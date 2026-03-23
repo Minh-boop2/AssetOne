@@ -18,32 +18,37 @@
       <a
         href="{{ url_for('dashboard_overview') }}"
         class="nav-link {% if request.endpoint == 'dashboard_overview' %}active{% endif %}"
-        >Tổng quan</a
       >
+        Tổng quan
+      </a>
 
       <a
         href="{{ url_for('assets_page') }}"
         class="nav-link {% if request.endpoint == 'assets_page' %}active{% endif %}"
-        >Tài sản</a
       >
+        Tài sản
+      </a>
 
       <a
         href="{{ url_for('assign_page') }}"
         class="nav-link {% if request.endpoint == 'assign_page' %}active{% endif %}"
-        >Cấp phát</a
       >
+        Cấp phát
+      </a>
 
       <a
         href="{{ url_for('return_page') }}"
         class="nav-link {% if request.endpoint == 'return_page' %}active{% endif %}"
-        >Thu hồi</a
       >
+        Thu hồi
+      </a>
 
       <a
         href="{{ url_for('report_page') }}"
         class="nav-link {% if request.endpoint == 'report_page' %}active{% endif %}"
-        >Báo cáo</a
       >
+        Báo cáo
+      </a>
     </nav>
 
     <div class="header-actions">
@@ -52,8 +57,10 @@
         id="themeToggle"
         type="button"
         aria-label="Đổi giao diện"
+        title="Đổi giao diện"
       >
-        <span class="toggle-icon">◐</span>
+        <i data-lucide="moon" class="toggle-icon icon-moon"></i>
+        <i data-lucide="sun" class="toggle-icon icon-sun"></i>
       </button>
 
       <div class="user-box">
@@ -75,6 +82,12 @@
 
     if (savedTheme === "dark") {
       root.setAttribute("data-theme", "dark");
+    } else {
+      root.removeAttribute("data-theme");
+    }
+
+    if (window.lucide) {
+      lucide.createIcons();
     }
 
     toggleBtn?.addEventListener("click", function () {

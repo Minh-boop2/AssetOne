@@ -49,12 +49,12 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  display: inline-flex;
+  display: flex; 
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  line-height: 1;
 }
-
 .stat-icon-blue {
   background: rgba(31, 79, 163, 0.12);
   color: var(--hsu-blue);
