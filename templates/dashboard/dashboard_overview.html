@@ -1,0 +1,224 @@
+<section class="dashboard-overview">
+  <div class="overview-container">
+    <div class="overview-heading">
+      <div>
+        <h2>Tổng quan hệ thống</h2>
+        <p>Theo dõi nhanh tài sản, cấp phát, thu hồi và tình trạng xử lý</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-icon stat-icon-blue">💻</span>
+          <span class="stat-label">Tổng tài sản</span>
+        </div>
+        <div class="stat-value">128</div>
+        <div class="stat-desc">Laptop, PC, máy in, thiết bị mạng...</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-icon stat-icon-green">✅</span>
+          <span class="stat-label">Đang sử dụng</span>
+        </div>
+        <div class="stat-value stat-success">92</div>
+        <div class="stat-progress">
+          <div
+            class="stat-progress-bar stat-progress-green"
+            style="width: 72%"
+          ></div>
+        </div>
+        <div class="stat-desc">Tài sản đang được cấp phát cho nhân viên</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-icon stat-icon-gray">📦</span>
+          <span class="stat-label">Chưa sử dụng</span>
+        </div>
+        <div class="stat-value">26</div>
+        <div class="stat-progress">
+          <div
+            class="stat-progress-bar stat-progress-blue"
+            style="width: 20%"
+          ></div>
+        </div>
+        <div class="stat-desc">Sẵn sàng để cấp phát</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <span class="stat-icon stat-icon-red">⚠️</span>
+          <span class="stat-label">Đang hỏng / bảo trì</span>
+        </div>
+        <div class="stat-value stat-danger">10</div>
+        <div class="stat-progress">
+          <div
+            class="stat-progress-bar stat-progress-red"
+            style="width: 8%"
+          ></div>
+        </div>
+        <div class="stat-desc">Cần theo dõi và xử lý</div>
+      </div>
+    </div>
+
+    <div class="overview-grid">
+      <div class="overview-card overview-card-large">
+        <div class="card-header">
+          <h3>Danh sách tài sản gần đây</h3>
+          <a href="#" class="card-link">Xem tất cả</a>
+        </div>
+
+        <div class="asset-table">
+          <div class="asset-row asset-row-head">
+            <div>Tên tài sản</div>
+            <div>Mã tài sản</div>
+            <div>Trạng thái</div>
+            <div>Người sử dụng</div>
+          </div>
+
+          <div class="asset-row">
+            <div>Laptop Dell XPS</div>
+            <div>KJX854</div>
+            <div>
+              <span class="status-badge status-using">Đang sử dụng</span>
+            </div>
+            <div>Nguyễn Văn A</div>
+          </div>
+
+          <div class="asset-row">
+            <div>Máy in HP LaserJet</div>
+            <div>BD558</div>
+            <div>
+              <span class="status-badge status-using">Đang sử dụng</span>
+            </div>
+            <div>Nguyễn Văn B</div>
+          </div>
+
+          <div class="asset-row">
+            <div>PC Văn phòng Dell</div>
+            <div>TCS35</div>
+            <div>
+              <span class="status-badge status-free">Chưa sử dụng</span>
+            </div>
+            <div>—</div>
+          </div>
+
+          <div class="asset-row">
+            <div>Router Mikrotik</div>
+            <div>MK220</div>
+            <div><span class="status-badge status-error">Bảo trì</span></div>
+            <div>Phòng IT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overview-card">
+        <div class="card-header">
+          <h3>Hoạt động gần đây</h3>
+          <a href="#" class="card-link">Xem tất cả</a>
+        </div>
+
+        <div class="activity-list">
+          <div class="activity-item">
+            <span class="activity-dot activity-success"></span>
+            <div class="activity-content">
+              <div class="activity-title">
+                Laptop Dell XPS đã cấp cho Nguyễn Văn A
+              </div>
+              <div class="activity-time">10 phút trước</div>
+            </div>
+          </div>
+
+          <div class="activity-item">
+            <span class="activity-dot activity-blue"></span>
+            <div class="activity-content">
+              <div class="activity-title">Thu hồi máy in HP từ Lê Thị B</div>
+              <div class="activity-time">1 giờ trước</div>
+            </div>
+          </div>
+
+          <div class="activity-item">
+            <span class="activity-dot activity-red"></span>
+            <div class="activity-content">
+              <div class="activity-title">
+                Nguyễn Văn C gửi yêu cầu báo hỏng thiết bị
+              </div>
+              <div class="activity-time">2 giờ trước</div>
+            </div>
+          </div>
+
+          <div class="activity-item">
+            <span class="activity-dot activity-blue"></span>
+            <div class="activity-content">
+              <div class="activity-title">
+                Admin cập nhật trạng thái Router Mikrotik
+              </div>
+              <div class="activity-time">3 giờ trước</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overview-grid bottom-grid">
+      <div class="overview-card overview-card-large">
+        <div class="card-header">
+          <h3>Cần xử lý</h3>
+        </div>
+
+        <div class="task-list">
+          <div class="task-item">
+            <div class="task-left">
+              <span class="task-icon task-icon-red">!</span>
+              <div>
+                <div class="task-title">1 máy in bị hỏng cần được sửa chữa</div>
+                <div class="task-subtitle">Ưu tiên xử lý trong hôm nay</div>
+              </div>
+            </div>
+            <button type="button" class="task-btn">Xem chi tiết</button>
+          </div>
+
+          <div class="task-item">
+            <div class="task-left">
+              <span class="task-icon task-icon-blue">i</span>
+              <div>
+                <div class="task-title">2 yêu cầu hỗ trợ chưa xử lý</div>
+                <div class="task-subtitle">Kiểm tra phản hồi từ nhân viên</div>
+              </div>
+            </div>
+            <button type="button" class="task-btn task-btn-primary">
+              Xử lý ngay
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overview-card">
+        <div class="card-header">
+          <h3>Phân loại nhanh</h3>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <span>💻 Laptop / PC</span>
+            <strong>78</strong>
+          </div>
+          <div class="mini-stat">
+            <span>🖨️ Máy in</span>
+            <strong>16</strong>
+          </div>
+          <div class="mini-stat">
+            <span>🌐 Thiết bị mạng</span>
+            <strong>21</strong>
+          </div>
+          <div class="mini-stat">
+            <span>🖥️ Màn hình / phụ kiện</span>
+            <strong>13</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
