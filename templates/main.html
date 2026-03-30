@@ -15,8 +15,35 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/dashboard/dashboard_overview.css') }}"
     />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components/table.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components/table_toolbar.css') }}"
+    />
   </head>
-  <body>
+  <body id="app-body">
     {% include 'components/header.html' %} {% block content %}{% endblock %}
   </body>
+  <script>
+    const body = document.getElementById("app-body");
+
+    // load trạng thái từ localStorage
+    if (localStorage.getItem("theme") === "dark") {
+      body.classList.add("dark");
+    }
+
+    // toggle button (gắn vào icon header sau)
+    function toggleTheme() {
+      body.classList.toggle("dark");
+
+      if (body.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+      } else {
+        localStorage.setItem("theme", "light");
+      }
+    }
+  </script>
 </html>

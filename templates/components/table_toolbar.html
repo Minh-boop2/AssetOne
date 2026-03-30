@@ -1,0 +1,70 @@
+<div class="table-toolbar">
+  <div class="toolbar-left">
+    <span class="toolbar-title">{{ title }}</span>
+
+    <input type="text" class="search-input" placeholder="{{ placeholder }}" />
+
+    {% if filters %} {% for f in filters %}
+    <div class="filter-wrapper">
+      <button class="filter-btn" onclick="toggleDropdown(this)">
+        <i data-lucide="plus"></i>
+        {{ f }}
+      </button>
+
+      <div class="dropdown">
+        <label><input type="checkbox" /> Hoạt động</label>
+        <label><input type="checkbox" /> Tạm khóa</label>
+      </div>
+    </div>
+    {% endfor %} {% endif %}
+  </div>
+
+  <div class="toolbar-right">
+    {% if show_columns %}
+    <div class="column-wrapper">
+      <button class="action-btn" onclick="toggleDropdown(this)">
+        <i data-lucide="sliders-horizontal"></i>
+        Cột
+      </button>
+
+      <div class="dropdown">
+        <div class="dropdown-title">Hiển thị cột</div>
+        <label><input type="checkbox" checked /> Họ Tên</label>
+        <label><input type="checkbox" checked /> Tên Đăng Nhập</label>
+        <label><input type="checkbox" /> Email</label>
+        <label><input type="checkbox" /> Phone</label>
+        <label><input type="checkbox" checked /> Vai Trò</label>
+        <label><input type="checkbox" checked /> Trạng Thái</label>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function toggleDropdown(btn) {
+    const wrapper = btn.parentElement;
+    const dropdown = wrapper.querySelector(".dropdown");
+
+    const isOpen = dropdown.style.display === "block";
+
+    document
+      .querySelectorAll(".dropdown")
+      .forEach((d) => (d.style.display = "none"));
+
+    if (!isOpen) {
+      dropdown.style.display = "block";
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    if (
+      !e.target.closest(".filter-wrapper") &&
+      !e.target.closest(".column-wrapper")
+    ) {
+      document
+        .querySelectorAll(".dropdown")
+        .forEach((d) => (d.style.display = "none"));
+    }
+  });
+</script>

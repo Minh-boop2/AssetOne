@@ -1,0 +1,35 @@
+<h2>Danh sách nhân sự</h2>
+
+{% set title = 'Danh sách nhân sự:' %} {% set placeholder = 'Tìm theo Họ tên,
+Tên đăng nhập, Hộp thư...' %} {% set filters = ['Vai trò', 'Trạng thái'] %} {%
+set show_columns = True %} {% include 'components/table_toolbar.html' with
+context %} {% macro render_role(row) %} {% if row.role == 'admin' %}
+<span class="badge badge-admin">Quản Trị</span>
+{% elif row.role == 'it' %}
+<span class="badge badge-it">IT</span>
+{% else %}
+<span class="badge badge-user">Người Dùng</span>
+{% endif %} {% endmacro %} {% macro render_status(row) %} {% if row.status ==
+'active' %}
+<span class="badge badge-active">Hoạt Động</span>
+{% else %}
+<span class="badge badge-inactive">Không Xác Định</span>
+{% endif %} {% endmacro %} {% macro render_permission(row) %} {% if
+row.permission == 'viewer' %}
+<span class="badge badge-viewer">Người Xem</span>
+{% else %}
+<span class="badge badge-denied">Bị Từ Chối</span>
+{% endif %} {% endmacro %} {% set columns = [ {"key": "name", "label": "Họ
+Tên"}, {"key": "username", "label": "Tên Đăng Nhập"}, {"key": "role", "label":
+"Vai Trò", "render": render_role}, {"key": "status", "label": "Trạng Thái",
+"render": render_status}, {"key": "project", "label": "Dự Án"}, {"key":
+"permission", "label": "Quyền", "render": render_permission} ] %} {% set data =
+[ {"name": "Tony Meo", "username": "vulnh", "role": "user", "status": "active",
+"project": 5, "permission": "viewer"}, {"name": "Đinh Quốc Tú", "username":
+"tudq", "role": "admin", "status": "active", "project": 7, "permission":
+"viewer"}, {"name": "N/A", "username": "vinx", "role": "it", "status":
+"unknown", "project": 2, "permission": "denied"}, {"name": "Xasojig108",
+"username": "xasojig108", "role": "user", "status": "active", "project": 3,
+"permission": "viewer"}, {"name": "Taicopro2", "username": "tac222", "role":
+"user", "status": "active", "project": 1, "permission": "viewer"} ] %} {%
+include 'components/table.html' %}

@@ -1,0 +1,101 @@
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-right: 8px; /* tránh dính mép phải */
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toolbar-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text);
+    width: 260px;
+}
+
+.filter-btn {
+    padding: 6px 10px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* ===== dropdown ===== */
+
+.filter-wrapper,
+.column-wrapper {
+    position: relative;
+}
+
+/* default dropdown (filter) */
+.dropdown {
+    display: none;
+    position: absolute;
+    top: 110%;
+    left: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 100;
+    min-width: 180px;
+}
+
+/* FIX: dropdown của nút "Cột" */
+.column-wrapper .dropdown {
+    left: auto;
+    right: 0;
+    transform: translateX(-8px); /* đẩy vào trong cho không bị cắt */
+}
+
+/* item */
+.dropdown label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dropdown-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* hover nhẹ cho đẹp */
+.dropdown label:hover {
+    background: var(--hover);
+    border-radius: 4px;
+}

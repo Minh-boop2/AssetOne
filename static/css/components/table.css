@@ -1,0 +1,134 @@
+/* ================= BASE COLOR SYSTEM ================= */
+
+:root {
+    --bg: #ffffff;
+    --card: #ffffff;
+    --header: #f1f5f9;
+    --border: #e2e8f0;
+
+    --text: #0f172a;
+    --muted: #64748b;
+
+    --hover: #f8fafc;
+}
+
+/* FIX: dùng data-theme thay vì .dark */
+[data-theme="dark"] {
+    --bg: #020617;
+    --card: #0f172a;
+    --header: #1e293b;
+    --border: #1e293b;
+
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+
+    --hover: #1e293b;
+}
+
+/* fix nền ngoài */
+html, body {
+    background: var(--bg);
+}
+
+/* ================= TABLE ================= */
+
+.table-container {
+    background: var(--card);
+    border-radius: 0;          /* bỏ bo góc nếu muốn full */
+    border: none;              /* bỏ viền ngoài */
+    padding: 0;                /* bỏ padding để sát mép */
+    width: 100%;
+}
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.custom-table thead {
+    background: var(--header);
+}
+
+.custom-table th {
+    padding: 14px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.custom-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.custom-table tr:hover {
+    background: var(--hover);
+}
+
+/* ================= BADGE SYSTEM ================= */
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* LIGHT */
+:root {
+    --b-user-bg: #e0e7ff;
+    --b-user-text: #3730a3;
+
+    --b-admin-bg: #fee2e2;
+    --b-admin-text: #991b1b;
+
+    --b-it-bg: #fef3c7;
+    --b-it-text: #92400e;
+
+    --b-active-bg: #dcfce7;
+    --b-active-text: #166534;
+
+    --b-inactive-bg: #e5e7eb;
+    --b-inactive-text: #374151;
+
+    --b-view-bg: #dbeafe;
+    --b-view-text: #1d4ed8;
+
+    --b-denied-bg: #000000;
+    --b-denied-text: #ffffff;
+}
+
+/* DARK (FIX đúng selector) */
+[data-theme="dark"] {
+    --b-user-bg: #1e3a8a;
+    --b-user-text: #c7d2fe;
+
+    --b-admin-bg: #7f1d1d;
+    --b-admin-text: #fecaca;
+
+    --b-it-bg: #78350f;
+    --b-it-text: #fde68a;
+
+    --b-active-bg: #064e3b;
+    --b-active-text: #6ee7b7;
+
+    --b-inactive-bg: #334155;
+    --b-inactive-text: #cbd5f5;
+
+    --b-view-bg: #1e40af;
+    --b-view-text: #bfdbfe;
+
+    --b-denied-bg: #000000;
+    --b-denied-text: #ffffff;
+}
+
+/* APPLY */
+.badge-user { background: var(--b-user-bg); color: var(--b-user-text); }
+.badge-admin { background: var(--b-admin-bg); color: var(--b-admin-text); }
+.badge-it { background: var(--b-it-bg); color: var(--b-it-text); }
+.badge-active { background: var(--b-active-bg); color: var(--b-active-text); }
+.badge-inactive { background: var(--b-inactive-bg); color: var(--b-inactive-text); }
+.badge-viewer { background: var(--b-view-bg); color: var(--b-view-text); }
+.badge-denied { background: var(--b-denied-bg); color: var(--b-denied-text); }
