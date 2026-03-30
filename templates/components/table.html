@@ -1,25 +1,27 @@
-<div class="table-container">
-  <table class="custom-table">
-    <thead>
-      <tr>
+<div class="table-container {{ table_wrapper_class or '' }}">
+  <table class="custom-table {{ table_class or '' }}">
+    <thead class="{{ thead_class or '' }}">
+      <tr class="{{ thead_row_class or '' }}">
         {% for col in columns %}
-        <th>{{ col.label }}</th>
+        <th class="{{ col.th_class or th_class or '' }}">{{ col.label }}</th>
         {% endfor %} {% if actions %}
-        <th></th>
+        <th class="{{ action_th_class or '' }}"></th>
         {% endif %}
       </tr>
     </thead>
 
-    <tbody>
+    <tbody class="{{ tbody_class or '' }}">
       {% for row in data %}
-      <tr>
+      <tr class="{{ row.row_class or tr_class or '' }}">
         {% for col in columns %}
-        <td>
+        <td class="{{ col.td_class or td_class or '' }}">
           {% if col.render %} {{ col.render(row) }} {% else %} {{ row[col.key]
           }} {% endif %}
         </td>
         {% endfor %} {% if actions %}
-        <td class="actions">{% include actions %}</td>
+        <td class="actions {{ action_td_class or '' }}">
+          {% include actions %}
+        </td>
         {% endif %}
       </tr>
       {% endfor %}

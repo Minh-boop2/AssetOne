@@ -10,9 +10,11 @@
     --muted: #64748b;
 
     --hover: #f8fafc;
+
+    --table-radius: 0;
+    --table-padding: 0;
 }
 
-/* FIX: dùng data-theme thay vì .dark */
 [data-theme="dark"] {
     --bg: #020617;
     --card: #0f172a;
@@ -25,20 +27,21 @@
     --hover: #1e293b;
 }
 
-/* fix nền ngoài */
-html, body {
+html,
+body {
     background: var(--bg);
 }
 
-/* ================= TABLE ================= */
+/* ================= TABLE BASE ================= */
 
 .table-container {
     background: var(--card);
-    border-radius: 0;          /* bỏ bo góc nếu muốn full */
-    border: none;              /* bỏ viền ngoài */
-    padding: 0;                /* bỏ padding để sát mép */
+    border-radius: var(--table-radius);
+    border: none;
+    padding: var(--table-padding);
     width: 100%;
 }
+
 .custom-table {
     width: 100%;
     border-collapse: collapse;
@@ -56,27 +59,139 @@ html, body {
     font-weight: 500;
     color: var(--muted);
     border-bottom: 1px solid var(--border);
+    vertical-align: middle;
 }
 
 .custom-table td {
     padding: 14px;
     border-bottom: 1px solid var(--border);
+    vertical-align: middle;
 }
 
-.custom-table tr:hover {
+.custom-table tbody tr:hover {
     background: var(--hover);
+}
+
+/* ================= OPTIONAL CUSTOM CLASSES ================= */
+
+/* scroll */
+.table-scroll-x {
+    overflow-x: auto;
+}
+
+.table-scroll-y {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.table-sticky-header thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--header);
+}
+
+/* width */
+.table-min-900 .custom-table {
+    min-width: 900px;
+}
+
+.table-min-1100 .custom-table {
+    min-width: 1100px;
+}
+
+.table-min-1300 .custom-table {
+    min-width: 1300px;
+}
+
+/* radius */
+.table-rounded-sm {
+    --table-radius: 8px;
+}
+
+.table-rounded-md {
+    --table-radius: 12px;
+}
+
+.table-rounded-lg {
+    --table-radius: 16px;
+}
+
+/* padding wrapper */
+.table-pad-sm {
+    --table-padding: 8px;
+}
+
+.table-pad-md {
+    --table-padding: 12px;
+}
+
+.table-pad-lg {
+    --table-padding: 16px;
+}
+
+/* border option */
+.table-bordered {
+    border: 1px solid var(--border);
+}
+
+/* spacing */
+.table-compact th,
+.table-compact td {
+    padding: 10px;
+}
+
+.table-comfortable th,
+.table-comfortable td {
+    padding: 18px;
+}
+
+/* row size */
+.table-row-lg td {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.table-row-sm td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+/* align */
+.th-center th,
+.td-center td {
+    text-align: center;
+}
+
+.th-right th,
+.td-right td {
+    text-align: right;
+}
+
+/* no hover */
+.table-no-hover tbody tr:hover {
+    background: transparent;
+}
+
+/* last action col */
+.actions {
+    text-align: right;
+    white-space: nowrap;
 }
 
 /* ================= BADGE SYSTEM ================= */
 
 .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.2;
 }
 
-/* LIGHT */
 :root {
     --b-user-bg: #e0e7ff;
     --b-user-text: #3730a3;
@@ -100,7 +215,6 @@ html, body {
     --b-denied-text: #ffffff;
 }
 
-/* DARK (FIX đúng selector) */
 [data-theme="dark"] {
     --b-user-bg: #1e3a8a;
     --b-user-text: #c7d2fe;
@@ -124,7 +238,6 @@ html, body {
     --b-denied-text: #ffffff;
 }
 
-/* APPLY */
 .badge-user { background: var(--b-user-bg); color: var(--b-user-text); }
 .badge-admin { background: var(--b-admin-bg); color: var(--b-admin-text); }
 .badge-it { background: var(--b-it-bg); color: var(--b-it-text); }
