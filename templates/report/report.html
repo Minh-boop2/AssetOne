@@ -1,4 +1,7 @@
-{% extends 'main.html' %} {% block content %} {% include
-'report/report_overview.html' %} {% endblock %}
+{% extends 'main.html' %}
 
-<!-- trang báo cáo -->
+{% block content %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report.css') }}">
+
+    {% include 'report/report_overview.html' %}
+{% endblock %}

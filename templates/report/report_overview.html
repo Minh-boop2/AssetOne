@@ -1,35 +1,66 @@
-<h2>Danh sách nhân sự</h2>
+<div class="report-page">
+    <div class="report-header">
+        <h2>Lịch sử Hoạt động Thiết bị (Audit Log)</h2>
+    </div>
 
-{% set title = 'Danh sách nhân sự:' %} {% set placeholder = 'Tìm theo Họ tên,
-Tên đăng nhập, Hộp thư...' %} {% set filters = ['Vai trò', 'Trạng thái'] %} {%
-set show_columns = True %} {% include 'components/table_toolbar.html' with
-context %} {% macro render_role(row) %} {% if row.role == 'admin' %}
-<span class="badge badge-admin">Quản Trị</span>
-{% elif row.role == 'it' %}
-<span class="badge badge-it">IT</span>
-{% else %}
-<span class="badge badge-user">Người Dùng</span>
-{% endif %} {% endmacro %} {% macro render_status(row) %} {% if row.status ==
-'active' %}
-<span class="badge badge-active">Hoạt Động</span>
-{% else %}
-<span class="badge badge-inactive">Không Xác Định</span>
-{% endif %} {% endmacro %} {% macro render_permission(row) %} {% if
-row.permission == 'viewer' %}
-<span class="badge badge-viewer">Người Xem</span>
-{% else %}
-<span class="badge badge-denied">Bị Từ Chối</span>
-{% endif %} {% endmacro %} {% set columns = [ {"key": "name", "label": "Họ
-Tên"}, {"key": "username", "label": "Tên Đăng Nhập"}, {"key": "role", "label":
-"Vai Trò", "render": render_role}, {"key": "status", "label": "Trạng Thái",
-"render": render_status}, {"key": "project", "label": "Dự Án"}, {"key":
-"permission", "label": "Quyền", "render": render_permission} ] %} {% set data =
-[ {"name": "Tony Meo", "username": "vulnh", "role": "user", "status": "active",
-"project": 5, "permission": "viewer"}, {"name": "Đinh Quốc Tú", "username":
-"tudq", "role": "admin", "status": "active", "project": 7, "permission":
-"viewer"}, {"name": "N/A", "username": "vinx", "role": "it", "status":
-"unknown", "project": 2, "permission": "denied"}, {"name": "Xasojig108",
-"username": "xasojig108", "role": "user", "status": "active", "project": 3,
-"permission": "viewer"}, {"name": "Taicopro2", "username": "tac222", "role":
-"user", "status": "active", "project": 1, "permission": "viewer"} ] %} {%
-include 'components/table.html' %}
+    <form method="GET" action="{{ url_for('report_page') }}" class="filter-bar">
+        <div class="filter-item">
+            <label>Phòng ban:</label>
+            <select name="department">
+                <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
+                <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
+                <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
+            </select>
+        </div>
+
+        <div class="filter-item">
+            <label>Loại hoạt động:</label>
+            <select name="type">
+                <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
+                <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
+                <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
+                <option value="Thay đổi" {% if selected_type == 'Thay đổi' %}selected{% endif %}>Thay đổi</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">Áp dụng bộ lọc</button>
+        <a href="{{ url_for('report_page') }}" class="btn-reset">Đặt lại</a>
+    </form>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Tài sản / Tên</th> <th>Loại Hoạt động</th>
+                    <th>Chi tiết</th>
+                    <th>Phòng ban</th>
+                    <th>Người thực hiện</th>
+                    <th>Trạng thái</th>
+                    <th>Thời gian</th> </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for log in logs %}
+                    <tr>
+                        <td><strong>{{ log.asset }}</strong></td>
+                        <td>
+                            <span class="badge {% if log.type == 'Bàn giao' %}bg-blue{% elif log.type == 'Bảo trì' %}bg-red{% else %}bg-green{% endif %}">
+                                {{ log.type }}
+                            </span>
+                        </td>
+                        <td>{{ log.detail }}</td>
+                        <td>{{ log.dept }}</td>
+                        <td>{{ log.user }}</td>
+                        <td><span class="badge bg-gray">{{ log.status }}</span></td>
+                        <td style="color: #888; font-size: 13px;">{{ log.time }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">Không có dữ liệu phù hợp.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
