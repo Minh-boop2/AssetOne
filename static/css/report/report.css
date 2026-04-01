@@ -1,128 +1,77 @@
-/* Tổng thể trang báo cáo */
-.report-page { 
-    font-family: 'Inter', sans-serif; 
-    padding: 25px; 
-    color: inherit; /* Tự động lấy màu chữ của hệ thống (đen hoặc trắng) */
-}
+/* Layout tổng thể */
+.report-page { font-family: 'Inter', sans-serif; padding: 25px; color: inherit; }
+.report-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
 
-.report-header h2 { 
-    font-size: 22px; 
-    font-weight: 700; 
-    margin-bottom: 20px; 
-}
-
-/* Thanh bộ lọc - Hiệu ứng kính mờ (Glassmorphism) */
+/* Thanh bộ lọc (Thích nghi mọi nền màu) */
 .filter-bar {
     background: rgba(128, 128, 128, 0.08); 
     backdrop-filter: blur(10px);
-    padding: 20px; 
+    padding: 15px 20px; 
     border-radius: 12px;
     display: flex; 
-    flex-wrap: wrap; 
-    gap: 20px; 
-    align-items: flex-end;
+    align-items: flex-end; 
+    gap: 15px;
     margin-bottom: 25px; 
     border: 1px solid rgba(128, 128, 128, 0.2);
 }
 
-.filter-item label { 
-    display: block;
-    font-size: 13px; 
-    font-weight: 600; 
-    margin-bottom: 8px;
-    opacity: 0.8; 
-}
+.filter-item label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; opacity: 0.7; }
 
-/* Ô chọn Select */
 .filter-item select { 
-    padding: 10px 15px; 
+    padding: 8px 12px; 
     border: 1px solid rgba(128, 128, 128, 0.3); 
-    border-radius: 8px; 
-    min-width: 180px;
+    border-radius: 6px; 
+    min-width: 170px;
     background: transparent; 
     color: inherit; 
     cursor: pointer;
-    outline: none;
 }
 
-/* FIX LỖI MẤT CHỮ TRONG DARK MODE: 
-   Ép các lựa chọn bên trong luôn có nền trắng và chữ đen */
+/* Fix lỗi mất chữ Dark Mode: Luôn hiện chữ đen nền trắng khi chọn */
 .filter-item select option {
     background-color: #ffffff !important; 
     color: #000000 !important;
 }
 
+/* Nút X hủy lọc */
+.btn-cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    text-decoration: none;
+    border-radius: 50%;
+    font-size: 22px;
+    font-weight: bold;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    transition: 0.3s;
+    margin-bottom: 2px;
+}
+
+.btn-cancel:hover { background: #ef4444; color: white; transform: rotate(90deg); }
+
 /* Bảng dữ liệu */
 .table-container { 
-    background: transparent; 
-    border-radius: 12px; 
-    overflow: hidden; 
-    border: 1px solid rgba(128, 128, 128, 0.2);
-}
-
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-}
-
-th { 
-    background: rgba(128, 128, 128, 0.15); 
-    padding: 15px; 
-    text-align: left; 
-    font-size: 13px; 
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.2); 
-}
-
-td { 
-    padding: 15px; 
-    font-size: 14px; 
-    border-bottom: 1px solid rgba(128, 128, 128, 0.1); 
-}
-
-/* Định dạng các nhãn (Badges) */
-.badge { 
-    padding: 4px 12px; 
-    border-radius: 20px; 
-    font-size: 11px; 
-    font-weight: 700; 
-    display: inline-block; 
-}
-
-.bg-blue { background: #dbeafe; color: #1e40af; }
-.bg-red { background: #fee2e2; color: #b91c1c; }
-.bg-green { background: #dcfce7; color: #15803d; }
-.bg-gray { 
-    background: rgba(128, 128, 128, 0.2); 
-    color: inherit; 
+    background: transparent; border-radius: 10px; overflow: hidden; 
     border: 1px solid rgba(128, 128, 128, 0.2); 
 }
 
-/* Nút bấm */
-.btn-primary { 
-    background: #1e40af; 
-    color: white; 
-    border: none; 
-    padding: 10px 20px; 
-    border-radius: 8px; 
-    font-weight: 600;
-    cursor: pointer; 
-    transition: 0.3s;
+table { width: 100%; border-collapse: collapse; }
+th { 
+    background: rgba(128, 128, 128, 0.15); padding: 12px 15px; 
+    text-align: left; font-size: 13px; border-bottom: 1px solid rgba(128, 128, 128, 0.2); 
 }
+td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid rgba(128, 128, 128, 0.1); }
 
-.btn-primary:hover { 
-    background: #1e3a8a; 
-    transform: translateY(-1px);
-}
+.time-cell { color: #888; font-size: 13px; }
+.empty-msg { text-align: center; padding: 40px; color: #999; }
 
-.btn-reset { 
-    opacity: 0.6; 
-    color: inherit; 
-    text-decoration: none; 
-    padding: 10px 15px; 
-    font-size: 14px; 
-    transition: 0.3s;
-}
-
-.btn-reset:hover { opacity: 1; }
+/* Badges */
+.badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+.bg-blue { background: #dbeafe; color: #1e40af; }
+.bg-red { background: #fee2e2; color: #b91c1c; }
+.bg-green { background: #dcfce7; color: #15803d; }
+.bg-gray { background: rgba(128, 128, 128, 0.2); color: inherit; }
