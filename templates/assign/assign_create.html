@@ -1,0 +1,50 @@
+<link rel="stylesheet" href="assign.css">
+
+<div class="assign-page">
+  <div class="page-heading">
+    <div class="heading-left">
+      <h1>Cấp phát tài sản</h1>
+      <p>Điền thông tin để thực hiện bàn giao tài sản trực tiếp</p>
+    </div>
+  </div>
+
+  <div class="content-card" style="max-width: 800px; margin: 0 auto; padding: 30px;">
+    <form action="#" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <div>
+        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Người nhận tài sản</label>
+        <input type="text" placeholder="Nhập tên nhân viên nhận..." style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px;">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Sản phẩm cấp phát</label>
+          <select style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: white;">
+            <option>-- Chọn sản phẩm có sẵn --</option>
+            <option>Laptop Dell XPS (KJX854)</option>
+            <option>Màn hình Dell 24 inch (MN2401)</option>
+            <option>Router Mikrotik (MK220)</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Trạng thái cấp phát</label>
+          <select style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: white;">
+            <option value="assigned">Đã cấp (Sử dụng ngay)</option>
+            <option value="pending">Chờ bàn giao</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Ghi chú bàn giao</label>
+        <textarea rows="4" placeholder="Tình trạng máy khi bàn giao, linh kiện đi kèm..." style="width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: inherit;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 20px;">
+        <button type="submit" class="btn btn-primary">Xác nhận cấp phát</button>
+        <a href="assign_overview.html" class="btn btn-light" style="text-decoration: none;">Hủy bỏ</a>
+      </div>
+
+    </form>
+  </div>
+</div>
