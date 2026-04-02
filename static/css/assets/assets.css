@@ -1,0 +1,267 @@
+/* ===== Page ===== */
+.assets-page {
+  padding: 28px;
+  background: #f6f8fc;
+  min-height: 100vh;
+}
+
+.assets-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.assets-page__title {
+  margin: 0 0 8px;
+  font-size: 36px;
+  font-weight: 800;
+  color: #14213d;
+  line-height: 1.2;
+}
+
+.assets-page__subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: #6b7a99;
+}
+
+.assets-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== Button ===== */
+.btn {
+  border: none;
+  outline: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #1f5eff;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(31, 94, 255, 0.18);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  background: #184ee0;
+}
+
+.btn-outline {
+  background: #fff;
+  color: #1f2a44;
+  border: 1px solid #dbe3f0;
+}
+
+.btn-outline:hover {
+  background: #f8fbff;
+}
+
+/* ===== Section ===== */
+.assets-table-section {
+  background: #fff;
+  border: 1px solid #e7edf6;
+  border-radius: 20px;
+  padding: 20px 20px 10px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  font-weight: 800;
+  color: #14213d;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #71809b;
+  font-size: 15px;
+}
+
+/* ===== Badge ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-type {
+  background: #f3f6fb;
+  color: #42526b;
+}
+
+.badge-laptop {
+  background: #e8f0ff;
+  color: #1d4ed8;
+}
+
+.badge-pc {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.badge-printer {
+  background: #fff4e8;
+  color: #d97706;
+}
+
+.badge-router {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+.badge-using {
+  background: #eafaf1;
+  color: #179c52;
+}
+
+.badge-available {
+  background: #edf4ff;
+  color: #2b63d9;
+}
+
+.badge-maintenance {
+  background: #fff4e5;
+  color: #ea8a00;
+}
+
+.badge-broken {
+  background: #ffeaea;
+  color: #e53935;
+}
+
+.badge-inactive {
+  background: #f2f4f7;
+  color: #6b7280;
+}
+
+/* ===== Table detail ===== */
+.asset-user {
+  font-weight: 600;
+  color: #1f2a44;
+}
+
+.asset-date {
+  color: #334155;
+  font-weight: 500;
+}
+
+.asset-empty {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ===== Action ===== */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  border: 1px solid #dbe3f0;
+  background: #fff;
+  color: #334155;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #f8fbff;
+  border-color: #c8d5ea;
+}
+
+.action-btn--primary {
+  background: #eff4ff;
+  color: #1d4ed8;
+  border-color: #dbe7ff;
+}
+
+.action-btn--primary:hover {
+  background: #e3edff;
+}
+
+/* ===== Optional table styling if component table supports default table ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table thead th {
+  text-align: left;
+  padding: 16px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6b7a99;
+  border-bottom: 1px solid #e8edf5;
+}
+
+table tbody td {
+  padding: 18px 14px;
+  font-size: 15px;
+  color: #1f2a44;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align: middle;
+}
+
+table tbody tr:hover {
+  background: #fafcff;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .assets-table-section {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .assets-page {
+    padding: 18px;
+  }
+
+  .assets-page__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .assets-page__title {
+    font-size: 28px;
+  }
+
+  .assets-table-section {
+    padding: 18px;
+    overflow-x: auto;
+  }
+
+  .table-actions {
+    flex-wrap: wrap;
+  }
+}
