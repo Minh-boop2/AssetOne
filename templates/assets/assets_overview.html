@@ -1,1 +1,146 @@
-bảo
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+
+<section class="assets-page">
+  <div class="assets-page__header">
+    <div>
+      <h1 class="assets-page__title">Quản lý tài sản</h1>
+      <p class="assets-page__subtitle">
+        Theo dõi, tìm kiếm và quản lý toàn bộ tài sản CNTT trong doanh nghiệp
+      </p>
+    </div>
+
+    <div class="assets-page__actions">
+      <button class="btn btn-outline">Nhập dữ liệu</button>
+      <button class="btn btn-primary">+ Thêm tài sản</button>
+    </div>
+  </div>
+
+  <div class="assets-table-section">
+    <div class="section-heading">
+      <div>
+        <h2>Danh sách tài sản</h2>
+        <p>Quản lý chi tiết từng tài sản trong hệ thống</p>
+      </div>
+    </div>
+
+    {% include 'components/table_toolbar.html' with context %}
+
+    {% macro render_asset_type(row) %}
+      {% if row.type == 'laptop' %}
+        <span class="badge badge-type badge-laptop">Laptop</span>
+      {% elif row.type == 'pc' %}
+        <span class="badge badge-type badge-pc">PC</span>
+      {% elif row.type == 'printer' %}
+        <span class="badge badge-type badge-printer">Máy in</span>
+      {% elif row.type == 'router' %}
+        <span class="badge badge-type badge-router">Router</span>
+      {% else %}
+        <span class="badge badge-type">Khác</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_status(row) %}
+      {% if row.status == 'using' %}
+        <span class="badge badge-using">Đang sử dụng</span>
+      {% elif row.status == 'available' %}
+        <span class="badge badge-available">Chưa sử dụng</span>
+      {% elif row.status == 'maintenance' %}
+        <span class="badge badge-maintenance">Bảo trì</span>
+      {% elif row.status == 'broken' %}
+        <span class="badge badge-broken">Hỏng</span>
+      {% else %}
+        <span class="badge badge-inactive">Không xác định</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_user(row) %}
+      {% if row.user %}
+        <span class="asset-user">{{ row.user }}</span>
+      {% else %}
+        <span class="asset-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_warranty(row) %}
+      {% if row.warranty %}
+        <span class="asset-date">{{ row.warranty }}</span>
+      {% else %}
+        <span class="asset-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_action(row) %}
+      <div class="table-actions">
+        <button class="action-btn">Chi tiết</button>
+        <button class="action-btn action-btn--primary">Sửa</button>
+      </div>
+    {% endmacro %}
+
+    {% set columns = [
+      {"key": "asset_code", "label": "Mã tài sản"},
+      {"key": "asset_name", "label": "Tên tài sản"},
+      {"key": "type", "label": "Loại tài sản", "render": render_asset_type},
+      {"key": "status", "label": "Trạng thái", "render": render_status},
+      {"key": "user", "label": "Người sử dụng", "render": render_user},
+      {"key": "department", "label": "Phòng ban"},
+      {"key": "location", "label": "Vị trí"},
+      {"key": "warranty", "label": "Bảo hành đến", "render": render_warranty},
+      {"key": "action", "label": "Thao tác", "render": render_action}
+    ] %}
+
+    {% set data = [
+      {
+        "asset_code": "LAP-001",
+        "asset_name": "Laptop Dell XPS 13",
+        "type": "laptop",
+        "status": "using",
+        "user": "Nguyễn Văn A",
+        "department": "Phòng Kỹ Thuật",
+        "location": "Tầng 3",
+        "warranty": "12/12/2026"
+      },
+      {
+        "asset_code": "PRI-002",
+        "asset_name": "Máy in HP LaserJet",
+        "type": "printer",
+        "status": "using",
+        "user": "Lê Thị B",
+        "department": "Phòng Hành Chính",
+        "location": "Tầng 2",
+        "warranty": "08/11/2025"
+      },
+      {
+        "asset_code": "PC-003",
+        "asset_name": "PC Văn phòng Dell Optiplex",
+        "type": "pc",
+        "status": "available",
+        "user": "",
+        "department": "Kho thiết bị",
+        "location": "Phòng IT",
+        "warranty": "22/06/2027"
+      },
+      {
+        "asset_code": "NET-004",
+        "asset_name": "Router Mikrotik RB4011",
+        "type": "router",
+        "status": "maintenance",
+        "user": "Phòng IT",
+        "department": "Hạ tầng mạng",
+        "location": "Phòng Server",
+        "warranty": "15/03/2026"
+      },
+      {
+        "asset_code": "LAP-005",
+        "asset_name": "MacBook Pro 14",
+        "type": "laptop",
+        "status": "broken",
+        "user": "Trần Văn C",
+        "department": "Phòng Thiết Kế",
+        "location": "Tầng 4",
+        "warranty": "01/09/2025"
+      }
+    ] %}
+
+    {% include 'components/table.html' %}
+  </div>
+</section>
