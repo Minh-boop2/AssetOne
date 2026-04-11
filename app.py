@@ -76,4 +76,4 @@ def return_page(): return render_template('return/return.html')
 def report_page(): return render_template('report/report.html', logs=DATABASE_LOGS)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True) 
