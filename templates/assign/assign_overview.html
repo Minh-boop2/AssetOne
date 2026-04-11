@@ -13,7 +13,7 @@
                 </div>
                 <div class="page-actions" style="display: flex; gap: 12px; margin-bottom: 5px;">
                     <a href="{{ url_for('assign_create') }}" class="task-btn task-btn-primary" style="text-decoration: none;">➕ Cấp phát mới</a>
-                    <a href="{{ url_for('request_create') }}" class="task-btn" style="text-decoration: none;">📝 Gửi yêu cầu</a>
+                    <a href="{{ url_for('request_create') }}" class="task-btn" style="text-decoration: none; background:#fff; border:1px solid #ddd; color:#333;">📝 Gửi yêu cầu</a>
                 </div>
             </div>
         </div>
@@ -33,62 +33,82 @@
             </div>
         </div>
 
-        <div class="overview-grid">
+        <div class="overview-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            
             <div class="overview-card overview-card-large">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>Lịch sử cấp phát</h3>
                     <form action="{{ url_for('assign_page') }}" method="GET" style="display: flex; gap: 8px;">
-                        <input type="text" name="search" placeholder="Nhập tên nhân viên..." value="{{ request.args.get('search', '') }}" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="text" name="search" placeholder="Nhập tên nhân viên..." value="{{ request.args.get('search', '') }}" style="padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
                         <button type="submit" class="task-btn task-btn-primary">Tìm kiếm</button>
-                        {% if request.args.get('search') %}
-                            <a href="{{ url_for('assign_page') }}" class="task-btn" style="text-decoration: none;">Hủy lọc</a>
-                        {% endif %}
                     </form>
                 </div>
 
                 <div class="asset-table">
-                    <div class="asset-row asset-row-head">
-                        <div>Tài sản</div><div>Người nhận</div><div>Ngày cấp</div><div>Trạng thái</div>
+                    <div class="asset-row asset-row-head" style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr; font-weight: bold; background:#f8fafc; padding: 12px; border-radius: 8px;">
+                        <div>Tài sản</div><div>Người nhận</div><div>Ngày cấp</div><div>Trạng thái</div><div>Thao tác</div>
                     </div>
+
                     {% for item in assigns %}
-                    <div class="asset-row">
-                        <div style="font-weight: 700;">{{ item.asset }}</div>
+                    <div class="asset-row" style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr; padding: 15px; border-bottom: 1px solid #eee; align-items: center;">
+                        <div style="font-weight: 700; color: #1e293b;">{{ item.asset }}</div>
                         <div>{{ item.receiver }}</div>
-                        <div style="color: var(--text-soft); font-size: 14px;">{{ item.date }}</div>
+                        <div style="color: #64748b; font-size: 13px;">{{ item.date }}</div>
                         <div>
                             <span class="status-badge {% if item.status == 'Hoàn thành' %}status-using{% else %}status-free{% endif %}">
                                 {{ item.status }}
                             </span>
                         </div>
+                        <div>
+                            <a href="{{ url_for('assign_detail', asset_name=item.asset) }}" style="text-decoration:none; color:#2563eb; font-weight:bold; font-size:12px;">🔍 Chi tiết</a>
+                        </div>
                     </div>
                     {% else %}
-                    <div style="padding: 20px; text-align: center;">Không tìm thấy kết quả nào.</div>
+                    <div style="padding: 30px; text-align: center; color: #94a3b8;">Không tìm thấy dữ liệu cấp phát.</div>
                     {% endfor %}
                 </div>
             </div>
 
             <div class="overview-card">
-                <div class="card-header"><h3>Phê duyệt nhanh</h3></div>
+                <div class="card-header" style="margin-bottom: 15px;">
+                    <h3>Phê duyệt yêu cầu </h3>
+                </div>
                 <div class="task-list">
-                    <div class="task-item" id="t1" style="padding: 12px;">
-                        <div class="task-left">
-                            <span class="task-icon task-icon-blue">?</span>
-                            <div><div class="task-title">Chuột Logitech</div><div class="task-subtitle">Lê Minh Khoa</div></div>
+                    {% if pending_requests %}
+                        {% for req in pending_requests %}
+                        <div class="task-item" style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="margin-bottom: 12px;">
+                                <div style="font-weight: bold; font-size: 15px; color: #1e293b;">{{ req.asset }}</div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">👤 Người yêu cầu: {{ req.receiver }}</div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{{ url_for('approve_request', id=req.id) }}" 
+                                   class="task-btn task-btn-primary" 
+                                   style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 8px 0; border-radius: 6px;"
+                                   onclick="return confirm('Bạn có chắc chắn muốn duyệt cấp thiết bị này?')">
+                                   Duyệt
+                                </a>
+
+                                <a href="{{ url_for('reject_request', id=req.id) }}" 
+                                   class="task-btn" 
+                                   style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 8px 0; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px;"
+                                   onclick="return confirm('Từ chối yêu cầu này?')">
+                                   Từ chối
+                                </a>
+                            </div>
                         </div>
-                        <button class="task-btn task-btn-primary" onclick="approve('t1')">Duyệt</button>
-                    </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+                            <div style="font-size: 30px; margin-bottom: 10px;">☕</div>
+                            <p style="font-size: 13px;">Không có yêu cầu nào cần phê duyệt.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
+
         </div>
     </div>
 </section>
-
-<script>
-function approve(id) {
-    if(confirm('Xác nhận duyệt?')) {
-        document.getElementById(id).style.opacity = '0.5';
-        setTimeout(() => document.getElementById(id).remove(), 300);
-    }
-}
-</script>
 {% endblock %}

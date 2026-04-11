@@ -1,31 +1,51 @@
 {% extends 'main.html' %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
+
 <section class="dashboard-overview">
-    <div class="overview-container" style="max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; border-top: 5px solid #3b82f6;">
-        <h2 style="margin-bottom: 10px;">📝 Gửi yêu cầu mượn thiết bị</h2>
-        <p style="color: #64748b; margin-bottom: 30px;">Vui lòng chọn thiết bị, Admin sẽ xem xét phê duyệt sau.</p>
+    <div class="overview-container" style="max-width: 600px; margin: 40px auto; background: #fff; padding: 35px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid #2563eb;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="margin-bottom: 10px; font-size: 24px;">📝 Gửi yêu cầu mượn thiết bị</h2>
+            <p style="color: #64748b;">Yêu cầu sẽ được gửi đến Admin để phê duyệt.</p>
+        </div>
 
         <form action="{{ url_for('request_create') }}" method="POST">
             <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 8px;">Thiết bị bạn cần:</label>
-                <select name="asset_name" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
-                    <option value="" disabled selected>-- Danh sách thiết bị sẵn có --</option>
+                <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #1e293b;">Thiết bị bạn cần:</label>
+                <select name="asset_name" required style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 15px; background-color: #f8fafc;">
+                    <option value="" disabled selected>-- Chọn thiết bị từ kho --</option>
                     {% for item in inventory %}
                         <option value="{{ item.name }}">{{ item.name }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div style="margin-bottom: 25px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 8px;">Tên của bạn:</label>
-                <input type="text" name="requester" required placeholder="Nhập họ tên đầy đủ" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #1e293b;">Họ và tên người mượn:</label>
+                <input type="text" name="requester" required placeholder="Ví dụ: Nguyễn Văn A" 
+                       style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 15px;">
             </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button type="submit" class="task-btn task-btn-primary" style="flex: 2; height: 45px; background: #2563eb;">Gửi yêu cầu ngay</button>
-                <a href="{{ url_for('assign_page') }}" class="task-btn" style="flex: 1; text-align: center; line-height: 45px; text-decoration: none; color: #64748b;">Quay lại</a>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button type="submit" class="task-btn task-btn-primary" 
+                        style="flex: 2; height: 50px; background: #2563eb; border: none; font-weight: bold; cursor: pointer; transition: 0.3s;">
+                    Gửi yêu cầu ngay
+                </button>
+                
+                <a href="{{ url_for('assign_page') }}" class="task-btn" 
+                   style="flex: 1; text-align: center; height: 50px; line-height: 50px; text-decoration: none; color: #64748b; background: #f1f5f9; border-radius: 10px; font-weight: 500;">
+                   Hủy bỏ
+                </a>
             </div>
         </form>
     </div>
 </section>
+
+<script>
+    const form = document.querySelector('form');
+    form.onsubmit = function() {
+        // Bạn có thể thêm loading ở đây nếu muốn
+    };
+</script>
 {% endblock %}
