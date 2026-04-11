@@ -1,90 +1,94 @@
-<link rel="stylesheet" href="assign.css">
+{% extends 'main.html' %}
 
-<div class="assign-page">
-  <div class="page-heading">
-    <div class="heading-left">
-      <h1>Quản lý cấp phát</h1>
-      <p>Danh sách các tài sản đã được cấp phát và yêu cầu trong hệ thống</p>
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
+
+<section class="dashboard-overview">
+    <div class="overview-container">
+        <div class="overview-heading">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h2>Quản lý cấp phát tài sản</h2>
+                    <p>Chào Admin, theo dõi luồng bàn giao thiết bị tại đây</p>
+                </div>
+                <div class="page-actions" style="display: flex; gap: 12px; margin-bottom: 5px;">
+                    <a href="{{ url_for('assign_create') }}" class="task-btn task-btn-primary" style="text-decoration: none;">➕ Cấp phát mới</a>
+                    <a href="{{ url_for('request_create') }}" class="task-btn" style="text-decoration: none;">📝 Gửi yêu cầu</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-top"><span class="stat-icon stat-icon-blue">🔄</span><span class="stat-label">Tổng lượt cấp</span></div>
+                <div class="stat-value">{{ stats.total }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-top"><span class="stat-icon stat-icon-green">📩</span><span class="stat-label">Yêu cầu mới</span></div>
+                <div class="stat-value stat-success">{{ stats.pending }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-top"><span class="stat-icon stat-icon-red">⚠️</span><span class="stat-label">Quá hạn</span></div>
+                <div class="stat-value stat-danger">{{ stats.overdue }}</div>
+            </div>
+        </div>
+
+        <div class="overview-grid">
+            <div class="overview-card overview-card-large">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Lịch sử cấp phát</h3>
+                    <form action="{{ url_for('assign_page') }}" method="GET" style="display: flex; gap: 8px;">
+                        <input type="text" name="search" placeholder="Nhập tên nhân viên..." value="{{ request.args.get('search', '') }}" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+                        <button type="submit" class="task-btn task-btn-primary">Tìm kiếm</button>
+                        {% if request.args.get('search') %}
+                            <a href="{{ url_for('assign_page') }}" class="task-btn" style="text-decoration: none;">Hủy lọc</a>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <div class="asset-table">
+                    <div class="asset-row asset-row-head">
+                        <div>Tài sản</div><div>Người nhận</div><div>Ngày cấp</div><div>Trạng thái</div>
+                    </div>
+                    {% for item in assigns %}
+                    <div class="asset-row">
+                        <div style="font-weight: 700;">{{ item.asset }}</div>
+                        <div>{{ item.receiver }}</div>
+                        <div style="color: var(--text-soft); font-size: 14px;">{{ item.date }}</div>
+                        <div>
+                            <span class="status-badge {% if item.status == 'Hoàn thành' %}status-using{% else %}status-free{% endif %}">
+                                {{ item.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="padding: 20px; text-align: center;">Không tìm thấy kết quả nào.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="overview-card">
+                <div class="card-header"><h3>Phê duyệt nhanh</h3></div>
+                <div class="task-list">
+                    <div class="task-item" id="t1" style="padding: 12px;">
+                        <div class="task-left">
+                            <span class="task-icon task-icon-blue">?</span>
+                            <div><div class="task-title">Chuột Logitech</div><div class="task-subtitle">Lê Minh Khoa</div></div>
+                        </div>
+                        <button class="task-btn task-btn-primary" onclick="approve('t1')">Duyệt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div class="page-actions" style="display: flex; gap: 12px;">
-      <a href="assign_create.html" class="btn btn-primary" style="text-decoration: none;">
-        + Cấp phát tài sản
-      </a>
-      <a href="request_create.html" class="btn btn-outline" style="text-decoration: none;">
-        + Yêu cầu cấp phát
-      </a>
-    </div>
-  </div>
+</section>
 
-  <div class="content-card">
-    {% set title = 'Danh sách cấp phát:' %}
-    {% set placeholder = 'Tìm theo tên tài sản, mã tài sản, người nhận, người yêu cầu...' %}
-    {% set filters = ['Danh mục tài sản', 'Hình thức', 'Trạng thái'] %}
-    {% set show_columns = True %}
-    {% include 'components/table_toolbar.html' with context %}
-
-    {% macro render_category(row) %}
-      {% if row.category == 'laptop' %}
-        <span class="badge badge-purple">Laptop / PC</span>
-      {% elif row.category == 'printer' %}
-        <span class="badge badge-orange">Máy in</span>
-      {% elif row.category == 'network' %}
-        <span class="badge badge-blue">Thiết bị mạng</span>
-      {% else %}
-        <span class="badge badge-sky">Phụ kiện</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_type(row) %}
-      {% if row.type == 'direct' %}
-        <span class="badge badge-green">Trực tiếp</span>
-      {% else %}
-        <span class="badge badge-purple">Yêu cầu</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_status(row) %}
-      {% if row.status == 'assigned' %}
-        <span class="badge badge-green">Đã cấp</span>
-      {% elif row.status == 'pending' %}
-        <span class="badge badge-orange">Chờ duyệt</span>
-      {% elif row.status == 'approved' %}
-        <span class="badge badge-blue">Đã duyệt</span>
-      {% elif row.status == 'rejected' %}
-        <span class="badge badge-red">Từ chối</span>
-      {% else %}
-        <span class="badge badge-red">Đã thu hồi</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_receiver(row) %}
-      {% if row.receiver %}
-        <span>{{ row.receiver }}</span>
-      {% else %}
-        <span style="color: var(--text-muted);">—</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% set columns = [
-      {"key": "asset_name", "label": "Tên tài sản"},
-      {"key": "asset_code", "label": "Mã tài sản"},
-      {"key": "category", "label": "Danh mục", "render": render_category},
-      {"key": "receiver", "label": "Người nhận / người yêu cầu", "render": render_receiver},
-      {"key": "type", "label": "Hình thức", "render": render_type},
-      {"key": "status", "label": "Trạng thái", "render": render_status},
-      {"key": "created_at", "label": "Ngày tạo"}
-    ] %}
-
-    {% set data = [
-      { "asset_name": "Laptop Dell XPS", "asset_code": "KJX854", "category": "laptop", "receiver": "Nguyễn Văn A", "type": "direct", "status": "assigned", "created_at": "10:36 16/03/2026" },
-      { "asset_name": "Laptop HP ProBook", "asset_code": "HP9821", "category": "laptop", "receiver": "Lê Thị B", "type": "request", "status": "pending", "created_at": "17:49 16/01/2026" },
-      { "asset_name": "Màn hình Dell 24 inch", "asset_code": "MN2401", "category": "accessory", "receiver": "Trần Văn C", "type": "request", "status": "approved", "created_at": "15:49 15/01/2026" },
-      { "asset_name": "Máy in HP LaserJet", "asset_code": "BD558", "category": "printer", "receiver": "Phòng Kế toán", "type": "request", "status": "rejected", "created_at": "21:07 21/12/2025" },
-      { "asset_name": "Router Mikrotik", "asset_code": "MK220", "category": "network", "receiver": "Phòng IT", "type": "direct", "status": "assigned", "created_at": "20:57 21/12/2025" },
-      { "asset_name": "PC Văn phòng Dell", "asset_code": "TCS35", "category": "laptop", "receiver": "Phạm Văn D", "type": "direct", "status": "returned", "created_at": "20:38 21/12/2025" }
-    ] %}
-
-    {% include 'components/table.html' %}
-  </div>
-</div>
+<script>
+function approve(id) {
+    if(confirm('Xác nhận duyệt?')) {
+        document.getElementById(id).style.opacity = '0.5';
+        setTimeout(() => document.getElementById(id).remove(), 300);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'main.html' %}
+{% block content %}
+<section class="dashboard-overview">
+    <div class="overview-container" style="max-width: 800px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2 style="margin: 0;">Thông tin tài sản chi tiết</h2>
+            <a href="{{ url_for('assign_page') }}" class="task-btn" style="text-decoration:none;">Quay lại</a>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px;">
+            <div style="border-right: 1px solid #eee; padding-right: 20px;">
+                <h4 style="color: #3b82f6; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;">Cấu hình máy</h4>
+                {% if info %}
+                    <p style="margin: 10px 0;"><strong>Tên:</strong> {{ info.name }}</p>
+                    <p style="margin: 10px 0;"><strong>Thông số:</strong> {{ info.spec }}</p>
+                    <p style="margin: 10px 0;"><strong>Bảo hành:</strong> {{ info.warranty }}</p>
+                {% else %}
+                    <p style="color: red;">Dữ liệu kho không tồn tại.</p>
+                {% endif %}
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                <h4 style="color: #64748b; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;">Tình trạng sử dụng</h4>
+                {% if holder %}
+                    <div style="text-align: center; margin-top: 10px;">
+                        <span style="background: #dcfce7; color: #166534; padding: 4px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;">ĐANG SỬ DỤNG</span>
+                        <p style="font-size: 20px; font-weight: bold; margin: 15px 0;">{{ holder.receiver }}</p>
+                        <p style="color: #64748b; font-size: 13px;">Bàn giao ngày: {{ holder.date }}</p>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; margin-top: 10px;">
+                        <span style="background: #f1f5f9; color: #475569; padding: 4px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;">SẴN SÀNG TRONG KHO</span>
+                        <p style="margin-top: 20px; font-weight: bold;">Chưa bàn giao cho ai.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

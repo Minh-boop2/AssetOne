@@ -1,50 +1,31 @@
-<link rel="stylesheet" href="assign.css">
+{% extends 'main.html' %}
+{% block content %}
+<section class="dashboard-overview">
+    <div class="overview-container" style="max-width: 600px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <h2 style="margin-bottom: 10px;">➕ Cấp phát tài sản mới</h2>
+        <p style="color: #64748b; margin-bottom: 30px;">Admin thực hiện bàn giao thiết bị trực tiếp cho nhân viên.</p>
 
-<div class="assign-page">
-  <div class="page-heading">
-    <div class="heading-left">
-      <h1>Cấp phát tài sản</h1>
-      <p>Điền thông tin để thực hiện bàn giao tài sản trực tiếp</p>
+        <form action="{{ url_for('assign_create') }}" method="POST">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 8px;">Chọn tài sản từ kho:</label>
+                <select name="asset_name" required style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                    <option value="" disabled selected>-- Nhấn để chọn thiết bị --</option>
+                    {% for item in inventory %}
+                        <option value="{{ item.name }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 8px;">Họ tên người nhận:</label>
+                <input type="text" name="receiver" required placeholder="Ví dụ: Nguyễn Văn A" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="task-btn task-btn-primary" style="flex: 2; height: 45px;">Xác nhận bàn giao</button>
+                <a href="{{ url_for('assign_page') }}" class="task-btn" style="flex: 1; text-align: center; line-height: 45px; text-decoration: none; background: #f1f5f9; color: #475569;">Hủy</a>
+            </div>
+        </form>
     </div>
-  </div>
-
-  <div class="content-card" style="max-width: 800px; margin: 0 auto; padding: 30px;">
-    <form action="#" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
-      
-      <div>
-        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Người nhận tài sản</label>
-        <input type="text" placeholder="Nhập tên nhân viên nhận..." style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px;">
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Sản phẩm cấp phát</label>
-          <select style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: white;">
-            <option>-- Chọn sản phẩm có sẵn --</option>
-            <option>Laptop Dell XPS (KJX854)</option>
-            <option>Màn hình Dell 24 inch (MN2401)</option>
-            <option>Router Mikrotik (MK220)</option>
-          </select>
-        </div>
-        <div>
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Trạng thái cấp phát</label>
-          <select style="width: 100%; height: 42px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: white;">
-            <option value="assigned">Đã cấp (Sử dụng ngay)</option>
-            <option value="pending">Chờ bàn giao</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Ghi chú bàn giao</label>
-        <textarea rows="4" placeholder="Tình trạng máy khi bàn giao, linh kiện đi kèm..." style="width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: inherit;"></textarea>
-      </div>
-
-      <div style="display: flex; gap: 12px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 20px;">
-        <button type="submit" class="btn btn-primary">Xác nhận cấp phát</button>
-        <a href="assign_overview.html" class="btn btn-light" style="text-decoration: none;">Hủy bỏ</a>
-      </div>
-
-    </form>
-  </div>
-</div>
+</section>
+{% endblock %}
