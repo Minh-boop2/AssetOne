@@ -111,6 +111,10 @@ def request_create():
 
 
 # --- 6. CÁC TRANG PHỤ KHÁC ---
+@app.route('/login')
+def login():
+    return render_template('login/login.html')
+
 @app.route('/assets')
 def assets_page(): 
     return render_template('assets/assets.html')
