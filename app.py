@@ -115,9 +115,9 @@ def request_create():
 def assets_page(): 
     return render_template('assets/assets.html')
 
-@app.route('/return')
-def return_page(): 
-    return render_template('return/return.html')
+@app.route('/manage')
+def manage():
+    return render_template('manage/manage.html')
 
 @app.route('/report')
 def report_page(): 
