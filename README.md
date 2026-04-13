@@ -6,8 +6,8 @@ sau đó ghi lệnh
 
 git pull origin master
 
-./run.bat
+sau đó chỉ cần chạy ở dưới
 
-chạy xong lên đầu tiên về sau chỉ cần python app.py
+./run.bat
 
 xong
