@@ -1,0 +1,66 @@
+/* BIẾN MÀU SẮC */
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #ffffff;
+    --text-sub: #94a3b8;
+    --input-bg: #0f172a;
+    --border-color: #334155;
+    --primary-blue: #3b82f6;
+    --toggle-bg: #1e293b; /* Màu nút khi ở chế độ tối */
+}
+
+body.light-theme {
+    --bg-color: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-sub: #64748b;
+    --input-bg: #f8fafc;
+    --border-color: #cbd5e1;
+    --toggle-bg: #ffffff; /* Màu nút khi ở chế độ sáng */
+}
+
+body { 
+    background-color: var(--bg-color); 
+    color: var(--text-main); 
+    transition: 0.3s; 
+    font-family: 'Inter', sans-serif; 
+    margin: 0;
+}
+
+.login-card { 
+    background: var(--card-bg); 
+    width: 420px; padding: 45px; border-radius: 20px; 
+    margin: 80px auto; text-align: center; 
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* LOGO & TIÊU ĐỀ */
+.auth-logo { width: 160px; margin-bottom: 15px; }
+.system-title { font-size: 20px; font-weight: 800; color: var(--primary-blue); margin-bottom: 30px; }
+
+/* NÚT CHỈNH MÀU - ĐÃ FIX MÀU NỀN NÚT */
+.theme-toggle {
+    position: fixed; top: 20px; right: 20px;
+    width: 45px; height: 45px;
+    background: var(--toggle-bg); /* Tự đổi màu nền nút */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 1000; transition: 0.3s;
+}
+.theme-toggle i { font-size: 20px; color: var(--primary-blue); }
+
+/* DÒNG GHI NHỚ */
+.form-options { display: flex; justify-content: space-between; align-items: center; margin: 25px 0; }
+.remember-group { display: flex; align-items: center; gap: 10px; }
+.remember-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+.remember-group label { font-size: 14px; color: var(--text-sub); cursor: pointer; }
+
+/* INPUT & BUTTON */
+input {
+    width: 100%; padding: 14px; border-radius: 10px;
+    background: var(--input-bg); color: var(--text-main);
+    border: 1px solid var(--border-color); box-sizing: border-box;
+}
+.btn-login { width: 100%; padding: 15px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }

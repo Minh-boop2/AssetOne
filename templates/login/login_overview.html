@@ -1,1 +1,37 @@
-sss ss
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng quan Hệ thống - AssetOne</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login/login.css') }}">
+</head>
+<body class="auth-page">
+    <div class="login-card overview-card">
+        <div class="auth-header">
+            <img src="{{ url_for('static', filename='images/hsu-logo.png') }}" alt="Logo" class="auth-logo">
+            <h1 style="color: #1e3a8a; margin-top: 10px;">AssetOne</h1>
+            <p>Hệ thống Quản lý Tài sản Tập trung</p>
+        </div>
+
+        <div class="overview-body" style="text-align: left; margin: 25px 0;">
+            <p style="font-weight: 600; color: #374151; margin-bottom: 10px;">Chào Châu Ngọc Đức,</p>
+            <p style="font-size: 14px; color: #6b7280; line-height: 1.5;">
+                Dự án "AssetOne" giúp tối ưu hóa việc theo dõi, cấp phát và bảo trì thiết bị IT trong doanh nghiệp. Vui lòng đăng nhập bằng tài khoản nội bộ để bắt đầu phiên làm việc.
+            </p>
+        </div>
+
+        <div class="auth-actions">
+            <a href="{{ url_for('login_page') }}" class="btn-login" style="text-decoration: none; display: block; text-align: center;">
+                Tiến tới Đăng nhập
+            </a>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px;">
+            <p style="font-size: 11px; color: #9ca3af;">
+                Phiên bản 1.0.0 &copy; 2026 Specialized Project Team
+            </p>
+        </div>
+    </div>
+</body>
+</html>
