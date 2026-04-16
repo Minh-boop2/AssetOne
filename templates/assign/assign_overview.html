@@ -1,117 +1,138 @@
 {% extends 'main.html' %}
+<<<<<<< HEAD
 
 <<<<<<< Updated upstream
+=======
+>>>>>>> bf0016cb5a91e98e99be7de97775819e4f70daa0
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
 
 <section class="dashboard-overview">
     <div class="overview-container">
         <div class="overview-heading">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                    <h2>Quản lý cấp phát tài sản</h2>
-                    <p>Chào Admin, theo dõi luồng bàn giao thiết bị tại đây</p>
-                </div>
-                <div class="page-actions" style="display: flex; gap: 12px; margin-bottom: 5px;">
-                    <a href="{{ url_for('assign_create') }}" class="task-btn task-btn-primary" style="text-decoration: none;">➕ Cấp phát mới</a>
-                    <a href="{{ url_for('request_create') }}" class="task-btn" style="text-decoration: none; background:#fff; border:1px solid #ddd; color:#333;">📝 Gửi yêu cầu</a>
-                </div>
-            </div>
+            <h2>Quản lý cấp phát tài sản</h2>
+            <p>Chào Admin, theo dõi luồng bàn giao thiết bị tại đây</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-card-top"><span class="stat-icon stat-icon-blue">🔄</span><span class="stat-label">Tổng lượt cấp</span></div>
+                <div class="stat-card-top">
+                    <span class="stat-label">🔄 Tổng lượt cấp</span>
+                </div>
                 <div class="stat-value">{{ stats.total }}</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-card-top"><span class="stat-icon stat-icon-green">📩</span><span class="stat-label">Yêu cầu mới</span></div>
-                <div class="stat-value stat-success">{{ stats.pending }}</div>
+                <div class="stat-card-top">
+                    <span class="stat-label">📩 Yêu cầu mới</span>
+                </div>
+                <div class="stat-value">{{ stats.pending }}</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-card-top"><span class="stat-icon stat-icon-red">⚠️</span><span class="stat-label">Quá hạn</span></div>
-                <div class="stat-value stat-danger">{{ stats.overdue }}</div>
+                <div class="stat-card-top">
+                    <span class="stat-label">⚠️ Quá hạn</span>
+                </div>
+                <div class="stat-value">{{ stats.overdue }}</div>
             </div>
         </div>
 
-        <div class="overview-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-            
-            <div class="overview-card overview-card-large">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="overview-card overview-card-large">
+            <div class="table-toolbar">
+                <div class="table-toolbar-left">
                     <h3>Lịch sử cấp phát</h3>
-                    <form action="{{ url_for('assign_page') }}" method="GET" style="display: flex; gap: 8px;">
-                        <input type="text" name="search" placeholder="Nhập tên nhân viên..." value="{{ request.args.get('search', '') }}" style="padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
-                        <button type="submit" class="task-btn task-btn-primary">Tìm kiếm</button>
+                </div>
+
+                <div class="table-toolbar-right">
+                    <a href="{{ url_for('assign_create') }}" class="task-btn task-btn-primary">
+                        ➕ Cấp phát mới
+                    </a>
+
+                    <a href="{{ url_for('request_create') }}" class="task-btn toolbar-btn-secondary">
+                        📝 Gửi yêu cầu
+                    </a>
+
+                    <form action="{{ url_for('assign_page') }}" method="GET" class="search-form">
+                        <input type="text"
+                               name="search"
+                               placeholder="Nhập tên nhân viên..."
+                               value="{{ request.args.get('search', '') }}"
+                               class="search-input">
+                        <button type="submit" class="task-btn task-btn-primary">
+                            Tìm kiếm
+                        </button>
                     </form>
                 </div>
-
-                <div class="asset-table">
-                    <div class="asset-row asset-row-head" style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr; font-weight: bold; background:#f8fafc; padding: 12px; border-radius: 8px;">
-                        <div>Tài sản</div><div>Người nhận</div><div>Ngày cấp</div><div>Trạng thái</div><div>Thao tác</div>
-                    </div>
-
-                    {% for item in assigns %}
-                    <div class="asset-row" style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr; padding: 15px; border-bottom: 1px solid #eee; align-items: center;">
-                        <div style="font-weight: 700; color: #1e293b;">{{ item.asset }}</div>
-                        <div>{{ item.receiver }}</div>
-                        <div style="color: #64748b; font-size: 13px;">{{ item.date }}</div>
-                        <div>
-                            <span class="status-badge {% if item.status == 'Hoàn thành' %}status-using{% else %}status-free{% endif %}">
-                                {{ item.status }}
-                            </span>
-                        </div>
-                        <div>
-                            <a href="{{ url_for('assign_detail', asset_name=item.asset) }}" style="text-decoration:none; color:#2563eb; font-weight:bold; font-size:12px;">🔍 Chi tiết</a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div style="padding: 30px; text-align: center; color: #94a3b8;">Không tìm thấy dữ liệu cấp phát.</div>
-                    {% endfor %}
-                </div>
             </div>
 
-            <div class="overview-card">
-                <div class="card-header" style="margin-bottom: 15px;">
-                    <h3>Phê duyệt yêu cầu </h3>
+            <div class="asset-table">
+                <div class="asset-row asset-row-head asset-row-assign">
+                    <div>Tài sản</div>
+                    <div>Người nhận</div>
+                    <div>Ngày cấp</div>
+                    <div>Trạng thái</div>
+                    <div>Xử lý</div>
+                    <div class="align-right">Tùy chọn</div>
                 </div>
-                <div class="task-list">
-                    {% if pending_requests %}
-                        {% for req in pending_requests %}
-                        <div class="task-item" style="padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                            <div style="margin-bottom: 12px;">
-                                <div style="font-weight: bold; font-size: 15px; color: #1e293b;">{{ req.asset }}</div>
-                                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">👤 Người yêu cầu: {{ req.receiver }}</div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 8px;">
-                                <a href="{{ url_for('approve_request', id=req.id) }}" 
-                                   class="task-btn task-btn-primary" 
-                                   style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 8px 0; border-radius: 6px;"
-                                   onclick="return confirm('Bạn có chắc chắn muốn duyệt cấp thiết bị này?')">
-                                   Duyệt
-                                </a>
 
-                                <a href="{{ url_for('reject_request', id=req.id) }}" 
-                                   class="task-btn" 
-                                   style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 8px 0; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px;"
-                                   onclick="return confirm('Từ chối yêu cầu này?')">
-                                   Từ chối
-                                </a>
-                            </div>
+                {% for item in assigns %}
+                <div class="asset-row asset-row-assign">
+                    <div class="asset-name-cell">{{ item.asset }}</div>
+                    <div>{{ item.receiver }}</div>
+                    <div class="muted-text">{{ item.date }}</div>
+
+                    <div>
+                        <span class="status-badge
+                            {% if item.status in ['Hoàn thành', 'Đang sử dụng'] %}
+                                status-using
+                            {% elif item.status == 'Chờ duyệt' %}
+                                status-pending
+                            {% elif item.status in ['Báo hỏng', 'Mất'] %}
+                                status-danger
+                            {% elif item.status == 'Thu hồi' %}
+                                status-free
+                            {% else %}
+                                status-free
+                            {% endif %}
+                        ">
+                            {{ item.status }}
+                        </span>
+                    </div>
+
+                    <div class="action-inline">
+                        {% if item.status == 'Chờ duyệt' %}
+                            <a href="{{ url_for('approve_request', id=item.id) }}"
+                               class="mini-btn mini-btn-success"
+                               onclick="return confirm('Duyệt cấp thiết bị này?')">
+                                Duyệt
+                            </a>
+
+                            <a href="{{ url_for('reject_request', id=item.id) }}"
+                               class="mini-btn mini-btn-danger"
+                               onclick="return confirm('Từ chối yêu cầu này?')">
+                                Từ chối
+                            </a>
+                        {% else %}
+                            <span class="muted-text">-</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="align-right action-menu-wrap">
+                        <button type="button" class="dots-btn" onclick="toggleMenu('menu-{{ item.id }}')">⋮</button>
+                        <div id="menu-{{ item.id }}" class="action-menu">
+                            <a href="{{ url_for('assign_detail', id=item.id) }}">🔍 Xem chi tiết</a>
+                            <a href="{{ url_for('assign_edit', id=item.id) }}">✏️ Sửa</a>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div style="text-align: center; padding: 40px 20px; color: #94a3b8;">
-                            <div style="font-size: 30px; margin-bottom: 10px;">☕</div>
-                            <p style="font-size: 13px;">Không có yêu cầu nào cần phê duyệt.</p>
-                        </div>
-                    {% endif %}
+                    </div>
                 </div>
+                {% else %}
+                <div class="table-empty">Không tìm thấy dữ liệu cấp phát.</div>
+                {% endfor %}
             </div>
-
         </div>
     </div>
 </section>
+<<<<<<< HEAD
 {% endblock %}
 =======
 <div class="assets-page">
@@ -212,3 +233,31 @@
   </div>
 </div>
 >>>>>>> Stashed changes
+=======
+
+<script>
+function toggleMenu(menuId) {
+    const allMenus = document.querySelectorAll('.action-menu');
+    allMenus.forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.classList.remove('show');
+        }
+    });
+
+    const menu = document.getElementById(menuId);
+    menu.classList.toggle('show');
+}
+
+document.addEventListener('click', function(event) {
+    const isMenuButton = event.target.closest('.dots-btn');
+    const isMenu = event.target.closest('.action-menu');
+
+    if (!isMenuButton && !isMenu) {
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+</script>
+{% endblock %}
+>>>>>>> bf0016cb5a91e98e99be7de97775819e4f70daa0

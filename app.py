@@ -6,7 +6,8 @@ import math # Thư viện tính toán số trang
 app = Flask(__name__)
 app.secret_key = "hsu_assetone_2026"
 
-# --- 1. TRANG CHỦ: TỔNG QUAN HỆ THỐNG ---
+
+# --- 1. TRANG CHỦ ---
 @app.route('/')
 def dashboard_overview():
     # Tính toán thống kê dựa trên dữ liệu thực tế từ ASSIGN_DATA
@@ -148,7 +149,11 @@ def assign_page():
     search_q = request.args.get('search', '').strip().lower()
     
     if search_q:
-        filtered = [i for i in ASSIGN_DATA if search_q in i['receiver'].lower() or search_q in i['asset'].lower()]
+        filtered = [
+            i for i in ASSIGN_DATA
+            if search_q in i.get('asset', '').lower()
+            or search_q in i.get('id', '').lower()
+        ]
     else:
         filtered = ASSIGN_DATA
 
@@ -159,7 +164,12 @@ def assign_page():
         "pending": len(pending_requests),
         "overdue": 0
     }
-    return render_template('assign/assign_overview.html', assigns=filtered, stats=stats, pending_requests=pending_requests)
+
+    return render_template(
+        'assign/assign_overview.html',
+        assigns=filtered,
+        stats=stats
+    )
 
 
 # --- 6. XỬ LÝ PHÊ DUYỆT / TỪ CHỐI YÊU CẦU (Giữ nguyên) ---
@@ -171,6 +181,7 @@ def approve_request(id):
             item['date'] = datetime.now().strftime("%d/%m/%Y")
             break
     return redirect(url_for('assign_page'))
+
 
 @app.route('/assign/reject/<string:id>')
 def reject_request(id):
@@ -186,28 +197,32 @@ def reject_request(id):
 def assign_create():
     if request.method == 'POST':
         new = {
-            "id": f"ASG-00{len(ASSIGN_DATA)+1}", 
-            "asset": request.form.get('asset_name'), 
-            "receiver": request.form.get('receiver'), 
-            "date": datetime.now().strftime("%d/%m/%Y"), 
+            "id": f"ASG-{str(len(ASSIGN_DATA) + 1).zfill(3)}",
+            "asset": request.form.get('asset_name'),
+            "receiver": request.form.get('receiver'),
+            "date": datetime.now().strftime("%d/%m/%Y"),
             "status": "Hoàn thành"
         }
         ASSIGN_DATA.insert(0, new) 
         return redirect(url_for('assign_page'))
+
     return render_template('assign/assign_create.html', inventory=INVENTORY_LIST)
 
+
+# --- 9. GỬI YÊU CẦU ---
 @app.route('/assign/request', methods=['GET', 'POST'])
 def request_create():
     if request.method == 'POST':
         new = {
-            "id": f"REQ-0{len(ASSIGN_DATA)+1}", 
-            "asset": request.form.get('asset_name'), 
-            "receiver": request.form.get('requester'), 
-            "date": datetime.now().strftime("%d/%m/%Y"), 
+            "id": f"REQ-{str(len(ASSIGN_DATA) + 1).zfill(3)}",
+            "asset": request.form.get('asset_name'),
+            "receiver": request.form.get('requester'),
+            "date": datetime.now().strftime("%d/%m/%Y"),
             "status": "Chờ duyệt"
         }
         ASSIGN_DATA.insert(0, new)
         return redirect(url_for('assign_page'))
+
     return render_template('assign/request_create.html', inventory=INVENTORY_LIST)
 
 
@@ -249,6 +264,7 @@ def forgot_password():
 @app.route('/manage')
 def manage(): 
     return render_template('manage/manage.html')
+
 
 @app.route('/report')
 def report_page(): 
