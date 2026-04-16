@@ -1,8 +1,7 @@
 # data.py
 from datetime import datetime
 
-# --- 1. KHO HÀNG CHỨA THÔNG SỐ KỸ THUẬT (Dùng để tra cứu chi tiết) ---
-# Quan trọng: Trường "name" phải trùng khớp với trường "asset" ở ASSIGN_DATA
+# --- 1. KHO HÀNG CHỨA THÔNG SỐ KỸ THUẬT (Giữ nguyên gốc) ---
 INVENTORY_LIST = [
     {
         "name": "Laptop Dell XPS 15", 
@@ -46,9 +45,9 @@ INVENTORY_LIST = [
     }
 ]
 
-# --- 2. DỮ LIỆU CẤP PHÁT & TRẠNG THÁI (Hiển thị ngoài bảng danh sách) ---
-# Bổ sung thêm các trường: type, department, location, asset_code để khớp với assets_overview.html
-ASSIGN_DATA = [
+# --- 2. DỮ LIỆU CẤP PHÁT & TRẠNG THÁI ---
+# Bước 1: Giữ nguyên 4 dữ liệu mẫu ban đầu của bạn
+_BASE_SAMPLES = [
     {
         "id": "ASG-001", 
         "asset_code": "LAP-001",
@@ -99,7 +98,23 @@ ASSIGN_DATA = [
     }
 ]
 
-# --- 3. NHẬT KÝ HỆ THỐNG (Dùng cho Report) ---
+# Bước 2: Tạo danh sách 128 tài sản tự động dựa trên mẫu của bạn
+ASSIGN_DATA = []
+for i in range(128):
+    # Lấy mẫu xoay vòng từ 4 mẫu gốc để đảm bảo dữ liệu đa dạng
+    sample = _BASE_SAMPLES[i % len(_BASE_SAMPLES)].copy()
+    
+    # Cập nhật lại ID và Asset Code để không bị trùng lặp
+    new_id_number = i + 1
+    sample["id"] = f"ASG-{str(new_id_number).zfill(3)}"
+    
+    # Tạo asset_code giả lập dựa trên loại thiết bị
+    prefix = sample["type"][:3].upper()
+    sample["asset_code"] = f"{prefix}-{str(new_id_number).zfill(3)}"
+    
+    ASSIGN_DATA.append(sample)
+
+# --- 3. NHẬT KÝ HỆ THỐNG (Giữ nguyên gốc) ---
 DATABASE_LOGS = [
     {
         "id": "L001", 
