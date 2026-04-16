@@ -1,4 +1,95 @@
-{% extends 'main.html' %} {% block content %} {% include
-'assets/assets_overview.html' %} {% endblock %}
+{% extends 'main.html' %} 
 
-<!-- trang báo cáo -->
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
+
+<section class="assets-page">
+  <div class="assets-page__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1 class="assets-page__title">Quản lý tài sản</h1>
+
+    <div class="header-actions" style="display: flex; gap: 16px; align-items: center;">
+      <form action="{{ url_for('assets_page') }}" method="GET" class="assets-search" style="margin: 0;">
+        <input type="text" name="search" placeholder="Tìm kiếm tài sản..." value="{{ request.args.get('search', '') }}" />
+      </form>
+      
+      <a href="{{ url_for('asset_create') }}" class="action-btn action-btn--primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px;">
+        + Thêm thiết bị
+      </a>
+    </div>
+  </div>
+
+  <div class="assets-table-section">
+    <div class="section-heading" style="margin-bottom: 20px;">
+      <h2 style="margin: 0; font-size: 18px; color: var(--text);">Danh sách tài sản</h2>
+    </div>
+
+    {# --- CÁC MACRO HIỂN THỊ --- #}
+    {% macro render_asset_type(row) %}
+      {% if row.type == 'laptop' %}
+        <span class="badge badge-type badge-laptop">Laptop</span>
+      {% elif row.type == 'pc' %}
+        <span class="badge badge-type badge-pc">PC</span>
+      {% elif row.type == 'printer' %}
+        <span class="badge badge-type badge-printer">Máy in</span>
+      {% else %}
+        <span class="badge badge-type">Khác</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_status(row) %}
+      {% if row.status == 'using' or row.status == 'Hoàn thành' %}
+        <span class="badge badge-using">Đang sử dụng</span>
+      {% elif row.status == 'available' %}
+        <span class="badge badge-available">Chưa sử dụng</span>
+      {% elif row.status == 'maintenance' %}
+        <span class="badge badge-maintenance">Bảo trì</span>
+      {% elif row.status == 'broken' %}
+        <span class="badge badge-broken">Hỏng</span>
+      {% else %}
+        <span class="badge badge-inactive">{{ row.status }}</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_user(row) %}
+      {% if row.user or row.receiver %}
+        <span class="asset-user">{{ row.user or row.receiver }}</span>
+      {% else %}
+        <span class="asset-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_warranty(row) %}
+      {% if row.warranty %}
+        <span class="asset-date">{{ row.warranty }}</span>
+      {% else %}
+        <span class="asset-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_action(row) %}
+      <div class="table-actions">
+        <a href="{{ url_for('asset_detail_view', asset_id=row.id or row.asset_code) }}" class="action-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+            Chi tiết
+        </a>
+      </div>
+    {% endmacro %}
+
+    {# --- CẤU HÌNH CỘT BẢNG --- #}
+    {% set columns = [
+      {"key": "asset_code", "label": "Mã tài sản"},
+      {"key": "asset_name", "label": "Tên tài sản"},
+      {"key": "type", "label": "Loại tài sản", "render": render_asset_type},
+      {"key": "status", "label": "Trạng thái", "render": render_status},
+      {"key": "user", "label": "Người sử dụng", "render": render_user},
+      {"key": "department", "label": "Phòng ban"},
+      {"key": "location", "label": "Vị trí"},
+      {"key": "warranty", "label": "Bảo hành đến", "render": render_warranty},
+      {"key": "action", "label": "Thao tác", "render": render_action}
+    ] %}
+
+    {# Gọi component table chung #}
+    {% set data = assets if assets else [] %}
+    {% include 'components/table.html' %}
+  </div>
+</section>
+{% endblock %}

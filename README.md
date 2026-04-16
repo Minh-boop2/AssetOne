@@ -10,4 +10,8 @@ sau đó chỉ cần chạy ở dưới
 
 ./run.bat
 
+mac
+python app.py
+
+
 xong
