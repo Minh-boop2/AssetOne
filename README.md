@@ -11,3 +11,13 @@ sau đó chỉ cần chạy ở dưới
 ./run.bat
 
 xong
+
+làm xong rồi thì hãy rồi có xác nhận của Minh thì dùng 2 lệnh sau
+
+git fetch
+
+git add .
+
+git commit -m " mô tả những gì đã làm "
+
+git push
