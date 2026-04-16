@@ -1,71 +1,92 @@
 <div class="report-page">
-    <div class="report-header">
-        <h2>Lịch sử Hoạt động Thiết bị (Audit Log)</h2>
+    <h2 class="page-title">Lịch sử Hoạt động Thiết bị (Audit Log)</h2>
+
+    <div class="audit-filter-bar">
+        <div class="filter-group search-area">
+            <label class="input-label">Tìm kiếm </label>
+            <div class="input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" name="search" placeholder="Tên tài sản, người thực hiện..." 
+                       value="{{ search_query }}"
+                       oninput="clearTimeout(this.delay); this.delay = setTimeout(() => this.form.submit(), 500)">
+            </div>
+        </div>
+
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label class="input-label">Phòng ban</label>
+                <select name="department" onchange="this.form.submit()" class="custom-select">
+                    <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
+                    <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
+                    <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="input-label">Loại hoạt động</label>
+                <select name="type" onchange="this.form.submit()" class="custom-select">
+                    <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
+                    <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
+                    <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
+                </select>
+            </div>
+
+            {% if search_query or (selected_dept and selected_dept != 'Tất cả') or (selected_type and selected_type != 'Tất cả') %}
+            <div class="filter-group">
+                <label class="input-label" style="visibility: hidden;">Reset</label>
+                <a href="{{ url_for('report_page') }}" class="btn-reset" title="Xóa lọc">&times;</a>
+            </div>
+            {% endif %}
+        </div>
     </div>
 
-    <form method="GET" action="{{ url_for('report_page') }}" class="filter-bar" id="filterForm">
-        <div class="filter-item">
-            <label>Phòng ban:</label>
-            <select name="department" onchange="this.form.submit()">
-                <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
-                <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
-                <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
-            </select>
-        </div>
-
-        <div class="filter-item">
-            <label>Loại hoạt động:</label>
-            <select name="type" onchange="this.form.submit()">
-                <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
-                <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
-                <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
-                <option value="Thay đổi" {% if selected_type == 'Thay đổi' %}selected{% endif %}>Thay đổi</option>
-            </select>
-        </div>
-
-        {% if selected_dept != 'Tất cả' or selected_type != 'Tất cả' %}
-            <a href="{{ url_for('report_page') }}" class="btn-cancel" title="Xóa bộ lọc">
-                &times;
-            </a>
-        {% endif %}
-    </form>
-
-    <div class="table-container">
-        <table>
+    <div class="table-card">
+        <table class="report-table">
             <thead>
                 <tr>
-                    <th>Mã Tài sản / Tên</th>
-                    <th>Loại Hoạt động</th>
-                    <th>Chi tiết</th>
-                    <th>Phòng ban</th>
-                    <th>Người thực hiện</th>
-                    <th>Trạng thái</th>
-                    <th>Thời gian</th>
+                    <th width="80">MÃ</th>
+                    <th>THÔNG TIN TÀI SẢN</th>
+                    <th>HOẠT ĐỘNG</th>
+                    <th>NHÂN VIÊN</th>
+                    <th>PHÒNG BAN</th>
+                    <th>TRẠNG THÁI</th>
+                    <th style="text-align: right;">THỜI GIAN</th>
                 </tr>
             </thead>
             <tbody>
                 {% if logs %}
                     {% for log in logs %}
                     <tr>
-                        <td><strong>{{ log.asset }}</strong></td>
-                        <td>
-                            <span class="badge {% if log.type == 'Bàn giao' %}bg-blue{% elif log.type == 'Bảo trì' %}bg-red{% else %}bg-green{% endif %}">
-                                {{ log.type }}
-                            </span>
-                        </td>
-                        <td>{{ log.detail }}</td>
-                        <td>{{ log.dept }}</td>
+                        <td class="txt-id">{{ log.id }}</td>
+                        <td class="txt-name"><strong>{{ log.asset_name }}</strong></td>
+                        <td><span class="badge-type">{{ log.type }}</span></td>
                         <td>{{ log.user }}</td>
-                        <td><span class="badge bg-gray">{{ log.status }}</span></td>
-                        <td class="time-cell">{{ log.time }}</td>
+                        <td>{{ log.dept }}</td>
+                        <td>
+                            <div class="status-wrapper">
+                                <span class="dot {% if log.status == 'Hoàn thành' %}dot-green{% else %}dot-orange{% endif %}"></span>
+                                {{ log.status }}
+                            </div>
+                        </td>
+                        <td class="txt-time">{{ log.time }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr>
-                        <td colspan="7" class="empty-msg">Không có dữ liệu phù hợp.</td>
-                    </tr>
+                    <tr><td colspan="7" class="no-data">Không tìm thấy dữ liệu mẫu nào.</td></tr>
                 {% endif %}
             </tbody>
         </table>
     </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('report_page', page=current_page-1, search=search_query, department=selected_dept, type=selected_type) }}" class="p-btn">« Trước</a>
+        {% endif %}
+        <span class="p-info">Trang {{ current_page }} / {{ total_pages }}</span>
+        {% if current_page < total_pages %}
+            <a href="{{ url_for('report_page', page=current_page+1, search=search_query, department=selected_dept, type=selected_type) }}" class="p-btn">Sau »</a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
