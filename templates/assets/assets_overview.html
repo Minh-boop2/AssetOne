@@ -1,29 +1,22 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
 
 <section class="assets-page">
   <div class="assets-page__header">
-    <div>
-      <h1 class="assets-page__title">Quản lý tài sản</h1>
-      <p class="assets-page__subtitle">
-        Theo dõi, tìm kiếm và quản lý toàn bộ tài sản CNTT trong doanh nghiệp
-      </p>
-    </div>
+    <h1 class="assets-page__title">Quản lý tài sản</h1>
 
-    <div class="assets-page__actions">
-      <button class="btn btn-outline">Nhập dữ liệu</button>
-      <button class="btn btn-primary">+ Thêm tài sản</button>
-    </div>
+    <form action="{{ url_for('assets_page') }}" method="GET" class="assets-search">
+      <input type="text" name="search" placeholder="Tìm kiếm tài sản..." value="{{ request.args.get('search', '') }}" />
+    </form>
   </div>
 
   <div class="assets-table-section">
     <div class="section-heading">
       <div>
         <h2>Danh sách tài sản</h2>
-        <p>Quản lý chi tiết từng tài sản trong hệ thống</p>
       </div>
     </div>
 
-    {% include 'components/table_toolbar.html' with context %}
+    {# --- CÁC MACRO HIỂN THỊ --- #}
 
     {% macro render_asset_type(row) %}
       {% if row.type == 'laptop' %}
@@ -40,7 +33,7 @@
     {% endmacro %}
 
     {% macro render_status(row) %}
-      {% if row.status == 'using' %}
+      {% if row.status == 'using' or row.status == 'Hoàn thành' %}
         <span class="badge badge-using">Đang sử dụng</span>
       {% elif row.status == 'available' %}
         <span class="badge badge-available">Chưa sử dụng</span>
@@ -49,13 +42,13 @@
       {% elif row.status == 'broken' %}
         <span class="badge badge-broken">Hỏng</span>
       {% else %}
-        <span class="badge badge-inactive">Không xác định</span>
+        <span class="badge badge-inactive">{{ row.status }}</span>
       {% endif %}
     {% endmacro %}
 
     {% macro render_user(row) %}
-      {% if row.user %}
-        <span class="asset-user">{{ row.user }}</span>
+      {% if row.user or row.receiver %}
+        <span class="asset-user">{{ row.user or row.receiver }}</span>
       {% else %}
         <span class="asset-empty">—</span>
       {% endif %}
@@ -69,13 +62,17 @@
       {% endif %}
     {% endmacro %}
 
+    {# --- CẬP NHẬT NÚT CHI TIẾT (ĐÃ BỎ NÚT SỬA) --- #}
     {% macro render_action(row) %}
       <div class="table-actions">
-        <button class="action-btn">Chi tiết</button>
-        <button class="action-btn action-btn--primary">Sửa</button>
+        {# Chỉ hiển thị nút Chi tiết #}
+        <a href="{{ url_for('asset_detail_view', asset_id=row.id or row.asset_code) }}" class="action-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+            Chi tiết
+        </a>
       </div>
     {% endmacro %}
 
+    {# --- CẤU HÌNH CỘT BẢNG --- #}
     {% set columns = [
       {"key": "asset_code", "label": "Mã tài sản"},
       {"key": "asset_name", "label": "Tên tài sản"},
@@ -88,59 +85,38 @@
       {"key": "action", "label": "Thao tác", "render": render_action}
     ] %}
 
-    {% set data = [
-      {
-        "asset_code": "LAP-001",
-        "asset_name": "Laptop Dell XPS 13",
-        "type": "laptop",
-        "status": "using",
-        "user": "Nguyễn Văn A",
-        "department": "Phòng Kỹ Thuật",
-        "location": "Tầng 3",
-        "warranty": "12/12/2026"
-      },
-      {
-        "asset_code": "PRI-002",
-        "asset_name": "Máy in HP LaserJet",
-        "type": "printer",
-        "status": "using",
-        "user": "Lê Thị B",
-        "department": "Phòng Hành Chính",
-        "location": "Tầng 2",
-        "warranty": "08/11/2025"
-      },
-      {
-        "asset_code": "PC-003",
-        "asset_name": "PC Văn phòng Dell Optiplex",
-        "type": "pc",
-        "status": "available",
-        "user": "",
-        "department": "Kho thiết bị",
-        "location": "Phòng IT",
-        "warranty": "22/06/2027"
-      },
-      {
-        "asset_code": "NET-004",
-        "asset_name": "Router Mikrotik RB4011",
-        "type": "router",
-        "status": "maintenance",
-        "user": "Phòng IT",
-        "department": "Hạ tầng mạng",
-        "location": "Phòng Server",
-        "warranty": "15/03/2026"
-      },
-      {
-        "asset_code": "LAP-005",
-        "asset_name": "MacBook Pro 14",
-        "type": "laptop",
-        "status": "broken",
-        "user": "Trần Văn C",
-        "department": "Phòng Thiết Kế",
-        "location": "Tầng 4",
-        "warranty": "01/09/2025"
-      }
-    ] %}
+    {# --- DỮ LIỆU HIỂN THỊ (Ưu tiên lấy từ Flask gửi xuống) --- #}
+    {% if assets %}
+      {% set display_data = assets %}
+    {% else %}
+      {% set display_data = [
+        {
+          "id": "ASG-001",
+          "asset_code": "LAP-001",
+          "asset_name": "Laptop Dell XPS 15",
+          "type": "laptop",
+          "status": "using",
+          "user": "Nguyễn Văn A",
+          "department": "Phòng Kỹ Thuật",
+          "location": "Tầng 3",
+          "warranty": "12/12/2026"
+        },
+        {
+          "id": "ASG-002",
+          "asset_code": "PC-003",
+          "asset_name": "PC Văn phòng Dell Optiplex",
+          "type": "pc",
+          "status": "available",
+          "user": "",
+          "department": "Kho thiết bị",
+          "location": "Phòng IT",
+          "warranty": "22/06/2027"
+        }
+      ] %}
+    {% endif %}
 
+    {# Gọi component table chung #}
+    {% set data = display_data %}
     {% include 'components/table.html' %}
   </div>
 </section>

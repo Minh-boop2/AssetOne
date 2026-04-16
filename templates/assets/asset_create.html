@@ -1,0 +1,176 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
+<style>
+    /* Bọc toàn bộ form để căn giữa và có khoảng cách với header */
+    .assets-create-page {
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    /* Thiết kế thẻ Form y hệt ảnh mẫu */
+    .form-card { 
+        background: var(--surface, #1e293b); 
+        padding: 32px; 
+        border-radius: 12px; 
+        width: 100%;
+        max-width: 800px; /* Độ rộng vừa phải giống ảnh */
+        border: 1px solid var(--border, #334155); 
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-card h2 {
+        margin-top: 0;
+        margin-bottom: 28px;
+        color: var(--text, #f1f5f9);
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Nút [NEW] nhỏ cạnh tiêu đề */
+    .badge-new {
+        background: #94a3b8;
+        color: #0f172a;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { 
+        display: block; 
+        margin-bottom: 8px; 
+        color: var(--text-soft, #94a3b8); 
+        font-size: 14px;
+    }
+    
+    .form-group input, .form-group select, .form-group textarea { 
+        width: 100%; 
+        padding: 12px 16px; 
+        border-radius: 8px; 
+        background: var(--surface-2, #0f172a); 
+        border: 1px solid var(--border, #334155); 
+        color: var(--text, #f1f5f9); 
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: 14px;
+    }
+    
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: var(--hsu-blue, #3b82f6);
+    }
+
+    .grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 24px; 
+    }
+
+    .btn-submit { 
+        background: var(--hsu-blue, #3b82f6); 
+        color: white; 
+        border: none; 
+        padding: 14px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        font-weight: 600; 
+        width: 100%; 
+        margin-top: 16px;
+        font-size: 15px;
+        transition: 0.2s;
+    }
+    
+    .btn-submit:hover { 
+        opacity: 0.9; 
+    }
+    
+    .btn-cancel {
+        display: block;
+        text-align: center;
+        margin-top: 16px;
+        color: var(--text-soft, #94a3b8);
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+
+    .btn-cancel:hover {
+        color: var(--text, #f1f5f9);
+    }
+</style>
+
+<div class="assets-create-page">
+    <div class="form-card">
+        <h2><span class="badge-new">NEW</span> Thêm thiết bị mới</h2>
+        <form method="POST">
+            <div class="grid">
+                <div class="form-group">
+                    <label>Mã tài sản</label>
+                    <input type="text" name="asset_code" placeholder="LAP-009" required>
+                </div>
+                <div class="form-group">
+                    <label>Tên tài sản</label>
+                    <input type="text" name="asset_name" placeholder="MacBook Air M2" required>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Loại</label>
+                    <select name="type">
+                        <option value="laptop">Laptop</option>
+                        <option value="pc">PC</option>
+                        <option value="printer">Máy in</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái</label>
+                    <select name="status">
+                        <option value="available">Chưa sử dụng</option>
+                        <option value="using">Đang sử dụng</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Cấu hình (Dùng cho trang Chi tiết)</label>
+                <textarea name="spec" rows="3" placeholder="Chip M2, 8GB RAM..."></textarea>
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Người sử dụng</label>
+                    <input type="text" name="receiver">
+                </div>
+                <div class="form-group">
+                    <label>Phòng ban</label>
+                    <input type="text" name="department">
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Vị trí</label>
+                    <input type="text" name="location">
+                </div>
+                <div class="form-group">
+                    <label>Bảo hành đến</label>
+                    <input type="text" name="warranty">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">Lưu thiết bị vào hệ thống</button>
+            <a href="{{ url_for('assets_page') }}" class="btn-cancel">Hủy và quay lại</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
+<style>
+    /* Tổng quan trang chi tiết */
+    .asset-detail-container { 
+        padding: 32px 24px; 
+        max-width: 1100px; 
+        margin: 0 auto; 
+    }
+
+    /* Khu vực Tiêu đề & Nút bấm */
+    .page-header-section { margin-bottom: 24px; }
+    
+    .back-link { 
+        color: var(--hsu-blue, #3b82f6); 
+        text-decoration: none; 
+        font-size: 16px; /* Đã chỉnh to lên */
+        font-weight: 600; 
+        display: inline-block;
+        margin-bottom: 12px; /* Tăng khoảng cách cho thoáng */
+        transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 0.8; }
+    
+    .asset-title { 
+        font-size: 28px; 
+        margin: 0 0 16px 0; 
+        color: var(--text, #f1f5f9); 
+    }
+    .action-buttons { display: flex; gap: 12px; }
+    
+    .btn-outline { 
+        background: var(--surface-2, #0f172a); 
+        border: 1px solid var(--border, #334155); 
+        color: var(--text, #f1f5f9); 
+        padding: 8px 16px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        font-weight: 600;
+        font-size: 13px;
+        transition: 0.2s;
+    }
+    .btn-outline:hover { background: var(--border, #334155); }
+    
+    .btn-primary { 
+        background: var(--hsu-blue, #3b82f6); 
+        border: none; 
+        color: white; 
+        padding: 8px 16px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        font-weight: 600;
+        font-size: 13px;
+        transition: 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    /* Layout Lưới (Grid) */
+    .detail-grid { 
+        display: grid; 
+        grid-template-columns: 1.8fr 1fr; 
+        gap: 24px; 
+        margin-bottom: 24px; 
+    }
+    .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Style các khối Card */
+    .info-card { 
+        background: var(--surface, #1e293b); 
+        border: 1px solid var(--border, #334155); 
+        border-radius: 12px; 
+        padding: 24px; 
+        box-shadow: var(--shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+    }
+    .info-card h3 { 
+        margin: 0 0 16px 0; 
+        font-size: 16px; 
+        color: var(--text); 
+        border-bottom: 1px solid var(--border); 
+        padding-bottom: 16px; 
+    }
+
+    /* Các dòng thông tin (Row) */
+    .detail-row { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        margin-bottom: 16px; 
+    }
+    .detail-row:last-child { margin-bottom: 0; }
+    .detail-label { color: var(--text-soft, #94a3b8); font-size: 14px; }
+    .detail-value { 
+        color: var(--text, #f1f5f9); 
+        font-weight: 600; 
+        font-size: 14px; 
+        text-align: right; 
+        max-width: 65%; 
+        line-height: 1.5;
+    }
+
+    /* Trạng thái */
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.15); /* Màu xanh lá cho 'Hoàn thành' */
+        color: #10b981;
+    }
+
+    /* Box người dùng */
+    .user-box { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        background: var(--surface-2, #0f172a); 
+        padding: 16px; 
+        border-radius: 10px; 
+    }
+    .user-avatar { 
+        width: 40px; 
+        height: 40px; 
+        background: var(--hsu-blue, #3b82f6); 
+        color: white; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-weight: bold; 
+        font-size: 16px; 
+    }
+    .user-name { font-weight: 600; color: var(--text); font-size: 14px; margin-bottom: 2px; }
+    .user-role { color: var(--text-soft); font-size: 12px; }
+
+    /* Lịch sử hoạt động */
+    .history-row { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 16px 0; 
+        border-bottom: 1px solid var(--border); 
+    }
+    .history-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .history-title { font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 14px; }
+    .history-sub { font-size: 13px; color: var(--text-soft); }
+    .history-date { font-size: 14px; color: var(--text-soft); }
+
+    /* Responsive cho màn hình nhỏ */
+    @media (max-width: 900px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="asset-detail-container">
+    <div class="page-header-section">
+        <a href="{{ url_for('assets_page') }}" class="back-link">← Quay lại danh sách tài sản</a>
+        <h1 class="asset-title">{{ info.asset }}</h1>
+        <div class="action-buttons">
+            <button class="btn-outline">Báo hỏng</button>
+            <button class="btn-primary">Sửa thông tin</button>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="info-card">
+            <h3>Thông số kỹ thuật</h3>
+            <div class="detail-row">
+                <span class="detail-label">Mã tài sản (ID):</span>
+                <span class="detail-value">{{ info.id }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Tên thiết bị:</span>
+                <span class="detail-value">{{ info.asset }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Cấu hình chi tiết:</span>
+                <span class="detail-value">{{ specs.spec }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Thời hạn bảo hành:</span>
+                <span class="detail-value">{{ specs.warranty }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Ngày nhập hệ thống:</span>
+                <span class="detail-value">20/01/2026</span>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="info-card">
+                <h3>Trạng thái hiện tại</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Tình trạng:</span>
+                    <span class="status-badge">{{ info.status }}</span>
+                </div>
+                <div class="detail-row" style="margin-bottom: 0;">
+                    <span class="detail-label">Ngày cấp phát:</span>
+                    <span class="detail-value">{{ info.date }}</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Người đang sử dụng</h3>
+                {% if info.receiver %}
+                <div class="user-box">
+                    <div class="user-avatar">{{ info.receiver[0] | upper }}</div>
+                    <div>
+                        <div class="user-name">{{ info.receiver }}</div>
+                        <div class="user-role">Nhân viên chính thức</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="user-box">
+                    <span class="detail-label">Thiết bị đang nằm trong kho</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h3>Lịch sử hoạt động</h3>
+        <div class="history-row">
+            <div>
+                <div class="history-title">Cấp phát tài sản</div>
+                <div class="history-sub">Thực hiện bởi Admin</div>
+            </div>
+            <div class="history-date">{{ info.date }}</div>
+        </div>
+        <div class="history-row">
+            <div>
+                <div class="history-title">Kiểm kê định kỳ</div>
+                <div class="history-sub">Tình trạng tốt</div>
+            </div>
+            <div class="history-date">01/04/2026</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
