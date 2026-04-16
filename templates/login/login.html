@@ -1,54 +1,71 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <title>AssetOne - Đăng nhập</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login/login.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="dark-theme">
-    <div class="theme-toggle" onclick="toggleTheme()">
-        <i class="fas fa-moon" id="theme-icon"></i>
-    </div>
+<body>
 
-    <div class="login-card">
-        <div class="auth-header">
-            <img src="{{ url_for('static', filename='images/hsu-logo.png') }}" class="auth-logo">
-            <div class="system-title">HỆ THỐNG QUẢN LÝ TÀI SẢN CNTT</div>
-            <h2>Đăng Nhập</h2>
+<header class="header">
+    <div class="header-left">
+        <div class="brand-wrap">
+            <img src="{{ url_for('static', filename='images/hsu-logo.png') }}" class="brand-logo">
+            <div class="brand-text">
+                <h1>Quản lý tài sản CNTT</h1>
+                <p>Hệ thống quản lý tài sản doanh nghiệp</p>
+            </div>
         </div>
+    </div>
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle">
+            <i data-lucide="moon" class="icon-moon"></i>
+            <i data-lucide="sun" class="icon-sun"></i>
+        </button>
+    </div>
+</header>
+
+<main class="auth-wrapper">
+    <div class="login-card">
+        <h3 class="login-title">Đăng Nhập</h3>
         <form method="POST">
-            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+            <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" placeholder="admin" required>
+                <input type="text" name="username" placeholder="Nhập tên đăng nhập..." required>
             </div>
-            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+            <div class="form-group">
                 <label>Mật khẩu</label>
-                <input type="password" name="password" placeholder="••••••" required>
+                <input type="password" name="password" placeholder="••••••••" required>
             </div>
+            
             <div class="form-options">
-                <div class="remember-group">
-                    <input type="checkbox" id="remember">
-                    <label for="remember">Ghi nhớ đăng nhập</label>
-                </div>
-                <a href="{{ url_for('forgot_password') }}" style="color: #3b82f6; text-decoration: none; font-size: 14px;">Quên mật khẩu?</a>
+                <label class="remember-me">
+                    <input type="checkbox" style="width: 18px; height: 18px;"> Ghi nhớ
+                </label>
+                <a href="{{ url_for('forgot_password') }}" class="forgot-link">Quên mật khẩu?</a>
             </div>
+            
             <button type="submit" class="btn-login">Đăng nhập</button>
         </form>
     </div>
+</main>
 
-    <script>
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
-            if (body.classList.contains('dark-theme')) {
-                body.classList.replace('dark-theme', 'light-theme');
-                icon.classList.replace('fa-moon', 'fa-sun');
-            } else {
-                body.classList.replace('light-theme', 'dark-theme');
-                icon.classList.replace('fa-sun', 'fa-moon');
-            }
-        }
-    </script>
+<script>
+    lucide.createIcons();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    
+    const saved = localStorage.getItem('theme') || 'light';
+    root.setAttribute('data-theme', saved);
+
+    btn.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+    });
+</script>
 </body>
 </html>
