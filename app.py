@@ -211,19 +211,84 @@ def request_create():
     return render_template('assign/request_create.html', inventory=INVENTORY_LIST)
 
 
-# --- 8. CÁC TRANG PHỤ KHÁC (Giữ nguyên) ---
-@app.route('/login')
-def login(): 
+# --- 8. CÁC TRANG PHỤ KHÁC ---
+# --- 8. CÁC TRANG PHỤ & ĐĂNG NHẬP (PHẦN CỦA ĐỨC) ---
+
+# Route cho trang giới thiệu (login_overview.html)
+@app.route('/welcome')
+def welcome_page():
+    return render_template('login/login_overview.html')
+
+# Route cho trang đăng nhập chính
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form Đức đã viết
+        user = request.form.get('username')
+        pw = request.form.get('password')
+        
+        # Logic kiểm tra đơn giản (Bạn có thể đổi 'admin'/'123' tùy ý)
+        if user == "admin" and pw == "123":
+            return redirect(url_for('dashboard_overview'))
+        else:
+            # Nếu sai mật khẩu, quay lại trang login
+            return redirect(url_for('login_page'))
+            
     return render_template('login/login.html')
 
+# Route cho trang Quên mật khẩu
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        # Xử lý khi người dùng nhấn "Gửi mã xác nhận"
+        email = request.form.get('email')
+        # Ở đây bạn có thể thêm logic gửi mail hoặc thông báo thành công
+        return "Mã xác nhận đã được gửi đến " + email
+        
+    return render_template('login/forgot_password.html')
 @app.route('/manage')
 def manage(): 
     return render_template('manage/manage.html')
 
 @app.route('/report')
 def report_page(): 
-    return render_template('report/report.html', logs=DATABASE_LOGS)
+    # 1. Lấy tham số từ URL (Để tự động lọc khi Đức gõ/chọn)
+    search_query = request.args.get('search', '').strip()
+    selected_dept = request.args.get('department', 'Tất cả')
+    selected_type = request.args.get('type', 'Tất cả')
+    page = request.args.get('page', 1, type=int)
+    per_page = 12 # Giới hạn đúng 12 dòng
 
+    # 2. Xử lý lọc dữ liệu (Lấy từ DATABASE_LOGS mà leader đã import)
+    filtered = DATABASE_LOGS
+    if search_query:
+        q = search_query.lower()
+        filtered = [l for l in filtered if q in l.get('asset_name', '').lower() or q in l.get('user', '').lower()]
+    
+    if selected_dept != 'Tất cả':
+        filtered = [l for l in filtered if l.get('dept') == selected_dept]
+        
+    if selected_type != 'Tất cả':
+        filtered = [l for l in filtered if l.get('type') == selected_type]
 
+    # 3. Tính toán phân trang
+    total_logs = len(filtered)
+    total_pages = (total_logs + per_page - 1) // per_page
+    if page < 1: page = 1
+    if page > total_pages and total_pages > 0: page = total_pages
+    
+    start = (page - 1) * per_page
+    logs_to_display = filtered[start : start + per_page]
+
+    # 4. Trả dữ liệu về Template (Giữ nguyên tên logs để không lỗi file HTML của nhóm)
+    return render_template('report/report.html', 
+                           logs=logs_to_display, 
+                           search_query=search_query,
+                           selected_dept=selected_dept,
+                           selected_type=selected_type,
+                           current_page=page,
+                           total_pages=total_pages)
+
+# --- CHẠY ỨNG DỤNG ---
 if __name__ == "__main__":
     app.run(debug=True)

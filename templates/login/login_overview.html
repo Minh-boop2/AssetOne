@@ -1,1 +1,50 @@
-minh
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/login/login.css') }}"
+/>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
+  rel="stylesheet"
+/>
+
+<div class="auth-wrapper">
+  <div class="login-card">
+    <h3 class="login-title">Đăng Nhập</h3>
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Username</label>
+        <input
+          type="text"
+          name="username"
+          placeholder="Nhập tên đăng nhập"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <input
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          required
+        />
+      </div>
+
+      <div class="form-options">
+        <label class="remember-me">
+          <input type="checkbox" style="width: 18px; height: 18px; margin: 0" />
+          Ghi nhớ
+        </label>
+        <a href="{{ url_for('forgot_password') }}" class="forgot-link"
+          >Quên mật khẩu?</a
+        >
+      </div>
+
+      <button type="submit" class="btn-login">Đăng nhập</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

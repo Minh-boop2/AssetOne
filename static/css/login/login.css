@@ -1,0 +1,185 @@
+/* --- BIẾN MÀU CHUẨN THEO ẢNH --- */
+:root {
+    /* LIGHT MODE */
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-sub: #64748b;
+    --brand-color: #2563eb; /* Xanh hơi đậm lúc sáng */
+    --header-border: #ef4444;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+}
+
+[data-theme="dark"] {
+    /* DARK MODE */
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --brand-color: #60a5fa; /* Xanh nhạt lúc tối */
+    --input-bg: #334155;
+    --input-border: #475569;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    /* Dùng Inter cho chữ mập và nét */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
+}
+
+/* --- HEADER: LOGO & CHỮ SIÊU LỚN --- */
+.header {
+    height: 105px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 60px;
+    background: var(--card-bg);
+    border-bottom: 4px solid var(--header-border);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+}
+
+.brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.brand-logo {
+    height: 70px !important; /* Logo cực to */
+    width: auto;
+}
+
+.brand-text h1 {
+    font-size: 30px; /* Chữ tiêu đề lớn */
+    color: var(--brand-color);
+    font-weight: 900; /* Siêu đậm */
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.brand-text p {
+    font-size: 16px;
+    margin-top: 5px;
+    color: var(--text-sub);
+    font-weight: 600;
+}
+
+/* --- THEME TOGGLE VUÔNG --- */
+.theme-toggle {
+    width: 46px;
+    height: 46px;
+    background: transparent;
+    border: 2px solid var(--brand-color);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-color);
+}
+
+/* --- CARD LOGIN & FORGOT --- */
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding-top: 105px;
+}
+
+.login-card {
+    background: var(--card-bg);
+    width: 440px;
+    padding: 50px;
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+}
+
+.login-title {
+    font-size: 34px;
+    font-weight: 900;
+    margin-bottom: 40px;
+    color: var(--text-main);
+    text-align: center;
+    letter-spacing: -0.04em;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 2px solid var(--input-border);
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--brand-color);
+}
+
+/* --- GHI NHỚ & QUÊN MẬT KHẨU --- */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 18px;
+    background: var(--brand-color);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 19px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-login:active { transform: scale(0.98); }
+
+.forgot-link {
+    color: var(--brand-color);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+/* LOGIC ICON */
+.icon-sun { display: none; color: #fbbf24; }
+[data-theme="dark"] .icon-sun { display: block; }
+[data-theme="dark"] .icon-moon { display: none; }

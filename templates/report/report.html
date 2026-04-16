@@ -2,6 +2,8 @@
 
 {% block content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report.css') }}">
-
-    {% include 'report/report_overview.html' %}
+    
+    <form method="GET" action="{{ url_for('report_page') }}" id="reportForm">
+        {% include 'report/report_overview.html' %}
+    </form>
 {% endblock %}
