@@ -118,23 +118,23 @@ for i in range(128):
 DATABASE_LOGS = [
     {
         "id": "L001", 
+        "asset_name": "Laptop Dell XPS 15", 
+        "type": "Thiết bị", 
         "user": "Admin", 
         "dept": "IT", 
-        "action": "Cấp phát", 
-        "asset": "Laptop Dell XPS 15", 
-        "time": "2026-04-09 10:00", 
-        "type": "Thiết bị"
+        "status": "Hoàn thành", 
+        "time": "2026-04-09 10:00"
     },
     {
         "id": "L002", 
+        "asset_name": "MacBook Pro M2", 
+        "type": "Thiết bị", 
         "user": "Admin", 
         "dept": "IT", 
-        "action": "Duyệt yêu cầu", 
-        "asset": "Máy in HP LaserJet", 
-        "time": "2026-04-10 14:30", 
-        "type": "Thiết bị"
+        "status": "Hoàn thành", 
+        "time": "2026-04-10 14:30"
     },
-    
+    # ... Các dòng tiếp theo Đức giữ nguyên ...
     {"id": "L003", "asset_name": "Màn hình Dell 24 inch", "type": "Bàn giao", "detail": "Cấp cho phòng kế toán", "dept": "Kế toán", "user": "Nguyễn An", "status": "Hoàn thành", "time": "2026-04-15 10:00"},
     {"id": "L004", "asset_name": "Máy in HP Laser", "type": "Bảo trì", "detail": "Sửa lỗi kẹt giấy", "dept": "Nhân sự", "user": "Lê Hoa", "status": "Hoàn thành", "time": "2026-04-14 14:20"},
     {"id": "L005", "asset_name": "iPad Air 5", "type": "Thay đổi", "detail": "Nâng cấp dung lượng iCloud", "dept": "Thiết kế", "user": "Phạm Hùng", "status": "Hoàn thành", "time": "2026-04-14 16:45"},

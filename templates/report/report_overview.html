@@ -1,47 +1,51 @@
 <div class="report-page">
-    <h2 class="page-title">Lịch sử Hoạt động Thiết bị (Audit Log)</h2>
-
-    <div class="audit-filter-bar">
-        <div class="filter-group search-area">
-            <label class="input-label">Tìm kiếm </label>
-            <div class="input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" name="search" placeholder="Tên tài sản, người thực hiện..." 
-                       value="{{ search_query }}"
-                       oninput="clearTimeout(this.delay); this.delay = setTimeout(() => this.form.submit(), 500)">
-            </div>
-        </div>
-
-        <div class="filter-controls">
-            <div class="filter-group">
-                <label class="input-label">Phòng ban</label>
-                <select name="department" onchange="this.form.submit()" class="custom-select">
-                    <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
-                    <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
-                    <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label class="input-label">Loại hoạt động</label>
-                <select name="type" onchange="this.form.submit()" class="custom-select">
-                    <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
-                    <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
-                    <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
-                </select>
-            </div>
-
-            {% if search_query or (selected_dept and selected_dept != 'Tất cả') or (selected_type and selected_type != 'Tất cả') %}
-            <div class="filter-group">
-                <label class="input-label" style="visibility: hidden;">Reset</label>
-                <a href="{{ url_for('report_page') }}" class="btn-reset" title="Xóa lọc">&times;</a>
-            </div>
-            {% endif %}
-        </div>
+    <div class="header-section">
+        <h1 class="page-title">Lịch sử Hoạt động Thiết bị</h1>
+        <p class="page-subtitle">Theo dõi toàn bộ nhật ký thay đổi và cấp phát tài sản hệ thống</p>
     </div>
 
-    <div class="table-card">
-        <table class="report-table">
+    <div class="audit-filter-bar">
+        <form method="GET" action="{{ url_for('report_page') }}" id="reportForm" style="display: flex; width: 100%; justify-content: space-between; align-items: flex-end; gap: 20px;">
+            
+            <div class="filter-group search-area">
+                <label class="input-label">Tìm kiếm</label>
+                <div class="input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" name="search" placeholder="Tên tài sản, người thực hiện..." 
+                           value="{{ search_query if search_query else '' }}" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label class="input-label">Phòng ban</label>
+                    <select name="department" class="custom-select" onchange="this.form.submit()">
+                        <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
+                        <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
+                        <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="input-label">Hoạt động</label>
+                    <select name="type" class="custom-select" onchange="this.form.submit()">
+                        <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
+                        <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
+                        <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
+                    </select>
+                </div>
+                
+                <a href="{{ url_for('report_page') }}" class="btn-reset" id="btnReset" 
+                   {% if not search_query and selected_dept == 'Tất cả' and selected_type == 'Tất cả' %}style="display: none;"{% endif %} 
+                   title="Xóa lọc">
+                   &times;
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="assets-table-section">
+        <table class="custom-table assign-table">
             <thead>
                 <tr>
                     <th width="80">MÃ</th>
@@ -50,43 +54,91 @@
                     <th>NHÂN VIÊN</th>
                     <th>PHÒNG BAN</th>
                     <th>TRẠNG THÁI</th>
-                    <th style="text-align: right;">THỜI GIAN</th>
+                    <th class="col-time">THỜI GIAN</th>
                 </tr>
             </thead>
             <tbody>
                 {% if logs %}
                     {% for log in logs %}
                     <tr>
-                        <td class="txt-id">{{ log.id }}</td>
-                        <td class="txt-name"><strong>{{ log.asset_name }}</strong></td>
+                        <td class="txt-id">#{{ log.id }}</td>
+                        <td><strong>{{ log.asset_name }}</strong></td>
                         <td><span class="badge-type">{{ log.type }}</span></td>
                         <td>{{ log.user }}</td>
                         <td>{{ log.dept }}</td>
                         <td>
                             <div class="status-wrapper">
                                 <span class="dot {% if log.status == 'Hoàn thành' %}dot-green{% else %}dot-orange{% endif %}"></span>
-                                {{ log.status }}
+                                <span style="font-weight: 700;">{{ log.status }}</span>
                             </div>
                         </td>
-                        <td class="txt-time">{{ log.time }}</td>
+                        <td class="col-time txt-time-val">{{ log.time }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr><td colspan="7" class="no-data">Không tìm thấy dữ liệu mẫu nào.</td></tr>
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 60px; color: var(--text-soft);">
+                            Không tìm thấy dữ liệu nhật ký phù hợp.
+                        </td>
+                    </tr>
                 {% endif %}
             </tbody>
         </table>
-    </div>
 
-    {% if total_pages > 1 %}
-    <div class="pagination">
-        {% if current_page > 1 %}
-            <a href="{{ url_for('report_page', page=current_page-1, search=search_query, department=selected_dept, type=selected_type) }}" class="p-btn">« Trước</a>
-        {% endif %}
-        <span class="p-info">Trang {{ current_page }} / {{ total_pages }}</span>
-        {% if current_page < total_pages %}
-            <a href="{{ url_for('report_page', page=current_page+1, search=search_query, department=selected_dept, type=selected_type) }}" class="p-btn">Sau »</a>
-        {% endif %}
+        <div class="pagination-container">
+            <div class="pagination-info">Trang <b>{{ current_page }}</b> / {{ total_pages }}</div>
+            <ul class="pagination-list">
+                <li>
+                    <a href="{{ url_for('report_page', page=current_page-1, search=search_query, department=selected_dept, type=selected_type) }}" 
+                       class="nav-btn {% if current_page <= 1 %}disabled{% endif %}">« Trước</a>
+                </li>
+
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == current_page %}
+                        <li><a class="active">{{ p }}</a></li>
+                    {% elif p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
+                        <li><a href="{{ url_for('report_page', page=p, search=search_query, department=selected_dept, type=selected_type) }}">{{ p }}</a></li>
+                    {% elif p == current_page - 2 or p == current_page + 2 %}
+                        <li class="p-dots"><span>...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li>
+                    <a href="{{ url_for('report_page', page=current_page+1, search=search_query, department=selected_dept, type=selected_type) }}" 
+                       class="nav-btn {% if current_page >= total_pages %}disabled{% endif %}">Sau »</a>
+                </li>
+            </ul>
+        </div>
     </div>
-    {% endif %}
 </div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const reportForm = document.getElementById('reportForm');
+    const btnReset = document.getElementById('btnReset');
+    const deptSelect = document.querySelector('select[name="department"]');
+    const typeSelect = document.querySelector('select[name="type"]');
+    
+    let typingTimer;
+
+    function checkFilters() {
+        const hasSearch = searchInput.value.trim() !== "";
+        const hasDept = deptSelect.value !== "Tất cả";
+        const hasType = typeSelect.value !== "Tất cả";
+
+        if (hasSearch || hasDept || hasType) {
+            btnReset.style.display = 'flex';
+        } else {
+            btnReset.style.display = 'none';
+        }
+    }
+
+    // Tự động submit sau khi ngừng gõ 500ms
+    searchInput.addEventListener('input', function() {
+        checkFilters();
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            reportForm.submit();
+        }, 500);
+    });
+</script>
