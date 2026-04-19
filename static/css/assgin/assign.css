@@ -1,710 +1,277 @@
-.dashboard-overview {
-    padding: 24px 28px 32px;
+/* assign.css - Cập nhật đồng bộ với Header Design System */
+
+/* ===== 1. ĐỒNG BỘ BIẾN SỐ (VARIABLES) ===== */
+/* Lưu ý: Các biến này nên nằm ở file global, nhưng tôi để đây để bạn dễ kiểm soát */
+:root {
+    --hsu-blue: #1f4fa3;
+    --hsu-blue-dark: #163c7d;
+    --hsu-blue-soft: #eaf1ff;
+    --hsu-red: #ef3b2d;
+
+    /* Light mode */
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-2: #f0f4fb;
+    --text: #162033;
+    --text-soft: #5d6b82;
+    --border: #d9e2f0;
+    --shadow: 0 10px 30px rgba(22, 60, 125, 0.08);
+}
+
+/* Đồng bộ với cách Header nhận diện Dark Mode qua [data-theme="dark"] */
+:root[data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #111c34;
+    --surface-2: #16233f;
+    --text: #e8eefc;
+    --text-soft: #aab8d3;
+    --border: #263553;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    
+    /* Điều chỉnh màu xanh cho Dark Mode giống tiêu đề Header */
+    --hsu-blue: #8eb6ff; 
+}
+
+/* ===== 2. FONT CHỮ & NỀN TẢNG ===== */
+.assign-page {
+    padding: 32px 28px;
     background: var(--bg);
+    min-height: 100vh;
+    /* Sử dụng font đồng bộ với Header */
+    font-family: Arial, Helvetica, sans-serif; 
     color: var(--text);
 }
 
-.dashboard-overview .overview-container {
-    width: 100%;
-}
-
-/* =========================
-   HEADING / OVERVIEW
-========================= */
-.dashboard-overview .overview-heading {
-    margin-bottom: 18px;
-}
-
-.dashboard-overview .overview-heading h2 {
-    margin: 0 0 6px;
-    font-size: 28px;
-    color: var(--text);
+/* Tiêu đề trang */
+.assign-page h2 {
+    color: var(--hsu-blue);
     font-weight: 700;
-    line-height: 1.2;
+    letter-spacing: -0.5px;
 }
 
-.dashboard-overview .overview-heading p {
-    margin: 0;
+/* ===== 3. THỐNG KÊ (STATS) ===== */
+.stat-card {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: 16px; /* Bo góc đồng bộ với Theme Toggle/User Box */
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--hsu-blue);
+}
+
+.stat-label {
     color: var(--text-soft);
     font-size: 14px;
-    line-height: 1.6;
-}
-
-/* =========================
-   STATS
-========================= */
-.dashboard-overview .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-top: 20px;
-    margin-bottom: 22px;
-}
-
-.dashboard-overview .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-}
-
-.dashboard-overview .stat-card-top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.dashboard-overview .stat-label {
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.dashboard-overview .stat-value {
-    font-size: 36px;
-    font-weight: 700;
-    color: var(--hsu-blue);
-    margin: 10px 0 0;
-    line-height: 1;
-}
-
-/* =========================
-   MAIN CARD
-========================= */
-.dashboard-overview .overview-card,
-.dashboard-overview .page-shell,
-.dashboard-overview .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    box-shadow: var(--shadow);
-}
-
-.dashboard-overview .overview-card {
-    padding: 22px;
-}
-
-.dashboard-overview .page-shell {
-    margin: 32px auto 0;
-    padding: 28px;
-}
-
-.dashboard-overview .page-shell-sm,
-.dashboard-overview .form-card-sm {
-    max-width: 680px;
-}
-
-.dashboard-overview .page-shell-lg,
-.dashboard-overview .form-card-lg {
-    max-width: 1040px;
-}
-
-.dashboard-overview .page-shell-accent,
-.dashboard-overview .form-card-accent {
-    border-top: 5px solid var(--hsu-blue);
-}
-
-/* =========================
-   PAGE HEADER
-========================= */
-.dashboard-overview .page-header,
-.dashboard-overview .form-card-header,
-.dashboard-overview .table-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 18px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-}
-
-.dashboard-overview .page-header-center,
-.dashboard-overview .form-card-header-center {
-    justify-content: center;
-    text-align: center;
-}
-
-.dashboard-overview .page-kicker {
-    display: inline-block;
-    margin-bottom: 8px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: rgba(31, 79, 163, 0.08);
-    color: var(--hsu-blue);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.dashboard-overview .page-header h2,
-.dashboard-overview .form-card-header h2 {
-    margin: 0 0 8px;
-    color: var(--text);
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.dashboard-overview .page-header p,
-.dashboard-overview .form-card-header p {
-    margin: 0;
-    color: var(--text-soft);
-    font-size: 14px;
-    line-height: 1.6;
-}
-
-.dashboard-overview .table-toolbar-left h3 {
-    margin: 0;
-    color: var(--text);
-    font-size: 22px;
-    font-weight: 700;
-}
-
-/* =========================
-   BUTTONS
-========================= */
-.dashboard-overview .task-btn {
-    height: 42px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
     font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.dashboard-overview .task-btn:hover {
-    transform: translateY(-1px);
-}
-
-.dashboard-overview .task-btn-primary {
-    background: var(--hsu-blue);
-    color: #fff;
-}
-
-.dashboard-overview .task-btn-primary:hover {
-    background: var(--hsu-blue-dark);
-}
-
-.dashboard-overview .toolbar-btn-secondary {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-}
-
-.dashboard-overview .toolbar-btn-secondary:hover {
-    background: var(--surface-2);
-    border-color: var(--hsu-blue);
-}
-
-/* =========================
-   SEARCH
-========================= */
-.dashboard-overview .search-form {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.dashboard-overview .search-input,
-.dashboard-overview .form-group input,
-.dashboard-overview .form-group select,
-.dashboard-overview .form-group textarea {
-    width: 100%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    border-radius: 12px;
-    padding: 12px 14px;
-    outline: none;
-    font-size: 14px;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-.dashboard-overview .search-input {
-    height: 42px;
-    min-width: 230px;
-}
-
-.dashboard-overview .search-input::placeholder,
-.dashboard-overview .form-group input::placeholder,
-.dashboard-overview .form-group textarea::placeholder {
-    color: var(--text-soft);
-}
-
-.dashboard-overview .search-input:focus,
-.dashboard-overview .form-group input:focus,
-.dashboard-overview .form-group select:focus,
-.dashboard-overview .form-group textarea:focus {
-    border-color: var(--hsu-blue);
-    box-shadow: 0 0 0 3px rgba(31, 79, 163, 0.12);
-}
-
-/* =========================
-   TABLE
-========================= */
-.dashboard-overview .asset-table {
-    width: 100%;
-}
-
-.dashboard-overview .asset-row {
-    display: grid;
-    gap: 14px;
-    padding: 14px 10px;
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-}
-
-.dashboard-overview .asset-row-assign {
-    grid-template-columns: 2.1fr 1.3fr 1fr 1.1fr 1.4fr 56px;
-}
-
-.dashboard-overview .asset-row-head {
-    background: var(--surface-2);
-    color: var(--text-soft);
-    font-weight: 700;
     text-transform: uppercase;
-    font-size: 12px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 10px;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.5px;
 }
 
-.dashboard-overview .asset-name-cell {
-    color: var(--text);
-    font-weight: 700;
-    font-size: 15px;
-}
-
-.dashboard-overview .muted-text {
-    color: var(--text-soft);
-    font-size: 13px;
-}
-
-.dashboard-overview .align-right {
-    text-align: right;
-}
-
-/* =========================
-   STATUS
-========================= */
-.dashboard-overview .status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 96px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.dashboard-overview .status-using {
-    background: rgba(34, 197, 94, 0.12);
-    color: #15803d;
-}
-
-.dashboard-overview .status-pending {
-    background: rgba(31, 79, 163, 0.12);
-    color: var(--hsu-blue);
-}
-
-.dashboard-overview .status-danger {
-    background: rgba(239, 59, 45, 0.12);
-    color: #c62828;
-}
-
-.dashboard-overview .status-free {
-    background: rgba(93, 107, 130, 0.12);
-    color: var(--text-soft);
-}
-
-:root[data-theme="dark"] .dashboard-overview .status-using {
-    background: rgba(34, 197, 94, 0.16);
-    color: #86efac;
-}
-
-:root[data-theme="dark"] .dashboard-overview .status-pending {
-    background: rgba(96, 165, 250, 0.16);
-    color: #93c5fd;
-}
-
-:root[data-theme="dark"] .dashboard-overview .status-danger {
-    background: rgba(239, 68, 68, 0.16);
-    color: #fca5a5;
-}
-
-:root[data-theme="dark"] .dashboard-overview .status-free {
-    background: rgba(170, 184, 211, 0.14);
-    color: #d6e0f5;
-}
-
-/* =========================
-   ACTIONS
-========================= */
-.dashboard-overview .action-inline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.dashboard-overview .mini-btn {
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.dashboard-overview .mini-btn:hover {
-    transform: translateY(-1px);
-}
-
-.dashboard-overview .mini-btn-success {
-    background: rgba(34, 197, 94, 0.15);
-    color: #16a34a;
-    border-color: rgba(34, 197, 94, 0.25);
-}
-
-.dashboard-overview .mini-btn-success:hover {
-    background: #16a34a;
-    color: #fff;
-}
-
-.dashboard-overview .mini-btn-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #dc2626;
-    border-color: rgba(239, 68, 68, 0.25);
-}
-
-.dashboard-overview .mini-btn-danger:hover {
-    background: #dc2626;
-    color: #fff;
-}
-
-:root[data-theme="dark"] .dashboard-overview .mini-btn-success {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
-}
-
-:root[data-theme="dark"] .dashboard-overview .mini-btn-success:hover {
-    background: #22c55e;
-    color: #022c22;
-}
-
-:root[data-theme="dark"] .dashboard-overview .mini-btn-danger {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-}
-
-:root[data-theme="dark"] .dashboard-overview .mini-btn-danger:hover {
-    background: #ef4444;
-    color: #2b0202;
-}
-
-/* =========================
-   3 DOT MENU
-========================= */
-.dashboard-overview .action-menu-wrap {
-    position: relative;
-}
-
-.dashboard-overview .dots-btn {
-    width: 38px;
-    height: 38px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-    font-size: 20px;
+.stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--hsu-blue); /* Màu xanh chủ đạo HSU */
+    margin-top: 10px;
     line-height: 1;
-    transition: all 0.2s ease;
 }
 
-.dashboard-overview .dots-btn:hover {
-    background: var(--surface-2);
-    border-color: var(--hsu-blue);
-    transform: translateY(-1px);
-}
-
-.dashboard-overview .action-menu {
-    position: absolute;
-    top: 44px;
-    right: 0;
-    min-width: 170px;
+/* ===== 4. CARD CHỨA BẢNG ===== */
+.assign-table-card {
     background: var(--surface);
+    border-radius: 16px;
     border: 1px solid var(--border);
-    border-radius: 12px;
     box-shadow: var(--shadow);
     overflow: hidden;
-    z-index: 20;
-    display: none;
+    margin-top: 32px;
 }
 
-.dashboard-overview .action-menu.show {
-    display: block;
+/* Tiêu đề bảng */
+.card-header-flex {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+    border-bottom: 1px solid var(--border);
 }
 
-.dashboard-overview .action-menu a {
-    display: block;
-    padding: 12px 14px;
-    text-decoration: none;
-    color: var(--text);
-    font-size: 14px;
+/* Nút "Cấp phát mới" đồng bộ với .nav-link active của Header */
+.btn-add-new {
+    background: var(--hsu-blue);
+    color: #fff !important;
+    padding: 10px 20px;
+    border-radius: 10px;
     font-weight: 600;
-}
-
-.dashboard-overview .action-menu a:hover {
-    background: var(--surface-2);
-    color: var(--hsu-blue);
-}
-
-.dashboard-overview .table-empty {
-    padding: 28px 12px;
-    text-align: center;
-    color: var(--text-soft);
-    font-size: 14px;
-}
-
-/* =========================
-   FORMS
-========================= */
-.dashboard-overview .assign-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-}
-
-.dashboard-overview .form-group {
-    display: flex;
-    flex-direction: column;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
     gap: 8px;
 }
 
-.dashboard-overview .form-group.full,
-.dashboard-overview .form-actions.full {
-    grid-column: 1 / -1;
+.btn-add-new:hover {
+    background: var(--hsu-blue-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 79, 163, 0.2);
 }
 
-.dashboard-overview .form-group label {
-    color: var(--text);
+/* ===== 5. TABLE STYLING (CHỐNG LỆCH HÀNG) ===== */
+.assign-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.col-asset  { width: 30%; }
+.col-user   { width: 20%; }
+.col-date   { width: 15%; }
+.col-status { width: 20%; }
+.col-action { width: 15%; }
+
+.assign-table th {
+    padding: 18px 24px;
+    color: var(--hsu-blue); /* Thêu dệt màu chủ đạo vào header bảng */
+    font-size: 13px;
     font-weight: 700;
-    font-size: 14px;
-}
-
-.dashboard-overview .form-group textarea {
-    resize: vertical;
-    min-height: 110px;
-    line-height: 1.6;
-}
-
-.dashboard-overview .form-group input:disabled {
-    background: var(--surface-2);
-    color: var(--text-soft);
-    cursor: not-allowed;
-}
-
-.dashboard-overview .form-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-}
-
-/* =========================
-   DETAIL PAGE
-========================= */
-.dashboard-overview .detail-layout {
-    display: grid;
-    grid-template-columns: 1.25fr 0.95fr;
-    gap: 22px;
-    align-items: start;
-}
-
-.dashboard-overview .detail-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 22px;
-    min-width: 0;
-}
-
-.dashboard-overview .detail-card-soft {
-    background: var(--surface-2);
-}
-
-.dashboard-overview .detail-card-title {
-    margin: 0 0 18px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-soft);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    background: var(--surface-2);
+    border-bottom: 2px solid var(--border);
+    text-align: left;
 }
 
-.dashboard-overview .detail-card-title-primary {
+:root[data-theme="dark"] .assign-table th {
     color: var(--hsu-blue);
 }
 
-.dashboard-overview .info-list {
-    display: grid;
-    gap: 14px;
+.assign-table td {
+    padding: 18px 24px;
+    color: var(--text);
+    font-size: 15px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    transition: background 0.2s ease;
 }
 
-.dashboard-overview .info-item {
-    display: grid;
-    gap: 6px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
+.assign-table tr:last-child td {
+    border-bottom: none;
 }
 
-.dashboard-overview .info-label {
+.assign-table tr:hover td {
+    background: var(--hsu-blue-soft);
+}
+
+:root[data-theme="dark"] .assign-table tr:hover td {
+    background: rgba(142, 182, 255, 0.05);
+}
+
+/* ===== 6. TRẠNG THÁI (STATUS BADGES) ===== */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 8px; /* Bo góc theo style User Box */
     font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-soft);
     font-weight: 700;
+    display: inline-flex;
 }
 
-.dashboard-overview .info-value {
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.6;
+.status-using, .status-completed {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
 }
 
-.dashboard-overview .usage-panel {
-    text-align: center;
-    padding-top: 6px;
+.status-pending {
+    background: var(--hsu-blue-soft);
+    color: var(--hsu-blue);
 }
 
-.dashboard-overview .usage-name {
-    margin: 18px 0 10px;
-    color: var(--text);
-    font-size: 24px;
-    font-weight: 700;
+.status-error {
+    background: rgba(239, 59, 45, 0.1);
+    color: var(--hsu-red);
 }
 
-.dashboard-overview .usage-date {
-    color: var(--text-soft);
-    font-size: 13px;
-}
-
-.dashboard-overview .usage-empty {
-    margin-top: 18px;
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.dashboard-overview .note-box {
-    margin-top: 18px;
-    padding: 14px 16px;
-    border-radius: 14px;
+/* ===== 7. THAO TÁC (ACTION MENU) ===== */
+.more-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
     background: var(--surface);
     border: 1px solid var(--border);
-    text-align: left;
+    color: var(--hsu-blue);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.more-btn:hover {
+    border-color: var(--hsu-blue);
+    background: var(--hsu-blue-soft);
+}
+
+.more-menu {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 6px;
+    z-index: 100;
+}
+
+.more-menu a {
+    padding: 10px 14px;
     color: var(--text);
-    line-height: 1.6;
-}
-
-.dashboard-overview .empty-state {
-    padding: 18px;
-    border-radius: 14px;
-    background: rgba(239, 59, 45, 0.08);
-    border: 1px solid rgba(239, 59, 45, 0.16);
+    border-radius: 8px;
     font-weight: 600;
+    transition: all 0.2s;
 }
 
-.dashboard-overview .danger-text {
-    color: #c62828;
+.more-menu a:hover {
+    background: var(--hsu-blue-soft);
+    color: var(--hsu-blue);
 }
 
-:root[data-theme="dark"] .dashboard-overview .danger-text {
-    color: #fca5a5;
+/* ===== 8. PHÂN TRANG (PAGINATION) ===== */
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    padding: 20px 24px;
+    background: var(--surface);
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
-@media (max-width: 992px) {
-    .dashboard-overview .stats-grid {
-        grid-template-columns: 1fr;
-    }
+.page-link {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+}
 
-    .dashboard-overview .assign-form-grid {
-        grid-template-columns: 1fr;
-    }
+.page-link:hover:not(.disabled) {
+    border-color: var(--hsu-blue);
+    color: var(--hsu-blue);
+    background: var(--hsu-blue-soft);
+}
 
-    .dashboard-overview .asset-row-assign {
-        grid-template-columns: 1.5fr 1.2fr 1fr 1fr;
-    }
+.page-link.active {
+    background: var(--hsu-blue);
+    color: #fff;
+    border-color: var(--hsu-blue);
+}
 
-    .dashboard-overview .asset-row-assign > :nth-child(5),
-    .dashboard-overview .asset-row-assign > :nth-child(6) {
-        justify-self: start;
-    }
-
-    .dashboard-overview .align-right {
-        text-align: left;
-    }
-
-    .dashboard-overview .detail-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-overview .page-header h2,
-    .dashboard-overview .form-card-header h2 {
-        font-size: 24px;
-    }
+/* ===== 9. RESPONSIVE ===== */
+@media (max-width: 980px) {
+    .assign-page { padding: 20px 16px; }
+    .stat-value { font-size: 30px; }
 }
 
 @media (max-width: 768px) {
-    .dashboard-overview {
-        padding: 18px 16px 24px;
-    }
-
-    .dashboard-overview .page-shell,
-    .dashboard-overview .form-card,
-    .dashboard-overview .overview-card {
-        padding: 20px;
-        border-radius: 18px;
-    }
-
-    .dashboard-overview .table-toolbar-right,
-    .dashboard-overview .search-form {
-        width: 100%;
-    }
-
-    .dashboard-overview .search-input,
-    .dashboard-overview .task-btn {
-        width: 100%;
-        min-width: 100%;
-    }
-
-    .dashboard-overview .usage-name {
-        font-size: 20px;
-    }
+    .assign-table-card { overflow-x: auto; }
+    .assign-table { min-width: 800px; } /* Đảm bảo không vỡ cột trên màn hình nhỏ */
 }

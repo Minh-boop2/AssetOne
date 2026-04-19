@@ -1,47 +1,247 @@
 {% extends 'main.html' %}
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
 
-<section class="dashboard-overview">
-    <div class="overview-container">
-        <div class="page-shell page-shell-sm">
-            <div class="page-header">
-                <div>
-                    <div class="page-kicker">Cấp phát</div>
-                    <h2>➕ Cấp phát tài sản mới</h2>
-                    <p>Admin thực hiện bàn giao thiết bị trực tiếp cho nhân viên.</p>
-                </div>
-                <a href="{{ url_for('assign_page') }}" class="task-btn toolbar-btn-secondary">
-                    Quay lại
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* 1. Thiết lập biến màu đồng bộ hệ thống */
+    :root {
+        --hsu-blue: #3b82f6;
+        --surface: var(--surface, #1e293b);
+        --surface-2: var(--surface-2, #0f172a);
+        --border: var(--border, #334155);
+        --text: var(--text, #f1f5f9);
+        --text-soft: var(--text-soft, #94a3b8);
+        --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .create-page-wrapper { 
+        padding: 40px; 
+        max-width: 1200px; 
+        margin: 0 auto; 
+        color: var(--text); 
+        font-family: Arial, Helvetica, sans-serif;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* 2. Header Bar */
+    .header-bar { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 32px; 
+        border-bottom: 1px solid var(--border); 
+        padding-bottom: 24px; 
+    }
+
+    .header-info h1 { margin: 0; font-size: 28px; font-weight: 800; color: var(--text); }
+    .header-info p { margin: 4px 0 0 0; color: var(--hsu-blue); font-weight: 700; }
+
+    /* 3. Grid Layout & Cards */
+    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    
+    .content-card { 
+        background: var(--surface); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 24px; 
+        margin-bottom: 24px; 
+        box-shadow: var(--shadow);
+    }
+    
+    .card-label { 
+        color: var(--hsu-blue); 
+        font-weight: 700; 
+        margin-bottom: 24px; 
+        font-size: 13px; 
+        text-transform: uppercase; 
+        display: flex; 
+        align-items: center; 
+        gap: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    /* 4. Form Elements */
+    .input-group { margin-bottom: 20px; }
+    .input-group label { 
+        display: block; 
+        color: var(--text-soft); 
+        font-size: 13px; 
+        font-weight: 700;
+        margin-bottom: 10px; 
+    }
+    
+    .custom-input { 
+        width: 100%; 
+        padding: 12px 16px; 
+        background: var(--surface-2); 
+        border: 1px solid var(--border); 
+        border-radius: 10px; 
+        color: var(--text); 
+        font-size: 14px; 
+        outline: none; 
+        box-sizing: border-box;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+    
+    .custom-input:focus { 
+        border-color: var(--hsu-blue); 
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
+    }
+    
+    select.custom-input {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.2em;
+    }
+
+    /* 5. Buttons */
+    .btn-submit { 
+        background: var(--hsu-blue); 
+        color: white !important; 
+        border: none; 
+        padding: 14px; 
+        border-radius: 10px; 
+        font-weight: 800; 
+        cursor: pointer; 
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .btn-submit:hover { 
+        opacity: 0.9; 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-cancel { 
+        color: var(--text-soft); 
+        text-decoration: none; 
+        font-size: 14px; 
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .btn-cancel:hover { color: var(--text); }
+
+    textarea.custom-input { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+    /* Info Box */
+    .info-box {
+        background: rgba(59, 130, 246, 0.08); 
+        padding: 16px; 
+        border-radius: 12px; 
+        border: 1px dashed var(--hsu-blue);
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="create-page-wrapper">
+    <form method="POST">
+        <div class="header-bar">
+            <div class="header-info">
+                <h1>Tạo cấp phát mới</h1>
+                <p><i class="fas fa-plus-circle"></i> Thiết lập phiếu bàn giao tài sản mới</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <a href="{{ url_for('assign_page') }}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
                 </a>
             </div>
-
-            <form action="{{ url_for('assign_create') }}" method="POST" class="assign-form-grid">
-                <div class="form-group full">
-                    <label>Chọn tài sản từ kho</label>
-                    <select name="asset_name" required>
-                        <option value="" disabled selected>-- Nhấn để chọn thiết bị --</option>
-                        {% for item in inventory %}
-                            <option value="{{ item.name }}">{{ item.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group full">
-                    <label>Họ tên người nhận</label>
-                    <input type="text" name="receiver" required placeholder="Ví dụ: Nguyễn Văn A">
-                </div>
-
-                <div class="form-actions full">
-                    <button type="submit" class="task-btn task-btn-primary">
-                        Xác nhận bàn giao
-                    </button>
-                    <a href="{{ url_for('assign_page') }}" class="task-btn toolbar-btn-secondary">
-                        Hủy
-                    </a>
-                </div>
-            </form>
         </div>
-    </div>
-</section>
+
+        <div class="main-grid">
+            <div class="left-col">
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-laptop"></i> 1. Thông tin tài sản</span>
+                    
+                    <div class="input-group">
+                        <label>Chọn thiết bị từ kho</label>
+                        <select name="asset_name" class="custom-input" required>
+                            <option value="" disabled selected>-- Chọn thiết bị đang có sẵn trong kho --</option>
+                            {% for item in inventory %}
+                            <option value="{{ item.name }}">{{ item.name }} (Sẵn có)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Loại thiết bị</label>
+                        <select name="type" class="custom-input">
+                            <option value="Laptop">💻 Laptop</option>
+                            <option value="PC">🖥️ Máy tính bàn (PC)</option>
+                            <option value="Thiết bị mạng">🌐 Thiết bị mạng (Router/Switch)</option>
+                            <option value="Phụ kiện">⌨️ Phụ kiện / Thiết bị khác</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Ghi chú cấu hình / Tình trạng ban đầu</label>
+                        <textarea name="spec" class="custom-input" placeholder="Nhập chi tiết cấu hình (RAM, CPU, SSD...) hoặc các lưu ý về ngoại quan máy khi bàn giao..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-user-tie"></i> 2. Thông tin người nhận</span>
+                    <div class="input-group">
+                        <label>Họ và tên nhân viên</label>
+                        <input type="text" name="receiver" class="custom-input" placeholder="Nhập tên người nhận..." required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Phòng ban</label>
+                        <select name="department" class="custom-input">
+                            <option value="" disabled selected>-- Chọn phòng ban --</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Vị trí lắp đặt (Lầu / Tầng)</label>
+                        <select name="location" class="custom-input">
+                            <option value="Tầng Trệt">Tầng Trệt</option>
+                            <option value="Tầng 1">Tầng 1</option>
+                            <option value="Tầng 2">Tầng 2</option>
+                            <option value="Tầng 3">Tầng 3</option>
+                            <option value="Tầng 4">Tầng 4</option>
+                            <option value="Tầng 5">Tầng 5</option>
+                            <option value="Sân thượng">Sân thượng</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-check-double"></i> 3. Xác nhận hệ thống</span>
+                    <div class="info-box">
+                        <p style="font-size: 13px; color: var(--text); line-height: 1.6; margin: 0;">
+                            <i class="fas fa-info-circle" style="color: var(--hsu-blue); margin-right: 5px;"></i>
+                            Hệ thống sẽ tự động tạo mã định danh <strong>ASG-XXX</strong> và chuyển trạng thái thiết bị sang <strong>"Hoàn thành"</strong> sau khi bạn xác nhận.
+                        </p>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-paper-plane"></i> XÁC NHẬN CẤP PHÁT
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}

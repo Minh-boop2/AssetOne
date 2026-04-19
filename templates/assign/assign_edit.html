@@ -1,59 +1,232 @@
 {% extends 'main.html' %}
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
 
-<section class="dashboard-overview">
-    <div class="overview-container">
-        <div class="form-card">
-            <div class="form-card-header">
-                <div>
-                    <h2>Chỉnh sửa cấp phát</h2>
-                    <p>Cập nhật trạng thái sử dụng và ghi chú tài sản</p>
-                </div>
-                <a href="{{ url_for('assign_page') }}" class="task-btn toolbar-btn-secondary">
-                    Quay lại
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* 1. Thiết lập biến màu hệ thống */
+    :root {
+        --hsu-blue: #3b82f6;
+        --surface: var(--surface, #1e293b);
+        --surface-2: var(--surface-2, #0f172a);
+        --border: var(--border, #334155);
+        --text: var(--text, #f1f5f9);
+        --text-soft: var(--text-soft, #94a3b8);
+        --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .edit-page-wrapper { 
+        padding: 40px; 
+        max-width: 1200px; 
+        margin: 0 auto; 
+        color: var(--text); 
+        font-family: Arial, Helvetica, sans-serif;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* 2. Header Bar */
+    .header-bar { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 32px; 
+        border-bottom: 1px solid var(--border); 
+        padding-bottom: 24px; 
+    }
+
+    .header-info h1 { margin: 0; font-size: 28px; font-weight: 800; color: var(--text); }
+    .header-info p { margin: 4px 0 0 0; color: var(--hsu-blue); font-weight: 700; font-family: monospace; }
+
+    /* 3. Grid Layout & Cards */
+    .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    
+    .content-card { 
+        background: var(--surface); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 24px; 
+        margin-bottom: 24px; 
+        box-shadow: var(--shadow);
+    }
+    
+    .card-label { 
+        color: var(--hsu-blue); 
+        font-weight: 700; 
+        margin-bottom: 24px; 
+        font-size: 13px; 
+        text-transform: uppercase; 
+        display: flex; 
+        align-items: center; 
+        gap: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    /* 4. Form Elements */
+    .input-group { margin-bottom: 20px; }
+    .input-group label { 
+        display: block; 
+        color: var(--text-soft); 
+        font-size: 13px; 
+        font-weight: 700;
+        margin-bottom: 10px; 
+    }
+    
+    .custom-input { 
+        width: 100%; 
+        padding: 12px 16px; 
+        background: var(--surface-2); 
+        border: 1px solid var(--border); 
+        border-radius: 10px; 
+        color: var(--text); 
+        font-size: 14px; 
+        outline: none; 
+        box-sizing: border-box;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+    
+    .custom-input:focus { 
+        border-color: var(--hsu-blue); 
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
+    }
+    
+    /* Fix lỗi mờ và sọc vằn ở ô bị khóa */
+    .locked-field { 
+        background: var(--border) !important; /* Sử dụng màu border làm nền để tạo độ tương phản tốt ở cả 2 mode */
+        opacity: 0.7;
+        color: var(--text); /* Ép màu text chính để dễ đọc hơn */
+        cursor: not-allowed; 
+        border: 1px solid var(--border) !important; /* Bỏ border dashed (đứt đoạn) gây ra sọc */
+        font-weight: 700;
+    }
+
+    /* 5. Buttons */
+    .btn-submit { 
+        background: var(--hsu-blue); 
+        color: white !important; 
+        border: none; 
+        padding: 12px 32px; 
+        border-radius: 10px; 
+        font-weight: 700; 
+        cursor: pointer; 
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-submit:hover { 
+        opacity: 0.9; 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-cancel { 
+        color: var(--text-soft); 
+        text-decoration: none; 
+        font-size: 14px; 
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .btn-cancel:hover { color: var(--hsu-blue); }
+
+    textarea.custom-input { resize: vertical; line-height: 1.6; }
+</style>
+
+<div class="edit-page-wrapper">
+    <form method="POST">
+        <div class="header-bar">
+            <div class="header-info">
+                <h1>Chỉnh sửa thông tin</h1>
+                <p><i class="fas fa-hashtag"></i> PHIẾU CẤP PHÁT: #{{ info.id }}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <a href="{{ url_for('assign_detail_view', assign_id=info.id) }}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Hủy bỏ
                 </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> CẬP NHẬT DỮ LIỆU
+                </button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="left-col">
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-box-open"></i> 1. Quản lý thiết bị</span>
+                    
+                    <div class="input-group">
+                        <label>Tên thiết bị (Thông tin gốc - Không thể sửa)</label>
+                        <input type="hidden" name="asset" value="{{ info.asset }}">
+                        <input type="text" value="{{ info.asset }}" class="custom-input locked-field" disabled>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="input-group">
+                            <label>Tình trạng vật lý</label>
+                            <select name="condition" class="custom-input">
+                                <option value="Mới" {% if info.condition == 'Mới' %}selected{% endif %}>✨ Mới / Nguyên seal</option>
+                                <option value="Bình thường" {% if info.condition == 'Bình thường' or not info.condition %}selected{% endif %}>✅ Hoạt động tốt</option>
+                                <option value="Cũ" {% if info.condition == 'Cũ' %}selected{% endif %}>⚠️ Cũ / Trầy xước</option>
+                                <option value="Hỏng" {% if info.condition == 'Hỏng' %}selected{% endif %}>❌ Hư hỏng - Cần xử lý</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Vị trí lắp đặt hiện tại</label>
+                            <input type="text" name="location" value="{{ info.location or '' }}" class="custom-input" placeholder="Ví dụ: Tầng 4, Phòng IT...">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Thông số kỹ thuật & Ghi chú hư hỏng</label>
+                        <textarea name="spec" class="custom-input" rows="8" placeholder="Mô tả chi tiết cấu hình máy hoặc các lỗi phát sinh...">{{ specs.spec if specs else '' }}</textarea>
+                    </div>
+                </div>
             </div>
 
-            <form method="POST" class="assign-form-grid">
-                <div class="form-group full">
-                    <label>Mã phiếu</label>
-                    <input type="text" value="{{ item.id }}" disabled>
+            <div class="right-col">
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-user-edit"></i> 2. Nhân sự sử dụng</span>
+                    <div class="input-group">
+                        <label>Họ và tên người nhận</label>
+                        <input type="text" name="receiver" value="{{ info.receiver }}" class="custom-input" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Phòng ban</label>
+                        <input type="text" name="department" value="{{ info.department }}" class="custom-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Ngày bàn giao (dd/mm/yyyy)</label>
+                        <div style="position: relative;">
+                            <input type="text" name="date" value="{{ info.date }}" class="custom-input">
+                            <i class="fas fa-calendar-alt" style="position: absolute; right: 15px; top: 14px; color: var(--hsu-blue); pointer-events: none;"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group full">
-                    <label>Tài sản</label>
-                    <input type="text" value="{{ item.asset }}" disabled>
+                <div class="content-card">
+                    <span class="card-label"><i class="fas fa-toggle-on"></i> 3. Trạng thái phiếu</span>
+                    <div class="input-group">
+                        <select name="status" class="custom-input" style="border-left: 4px solid var(--hsu-blue); font-weight: 700;">
+                            <option value="Hoàn thành" {% if info.status == 'Hoàn thành' %}selected{% endif %}>Hoàn thành</option>
+                            <option value="Chờ duyệt" {% if info.status == 'Chờ duyệt' %}selected{% endif %}>Chờ duyệt</option>
+                            <option value="Đang bảo trì" {% if info.status == 'Đang bảo trì' %}selected{% endif %}>Đang bảo trì</option>
+                        </select>
+                    </div>
+                    <div style="background: rgba(59, 130, 246, 0.08); padding: 15px; border-radius: 10px; border: 1px dashed var(--hsu-blue);">
+                        <p style="font-size: 12px; color: var(--text); line-height: 1.5; margin: 0;">
+                            <i class="fas fa-info-circle" style="color: var(--hsu-blue); margin-right: 5px;"></i>
+                            <strong>Mẹo:</strong> Nếu thiết bị hỏng, hãy chuyển trạng thái sang "Đang bảo trì" để theo dõi.
+                        </p>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label>Người nhận / người đang dùng</label>
-                    <input type="text" name="receiver" value="{{ item.receiver }}" placeholder="Nhập họ tên">
-                </div>
-
-                <div class="form-group">
-                    <label>Trạng thái</label>
-                    <select name="status" required>
-                        <option value="Đang sử dụng" {% if item.status == 'Đang sử dụng' %}selected{% endif %}>Đang sử dụng</option>
-                        <option value="Báo hỏng" {% if item.status == 'Báo hỏng' %}selected{% endif %}>Báo hỏng</option>
-                        <option value="Mất" {% if item.status == 'Mất' %}selected{% endif %}>Mất</option>
-                        <option value="Thu hồi" {% if item.status == 'Thu hồi' %}selected{% endif %}>Thu hồi</option>
-                        <option value="Hoàn thành" {% if item.status == 'Hoàn thành' %}selected{% endif %}>Hoàn thành</option>
-                        <option value="Chờ duyệt" {% if item.status == 'Chờ duyệt' %}selected{% endif %}>Chờ duyệt</option>
-                    </select>
-                </div>
-
-                <div class="form-group full">
-                    <label>Ghi chú</label>
-                    <textarea name="note" rows="4" placeholder="Ví dụ: bị lỗi màn hình, đã thu hồi về kho IT...">{{ item.note if item.note else '' }}</textarea>
-                </div>
-
-                <div class="form-actions full">
-                    <button type="submit" class="task-btn task-btn-primary">Lưu thay đổi</button>
-                    <a href="{{ url_for('assign_page') }}" class="task-btn toolbar-btn-secondary">Hủy</a>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</section>
+    </form>
+</div>
 {% endblock %}
