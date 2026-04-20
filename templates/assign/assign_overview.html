@@ -67,7 +67,7 @@
     .filter-grid {
         display: flex;
         gap: 12px;
-        align-items: flex-end; /* Quan trọng: để nút bấm khớp với chân của input */
+        align-items: flex-end;
         width: 100%;
     }
 
@@ -77,14 +77,8 @@
         gap: 8px;
     }
 
-    /* Tỉ lệ: Ô tìm kiếm rộng hơn (flex: 1), các ô chọn rộng vừa đủ (width) */
-    .filter-item.search-wide { 
-        flex: 1; 
-    }
-
-    .filter-item.select-box {
-        width: 180px; 
-    }
+    .filter-item.search-wide { flex: 1; }
+    .filter-item.select-box { width: 180px; }
 
     .filter-label-small {
         font-size: 11px;
@@ -104,7 +98,7 @@
         font-size: 14px;
         outline: none;
         transition: all 0.2s;
-        height: 41px; /* Cố định chiều cao để đồng nhất với nút */
+        height: 41px;
     }
 
     .filter-input:focus { border-color: var(--hsu-blue); background: var(--surface); }
@@ -155,6 +149,23 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+
+    /* --- CẬP NHẬT NÚT THAO TÁC 3 CHẤM --- */
+    .task-btn {
+        padding: 8px 12px;
+        background: transparent; /* Bỏ background */
+        border: none;            /* Bỏ viền */
+        border-radius: 8px;
+        color: var(--text-soft);  /* Màu nhạt hơn cho chuyên nghiệp */
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.2s ease;
+    }
+
+    .task-btn:hover {
+        background: var(--surface-2); /* Chỉ hiện nền khi hover */
+        color: var(--hsu-blue);
     }
 
     /* Phân trang */
@@ -213,7 +224,7 @@
         </div>
     </div>
 
-    {# --- 3. BỘ LỌC TÌM KIẾM (DÀN HÀNG NGANG) --- #}
+    {# --- 3. BỘ LỌC TÌM KIẾM --- #}
     <div class="filter-section">
         <form method="GET" action="{{ url_for('assign_page') }}" class="filter-grid">
             <div class="filter-item search-wide">
@@ -264,19 +275,16 @@
             </a>
         </div>
 
-        {# Macro cho Tài sản #}
         {% macro render_asset_info(row) %}
             <div style="font-weight: 700; color: var(--text); margin-bottom: 2px;">{{ row.asset }}</div>
             <div style="font-size: 11px; color: var(--text-soft); font-family: 'Courier New', monospace;">ID: #{{ row.id }}</div>
         {% endmacro %}
 
-        {# Macro cho Người nhận #}
         {% macro render_receiver(row) %}
             <div style="font-weight: 600; color: var(--text);">{{ row.receiver }}</div>
             <div style="font-size: 12px; color: var(--text-soft);">{{ row.department }}</div>
         {% endmacro %}
 
-        {# Macro cho Trạng thái (Giữ nguyên Duyệt/Hủy) #}
         {% macro render_assign_status(row) %}
             {% if row.status == 'Chờ duyệt' %}
                 <div style="display: flex; gap: 6px;">
@@ -290,10 +298,9 @@
             {% endif %}
         {% endmacro %}
 
-        {# Macro cho Thao tác (Giữ nguyên nút 3 chấm và menu ẩn) #}
         {% macro render_assign_action(row) %}
             <div style="position: relative;">
-                <button class="task-btn" onclick="event.stopPropagation(); toggleMenu(this)" style="padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-weight: bold;">⋮</button>
+                <button class="task-btn" onclick="event.stopPropagation(); toggleMenu(this)">⋮</button>
                 <div class="more-menu" style="display: none; position: absolute; right: 0; top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 100; min-width: 140px; padding: 8px;">
                     <a href="{{ url_for('assign_detail_view', assign_id=row.id) }}" style="display: block; padding: 10px; text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500; border-radius: 6px;">🔍 Chi tiết</a>
                 </div>
@@ -320,7 +327,6 @@
             {% endif %}
         </div>
 
-        {# --- PHÂN TRANG (GIỮ NGUYÊN) --- #}
         {% if total_pages > 0 %}
         <div class="pagination-container">
             <div class="pagination-info">Trang <strong>{{ current_page }}</strong> / {{ total_pages }}</div>
@@ -348,13 +354,9 @@
         const menus = document.querySelectorAll('.more-menu');
         const menu = btn.nextElementSibling;
         
-        // Đóng các menu khác
         menus.forEach(m => { if (m !== menu) m.style.display = 'none'; });
-        
-        // Toggle menu hiện tại
         menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         
-        // Đóng khi nhấn ra ngoài
         const hide = (e) => {
             if(!btn.contains(e.target) && !menu.contains(e.target)) {
                 menu.style.display = 'none';

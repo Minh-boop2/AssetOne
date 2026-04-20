@@ -1,5 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
-from data import ASSIGN_DATA, INVENTORY_LIST, DATABASE_LOGS, DEPARTMENTS, ASSET_TYPES, STATUS_OPTIONS
+from flask import Flask, render_template, request, redirect, url_for, flash
+from data import (
+    ASSIGN_DATA, INVENTORY_LIST, DATABASE_LOGS, DEPARTMENTS, 
+    ASSET_TYPES, STATUS_OPTIONS, USER_LIST_DATA, ROLES, USER_STATUS_OPTIONS
+)
 from datetime import datetime
 import math
 
@@ -9,12 +12,12 @@ app.secret_key = "hsu_assetone_2026"
 # --- 1. TRANG CHỦ (DASHBOARD) ---
 @app.route('/')
 def dashboard_overview():
-    using_count = len([i for i in ASSIGN_DATA if i['status'] == 'Hoàn thành'])
+    using_count = len([i for i in ASSIGN_DATA if i.get('status') == 'Hoàn thành'])
     total_real = len(ASSIGN_DATA)
     stats = {
         "total": total_real,
         "using": using_count,
-        "available": total_real - using_count - 10,
+        "available": max(0, total_real - using_count - 10),
         "maintenance": 10
     }
     recent_activities = ASSIGN_DATA[:4]
@@ -42,14 +45,16 @@ def assets_page():
         filtered = [i for i in filtered if i.get('department') == sel_dept]
     if sel_status != 'Tất cả':
         if sel_status == 'using':
-            filtered = [i for i in filtered if i['status'] in ['using', 'Hoàn thành']]
+            filtered = [i for i in filtered if i.get('status') in ['using', 'Hoàn thành']]
         else:
-            filtered = [i for i in filtered if i['status'] == sel_status]
+            filtered = [i for i in filtered if i.get('status') == sel_status]
 
     page = request.args.get('page', 1, type=int) 
     per_page = 10 
     total_assets = len(filtered)
-    total_pages = math.ceil(total_assets / per_page)
+    total_pages = math.ceil(total_assets / per_page) if total_assets > 0 else 1
+    page = max(1, min(page, total_pages))
+    
     start = (page - 1) * per_page
     end = start + per_page
     paginated_assets = filtered[start:end]
@@ -124,13 +129,13 @@ def assign_page():
 
     stats = {
         "total": len(ASSIGN_DATA),
-        "pending": len([i for i in ASSIGN_DATA if i['status'] == 'Chờ duyệt']),
+        "pending": len([i for i in ASSIGN_DATA if i.get('status') == 'Chờ duyệt']),
         "overdue": 0
     }
 
     total_items = len(filtered)
-    total_pages = (total_items + per_page - 1) // per_page
-    page = max(1, min(page, total_pages)) if total_pages > 0 else 1
+    total_pages = math.ceil(total_items / per_page) if total_items > 0 else 1
+    page = max(1, min(page, total_pages))
     
     start = (page - 1) * per_page
     assigns_paginated = filtered[start:start+per_page]
@@ -153,8 +158,7 @@ def assign_page():
 @app.route('/assign/detail/<string:assign_id>')
 def assign_detail_view(assign_id):
     info = next((item for item in ASSIGN_DATA if item["id"] == assign_id), None)
-    if not info:
-        return redirect(url_for('assign_page'))
+    if not info: return redirect(url_for('assign_page'))
     
     specs = next((item for item in INVENTORY_LIST if item["name"] == info.get('asset')), {
         "spec": "Dữ liệu cấu hình chưa có cho yêu cầu này.",
@@ -166,10 +170,8 @@ def assign_detail_view(assign_id):
 def assign_create():
     if request.method == 'POST':
         asset_name = request.form.get('asset_name')
-        new_id = f"ASG-{str(len(ASSIGN_DATA) + 1).zfill(3)}"
-        
         new_entry = {
-            "id": new_id,
+            "id": f"ASG-{str(len(ASSIGN_DATA) + 1).zfill(3)}",
             "asset": asset_name,
             "receiver": request.form.get('receiver'),
             "department": request.form.get('department'),
@@ -179,54 +181,115 @@ def assign_create():
             "status": "Hoàn thành",
             "condition": "Mới"
         }
-        
         ASSIGN_DATA.insert(0, new_entry)
-        
-        new_spec = request.form.get('spec')
-        if new_spec:
-            for item in INVENTORY_LIST:
-                if item["name"] == asset_name:
-                    item["spec"] = new_spec
-                    break
-
         return redirect(url_for('assign_page'))
-    
-    return render_template('assign/assign_create.html', 
-                            inventory=INVENTORY_LIST, 
-                            departments=DEPARTMENTS)
+    return render_template('assign/assign_create.html', inventory=INVENTORY_LIST, departments=DEPARTMENTS)
 
 @app.route('/assign/edit/<string:assign_id>', methods=['GET', 'POST'])
 def assign_edit(assign_id):
     info = next((item for item in ASSIGN_DATA if item["id"] == assign_id), None)
-    if not info:
-        return redirect(url_for('assign_page'))
+    if not info: return redirect(url_for('assign_page'))
+    if request.method == 'POST':
+        info.update({
+            "receiver": request.form.get('receiver'),
+            "department": request.form.get('department'),
+            "status": request.form.get('status'),
+            "location": request.form.get('location')
+        })
+        return redirect(url_for('assign_detail_view', assign_id=assign_id))
+    return render_template('assign/assign_edit.html', info=info)
+
+# --- 4. QUẢN TRỊ NHÂN SỰ (MANAGE) ---
+@app.route('/manage')
+def manage(): 
+    search_q = request.args.get('search', '').strip().lower()
+    selected_dept = request.args.get('department', '')
+    selected_role = request.args.get('role', '')
+    selected_status = request.args.get('status', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 10 
+
+    filtered_users = USER_LIST_DATA
+    if search_q:
+        filtered_users = [i for i in filtered_users if 
+                          search_q in i.get('name', '').lower() or 
+                          search_q in i.get('id', '').lower() or
+                          search_q in i.get('email', '').lower()]
+    
+    if selected_dept and "Tất cả" not in selected_dept: 
+        filtered_users = [i for i in filtered_users if i.get('dept') == selected_dept]
+    if selected_role and "Tất cả" not in selected_role: 
+        filtered_users = [i for i in filtered_users if i.get('role') == selected_role]
+    if selected_status and "Tất cả" not in selected_status: 
+        filtered_users = [i for i in filtered_users if i.get('status') == selected_status]
+
+    total_users = len(filtered_users)
+    total_pages = math.ceil(total_users / per_page) if total_users > 0 else 1
+    page = max(1, min(page, total_pages))
+    
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_users = filtered_users[start:end]
+
+    stats = {
+        "total": len(USER_LIST_DATA),
+        "admin_count": len([i for i in USER_LIST_DATA if i.get('role').lower() == 'admin']),
+        "manager_count": len([i for i in USER_LIST_DATA if i.get('role').lower() == 'manager']),
+        "staff_count": len([i for i in USER_LIST_DATA if i.get('role').lower() == 'staff'])
+    }
+
+    return render_template('manage/manage_overview.html', 
+                           employees=paginated_users,
+                           stats=stats,
+                           departments=DEPARTMENTS,
+                           roles=ROLES,
+                           user_status=USER_STATUS_OPTIONS,
+                           search_q=search_q,
+                           selected_dept=selected_dept,
+                           selected_role=selected_role,
+                           selected_status=selected_status,
+                           current_page=page,
+                           total_pages=total_pages)
+
+# --- PHẦN UPDATE MỚI: 3 ROUTE QUẢN LÝ NHÂN SỰ ---
+
+@app.route('/manage/detail/<string:id>')
+def user_detail(id):
+    user = next((u for u in USER_LIST_DATA if u['id'] == id), None)
+    if not user: return redirect(url_for('manage'))
+    return render_template('manage/manage_detail.html', employee=user)
+
+@app.route('/manage/edit/<string:id>', methods=['GET', 'POST'])
+def user_edit(id):
+    user = next((u for u in USER_LIST_DATA if u['id'] == id), None)
+    if not user: return redirect(url_for('manage'))
+    
+    if request.method == 'POST':
+        user.update({
+            "role": request.form.get('role'),
+            "status": request.form.get('status')
+        })
+        flash(f"Đã cập nhật quyền cho {user['name']}", "success")
+        return redirect(url_for('manage'))
+        
+    return render_template('manage/manage_edit.html', employee=user)
+
+@app.route('/manage/delete/<string:id>', methods=['GET', 'POST'])
+def user_delete(id):
+    global USER_LIST_DATA
+    user = next((u for u in USER_LIST_DATA if u['id'] == id), None)
+    if not user: return redirect(url_for('manage'))
 
     if request.method == 'POST':
-        asset_name = request.form.get('asset') or info.get('asset')
-        
-        info['asset'] = asset_name
-        info['receiver'] = request.form.get('receiver')
-        info['department'] = request.form.get('department')
-        info['date'] = request.form.get('date')
-        info['status'] = request.form.get('status')
-        info['location'] = request.form.get('location')
-        info['condition'] = request.form.get('condition', 'Bình thường')
+        # Xóa hoàn toàn khỏi danh sách
+        USER_LIST_DATA = [u for u in USER_LIST_DATA if u['id'] != id]
+        flash(f"Đã xóa vĩnh viễn nhân sự {id}", "danger")
+        return redirect(url_for('manage'))
+    
+    # Hiển thị trang xác nhận xóa
+    return render_template('manage/manage_delete.html', employee=user)
 
-        new_spec = request.form.get('spec')
-        for item in INVENTORY_LIST:
-            if item["name"] == asset_name:
-                item["spec"] = new_spec
-                break
-        
-        return redirect(url_for('assign_detail_view', assign_id=assign_id))
-
-    specs = next((item for item in INVENTORY_LIST if item["name"] == info.get('asset')), {
-        "spec": "",
-        "warranty": "N/A"
-    })
-    return render_template('assign/assign_edit.html', info=info, specs=specs)
-
-# --- 4. PHÊ DUYỆT YÊU CẦU ---
+# --- 5. ROUTE HỖ TRỢ KHÁC ---
 @app.route('/assign/request', methods=['GET','POST'])
 def request_create():
     if request.method == 'POST':
@@ -259,82 +322,32 @@ def reject_request(id):
             break
     return redirect(url_for('assign_page'))
 
-# --- 5. ĐĂNG NHẬP & QUẢN TRỊ ---
 @app.route('/welcome')
-def welcome_page():
-    return render_template('login/login_overview.html')
+def welcome_page(): return render_template('login/login_overview.html')
 
 @app.route('/login', methods=['GET','POST'])
 def login_page():
     if request.method == 'POST':
-        user = request.form.get('username')
-        pw = request.form.get('password')
-        if user == "admin" and pw == "123":
+        if request.form.get('username') == "admin" and request.form.get('password') == "123":
             return redirect(url_for('dashboard_overview'))
     return render_template('login/login.html')
 
-# --- ROUTE QUẢN LÝ ĐÃ FIX LỖI ---
-@app.route('/manage')
-def manage(): 
-    search_q = request.args.get('search', '').strip().lower()
-    selected_dept = request.args.get('department', '')
-    selected_role = request.args.get('role', '')
-    selected_status = request.args.get('status', '')
-
-    # Dữ liệu nhân sự mẫu để code không bị lỗi khi render bảng
-    users_list = [
-        {"full_name": "Nguyễn Văn A", "email": "anv@hoasen.edu.vn", "dept": "Phòng IT", "role": "Admin", "last_login": "10 phút trước", "status": "Active"},
-        {"full_name": "Lê Thị B", "email": "blt@hoasen.edu.vn", "dept": "Phòng Kế toán", "role": "Staff", "last_login": "1 giờ trước", "status": "Active"},
-        {"full_name": "Trần Văn C", "email": "ctv@hoasen.edu.vn", "dept": "Phòng Nhân sự", "role": "Staff", "last_login": "2 ngày trước", "status": "Inactive"},
-    ]
-
-    # Thực hiện lọc
-    filtered_users = users_list
-    if search_q:
-        filtered_users = [u for u in filtered_users if search_q in u['full_name'].lower() or search_q in u['email'].lower()]
-    if selected_dept:
-        filtered_users = [u for u in filtered_users if u['dept'] == selected_dept]
-    if selected_role:
-        filtered_users = [u for u in filtered_users if u['role'] == selected_role]
-    if selected_status:
-        filtered_users = [u for u in filtered_users if u['status'] == selected_status]
-
-    stats = {
-        "total_users": len(users_list),
-        "total_depts": len(DEPARTMENTS),
-        "total_admins": len([u for u in users_list if u['role'] == 'Admin'])
-    }
-
-    return render_template('manage/manage.html', 
-                           users=filtered_users,
-                           stats=stats,
-                           departments=DEPARTMENTS,
-                           search_q=search_q,
-                           selected_dept=selected_dept,
-                           selected_role=selected_role,
-                           selected_status=selected_status)
-
-# --- 6. BÁO CÁO (REPORT) ---
 @app.route('/report')
 def report_page(): 
     search_query = request.args.get('search', '').strip().lower()
     selected_dept = request.args.get('department', 'Tất cả')
-    selected_type = request.args.get('type', 'Tất cả')
     page = request.args.get('page', 1, type=int)
     per_page = 12
 
     filtered = DATABASE_LOGS
     if search_query:
-        filtered = [l for l in filtered if search_query in l.get('asset_name', '').lower() or search_query in l.get('user', '').lower()]
+        filtered = [l for l in filtered if search_query in l.get('asset', '').lower() or search_query in l.get('user', '').lower()]
     if selected_dept != 'Tất cả':
         filtered = [l for l in filtered if l.get('dept') == selected_dept]
-    if selected_type != 'Tất cả':
-        filtered = [l for l in filtered if l.get('type') == selected_type]
 
     total_logs = len(filtered)
-    total_pages = math.ceil(total_logs / per_page)
-    page = max(1, min(page, total_pages)) if total_pages > 0 else 1
-
+    total_pages = math.ceil(total_logs / per_page) if total_logs > 0 else 1
+    page = max(1, min(page, total_pages))
     start = (page - 1) * per_page
     logs_to_display = filtered[start : start + per_page]
 
@@ -342,7 +355,6 @@ def report_page():
                             logs=logs_to_display, 
                             search_query=search_query,
                             selected_dept=selected_dept,
-                            selected_type=selected_type,
                             current_page=page,
                             total_pages=total_pages)
 

@@ -1,0 +1,60 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<style>
+    .delete-bg {
+        min-height: 90vh;
+        background: radial-gradient(circle, #450a0a 0%, #0f172a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delete-modal {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid #ef4444;
+        padding: 40px;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+    }
+
+    .icon-danger {
+        width: 60px;
+        height: 60px;
+        background: #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 30px;
+        color: white;
+    }
+
+    .btn-real-delete {
+        background: #ef4444;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<div class="delete-bg">
+    <div class="delete-modal">
+        <div class="icon-danger">✕</div>
+        <h2 style="color: white; margin-bottom: 10px;">Xóa nhân sự?</h2>
+        <p style="color: #94a3b8; margin-bottom: 30px;">
+            Bạn đang yêu cầu xóa <strong>{{ employee.name }}</strong>. Hành động này không thể hoàn tác.
+        </p>
+        <form method="POST" style="display: flex; gap: 15px; justify-content: center;">
+            <a href="{{ url_for('manage') }}" style="color: white; text-decoration: none; padding-top: 10px;">Hủy</a>
+            <button type="submit" class="btn-real-delete">Xác nhận xóa</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

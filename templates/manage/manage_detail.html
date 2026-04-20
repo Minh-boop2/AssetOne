@@ -1,0 +1,198 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* 1. SỬ DỤNG LẠI BỘ BIẾN MÀU CỦA TRANG MANAGE.HTML */
+    /* Nếu main.html chưa có các biến này cho Dark Mode, ta khai báo đè ở đây */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --surface: #1e293b;
+            --surface-2: #0f172a;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text-soft: #94a3b8;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    /* 2. CẤU TRÚC CONTAINER - ÉP ĐỒNG BỘ */
+    .manage-detail-container {
+        min-height: 100vh;
+        padding: 24px;
+        background-color: var(--surface-2); /* Đồng bộ màu nền với filter-input của trang manage */
+        color: var(--text);
+        font-family: Arial, sans-serif; /* Khớp font trang manage */
+        transition: all 0.3s ease;
+    }
+
+    .content-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    /* 3. CARD THÔNG TIN (DÙNG CHUNG STYLE VỚI .STAT-CARD VÀ .OVERVIEW-CARD) */
+    .detail-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* 4. ĐỊNH DẠNG CÁC HÀNG DỮ LIỆU */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    /* 5. BADGES & TRẠNG THÁI (COPY Y HỆT TỪ MANAGE.HTML) */
+    .role-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .role-admin { background: rgba(239, 59, 45, 0.1); color: var(--hsu-red); }
+    .role-manager { background: rgba(31, 79, 163, 0.1); color: var(--hsu-blue); }
+    .role-staff { background: var(--surface-2); color: var(--text-soft); border: 1px solid var(--border); }
+    
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .dot-active { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+
+    /* 6. NÚT BẤM (GIỐNG .BTN-SEARCH VÀ .BTN-ADD-NEW) */
+    .btn-hsu {
+        background: var(--hsu-blue);
+        color: #ffffff !important;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s;
+    }
+    .btn-hsu:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Avatar giống hình tròn của trang manage */
+    .profile-avatar {
+        width: 80px; height: 80px;
+        background: var(--surface-2);
+        border: 2px solid var(--hsu-blue);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 32px; font-weight: 800; color: var(--hsu-blue);
+        margin: 0 auto 15px;
+    }
+</style>
+
+<section class="manage-detail-container">
+    <div class="content-wrapper">
+        
+        {# --- Điều hướng quay lại --- #}
+        <div style="margin-bottom: 24px;">
+            <a href="{{ url_for('manage') }}" style="color: var(--hsu-blue); text-decoration: none; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+                <i class="fas fa-chevron-left"></i> QUẢN LÝ NHÂN SỰ
+            </a>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px;">
+            
+            {# --- CỘT TRÁI: THÔNG TIN CHI TIẾT --- #}
+            <div class="main-column">
+                <div class="detail-card">
+                    <div class="card-header-flex">
+                        <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text);">Hồ sơ nhân viên</h3>
+                        <a href="{{ url_for('user_edit', id=employee.id) }}" class="btn-hsu">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Mã số nhân viên</span>
+                        <span class="info-value">{{ employee.id }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Họ và tên</span>
+                        <span class="info-value">{{ employee.name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Địa chỉ Email</span>
+                        <span class="info-value">{{ employee.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phòng ban</span>
+                        <span class="info-value" style="color: var(--hsu-blue)">{{ employee.dept }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Quyền hạn</span>
+                        <span class="info-value">
+                            {% set r = employee.role | upper %}
+                            <span class="role-badge {% if r == 'ADMIN' %}role-admin{% elif r == 'MANAGER' %}role-manager{% else %}role-staff{% endif %}">
+                                {{ employee.role }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {# --- CỘT PHẢI: AVATAR & TRẠNG THÁI --- #}
+            <div class="side-column">
+                <div class="detail-card" style="text-align: center;">
+                    <div class="profile-avatar">
+                        {{ employee.name[0]|upper }}
+                    </div>
+                    <h2 style="margin: 0; font-size: 20px; color: var(--text);">{{ employee.name }}</h2>
+                    <p style="color: var(--text-soft); font-size: 13px; margin: 8px 0 20px;">{{ employee.role }}</p>
+                    
+                    <div style="display: inline-flex; align-items: center; padding: 8px 16px; background: var(--surface-2); border-radius: 8px;">
+                        <span class="status-dot dot-active"></span>
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text);">ĐANG HOẠT ĐỘNG</span>
+                    </div>
+                </div>
+
+                <div style="padding: 15px; color: var(--text-soft); font-size: 12px; line-height: 1.5;">
+                    <i class="fas fa-shield-alt"></i> Dữ liệu được bảo mật bởi hệ thống quản lý tài sản HSU.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script>
+    // FIX TRIỆT ĐỂ: Nếu main.html không tự đổi màu body, script này sẽ ép đổi theo hệ thống
+    function syncTheme() {
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.body.style.backgroundColor = isDark ? "#0f172a" : "#f8fafc";
+        document.body.style.color = isDark ? "#f1f5f9" : "#0f172a";
+    }
+    syncTheme();
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+</script>
+{% endblock %}

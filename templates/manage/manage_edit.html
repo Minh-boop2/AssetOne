@@ -1,0 +1,211 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* 1. ĐỒNG BỘ HỆ THỐNG BIẾN MÀU HSU */
+    :root {
+        --hsu-blue: #2563eb;
+        --hsu-red: #ef3b2d;
+        --surface: #ffffff;
+        --surface-2: #f1f5f9;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --text-soft: #64748b;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --surface: #1e293b;
+            --surface-2: #0f172a;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text-soft: #94a3b8;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        body, .edit-wrapper {
+            background-color: var(--surface-2) !important;
+            color: var(--text) !important;
+        }
+    }
+
+    /* 2. CẤU TRÚC LAYOUT */
+    .edit-wrapper {
+        min-height: 85vh;
+        background-color: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: Arial, sans-serif;
+    }
+
+    /* 3. THIẾT KẾ THẺ CARD CHỈNH SỬA */
+    .edit-card {
+        background: var(--surface);
+        padding: 40px;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 480px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 4. ĐỊNH DẠNG FORM */
+    .form-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    
+    .form-header h3 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text);
+        margin: 0;
+    }
+
+    .form-group { margin-bottom: 24px; }
+    
+    .form-label { 
+        display: block; 
+        color: var(--text-soft); 
+        margin-bottom: 10px; 
+        font-weight: 700; 
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Input & Select đồng bộ với trang manage */
+    select, input {
+        width: 100%;
+        height: 50px;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    select:focus, input:focus {
+        border-color: var(--hsu-blue);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    input[readonly] {
+        opacity: 0.7;
+        cursor: not-allowed;
+        border-style: dashed;
+    }
+
+    /* 5. NÚT BẤM CHUẨN HSU */
+    .btn-submit {
+        width: 100%;
+        background: var(--hsu-blue);
+        color: white !important;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 15px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+        box-shadow: 0 4px 12px rgba(31, 79, 163, 0.2);
+    }
+
+    .btn-submit:hover { 
+        opacity: 0.95;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(31, 79, 163, 0.3);
+    }
+
+    .btn-back {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: var(--text-soft);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .btn-back:hover { color: var(--hsu-blue); }
+
+    /* Avatar trang trí */
+    .avatar-mini {
+        width: 60px; height: 60px;
+        background: var(--surface-2);
+        color: var(--hsu-blue);
+        border: 2px solid var(--hsu-blue);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 24px; font-weight: 800;
+    }
+</style>
+
+<div class="edit-wrapper">
+    <div class="edit-card">
+        <div class="form-header">
+            <div class="avatar-mini">{{ employee.name[0]|upper }}</div>
+            <h3>Cập nhật hồ sơ</h3>
+            <p style="color: var(--text-soft); font-size: 13px; margin-top: 5px;">Mã số: {{ employee.id }}</p>
+        </div>
+
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-user" style="margin-right: 5px;"></i> Tên nhân sự</label>
+                <input type="text" value="{{ employee.name }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-shield-alt" style="margin-right: 5px;"></i> Vai trò hệ thống</label>
+                <select name="role">
+                    <option value="Staff" {% if employee.role == 'Staff' %}selected{% endif %}>Nhân viên (Staff)</option>
+                    <option value="Manager" {% if employee.role == 'Manager' %}selected{% endif %}>Quản lý (Manager)</option>
+                    <option value="Admin" {% if employee.role == 'Admin' %}selected{% endif %}>Quản trị viên (Admin)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-toggle-on" style="margin-right: 5px;"></i> Trạng thái</label>
+                <select name="status">
+                    <option value="Hoạt động" {% if employee.status == 'Hoạt động' or employee.status == 'Active' %}selected{% endif %}>Đang hoạt động</option>
+                    <option value="Ngưng hoạt động" {% if employee.status == 'Ngưng hoạt động' or employee.status == 'Inactive' %}selected{% endif %}>Ngưng hoạt động</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit">LƯU THAY ĐỔI</button>
+            
+            <a href="{{ url_for('manage') }}" class="btn-back">
+                <i class="fas fa-chevron-left"></i> Quay lại danh sách
+            </a>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ÉP ĐỒNG BỘ MÀU NỀN BODY NGAY LẬP TỨC CHO DARK MODE
+    function syncTheme() {
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.body.style.backgroundColor = isDark ? "#0f172a" : "#f8fafc";
+    }
+    syncTheme();
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncTheme);
+</script>
+{% endblock %}
