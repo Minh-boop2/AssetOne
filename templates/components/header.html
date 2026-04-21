@@ -63,11 +63,30 @@
         <i data-lucide="sun" class="toggle-icon icon-sun"></i>
       </button>
 
-      <div class="user-box">
-        <div class="user-avatar">A</div>
-        <div class="user-info">
-          <span class="user-name">Admin</span>
-          <span class="user-role">Quản trị hệ thống</span>
+      <div class="user-menu-wrapper" id="userMenuWrapper">
+        <button
+          class="user-box user-box-trigger"
+          id="userMenuTrigger"
+          type="button"
+        >
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <span class="user-name">Admin</span>
+            <span class="user-role">Quản trị hệ thống</span>
+          </div>
+        </button>
+
+        <div class="user-dropdown" id="userDropdown">
+          <a href="{{ url_for('profile_page') }}" class="user-dropdown-item">
+            Hồ sơ
+          </a>
+          <a href="" class="user-dropdown-item"> Thống kê </a>
+          <a
+            href="{{ url_for('login_page') }}"
+            class="user-dropdown-item user-dropdown-item--danger"
+          >
+            Đăng xuất
+          </a>
         </div>
       </div>
     </div>
@@ -79,6 +98,10 @@
     const root = document.documentElement;
     const toggleBtn = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem("theme");
+
+    const userMenuWrapper = document.getElementById("userMenuWrapper");
+    const userMenuTrigger = document.getElementById("userMenuTrigger");
+    const userDropdown = document.getElementById("userDropdown");
 
     if (savedTheme === "dark") {
       root.setAttribute("data-theme", "dark");
@@ -99,6 +122,23 @@
       } else {
         root.setAttribute("data-theme", "dark");
         localStorage.setItem("theme", "dark");
+      }
+    });
+
+    userMenuTrigger?.addEventListener("click", function (event) {
+      event.stopPropagation();
+      userMenuWrapper.classList.toggle("open");
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!userMenuWrapper?.contains(event.target)) {
+        userMenuWrapper?.classList.remove("open");
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        userMenuWrapper?.classList.remove("open");
       }
     });
   })();

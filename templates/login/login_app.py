@@ -12,7 +12,10 @@ def register_login_routes(app):
             if request.form.get('username') == "admin" and request.form.get('password') == "123":
                 return redirect(url_for('dashboard_overview'))
         return render_template('login/login.html')
+    
 
     @app.route('/forgot-password', methods=['GET', 'POST'])
     def forgot_password():
         return render_template('login/forgot_password.html')
+    
+    
