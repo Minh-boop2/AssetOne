@@ -1,0 +1,42 @@
+{% macro render_action(row) %}
+<div class="table-actions">
+  <div class="action-menu" data-menu>
+    <button
+      type="button"
+      class="action-menu__trigger"
+      data-menu-toggle
+      aria-label="Mở menu thao tác"
+    >
+      <span class="action-menu__dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+
+    <div class="action-menu__dropdown">
+      <a
+        href="{{ url_for('asset_detail_view', asset_id=row.id) }}"
+        class="action-menu__item"
+      >
+        <span class="action-menu__icon">👁</span>
+        <span>Xem chi tiết</span>
+      </a>
+
+      <a href="#" class="action-menu__item">
+        <span class="action-menu__icon">✏️</span>
+        <span>Chỉnh sửa</span>
+      </a>
+
+      <button
+        type="button"
+        class="action-menu__item action-menu__item--danger"
+        data-delete-asset-id="{{ row.id }}"
+      >
+        <span class="action-menu__icon">🗑</span>
+        <span>Xóa</span>
+      </button>
+    </div>
+  </div>
+</div>
+{% endmacro %}

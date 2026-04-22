@@ -1,0 +1,84 @@
+{% from 'assets/assets_action.html' import render_action %}
+
+<div class="section-heading">
+  <h2 class="section-heading__title">Danh sách tài sản</h2>
+  <span class="section-heading__meta">
+    Hiển thị <strong>{{ assets|length }}</strong> trên
+    <strong>{{ total_count if total_count else 0 }}</strong> tài sản
+  </span>
+</div>
+
+{% macro render_asset_type(row) %} {% if row.type == 'laptop' %}
+<span class="badge badge-type badge-laptop">Laptop</span>
+{% elif row.type == 'pc' %}
+<span class="badge badge-type badge-pc">Máy tính bàn</span>
+{% elif row.type == 'printer' %}
+<span class="badge badge-type badge-printer">Máy in</span>
+{% else %}
+<span class="badge badge-type">Khác</span>
+{% endif %} {% endmacro %} {% macro render_status(row) %} {% if row.status ==
+'using' or row.status == 'Hoàn thành' or row.status == 'Đang sử dụng' %}
+<span class="badge badge-using">Đang sử dụng</span>
+{% elif row.status == 'available' or row.status == 'Chưa sử dụng' %}
+<span class="badge badge-available">Chưa sử dụng</span>
+{% elif row.status == 'maintenance' or row.status == 'Bảo trì' %}
+<span class="badge badge-maintenance">Bảo trì</span>
+{% elif row.status == 'broken' or row.status == 'Hỏng' %}
+<span class="badge badge-broken">Hỏng</span>
+{% else %}
+<span class="badge badge-maintenance">Chờ duyệt</span>
+{% endif %} {% endmacro %} {% macro render_user(row) %} {% set name =
+row.receiver or row.user %} {% if name %}
+<span class="asset-user">{{ name }}</span>
+{% else %}
+<span class="asset-empty">—</span>
+{% endif %} {% endmacro %} {% macro render_warranty(row) %} {% if row.warranty
+%}
+<span class="asset-date">{{ row.warranty }}</span>
+{% else %}
+<span class="asset-empty">—</span>
+{% endif %} {% endmacro %} {% set columns = [ {"key": "asset_code", "label": "Mã
+tài sản"}, {"key": "asset", "label": "Tên tài sản"}, {"key": "type", "label":
+"Loại tài sản", "render": render_asset_type}, {"key": "status", "label": "Trạng
+thái", "render": render_status}, {"key": "user", "label": "Người sử dụng",
+"render": render_user}, {"key": "department", "label": "Phòng ban"}, {"key":
+"location", "label": "Vị trí"}, {"key": "warranty", "label": "Bảo hành đến",
+"render": render_warranty}, {"key": "action", "label": "Thao tác", "render":
+render_action} ] %} {% set data = assets if assets else [] %} {% include
+'components/table.html' %} {% if total_pages and total_pages > 1 %}
+<div class="pagination-container">
+  <div class="pagination-info">
+    Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
+  </div>
+  <ul class="pagination-list">
+    <li>
+      <a
+        href="{{ url_for('assets_page', page=current_page-1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
+        class="{{ 'disabled' if current_page == 1 }}"
+        >&laquo; Trước</a
+      >
+    </li>
+
+    {% for p in range(1, total_pages + 1) %} {% if p == 1 or p == total_pages or
+    (p >= current_page - 1 and p <= current_page + 1) %}
+    <li>
+      <a
+        href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
+        class="{{ 'active' if p == current_page }}"
+        >{{ p }}</a
+      >
+    </li>
+    {% elif p == current_page - 2 or p == current_page + 2 %}
+    <li class="pagination-dots">...</li>
+    {% endif %} {% endfor %}
+
+    <li>
+      <a
+        href="{{ url_for('assets_page', page=current_page+1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
+        class="{{ 'disabled' if current_page == total_pages }}"
+        >Sau &raquo;</a
+      >
+    </li>
+  </ul>
+</div>
+{% endif %}

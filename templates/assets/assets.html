@@ -1,149 +1,31 @@
-{% extends 'main.html' %} 
+{% extends 'main.html' %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
 
+{% set type_options = [
+  {'value': 'Tất cả', 'label': 'Tất cả loại', 'count': filter_counts.type.all if filter_counts and filter_counts.type else 0},
+  {'value': 'laptop', 'label': 'Laptop', 'count': filter_counts.type.laptop if filter_counts and filter_counts.type else 0},
+  {'value': 'pc', 'label': 'Máy tính bàn', 'count': filter_counts.type.pc if filter_counts and filter_counts.type else 0},
+  {'value': 'printer', 'label': 'Máy in', 'count': filter_counts.type.printer if filter_counts and filter_counts.type else 0}
+] %}
+
+{% set status_options = [
+  {'value': 'Tất cả', 'label': 'Tất cả trạng thái', 'count': filter_counts.status.all if filter_counts and filter_counts.status else 0},
+  {'value': 'using', 'label': 'Đang sử dụng', 'count': filter_counts.status.using if filter_counts and filter_counts.status else 0},
+  {'value': 'available', 'label': 'Chưa sử dụng', 'count': filter_counts.status.available if filter_counts and filter_counts.status else 0},
+  {'value': 'maintenance', 'label': 'Bảo trì', 'count': filter_counts.status.maintenance if filter_counts and filter_counts.status else 0},
+  {'value': 'Chờ duyệt', 'label': 'Chờ duyệt', 'count': filter_counts.status.pending if filter_counts and filter_counts.status else 0}
+] %}
+
 <section class="assets-page">
-  <div class="assets-page__header" style="margin-bottom: 24px;">
-    <h1 class="assets-page__title" style="margin-bottom: 16px;">Quản lý tài sản</h1>
-
-    <form action="{{ url_for('assets_page') }}" method="GET" id="filterForm">
-      <div class="filter-bar" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; background: var(--surface); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-        
-        <div class="filter-item" style="flex: 1; min-width: 250px;">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-soft); font-weight: 600;">Tìm kiếm</label>
-          <input type="text" name="search" id="searchInput" placeholder="Gõ để tìm tên hoặc mã tài sản (ASG...)" value="{{ search_q or '' }}" 
-                 style="width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); outline: none;">
-        </div>
-
-        <div class="filter-item">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-soft); font-weight: 600;">Loại thiết bị</label>
-          <select name="type" onchange="this.form.submit()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); min-width: 130px; cursor: pointer;">
-            <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả loại</option>
-            <option value="laptop" {% if selected_type == 'laptop' %}selected{% endif %}>Laptop</option>
-            <option value="pc" {% if selected_type == 'pc' %}selected{% endif %}>PC</option>
-            <option value="printer" {% if selected_type == 'printer' %}selected{% endif %}>Máy in</option>
-          </select>
-        </div>
-
-        <div class="filter-item">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-soft); font-weight: 600;">Phòng ban</label>
-          <select name="department" onchange="this.form.submit()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); min-width: 150px; cursor: pointer;">
-            <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng</option>
-            <option value="Phòng Kỹ Thuật" {% if selected_dept == 'Phòng Kỹ Thuật' %}selected{% endif %}>Phòng Kỹ Thuật</option>
-            <option value="Phòng Hành Chính" {% if selected_dept == 'Phòng Hành Chính' %}selected{% endif %}>Phòng Hành Chính</option>
-            <option value="Phòng Thiết Kế" {% if selected_dept == 'Phòng Thiết Kế' %}selected{% endif %}>Phòng Thiết Kế</option>
-            <option value="Phòng IT" {% if selected_dept == 'Phòng IT' %}selected{% endif %}>Phòng IT</option>
-          </select>
-        </div>
-
-        <div class="filter-item">
-          <label style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-soft); font-weight: 600;">Trạng thái</label>
-          <select name="status" onchange="this.form.submit()" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); min-width: 140px; cursor: pointer;">
-            <option value="Tất cả" {% if selected_status == 'Tất cả' %}selected{% endif %}>Tất cả trạng thái</option>
-            <option value="using" {% if selected_status == 'using' %}selected{% endif %}>Đang sử dụng</option>
-            <option value="available" {% if selected_status == 'available' %}selected{% endif %}>Chưa sử dụng</option>
-            <option value="maintenance" {% if selected_status == 'maintenance' %}selected{% endif %}>Bảo trì</option>
-            <option value="Chờ duyệt" {% if selected_status == 'Chờ duyệt' %}selected{% endif %}>Chờ duyệt</option>
-          </select>
-        </div>
-
-        <div class="filter-actions" style="display: flex; gap: 10px; align-items: center;">
-          {% if search_q or (selected_type and selected_type != 'Tất cả') or (selected_dept and selected_dept != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
-            <a href="{{ url_for('assets_page') }}" class="btn-reset" title="Xóa lọc" style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; color: var(--hsu-red); border: 1px solid var(--border); border-radius: 8px; text-decoration: none;">✕</a>
-          {% endif %}
-          
-          <a href="{{ url_for('asset_create') }}" class="action-btn action-btn--primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; white-space: nowrap;">
-            + Thêm thiết bị
-          </a>
-        </div>
-      </div>
-    </form>
+  <div class="assets-page__header">
+    <h1 class="assets-page__title">Quản lý tài sản</h1>
+    {% include 'assets/asset_filter.html' %}
   </div>
 
   <div class="assets-table-section">
-    <div class="section-heading" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-      <h2 style="margin: 0; font-size: 18px; color: var(--text);">Danh sách tài sản</h2>
-      <span style="font-size: 13px; color: var(--text-soft)">Hiển thị <strong>{{ assets|length }}</strong> trên <strong>{{ total_count if total_count else 0 }}</strong> tài sản</span>
-    </div>
-
-    {# --- CÁC MACRO HIỂN THỊ --- #}
-    {% macro render_asset_type(row) %}
-      {% if row.type == 'laptop' %}
-        <span class="badge badge-type badge-laptop">Laptop</span>
-      {% elif row.type == 'pc' %}
-        <span class="badge badge-type badge-pc">PC</span>
-      {% elif row.type == 'printer' %}
-        <span class="badge badge-type badge-printer">Máy in</span>
-      {% else %}
-        <span class="badge badge-type">Khác</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_status(row) %}
-      {% if row.status == 'using' or row.status == 'Hoàn thành' or row.status == 'Đang sử dụng' %}
-        <span class="badge badge-using">Đang sử dụng</span>
-      {% elif row.status == 'available' or row.status == 'Chưa sử dụng' %}
-        <span class="badge badge-available">Chưa sử dụng</span>
-      {% elif row.status == 'maintenance' or row.status == 'Bảo trì' %}
-        <span class="badge badge-maintenance">Bảo trì</span>
-      {% elif row.status == 'broken' or row.status == 'Hỏng' %}
-        <span class="badge badge-broken">Hỏng</span>
-      {% else %}
-        <span class="badge badge-maintenance">Chờ duyệt</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_user(row) %}
-      {% set name = row.receiver or row.user %}
-      {% if name %}<span class="asset-user">{{ name }}</span>{% else %}<span class="asset-empty">—</span>{% endif %}
-    {% endmacro %}
-
-    {% macro render_warranty(row) %}
-      {% if row.warranty %}<span class="asset-date">{{ row.warranty }}</span>{% else %}<span class="asset-empty">—</span>{% endif %}
-    {% endmacro %}
-
-    {% macro render_action(row) %}
-      <div class="table-actions">
-        <a href="{{ url_for('asset_detail_view', asset_id=row.id) }}" class="action-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Chi tiết</a>
-      </div>
-    {% endmacro %}
-
-    {# --- CẤU HÌNH CỘT BẢNG --- #}
-    {% set columns = [
-      {"key": "asset_code", "label": "Mã tài sản"},
-      {"key": "asset", "label": "Tên tài sản"},
-      {"key": "type", "label": "Loại tài sản", "render": render_asset_type},
-      {"key": "status", "label": "Trạng thái", "render": render_status},
-      {"key": "user", "label": "Người sử dụng", "render": render_user},
-      {"key": "department", "label": "Phòng ban"},
-      {"key": "location", "label": "Vị trí"},
-      {"key": "warranty", "label": "Bảo hành đến", "render": render_warranty},
-      {"key": "action", "label": "Thao tác", "render": render_action}
-    ] %}
-
-    {% set data = assets if assets else [] %}
-    {% include 'components/table.html' %}
-
-    {# --- PHÂN TRANG (PAGINATION) --- #}
-    {% if total_pages and total_pages > 1 %}
-    <div class="pagination-container">
-        <div class="pagination-info">Trang <strong>{{ current_page }}</strong> / {{ total_pages }}</div>
-        <ul class="pagination-list">
-            <li><a href="{{ url_for('assets_page', page=current_page-1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}" class="{{ 'disabled' if current_page == 1 }}">&laquo; Trước</a></li>
-            
-            {% for p in range(1, total_pages + 1) %}
-                {% if p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
-                    <li><a href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}" class="{{ 'active' if p == current_page }}">{{ p }}</a></li>
-                {% elif p == current_page - 2 or p == current_page + 2 %}
-                    <li style="color: var(--text-soft); padding: 8px 4px;">...</li>
-                {% endif %}
-            {% endfor %}
-
-            <li><a href="{{ url_for('assets_page', page=current_page+1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}" class="{{ 'disabled' if current_page == total_pages }}">Sau &raquo;</a></li>
-        </ul>
-    </div>
-    {% endif %}
+    {% include 'assets/asset_table.html' %}
   </div>
 </section>
 
@@ -151,24 +33,131 @@
   const searchInput = document.getElementById('searchInput');
   const filterForm = document.getElementById('filterForm');
   let typingTimer;
-  const doneTypingInterval = 400; // Đợi 0.4 giây sau khi ngừng gõ để tự động gửi form
+  const doneTypingInterval = 400;
 
-  searchInput.addEventListener('input', () => {
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => {
-      filterForm.submit();
-    }, doneTypingInterval);
+  if (searchInput && filterForm) {
+    searchInput.addEventListener('input', () => {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        filterForm.submit();
+      }, doneTypingInterval);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    const filterToggle = e.target.closest('[data-filter-toggle]');
+    const currentFilter = e.target.closest('[data-filter-select]');
+
+    document.querySelectorAll('[data-filter-select].open').forEach(drop => {
+      if (drop !== currentFilter) {
+        drop.classList.remove('open');
+      }
+    });
+
+    if (filterToggle) {
+      const drop = filterToggle.closest('[data-filter-select]');
+      drop.classList.toggle('open');
+      e.stopPropagation();
+      return;
+    }
+
+    const filterOption = e.target.closest('[data-filter-option]');
+    if (filterOption) {
+      const drop = filterOption.closest('[data-filter-select]');
+      const input = drop.querySelector('[data-filter-input]');
+      const label = drop.querySelector('[data-filter-current-label]');
+      const count = drop.querySelector('[data-filter-current-count]');
+
+      input.value = filterOption.dataset.value;
+      label.textContent = filterOption.dataset.label;
+      count.textContent = filterOption.dataset.count;
+
+      drop.querySelectorAll('[data-filter-option]').forEach(btn => {
+        btn.classList.remove('is-active');
+      });
+      filterOption.classList.add('is-active');
+
+      drop.classList.remove('open');
+      if (filterForm) {
+        filterForm.submit();
+      }
+      return;
+    }
+
+    const menuToggle = e.target.closest('[data-menu-toggle]');
+    const currentMenu = e.target.closest('[data-menu]');
+
+    document.querySelectorAll('[data-menu].open').forEach(menu => {
+      if (menu !== currentMenu) {
+        menu.classList.remove('open');
+      }
+    });
+
+    if (menuToggle) {
+      const menu = menuToggle.closest('[data-menu]');
+      menu.classList.toggle('open');
+      e.stopPropagation();
+      return;
+    }
   });
 
-  // Tự động focus và đưa con trỏ xuống cuối dòng khi trang tải lại
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('[data-menu].open').forEach(menu => {
+        menu.classList.remove('open');
+      });
+
+      document.querySelectorAll('[data-filter-select].open').forEach(drop => {
+        drop.classList.remove('open');
+      });
+    }
+  });
+
   window.onload = () => {
-    if (searchInput.value.length > 0) {
+    if (searchInput && searchInput.value.length > 0) {
       searchInput.focus();
-      // Đưa con trỏ về cuối văn bản để người dùng gõ tiếp
       const val = searchInput.value;
       searchInput.value = '';
       searchInput.value = val;
     }
   };
+
+  document.addEventListener('click', async function (e) {
+    const deleteBtn = e.target.closest('[data-delete-asset-id]');
+    if (!deleteBtn) return;
+
+    const assetId = deleteBtn.getAttribute('data-delete-asset-id');
+    if (!assetId) return;
+
+    const confirmed = window.confirm('Bạn có chắc muốn xóa tài sản này không? Hành động này không thể hoàn tác.');
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/assets/delete/${encodeURIComponent(assetId)}`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (_) {
+        result = {};
+      }
+
+      if (!response.ok) {
+        alert(result.message || 'Xóa tài sản thất bại.');
+        return;
+      }
+
+      alert(result.message || 'Xóa tài sản thành công.');
+      window.location.reload();
+    } catch (error) {
+      alert('Không thể kết nối đến server để xóa tài sản.');
+      console.error(error);
+    }
+  });
 </script>
 {% endblock %}

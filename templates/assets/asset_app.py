@@ -1,10 +1,26 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, jsonify
 import json
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlencode, quote
 
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
+
+DEFAULT_FILTER_COUNTS = {
+    "type": {
+        "all": 0,
+        "laptop": 0,
+        "pc": 0,
+        "printer": 0
+    },
+    "status": {
+        "all": 0,
+        "using": 0,
+        "available": 0,
+        "maintenance": 0,
+        "pending": 0
+    }
+}
 
 
 def fetch_assets_from_backend(page=1, per_page=10, search="", asset_type="Tất cả", department="Tất cả", status="Tất cả"):
@@ -31,7 +47,8 @@ def fetch_assets_from_backend(page=1, per_page=10, search="", asset_type="Tất 
                 "per_page": per_page,
                 "total_items": 0,
                 "total_pages": 1
-            }
+            },
+            "filter_counts": DEFAULT_FILTER_COUNTS
         }
 
 
@@ -44,6 +61,33 @@ def fetch_asset_detail_from_backend(asset_id):
         return payload
     except (URLError, HTTPError, TimeoutError, json.JSONDecodeError):
         return None
+
+
+def delete_asset_from_backend(asset_id):
+    api_url = f"{BACKEND_ASSETS_API}/{quote(asset_id)}"
+    req = Request(api_url, method="DELETE")
+
+    try:
+        with urlopen(req, timeout=5) as response:
+            raw = response.read().decode("utf-8")
+            payload = json.loads(raw) if raw else {}
+        return True, payload
+
+    except HTTPError as e:
+        try:
+            raw = e.read().decode("utf-8")
+            payload = json.loads(raw) if raw else {}
+        except Exception:
+            payload = {}
+
+        return False, {
+            "message": payload.get("message", f"Xóa tài sản thất bại. HTTP {e.code}")
+        }
+
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return False, {
+            "message": "Không thể kết nối đến backend để xóa tài sản."
+        }
 
 
 def register_assets_routes(app):
@@ -67,6 +111,7 @@ def register_assets_routes(app):
 
         assets = api_result.get("items", [])
         pagination = api_result.get("pagination", {})
+        filter_counts = api_result.get("filter_counts", DEFAULT_FILTER_COUNTS)
 
         return render_template(
             'assets/assets.html',
@@ -77,7 +122,8 @@ def register_assets_routes(app):
             total_count=pagination.get("total_items", 0),
             selected_type=sel_type,
             selected_dept=sel_dept,
-            selected_status=sel_status
+            selected_status=sel_status,
+            filter_counts=filter_counts
         )
 
     @app.route('/assets/create', methods=['GET', 'POST'])
@@ -102,3 +148,14 @@ def register_assets_routes(app):
         }
 
         return render_template('assets/asset_detail.html', info=info, specs=specs)
+
+    @app.route('/assets/delete/<string:asset_id>', methods=['POST'])
+    def asset_delete_view(asset_id):
+        success, result = delete_asset_from_backend(asset_id)
+
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        if is_ajax:
+            return jsonify(result), 200 if success else 400
+
+        return redirect(url_for('assets_page'))

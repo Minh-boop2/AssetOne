@@ -1,0 +1,148 @@
+<form action="{{ url_for('assets_page') }}" method="GET" id="filterForm">
+  <div class="filter-bar">
+    <div class="filter-item filter-item--search">
+      <label class="filter-label">Tìm kiếm</label>
+      <input
+        type="text"
+        name="search"
+        id="searchInput"
+        placeholder="Gõ để tìm tên hoặc mã tài sản (ASG...)"
+        value="{{ search_q or '' }}"
+        class="filter-input"
+      >
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Loại thiết bị</label>
+
+      <div class="filter-select" data-filter-select>
+        <input type="hidden" name="type" value="{{ selected_type or 'Tất cả' }}" data-filter-input>
+
+        <button type="button" class="filter-select__button" data-filter-toggle>
+          <span class="filter-select__value">
+            <span class="filter-select__label" data-filter-current-label>
+              {% if selected_type == 'laptop' %}
+                Laptop
+              {% elif selected_type == 'pc' %}
+                Máy tính bàn
+              {% elif selected_type == 'printer' %}
+                Máy in
+              {% else %}
+                Tất cả loại
+              {% endif %}
+            </span>
+            <span class="filter-select__count" data-filter-current-count>
+              {% if selected_type == 'laptop' %}
+                {{ filter_counts.type.laptop if filter_counts and filter_counts.type else 0 }}
+              {% elif selected_type == 'pc' %}
+                {{ filter_counts.type.pc if filter_counts and filter_counts.type else 0 }}
+              {% elif selected_type == 'printer' %}
+                {{ filter_counts.type.printer if filter_counts and filter_counts.type else 0 }}
+              {% else %}
+                {{ filter_counts.type.all if filter_counts and filter_counts.type else 0 }}
+              {% endif %}
+            </span>
+          </span>
+          <span class="filter-select__caret">▼</span>
+        </button>
+
+        <div class="filter-select__menu">
+          {% for opt in type_options %}
+            <button
+              type="button"
+              class="filter-select__option {% if opt.value == selected_type %}is-active{% endif %}"
+              data-filter-option
+              data-value="{{ opt.value }}"
+              data-label="{{ opt.label }}"
+              data-count="{{ opt.count }}"
+            >
+              <span class="filter-select__option-label">{{ opt.label }}</span>
+              <span class="filter-select__option-count">{{ opt.count }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Phòng ban</label>
+      <select
+        name="department"
+        onchange="this.form.submit()"
+        class="filter-native-select"
+      >
+        <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng</option>
+        <option value="Phòng Kỹ Thuật" {% if selected_dept == 'Phòng Kỹ Thuật' %}selected{% endif %}>Phòng Kỹ Thuật</option>
+        <option value="Phòng Hành Chính" {% if selected_dept == 'Phòng Hành Chính' %}selected{% endif %}>Phòng Hành Chính</option>
+        <option value="Phòng Thiết Kế" {% if selected_dept == 'Phòng Thiết Kế' %}selected{% endif %}>Phòng Thiết Kế</option>
+        <option value="Phòng IT" {% if selected_dept == 'Phòng IT' %}selected{% endif %}>Phòng IT</option>
+      </select>
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Trạng thái</label>
+
+      <div class="filter-select" data-filter-select>
+        <input type="hidden" name="status" value="{{ selected_status or 'Tất cả' }}" data-filter-input>
+
+        <button type="button" class="filter-select__button" data-filter-toggle>
+          <span class="filter-select__value">
+            <span class="filter-select__label" data-filter-current-label>
+              {% if selected_status == 'using' %}
+                Đang sử dụng
+              {% elif selected_status == 'available' %}
+                Chưa sử dụng
+              {% elif selected_status == 'maintenance' %}
+                Bảo trì
+              {% elif selected_status == 'Chờ duyệt' %}
+                Chờ duyệt
+              {% else %}
+                Tất cả trạng thái
+              {% endif %}
+            </span>
+            <span class="filter-select__count" data-filter-current-count>
+              {% if selected_status == 'using' %}
+                {{ filter_counts.status.using if filter_counts and filter_counts.status else 0 }}
+              {% elif selected_status == 'available' %}
+                {{ filter_counts.status.available if filter_counts and filter_counts.status else 0 }}
+              {% elif selected_status == 'maintenance' %}
+                {{ filter_counts.status.maintenance if filter_counts and filter_counts.status else 0 }}
+              {% elif selected_status == 'Chờ duyệt' %}
+                {{ filter_counts.status.pending if filter_counts and filter_counts.status else 0 }}
+              {% else %}
+                {{ filter_counts.status.all if filter_counts and filter_counts.status else 0 }}
+              {% endif %}
+            </span>
+          </span>
+          <span class="filter-select__caret">▼</span>
+        </button>
+
+        <div class="filter-select__menu">
+          {% for opt in status_options %}
+            <button
+              type="button"
+              class="filter-select__option {% if opt.value == selected_status %}is-active{% endif %}"
+              data-filter-option
+              data-value="{{ opt.value }}"
+              data-label="{{ opt.label }}"
+              data-count="{{ opt.count }}"
+            >
+              <span class="filter-select__option-label">{{ opt.label }}</span>
+              <span class="filter-select__option-count">{{ opt.count }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      {% if search_q or (selected_type and selected_type != 'Tất cả') or (selected_dept and selected_dept != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
+        <a href="{{ url_for('assets_page') }}" class="btn-reset" title="Xóa lọc">✕</a>
+      {% endif %}
+
+      <a href="{{ url_for('asset_create') }}" class="action-btn action-btn--primary action-btn--add">
+        + Thêm thiết bị
+      </a>
+    </div>
+  </div>
+</form>
