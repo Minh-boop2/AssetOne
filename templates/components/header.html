@@ -80,7 +80,9 @@
           <a href="{{ url_for('profile_page') }}" class="user-dropdown-item">
             Hồ sơ
           </a>
-          <a href="" class="user-dropdown-item"> Thống kê </a>
+          <a href="{{ url_for('statistics_page') }}" class="user-dropdown-item">
+            Thống kê
+          </a>
           <a
             href="{{ url_for('login_page') }}"
             class="user-dropdown-item user-dropdown-item--danger"
