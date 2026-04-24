@@ -1,21 +1,12 @@
-{% extends 'main.html' %} {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/login/login.css') }}"
-/>
-<link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap"
-  rel="stylesheet"
-/>
-
 <div class="auth-wrapper">
   <div class="login-card">
     <h3 class="login-title">Đăng Nhập</h3>
 
     <form method="POST">
       <div class="form-group">
-        <label>Username</label>
+        <label for="username">Username</label>
         <input
+          id="username"
           type="text"
           name="username"
           placeholder="Nhập tên đăng nhập"
@@ -24,8 +15,9 @@
       </div>
 
       <div class="form-group">
-        <label>Mật khẩu</label>
+        <label for="password">Mật khẩu</label>
         <input
+          id="password"
           type="password"
           name="password"
           placeholder="••••••••"
@@ -34,17 +26,22 @@
       </div>
 
       <div class="form-options">
-        <label class="remember-me">
-          <input type="checkbox" style="width: 18px; height: 18px; margin: 0" />
-          Ghi nhớ
+        <label class="remember-me" for="remember">
+          <input
+            id="remember"
+            type="checkbox"
+            name="remember"
+            class="remember-checkbox"
+          />
+          <span>Ghi nhớ</span>
         </label>
-        <a href="{{ url_for('forgot_password') }}" class="forgot-link"
-          >Quên mật khẩu?</a
-        >
+
+        <a href="{{ url_for('forgot_password') }}" class="forgot-link">
+          Quên mật khẩu?
+        </a>
       </div>
 
       <button type="submit" class="btn-login">Đăng nhập</button>
     </form>
   </div>
 </div>
-{% endblock %}

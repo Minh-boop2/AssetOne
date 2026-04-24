@@ -1,71 +1,7 @@
-<!DOCTYPE html>
-<html lang="vi" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <title>AssetOne - Đăng nhập</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login/login.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body>
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/login/login.css') }}"
+/>
 
-<header class="header">
-    <div class="header-left">
-        <div class="brand-wrap">
-            <img src="{{ url_for('static', filename='images/hsu-logo.png') }}" class="brand-logo">
-            <div class="brand-text">
-                <h1>Quản lý tài sản CNTT</h1>
-                <p>Hệ thống quản lý tài sản doanh nghiệp</p>
-            </div>
-        </div>
-    </div>
-    <div class="header-right">
-        <button class="theme-toggle" id="themeToggle">
-            <i data-lucide="moon" class="icon-moon"></i>
-            <i data-lucide="sun" class="icon-sun"></i>
-        </button>
-    </div>
-</header>
-
-<main class="auth-wrapper">
-    <div class="login-card">
-        <h3 class="login-title">Đăng Nhập</h3>
-        <form method="POST">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" placeholder="Nhập tên đăng nhập..." required>
-            </div>
-            <div class="form-group">
-                <label>Mật khẩu</label>
-                <input type="password" name="password" placeholder="••••••••" required>
-            </div>
-            
-            <div class="form-options">
-                <label class="remember-me">
-                    <input type="checkbox" style="width: 18px; height: 18px;"> Ghi nhớ
-                </label>
-                <a href="{{ url_for('forgot_password') }}" class="forgot-link">Quên mật khẩu?</a>
-            </div>
-            
-            <button type="submit" class="btn-login">Đăng nhập</button>
-        </form>
-    </div>
-</main>
-
-<script>
-    lucide.createIcons();
-    const root = document.documentElement;
-    const btn = document.getElementById('themeToggle');
-    
-    const saved = localStorage.getItem('theme') || 'light';
-    root.setAttribute('data-theme', saved);
-
-    btn.addEventListener('click', () => {
-        const current = root.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        root.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-    });
-</script>
-</body>
-</html>
+{% include 'login/login_overview.html' %} {% endblock %}

@@ -1,185 +1,336 @@
-/* --- BIẾN MÀU CHUẨN THEO ẢNH --- */
-:root {
-    /* LIGHT MODE */
-    --bg-color: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #0f172a;
-    --text-sub: #64748b;
-    --brand-color: #2563eb; /* Xanh hơi đậm lúc sáng */
-    --header-border: #ef4444;
-    --input-bg: #ffffff;
-    --input-border: #cbd5e1;
+/* =========================================
+   LOGIN / FORGOT PASSWORD PAGE ONLY
+   Chỉ load ở login.html và forgot_password.html
+   Không cần sửa header.html
+========================================= */
+
+/* Ẩn menu + avatar chỉ ở trang login/forgot */
+.header .header-nav,
+.header .user-menu-wrapper {
+  display: none !important;
 }
 
-[data-theme="dark"] {
-    /* DARK MODE */
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --text-main: #f8fafc;
-    --text-sub: #94a3b8;
-    --brand-color: #60a5fa; /* Xanh nhạt lúc tối */
-    --input-bg: #334155;
-    --input-border: #475569;
+/* Giữ logo bên trái + nút đổi theme bên phải */
+.header .header-right {
+  width: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    /* Dùng Inter cho chữ mập và nét */
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    transition: all 0.3s ease;
+.header .header-actions {
+  width: auto;
+  justify-content: flex-end;
 }
 
-/* --- HEADER: LOGO & CHỮ SIÊU LỚN --- */
-.header {
-    height: 105px;
-    display: flex;
-    justify-content: space-between;
+/* Fix responsive header riêng cho trang auth */
+@media (max-width: 980px) {
+  .header {
+    flex-direction: row;
     align-items: center;
-    padding: 0 60px;
-    background: var(--card-bg);
-    border-bottom: 4px solid var(--header-border);
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 1000;
-}
+  }
 
-.brand-wrap {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
+  .header-left {
+    flex: 1;
+  }
 
-.brand-logo {
-    height: 70px !important; /* Logo cực to */
+  .header-right {
     width: auto;
+  }
 }
 
-.brand-text h1 {
-    font-size: 30px; /* Chữ tiêu đề lớn */
-    color: var(--brand-color);
-    font-weight: 900; /* Siêu đậm */
-    letter-spacing: -0.03em;
-    line-height: 1;
-}
-
-.brand-text p {
-    font-size: 16px;
-    margin-top: 5px;
-    color: var(--text-sub);
-    font-weight: 600;
-}
-
-/* --- THEME TOGGLE VUÔNG --- */
-.theme-toggle {
-    width: 46px;
-    height: 46px;
-    background: transparent;
-    border: 2px solid var(--brand-color);
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
+@media (max-width: 640px) {
+  .header {
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    color: var(--brand-color);
+  }
+
+  .header-right,
+  .header-actions {
+    width: auto;
+  }
 }
 
-/* --- CARD LOGIN & FORGOT --- */
+/* =========================================
+   AUTH FORM
+   Font giống header: Arial, Helvetica, sans-serif
+========================================= */
+
+.auth-wrapper,
+.auth-wrapper *,
+.login-card,
+.login-card * {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .auth-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding-top: 105px;
+  width: 100%;
+  min-height: calc(100vh - 86px);
+
+  padding: 70px 16px 40px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: var(--bg);
+  color: var(--text);
 }
 
 .login-card {
-    background: var(--card-bg);
-    width: 440px;
-    padding: 50px;
-    border-radius: 28px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 440px;
+
+  padding: 48px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+
+  box-shadow: var(--shadow);
 }
 
 .login-title {
-    font-size: 34px;
-    font-weight: 900;
-    margin-bottom: 40px;
-    color: var(--text-main);
-    text-align: center;
-    letter-spacing: -0.04em;
+  margin: 0 0 18px;
+
+  color: var(--hsu-blue);
+  text-align: center;
+
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 700;
+
+  letter-spacing: normal;
+  text-shadow: none;
 }
 
+:root[data-theme="dark"] .login-title {
+  color: #8eb6ff;
+}
+
+.auth-desc {
+  margin: 0 0 35px;
+
+  color: var(--text-soft);
+  text-align: center;
+
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+/* Form */
 .form-group {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
-    display: block;
-    font-weight: 700;
-    margin-bottom: 10px;
-    font-size: 15px;
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: var(--text);
+
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
 }
 
-input {
-    width: 100%;
-    padding: 16px 20px;
-    border-radius: 14px;
-    border: 2px solid var(--input-border);
-    background: var(--bg-color);
-    color: var(--text-main);
-    font-family: inherit;
-    font-size: 16px;
-    transition: 0.2s;
+/* Input dùng chung login + forgot password */
+.login-card input[type="text"],
+.login-card input[type="password"],
+.login-card input[type="email"] {
+  width: 100%;
+
+  padding: 15px 18px;
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  background: var(--surface-2);
+  color: var(--text);
+
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 400;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-input:focus {
-    outline: none;
-    border-color: var(--brand-color);
+.login-card input[type="text"]::placeholder,
+.login-card input[type="password"]::placeholder,
+.login-card input[type="email"]::placeholder {
+  color: var(--text-soft);
+  font-weight: 400;
+  opacity: 1;
 }
 
-/* --- GHI NHỚ & QUÊN MẬT KHẨU --- */
+.login-card input[type="text"]:focus,
+.login-card input[type="password"]:focus,
+.login-card input[type="email"]:focus {
+  border-color: var(--hsu-blue);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(31, 79, 163, 0.12);
+}
+
+/* Ghi nhớ + quên mật khẩu */
 .form-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 35px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  margin: 8px 0 34px;
 }
 
 .remember-me {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--text);
+
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+
+  cursor: pointer;
+  user-select: none;
 }
 
-.btn-login {
-    width: 100%;
-    padding: 18px;
-    background: var(--brand-color);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    font-weight: 800;
-    font-size: 19px;
-    cursor: pointer;
-    transition: transform 0.1s;
+.remember-checkbox {
+  flex: 0 0 auto;
+
+  width: 18px;
+  height: 18px;
+  margin: 0;
+
+  accent-color: var(--hsu-blue);
+  cursor: pointer;
 }
 
-.btn-login:active { transform: scale(0.98); }
-
+/* Link */
 .forgot-link {
-    color: var(--brand-color);
-    text-decoration: none;
-    font-weight: 800;
-    font-size: 15px;
+  color: var(--hsu-blue);
+
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition: color 0.2s ease;
 }
 
-/* LOGIC ICON */
-.icon-sun { display: none; color: #fbbf24; }
-[data-theme="dark"] .icon-sun { display: block; }
-[data-theme="dark"] .icon-moon { display: none; }
+.forgot-link:hover {
+  color: var(--hsu-blue-dark);
+  text-decoration: underline;
+}
+
+:root[data-theme="dark"] .forgot-link {
+  color: #8eb6ff;
+}
+
+/* Button */
+.btn-login {
+  width: 100%;
+
+  padding: 15px 20px;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: var(--hsu-blue);
+  color: #ffffff;
+
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-login:hover {
+  background: var(--hsu-blue-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(31, 79, 163, 0.22);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+}
+
+/* Link quay lại */
+.auth-back {
+  margin-top: 35px;
+  text-align: center;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .login-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .login-card input[type="text"],
+:root[data-theme="dark"] .login-card input[type="password"],
+:root[data-theme="dark"] .login-card input[type="email"] {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .login-card input[type="text"]:focus,
+:root[data-theme="dark"] .login-card input[type="password"]:focus,
+:root[data-theme="dark"] .login-card input[type="email"]:focus {
+  background: var(--surface);
+  border-color: #8eb6ff;
+  box-shadow: 0 0 0 4px rgba(142, 182, 255, 0.14);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .auth-wrapper {
+    padding: 40px 14px 32px;
+    align-items: flex-start;
+  }
+
+  .login-card {
+    padding: 34px 24px;
+    border-radius: 20px;
+  }
+
+  .login-title {
+    margin-bottom: 16px;
+    font-size: 24px;
+  }
+
+  .auth-desc {
+    margin-bottom: 30px;
+  }
+
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .forgot-link {
+    white-space: normal;
+  }
+
+  .btn-login {
+    font-size: 15px;
+  }
+}
