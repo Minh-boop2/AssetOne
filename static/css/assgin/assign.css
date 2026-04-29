@@ -1,277 +1,665 @@
-/* assign.css - Cập nhật đồng bộ với Header Design System */
+/* =========================================
+    ASSIGN MODULE - FULL STYLESHEET
+   ========================================= */
 
-/* ===== 1. ĐỒNG BỘ BIẾN SỐ (VARIABLES) ===== */
-/* Lưu ý: Các biến này nên nằm ở file global, nhưng tôi để đây để bạn dễ kiểm soát */
 :root {
-    --hsu-blue: #1f4fa3;
-    --hsu-blue-dark: #163c7d;
-    --hsu-blue-soft: #eaf1ff;
-    --hsu-red: #ef3b2d;
-
-    /* Light mode */
-    --bg: #f5f7fb;
-    --surface: #ffffff;
-    --surface-2: #f0f4fb;
-    --text: #162033;
-    --text-soft: #5d6b82;
-    --border: #d9e2f0;
-    --shadow: 0 10px 30px rgba(22, 60, 125, 0.08);
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-soft: #64748b;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --hsu-blue: #2563eb;
+  --hsu-red: #ef4444;
+  --hsu-green: #10b981;
+  --font-main: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Đồng bộ với cách Header nhận diện Dark Mode qua [data-theme="dark"] */
-:root[data-theme="dark"] {
-    --bg: #0f172a;
-    --surface: #111c34;
-    --surface-2: #16233f;
-    --text: #e8eefc;
-    --text-soft: #aab8d3;
-    --border: #263553;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    
-    /* Điều chỉnh màu xanh cho Dark Mode giống tiêu đề Header */
-    --hsu-blue: #8eb6ff; 
+/* Chế độ tối (Dark Mode) */
+body.dark-mode, .dark-mode {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #162033;
+  --border: #334155;
+  --text: #f8fafc;
+  --text-soft: #94a3b8;
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.18);
 }
 
-/* ===== 2. FONT CHỮ & NỀN TẢNG ===== */
-.assign-page {
-    padding: 32px 28px;
+/* TÙY CHỈNH THANH CUỘN (SCROLLBAR) THEO MÀU NỀN */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
     background: var(--bg);
-    min-height: 100vh;
-    /* Sử dụng font đồng bộ với Header */
-    font-family: Arial, Helvetica, sans-serif; 
-    color: var(--text);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hsu-blue);
 }
 
-/* Tiêu đề trang */
-.assign-page h2 {
-    color: var(--hsu-blue);
-    font-weight: 700;
-    letter-spacing: -0.5px;
+/* Đồng bộ Font & Reset */
+.assign-page, .assign-create-page {
+  font-family: var(--font-main);
+  background: var(--bg) !important;
+  color: var(--text);
+  padding: 24px 28px 32px;
+  min-height: 100vh;
 }
 
-/* ===== 3. THỐNG KÊ (STATS) ===== */
-.stat-card {
-    background: var(--surface);
-    padding: 24px;
-    border-radius: 16px; /* Bo góc đồng bộ với Theme Toggle/User Box */
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+.assign-page *, .assign-create-page * { box-sizing: border-box; }
+
+/* Header Section */
+.assets-page__header { margin-bottom: 24px; }
+.assets-page__title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 4px;
 }
 
-.stat-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--hsu-blue);
+/* =========================================
+    FILTER BAR
+   ========================================= */
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: nowrap; 
+  background: var(--surface);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
-.stat-label {
-    color: var(--text-soft);
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  position: relative;
 }
 
-.stat-value {
-    font-size: 36px;
-    font-weight: 800;
-    color: var(--hsu-blue); /* Màu xanh chủ đạo HSU */
-    margin-top: 10px;
-    line-height: 1;
+.filter-item--search { flex: 2; }
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* ===== 4. CARD CHỨA BẢNG ===== */
-.assign-table-card {
+/* Base Control & Custom Select Button */
+.filter-control, .filter-select__button {
+  width: 100%;
+  height: 42px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  appearance: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+/* UPDATE: Tối ưu hiển thị cho ô Input Date */
+input[type="date"].filter-control {
+    position: relative;
+    padding-right: 10px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    filter: invert(0.5); /* Giúp icon lịch hiển thị tốt hơn trên cả nền sáng/tối */
+}
+
+.filter-control:focus, .filter-select__button:focus {
+  border-color: var(--hsu-blue);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-select__value {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-select__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-select__count {
+  margin-left: auto; 
+  margin-right: 10px;
+  color: var(--text-soft);
+  font-weight: 600;
+  font-size: 12px;
+  background: rgba(0,0,0,0.05);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.dark-mode .filter-select__count {
+  background: rgba(255,255,255,0.05);
+}
+
+/* CUSTOM DROPDOWN MENU */
+.filter-select { position: relative; width: 100%; }
+
+.filter-select__menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  z-index: 1000;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* BỎ CUỘN PHÒNG BAN */
+#select-department .filter-select__menu {
+    max-height: none !important;
+    overflow-y: visible !important;
+}
+
+.filter-select__menu.show { display: block; }
+
+.filter-select__option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filter-select__option:hover {
+  background: var(--surface-2);
+  color: var(--hsu-blue);
+}
+
+.filter-select__option-label { flex: 1; text-align: left; }
+
+.filter-select__option-count {
+  margin-left: auto;
+  color: var(--text-soft);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.filter-select__caret {
+  font-size: 10px;
+  color: var(--text-soft);
+  transition: transform 0.2s;
+}
+
+.btn-add-new {
+  background: var(--hsu-blue);
+  color: #fff !important;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-add-new:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* =========================================
+    TABLE CONTAINER
+   ========================================= */
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: visible;
+  box-shadow: var(--shadow);
+}
+
+.table-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-list-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0; }
+.table-info-count { font-size: 13px; color: var(--text-soft); }
+
+.table-scroll { max-height: 550px; overflow-y: auto; }
+.custom-table { width: 100%; border-collapse: collapse; }
+.custom-table thead { position: sticky; top: 0; z-index: 10; background: var(--surface); }
+
+.custom-table th {
+  padding: 16px; text-align: left; font-size: 12px;
+  color: var(--text-soft); text-transform: uppercase; font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+
+.custom-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.custom-table tr:hover { background: var(--surface-2); }
+.text-center { text-align: center !important; }
+
+/* Badges */
+.badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-block; }
+.status-hoanthanh { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.status-choduyet { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.status-dangxuly { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
+.status-reject { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.font-bold { font-weight: 700; }
+.asset-code { font-family: monospace; color: var(--hsu-blue); font-weight: 600; }
+
+/* =========================================
+    ACTION MENU
+   ========================================= */
+.action-menu { position: relative; }
+.action-menu-center { display: flex; justify-content: center; width: 100%; }
+.action-menu__trigger {
+  background: transparent; border: none; cursor: pointer;
+  width: 32px; height: 32px; display: flex; align-items: center;
+  justify-content: center; border-radius: 8px; transition: background 0.2s;
+}
+.action-menu__trigger:hover { background: var(--surface-2); }
+.action-menu__dots span { display: block; width: 4px; height: 4px; background-color: var(--text-soft); border-radius: 50%; margin: 2px 0; }
+
+.action-menu__dropdown {
+  display: none; position: absolute; right: 0; top: 100%;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; width: 180px; z-index: 1000;
+  box-shadow: var(--shadow); padding: 6px; margin-top: 8px;
+}
+.action-menu__dropdown.show { display: block; }
+.action-menu__item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  color: var(--text); text-decoration: none; font-size: 14px;
+  border-radius: 8px; transition: all 0.2s; width: 100%; cursor: pointer;
+}
+.action-menu__item:hover { background: var(--surface-2); }
+.action-menu__item--danger { color: var(--hsu-red) !important; }
+
+/* =========================================
+    DECISION BUTTONS - SỬA ĐỂ NGANG HÀNG
+   ========================================= */
+.status-container {
+  display: flex;
+  flex-direction: row; 
+  gap: 12px;
+  align-items: center;
+}
+
+.decision-group { display: flex; gap: 6px; }
+
+.btn-decision {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-decision--approve {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+.btn-decision--approve:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-decision--reject {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.btn-decision--reject:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* =========================================
+    PAGINATION
+   ========================================= */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: transparent;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-info { font-size: 14px; color: var(--text-soft); }
+
+.pagination-controls { display: flex; gap: 8px; align-items: center; }
+
+.page-btn {
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px; 
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.page-btn--nav { padding: 0 15px; min-width: auto; color: var(--text-soft); }
+
+.page-btn:hover:not(.disabled):not(.active) {
+  border-color: var(--hsu-blue);
+  color: var(--hsu-blue);
+  background: var(--surface);
+}
+
+.page-btn.active {
+  background: var(--hsu-blue) !important;
+  color: #ffffff !important;
+  border-color: var(--hsu-blue) !important;
+}
+
+.page-btn.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+/* =========================================
+    CREATE & EDIT PAGE SPECIFIC STYLES
+   ========================================= */
+
+.assign-create-page .form-container {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
     background: var(--surface);
     border-radius: 16px;
     border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    margin-top: 32px;
 }
 
-/* Tiêu đề bảng */
-.card-header-flex {
-    padding: 20px 24px;
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-    border-bottom: 1px solid var(--border);
+.asset-code-card {
+    background: var(--surface);
+    border: 2px solid var(--hsu-blue);
+    padding: 18px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+    position: relative;
+    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.12);
 }
 
-/* Nút "Cấp phát mới" đồng bộ với .nav-link active của Header */
-.btn-add-new {
-    background: var(--hsu-blue);
-    color: #fff !important;
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border: none;
-    display: inline-flex;
+.asset-code-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    margin-bottom: 10px;
 }
 
-.btn-add-new:hover {
-    background: var(--hsu-blue-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(31, 79, 163, 0.2);
+.asset-code-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* ===== 5. TABLE STYLING (CHỐNG LỆCH HÀNG) ===== */
-.assign-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+.asset-code-display {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--hsu-blue);
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    letter-spacing: 2px;
 }
 
-.col-asset  { width: 30%; }
-.col-user   { width: 20%; }
-.col-date   { width: 15%; }
-.col-status { width: 20%; }
-.col-action { width: 15%; }
-
-.assign-table th {
-    padding: 18px 24px;
-    color: var(--hsu-blue); /* Thêu dệt màu chủ đạo vào header bảng */
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
+.copy-btn {
     background: var(--surface-2);
-    border-bottom: 2px solid var(--border);
-    text-align: left;
-}
-
-:root[data-theme="dark"] .assign-table th {
+    border: 1px solid var(--border);
     color: var(--hsu-blue);
-}
-
-.assign-table td {
-    padding: 18px 24px;
-    color: var(--text);
-    font-size: 15px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    transition: background 0.2s ease;
-}
-
-.assign-table tr:last-child td {
-    border-bottom: none;
-}
-
-.assign-table tr:hover td {
-    background: var(--hsu-blue-soft);
-}
-
-:root[data-theme="dark"] .assign-table tr:hover td {
-    background: rgba(142, 182, 255, 0.05);
-}
-
-/* ===== 6. TRẠNG THÁI (STATUS BADGES) ===== */
-.status-badge {
-    padding: 6px 14px;
-    border-radius: 8px; /* Bo góc theo style User Box */
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-}
-
-.status-using, .status-completed {
-    background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
-}
-
-.status-pending {
-    background: var(--hsu-blue-soft);
-    color: var(--hsu-blue);
-}
-
-.status-error {
-    background: rgba(239, 59, 45, 0.1);
-    color: var(--hsu-red);
-}
-
-/* ===== 7. THAO TÁC (ACTION MENU) ===== */
-.more-btn {
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--hsu-blue);
     cursor: pointer;
     transition: all 0.2s;
-}
-
-.more-btn:hover {
-    border-color: var(--hsu-blue);
-    background: var(--hsu-blue-soft);
-}
-
-.more-menu {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 6px;
-    z-index: 100;
-}
-
-.more-menu a {
-    padding: 10px 14px;
-    color: var(--text);
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.more-menu a:hover {
-    background: var(--hsu-blue-soft);
-    color: var(--hsu-blue);
-}
-
-/* ===== 8. PHÂN TRANG (PAGINATION) ===== */
-.pagination-controls {
-    display: flex;
-    gap: 8px;
-    padding: 20px 24px;
-    background: var(--surface);
-}
-
-.page-link {
-    min-width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+}
+
+.copy-btn:hover { background: var(--hsu-blue); color: #fff; }
+
+.asset-code-footer { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.asset-code-footer p { font-size: 10px; color: var(--text-soft); margin: 0; font-style: italic; }
+
+#spec_area {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    background: var(--surface-2);
     border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    width: 100%;
+}
+
+#spec_area:focus { background: var(--surface); border-color: var(--hsu-blue); }
+
+/* =========================================
+    ASSIGN DETAIL PAGE - PREMIUM STYLES
+   ========================================= */
+
+.detail-card {
+    animation: slideUp 0.4s ease-out;
     background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.asset-id-highlight {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.02) 100%);
+    border: 2px dashed rgba(37, 99, 235, 0.3) !important;
+    position: relative;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.dark-mode .asset-id-highlight {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%);
+    border: 2px dashed rgba(37, 99, 235, 0.4) !important;
+}
+
+.spec-box-detail {
+    background: var(--surface-2) !important;
+    border-left: 4px solid var(--hsu-blue) !important;
+    font-family: 'Cascadia Code', 'Consolas', monospace !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+    padding: 15px;
+    border-radius: 8px;
     color: var(--text);
+}
+
+/* Box lịch trình */
+.schedule-box {
+    border: 1px solid var(--border);
+    background: #ffffff !important; 
+    transition: transform 0.2s;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.schedule-box .info-label {
+    color: #64748b !important;
     font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.schedule-box .info-value {
+    color: #1e293b !important;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.schedule-box [style*="color: var(--hsu-red)"],
+.schedule-box .info-value[style*="color: var(--hsu-red)"] {
+    color: #ef4444 !important;
+}
+
+.schedule-box:hover {
+    transform: scale(1.01);
+}
+
+.info-label {
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.info-value-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dark-mode .spec-box-detail {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+
+/* Buttons Detail */
+.btn-action-detail {
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
     text-decoration: none;
-    transition: all 0.2s;
 }
 
-.page-link:hover:not(.disabled) {
-    border-color: var(--hsu-blue);
-    color: var(--hsu-blue);
-    background: var(--hsu-blue-soft);
+.btn-edit-detail {
+    background: var(--surface-2);
+    color: var(--text);
 }
 
-.page-link.active {
+.btn-edit-detail:hover {
+    background: var(--border);
+    transform: translateY(-2px);
+}
+
+.btn-approve-detail {
     background: var(--hsu-blue);
-    color: #fff;
+    color: #ffffff !important;
+}
+
+.btn-approve-detail:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+
+/* =========================================
+    CẬP NHẬT RIÊNG CHO TRANG EDIT (PHẦN MỚI)
+   ========================================= */
+
+/* Hiệu ứng focus chuyên sâu cho các ô nhập liệu trong trang Edit */
+.assign-create-page form .filter-control:focus {
+    background: var(--surface);
     border-color: var(--hsu-blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    transform: translateY(-1px);
 }
 
-/* ===== 9. RESPONSIVE ===== */
-@media (max-width: 980px) {
-    .assign-page { padding: 20px 16px; }
-    .stat-value { font-size: 30px; }
+/* Làm cho Textarea ghi chú xịn hơn */
+.assign-create-page textarea#spec_area {
+    min-height: 150px;
+    line-height: 1.6;
+    font-size: 14px;
+    padding: 15px;
+    border-radius: 12px;
 }
 
+/* Hiệu ứng hover cho nút xác nhận cập nhật */
+.assign-create-page .btn-add-new[type="submit"] {
+    background: linear-gradient(135deg, var(--hsu-blue) 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    cursor: pointer;
+}
+
+.assign-create-page .btn-add-new[type="submit"]:hover {
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+
+/* =========================================
+    RESPONSIVE
+   ========================================= */
 @media (max-width: 768px) {
-    .assign-table-card { overflow-x: auto; }
-    .assign-table { min-width: 800px; } /* Đảm bảo không vỡ cột trên màn hình nhỏ */
+    .assign-create-page form > div, .info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-item { width: 100%; }
+
+    .status-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

@@ -1,369 +1,240 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assign/assign.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
 
-<style>
-    /* Tổng thể container */
-    .assign-page-container {
-        padding: 24px;
-        max-width: 100%;
-        font-family: Arial, Helvetica, sans-serif;
-    }
-
-    /* Thống kê (Stats) */
-    .stats-grid.assign-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .assign-stats .stat-card {
-        background: var(--surface);
-        padding: 24px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .assign-stats .stat-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--hsu-blue);
-    }
-
-    .stat-card-top { display: flex; align-items: center; gap: 12px; }
-    .stat-icon {
-        width: 44px; height: 44px;
-        display: flex; align-items: center; justify-content: center;
-        border-radius: 12px; font-size: 20px;
-    }
-
-    .stat-icon-blue { background: rgba(31, 79, 163, 0.1); color: var(--hsu-blue); }
-    .stat-icon-green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .stat-icon-red { background: rgba(239, 59, 45, 0.1); color: var(--hsu-red); }
-
-    .stat-label { font-size: 13px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 32px; font-weight: 800; color: var(--hsu-blue); line-height: 1; }
-    :root[data-theme="dark"] .stat-value { color: #8eb6ff; }
-    .stat-success { color: #10b981 !important; }
-    .stat-danger { color: var(--hsu-red) !important; }
-
-    /* --- BỘ LỌC CẬP NHẬT DÀN HÀNG NGANG --- */
-    .filter-section {
-        background: var(--surface);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        margin-bottom: 32px;
-        padding: 20px;
-        box-shadow: var(--shadow);
-    }
-
-    .filter-grid {
-        display: flex;
-        gap: 12px;
-        align-items: flex-end;
-        width: 100%;
-    }
-
-    .filter-item {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filter-item.search-wide { flex: 1; }
-    .filter-item.select-box { width: 180px; }
-
-    .filter-label-small {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-soft);
-        text-transform: uppercase;
-        margin-left: 2px;
-    }
-
-    .filter-input {
-        width: 100%;
-        padding: 10px 14px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: var(--surface-2);
-        color: var(--text);
-        font-size: 14px;
-        outline: none;
-        transition: all 0.2s;
-        height: 41px;
-    }
-
-    .filter-input:focus { border-color: var(--hsu-blue); background: var(--surface); }
-
-    .btn-search {
-        background: var(--hsu-blue);
-        color: #ffffff;
-        border: none;
-        padding: 0 24px;
-        height: 41px; 
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn-search:hover { opacity: 0.9; transform: translateY(-1px); }
-
-    /* Bảng */
-    .overview-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-    }
-
-    .card-header-flex {
-        padding: 24px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .btn-add-new {
-        background: var(--hsu-blue);
-        color: #ffffff !important;
-        text-decoration: none;
-        padding: 10px 18px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* --- CẬP NHẬT NÚT THAO TÁC 3 CHẤM --- */
-    .task-btn {
-        padding: 8px 12px;
-        background: transparent; /* Bỏ background */
-        border: none;            /* Bỏ viền */
-        border-radius: 8px;
-        color: var(--text-soft);  /* Màu nhạt hơn cho chuyên nghiệp */
-        cursor: pointer;
-        font-size: 18px;
-        transition: all 0.2s ease;
-    }
-
-    .task-btn:hover {
-        background: var(--surface-2); /* Chỉ hiện nền khi hover */
-        color: var(--hsu-blue);
-    }
-
-    /* Phân trang */
-    .pagination-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-    }
-
-    .page-link {
-        min-width: 36px; height: 36px;
-        display: flex; align-items: center; justify-content: center;
-        padding: 0 10px; border-radius: 8px;
-        border: 1px solid var(--border); background: var(--surface);
-        color: var(--text); text-decoration: none;
-        font-size: 13px; font-weight: 600; transition: all 0.2s ease;
-    }
-    .page-link.active { background: var(--hsu-blue); color: #fff; border-color: var(--hsu-blue); }
-    .page-link.disabled { opacity: 0.5; pointer-events: none; }
-</style>
-
-<section class="assign-page-container">
-    {# --- 1. TIÊU ĐỀ TRANG --- #}
-    <div style="margin-bottom: 32px;">
-        <h2 style="font-size: 28px; font-weight: 700; color: var(--text); margin: 0; margin-bottom: 8px;">Quản lý cấp phát</h2>
-        <p style="color: var(--text-soft); font-size: 14px; margin: 0;">Theo dõi và điều phối tài sản cho nhân viên các phòng ban</p>
+<section class="assign-page">
+    <div class="assets-page__header">
+        <h1 class="assets-page__title">Quản lý cấp phát</h1>
+        <p style="color: var(--text-soft); font-size: 14px; margin-bottom: 24px;">Theo dõi danh sách và lịch sử bàn giao thiết bị nhân viên</p>
     </div>
 
-    {# --- 2. THỐNG KÊ --- #}
-    <div class="stats-grid assign-stats">
-        <div class="stat-card">
-            <div class="stat-card-top">
-                <span class="stat-icon stat-icon-blue">📊</span>
-                <span class="stat-label">Tổng lượt cấp</span>
-            </div>
-            <div class="stat-value">{{ stats.total }}</div>
+    <form action="{{ url_for('assign_page') }}" method="GET" id="filterForm" class="filter-bar">
+        <div class="filter-item filter-item--search">
+            <label class="filter-label">TÌM KIẾM</label>
+            <input type="text" name="search" placeholder="Gõ tên, mã tài sản hoặc người dùng..." value="{{ search_q or '' }}" class="filter-control">
         </div>
 
-        <div class="stat-card">
-            <div class="stat-card-top">
-                <span class="stat-icon stat-icon-green">📩</span>
-                <span class="stat-label">Yêu cầu mới</span>
-            </div>
-            <div class="stat-value stat-success">{{ stats.pending }}</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-card-top">
-                <span class="stat-icon stat-icon-red">⚠️</span>
-                <span class="stat-label">Quá hạn trả</span>
-            </div>
-            <div class="stat-value stat-danger">{{ stats.overdue }}</div>
-        </div>
-    </div>
-
-    {# --- 3. BỘ LỌC TÌM KIẾM --- #}
-    <div class="filter-section">
-        <form method="GET" action="{{ url_for('assign_page') }}" class="filter-grid">
-            <div class="filter-item search-wide">
-                <label class="filter-label-small">Tìm kiếm</label>
-                <input type="text" name="search" class="filter-input" placeholder="Tên nhân viên, mã tài sản..." value="{{ search_q or '' }}">
-            </div>
-            
-            <div class="filter-item select-box">
-                <label class="filter-label-small">Loại tài sản</label>
-                <select name="category" class="filter-input">
-                    <option value="">Tất cả</option>
+        <div class="filter-item">
+            <label class="filter-label">LOẠI THIẾT BỊ</label>
+            <div class="filter-select" id="select-category">
+                <input type="hidden" name="category" value="{{ selected_cat }}">
+                <button type="button" class="filter-select__button">
+                    <span class="filter-select__value">
+                        <span class="filter-select__label">{{ selected_cat if selected_cat != 'Tất cả' else 'Tất cả loại' }}</span>
+                        <span class="filter-select__count">{{ counts['total'] if selected_cat == 'Tất cả' else counts['categories'].get(selected_cat, 0) }}</span>
+                    </span>
+                    <i class="fas fa-chevron-down filter-select__caret"></i>
+                </button>
+                <div class="filter-select__menu">
+                    <button type="button" class="filter-select__option" data-value="Tất cả">
+                        <span class="filter-select__option-label">Tất cả loại</span>
+                        <span class="filter-select__option-count">{{ counts['total'] }}</span>
+                    </button>
                     {% for cat in categories %}
-                    <option value="{{ cat }}" {% if selected_cat == cat %}selected{% endif %}>{{ cat }}</option>
+                    <button type="button" class="filter-select__option" data-value="{{ cat }}">
+                        <span class="filter-select__option-label">{{ cat }}</span>
+                        <span class="filter-select__option-count">{{ counts['categories'].get(cat, 0) }}</span>
+                    </button>
                     {% endfor %}
-                </select>
+                </div>
             </div>
+        </div>
 
-            <div class="filter-item select-box">
-                <label class="filter-label-small">Phòng ban</label>
-                <select name="department" class="filter-input">
-                    <option value="">Tất cả</option>
+        <div class="filter-item">
+            <label class="filter-label">PHÒNG BAN</label>
+            <div class="filter-select" id="select-department">
+                <input type="hidden" name="department" value="{{ selected_dept }}">
+                <button type="button" class="filter-select__button">
+                    <span class="filter-select__value">
+                        <span class="filter-select__label">{{ selected_dept if selected_dept != 'Tất cả' else 'Tất cả phòng' }}</span>
+                        <span class="filter-select__count">{{ counts['total'] if selected_dept == 'Tất cả' else counts['departments'].get(selected_dept, 0) }}</span>
+                    </span>
+                    <i class="fas fa-chevron-down filter-select__caret"></i>
+                </button>
+                <div class="filter-select__menu">
+                    <button type="button" class="filter-select__option" data-value="Tất cả">
+                        <span class="filter-select__option-label">Tất cả phòng</span>
+                        <span class="filter-select__option-count">{{ counts['total'] }}</span>
+                    </button>
                     {% for dept in departments %}
-                    <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                    <button type="button" class="filter-select__option" data-value="{{ dept }}">
+                        <span class="filter-select__option-label">{{ dept }}</span>
+                        <span class="filter-select__option-count">{{ counts['departments'].get(dept, 0) }}</span>
+                    </button>
                     {% endfor %}
-                </select>
+                </div>
             </div>
+        </div>
 
-            <div class="filter-item select-box">
-                <label class="filter-label-small">Trạng thái</label>
-                <select name="status" class="filter-input">
-                    <option value="">Tất cả</option>
+        <div class="filter-item">
+            <label class="filter-label">TRẠNG THÁI</label>
+            <div class="filter-select" id="select-status">
+                <input type="hidden" name="status" value="{{ selected_status }}">
+                <button type="button" class="filter-select__button">
+                    <span class="filter-select__value">
+                        <span class="filter-select__label">{{ selected_status if selected_status != 'Tất cả' else 'Tất cả trạng thái' }}</span>
+                        <span class="filter-select__count">{{ counts['total'] if selected_status == 'Tất cả' else counts['status'].get(selected_status, 0) }}</span>
+                    </span>
+                    <i class="fas fa-chevron-down filter-select__caret"></i>
+                </button>
+                <div class="filter-select__menu">
+                    <button type="button" class="filter-select__option" data-value="Tất cả">
+                        <span class="filter-select__option-label">Tất cả trạng thái</span>
+                        <span class="filter-select__option-count">{{ counts['total'] }}</span>
+                    </button>
                     {% for st in status_options %}
-                    <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st }}</option>
+                    <button type="button" class="filter-select__option" data-value="{{ st }}">
+                        <span class="filter-select__option-label">{{ st }}</span>
+                        <span class="filter-select__option-count">{{ counts['status'].get(st, 0) }}</span>
+                    </button>
                     {% endfor %}
-                </select>
+                </div>
             </div>
+        </div>
 
-            <button type="submit" class="btn-search">Lọc dữ liệu</button>
-        </form>
-    </div>
-
-    {# --- 4. BẢNG DỮ LIỆU --- #}
-    <div class="overview-card">
-        <div class="card-header-flex">
-            <h3 style="font-size: 18px; font-weight: 700; color: var(--text); margin: 0;">Danh sách lịch sử cấp phát</h3>
+        <div class="filter-actions" style="display: flex; gap: 8px; align-items: center;">
+            {% if search_q or selected_dept != 'Tất cả' or selected_cat != 'Tất cả' or selected_status != 'Tất cả' %}
+                <a href="{{ url_for('assign_page') }}" class="page-btn" title="Xóa lọc" style="height: 42px; width: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none;">✕</a>
+            {% endif %}
             <a href="{{ url_for('assign_create') }}" class="btn-add-new">
-                <span style="font-size: 18px;">+</span> Cấp phát mới
+                <i class="fas fa-plus"></i> Cấp phát mới
             </a>
         </div>
+    </form>
 
-        {% macro render_asset_info(row) %}
-            <div style="font-weight: 700; color: var(--text); margin-bottom: 2px;">{{ row.asset }}</div>
-            <div style="font-size: 11px; color: var(--text-soft); font-family: 'Courier New', monospace;">ID: #{{ row.id }}</div>
-        {% endmacro %}
-
-        {% macro render_receiver(row) %}
-            <div style="font-weight: 600; color: var(--text);">{{ row.receiver }}</div>
-            <div style="font-size: 12px; color: var(--text-soft);">{{ row.department }}</div>
-        {% endmacro %}
-
-        {% macro render_assign_status(row) %}
-            {% if row.status == 'Chờ duyệt' %}
-                <div style="display: flex; gap: 6px;">
-                    <a href="{{ url_for('approve_request', id=row.id) }}" class="status-badge" style="text-decoration: none; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">Duyệt</a>
-                    <a href="{{ url_for('reject_request', id=row.id) }}" class="status-badge" style="text-decoration: none; background: rgba(239, 59, 45, 0.1); color: var(--hsu-red); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;" onclick="return confirm('Hủy yêu cầu?')">Hủy</a>
-                </div>
-            {% else %}
-                <span class="status-badge {% if row.status == 'Hoàn thành' or row.status == 'using' %}status-using{% else %}status-free{% endif %}">
-                    {{ row.status }}
-                </span>
-            {% endif %}
-        {% endmacro %}
-
-        {% macro render_assign_action(row) %}
-            <div style="position: relative;">
-                <button class="task-btn" onclick="event.stopPropagation(); toggleMenu(this)">⋮</button>
-                <div class="more-menu" style="display: none; position: absolute; right: 0; top: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 100; min-width: 140px; padding: 8px;">
-                    <a href="{{ url_for('assign_detail_view', assign_id=row.id) }}" style="display: block; padding: 10px; text-decoration: none; color: var(--text); font-size: 13px; font-weight: 500; border-radius: 6px;">🔍 Chi tiết</a>
-                </div>
+    <div class="table-container">
+        <div class="table-header-wrapper">
+            <h2 class="table-list-title">Danh sách cấp phát tài sản</h2>
+            <div class="table-info-count">
+                Hiển thị <strong>{{ assigns|length }}</strong> trên <strong>{{ total_items }}</strong> bản ghi
             </div>
-        {% endmacro %}
-
-        {% set columns = [
-            {"key": "asset", "label": "Tài sản", "render": render_asset_info},
-            {"key": "receiver", "label": "Người nhận", "render": render_receiver},
-            {"key": "date", "label": "Ngày cấp"},
-            {"key": "status", "label": "Trạng thái", "render": render_assign_status},
-            {"key": "action", "label": "Thao tác", "render": render_assign_action}
-        ] %}
-
-        <div style="padding: 0;">
-            {% if assigns %}
-                {% set data = assigns %}
-                {% include 'components/table.html' %}
-            {% else %}
-                <div style="padding: 80px 20px; text-align: center; color: var(--text-soft);">
-                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📂</div>
-                    <p style="font-size: 16px; font-weight: 500;">Không tìm thấy dữ liệu cấp phát phù hợp.</p>
-                </div>
-            {% endif %}
         </div>
 
-        {% if total_pages > 0 %}
-        <div class="pagination-container">
+        <div class="table-scroll" style="overflow-x: auto; width: 100%;">
+            <table class="custom-table" style="min-width: 1100px;">
+                <thead>
+                    <tr>
+                        <th>Mã tài sản</th>
+                        <th style="min-width: 200px;">Tên tài sản</th>
+                        <th>Loại</th>
+                        <th style="min-width: 220px;">Trạng thái</th> <th>Người sử dụng</th>
+                        <th>Phòng ban</th>
+                        <th>Vị trí</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in assigns %}
+                    <tr>
+                        <td class="asset-code">#{{ row.asset_code }}</td>
+                        <td class="font-bold">{{ row.asset }}</td>
+                        <td class="text-soft">{{ row.type }}</td>
+                        <td>
+                            <div class="status-container">
+                                <span class="badge 
+                                    {% if row.status == 'Hoàn thành' %}status-hoanthanh
+                                    {% elif row.status == 'Chờ duyệt' %}status-choduyet
+                                    {% elif row.status == 'Đã từ chối' %}status-reject
+                                    {% else %}status-dangxuly{% endif %}">
+                                    {{ row.status }}
+                                </span>
+                                
+                                {% if row.status == 'Chờ duyệt' %}
+                                <div class="decision-group">
+                                    <a href="{{ url_for('approve_request', id=row.id) }}" class="btn-decision btn-decision--approve">Duyệt</a>
+                                    <a href="{{ url_for('reject_request', id=row.id) }}" class="btn-decision btn-decision--reject"
+                                       onclick="return confirm('Bạn có chắc chắn muốn từ chối yêu cầu này?')">Từ chối</a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="font-bold">{{ row.receiver }}</td>
+                        <td>{{ row.department }}</td>
+                        <td>{{ row.location }}</td>
+                        <td>
+                            <div class="action-menu-center">
+                                <div class="action-menu">
+                                    <button type="button" class="action-menu__trigger">
+                                        <div class="action-menu__dots"><span></span><span></span><span></span></div>
+                                    </button>
+                                    <div class="action-menu__dropdown">
+                                        <a href="{{ url_for('assign_detail', id=row.id) }}" class="action-menu__item"><i class="fas fa-eye"></i> Xem chi tiết</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-soft);">Không tìm thấy dữ liệu phù hợp.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
             <div class="pagination-info">Trang <strong>{{ current_page }}</strong> / {{ total_pages }}</div>
-            <div class="pagination-controls" style="display: flex; gap: 6px;">
-                <a href="{{ url_for('assign_page', page=current_page-1, search=search_q, category=selected_cat, department=selected_dept, status=selected_status) if current_page > 1 else '#' }}" 
-                   class="page-link {{ 'disabled' if current_page == 1 else '' }}">Trước</a>
+            <div class="pagination-controls">
+                <a href="{{ url_for('assign_page', page=current_page-1, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" 
+                   class="page-btn page-btn--nav {% if current_page <= 1 %}disabled{% endif %}">« Trước</a>
                 
                 {% for p in range(1, total_pages + 1) %}
-                    {% if p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
-                        <a href="{{ url_for('assign_page', page=p, search=search_q, category=selected_cat, department=selected_dept, status=selected_status) }}" 
-                           class="page-link {{ 'active' if p == current_page else '' }}">{{ p }}</a>
+                    {% if p >= current_page - 1 and p <= current_page + 1 %}
+                        {% if p == current_page %}
+                            <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                            <a href="{{ url_for('assign_page', page=p, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn">{{ p }}</a>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
-                
-                <a href="{{ url_for('assign_page', page=current_page+1, search=search_q, category=selected_cat, department=selected_dept, status=selected_status) if current_page < total_pages else '#' }}" 
-                   class="page-link {{ 'disabled' if current_page == total_pages else '' }}">Sau</a>
+
+                <a href="{{ url_for('assign_page', page=current_page+1, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" 
+                   class="page-btn page-btn--nav {% if current_page >= total_pages %}disabled{% endif %}">Sau »</a>
             </div>
         </div>
-        {% endif %}
     </div>
 </section>
 
 <script>
-    function toggleMenu(btn) {
-        const menus = document.querySelectorAll('.more-menu');
-        const menu = btn.nextElementSibling;
-        
-        menus.forEach(m => { if (m !== menu) m.style.display = 'none'; });
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        
-        const hide = (e) => {
-            if(!btn.contains(e.target) && !menu.contains(e.target)) {
-                menu.style.display = 'none';
-                document.removeEventListener('click', hide);
-            }
-        };
-        if(menu.style.display === 'block') setTimeout(() => document.addEventListener('click', hide), 10);
-    }
+// Script xử lý Filter dropdown
+document.querySelectorAll('.filter-select').forEach(select => {
+    const btn = select.querySelector('.filter-select__button');
+    const menu = select.querySelector('.filter-select__menu');
+    const input = select.querySelector('input[type="hidden"]');
+    const form = document.getElementById('filterForm');
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.filter-select__menu').forEach(m => {
+            if (m !== menu) m.classList.remove('show');
+        });
+        menu.classList.toggle('show');
+    });
+
+    select.querySelectorAll('.filter-select__option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            input.value = opt.dataset.value;
+            form.submit();
+        });
+    });
+});
+
+// Script xử lý Action menu
+document.querySelectorAll('.action-menu__trigger').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = button.nextElementSibling;
+        document.querySelectorAll('.action-menu__dropdown').forEach(d => {
+            if (d !== dropdown) d.classList.remove('show');
+        });
+        dropdown.classList.toggle('show');
+    });
+});
+
+document.addEventListener('click', () => {
+    document.querySelectorAll('.filter-select__menu, .action-menu__dropdown').forEach(d => d.classList.remove('show'));
+});
 </script>
 {% endblock %}

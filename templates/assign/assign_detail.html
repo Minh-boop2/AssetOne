@@ -1,270 +1,119 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
 
-<style>
-    /* 1. Cấu trúc màu sắc linh hoạt */
-    :root {
-        --hsu-blue: #3b82f6;
-        --surface: var(--surface, #1e293b);    
-        --surface-2: var(--surface-2, #0f172a);
-        --border: var(--border, #334155);
-        --text: var(--text, #f1f5f9);
-        --text-soft: var(--text-soft, #94a3b8);
-        
-        /* Màu bổ trợ */
-        --success: #10b981;
-        --warning: #f59e0b;
-        --danger: #ef4444;
-        --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-
-    /* 2. Tổng thể container */
-    .assign-detail-wrapper {
-        padding: 40px;
-        max-width: 1200px;
-        margin: 0 auto;
-        color: var(--text);
-        font-family: Arial, Helvetica, sans-serif;
-        animation: fadeIn 0.4s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* 3. Breadcrumb Nav */
-    .breadcrumb-nav { margin-bottom: 24px; }
-    .breadcrumb-nav a {
-        color: var(--hsu-blue);
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: 0.2s;
-    }
-    .breadcrumb-nav a:hover { opacity: 0.8; }
-
-    /* 4. Header Section */
-    .detail-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 32px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 24px;
-    }
-    .header-title h1 { 
-        font-size: 32px; 
-        margin: 0 0 8px 0; 
-        font-weight: 800; 
-        letter-spacing: -0.5px;
-        color: var(--text); /* Đảm bảo tiêu đề luôn rõ */
-    }
-    
-    /* 5. Buttons */
-    .btn-action {
-        padding: 10px 24px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.2s;
-        cursor: pointer;
-    }
-    .btn-primary { 
-        background: var(--hsu-blue); 
-        color: white !important; 
-        border: none; 
-    }
-    .btn-primary:hover { 
-        transform: translateY(-2px); 
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); 
-    }
-
-    /* 6. Grid Layout & Cards */
-    .detail-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-    
-    .card { 
-        background: var(--surface); 
-        border: 1px solid var(--border); 
-        border-radius: 16px;
-        padding: 24px; 
-        margin-bottom: 24px; 
-        box-shadow: var(--shadow);
-    }
-    
-    .card:hover { border-color: var(--hsu-blue); }
-
-    .card-label { 
-        font-size: 13px; 
-        font-weight: 700; 
-        margin-bottom: 24px; 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        color: var(--hsu-blue);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    /* 7. Info List Styling */
-    .info-list { display: flex; flex-direction: column; gap: 20px; }
-    .info-item { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;
-        padding-bottom: 14px; 
-        border-bottom: 1px solid var(--border); 
-    }
-    .info-item:last-child { border-bottom: none; }
-    
-    .label-text { color: var(--text-soft); font-size: 14px; font-weight: 500; }
-    .value-text { font-weight: 600; font-size: 15px; color: var(--text); }
-
-    /* 8. Status Pills */
-    .status-pill { 
-        padding: 6px 16px; 
-        border-radius: 20px; 
-        font-size: 12px; 
-        font-weight: 800; 
-        text-transform: uppercase;
-    }
-    .status-hoanthanh { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-    .status-choduyet { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-
-    /* 9. User Profile Section */
-    .user-profile { 
-        display: flex; 
-        align-items: center; 
-        gap: 16px; 
-        background: var(--surface-2); 
-        padding: 20px; 
-        border-radius: 12px;
-        border: 1px solid var(--border);
-    }
-    .user-avatar { 
-        width: 52px; 
-        height: 52px; 
-        background: linear-gradient(135deg, var(--hsu-blue), #2563eb); 
-        color: white; 
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        font-weight: 800;
-        font-size: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    /* 10. Fix cho Spec Box (Nơi dữ liệu bị mờ) */
-    .spec-box {
-        background: var(--surface-2);
-        padding: 16px;
-        border-radius: 8px;
-        border-left: 4px solid var(--hsu-blue);
-        margin-top: 10px;
-        font-family: 'Courier New', monospace;
-        font-size: 14px; /* Tăng size nhẹ */
-        line-height: 1.6;
-        font-weight: 500;
-        color: var(--text); /* Ép sử dụng biến --text để tự động đổi màu theo mode */
-        border: 1px solid var(--border); /* Thêm viền nhẹ để định hình khối ở light mode */
-    }
-</style>
-
-<div class="assign-detail-wrapper">
-    <div class="breadcrumb-nav">
-        <a href="{{ url_for('assign_page') }}">
-            <i class="fas fa-chevron-left"></i> QUAY LẠI QUẢN LÝ
+<section class="assign-page">
+    <div class="assets-page__header">
+        <a href="{{ url_for('assign_page') }}" style="text-decoration: none; color: var(--hsu-blue); font-weight: 600; font-size: 13px;">
+            <i class="fas fa-chevron-left"></i> QUAY LẠI DANH SÁCH
         </a>
+        <h1 class="assets-page__title" style="margin-top: 15px;">Thông tin chi tiết cấp phát</h1>
     </div>
 
-    <div class="detail-header">
-        <div class="header-title">
-            <p style="color: var(--hsu-blue); font-weight: 700; margin-bottom: 4px; font-size: 12px; text-transform: uppercase;">Chi tiết phiếu cấp phát</p>
-            <h1>{{ info.asset }}</h1>
-            <p style="color: var(--text-soft);">Mã định danh hệ thống: <span style="color: var(--hsu-blue); font-weight: 700; font-family: monospace;">#{{ info.id }}</span></p>
+    <div class="detail-card" style="max-width: 950px; margin: 20px auto; background: var(--surface); border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden;">
+        
+        <div style="background: var(--surface-2); padding: 25px 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="background: var(--hsu-blue); color: white; padding: 10px 20px; border-radius: 12px; text-align: center;">
+                    <span style="display: block; font-size: 10px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">Mã phiếu</span>
+                    <span style="font-size: 18px; font-weight: 800; font-family: 'Consolas', monospace;">{{ info.id }}</span>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 22px; color: var(--text);">{{ info.asset }}</h2>
+                    <div style="display: flex; gap: 15px; margin-top: 5px;">
+                        <span style="color: var(--text-soft); font-size: 13px;"><i class="far fa-calendar-alt"></i> Ngày lập: <strong>{{ info.date }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            <span class="badge 
+                {% if info.status == 'Hoàn thành' %}status-hoanthanh
+                {% elif info.status == 'Chờ duyệt' %}status-choduyet
+                {% elif info.status == 'Đã từ chối' %}status-reject
+                {% else %}status-dangxuly{% endif %}" style="padding: 10px 20px; font-size: 14px; border-radius: 30px;">
+                <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i> {{ info.status }}
+            </span>
         </div>
-        <div class="action-group">
-            <a href="{{ url_for('assign_edit', assign_id=info.id) }}" class="btn-action btn-primary">
-                <i class="fas fa-pen-to-square"></i> CHỈNH SỬA
-            </a>
-        </div>
-    </div>
 
-    <div class="detail-grid">
-        <div class="main-content">
-            <div class="card">
-                <div class="card-label"><i class="fas fa-microchip"></i> Thông tin thiết bị & Cấp phát</div>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="label-text">Tên tài sản</span>
-                        <span class="value-text">{{ info.asset }}</span>
+        <div style="padding: 35px;">
+            <div style="background: rgba(0, 82, 156, 0.05); border: 1px dashed var(--hsu-blue); border-radius: 15px; padding: 20px; margin-bottom: 35px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <span style="display: block; font-size: 11px; font-weight: 700; color: var(--hsu-blue); text-transform: uppercase; margin-bottom: 5px;">Mã định danh tài sản (Unique Asset Code)</span>
+                    <span style="font-size: 28px; font-weight: 900; color: var(--hsu-blue); font-family: 'Consolas', monospace; letter-spacing: 2px;">{{ info.asset_code }}</span>
+                </div>
+                <i class="fas fa-qrcode" style="font-size: 50px; color: var(--hsu-blue); opacity: 0.1;"></i>
+            </div>
+
+            <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px;">
+                
+                <div class="info-column">
+                    <h4 style="font-size: 14px; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;">
+                        <i class="fas fa-microchip" style="margin-right: 8px; color: var(--hsu-blue);"></i>THÔNG SỐ KỸ THUẬT
+                    </h4>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Phân loại</label>
+                        <span style="font-size: 16px; font-weight: 600;">{{ info.type }}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label-text">Phân loại danh mục</span>
-                        <span class="value-text" style="color: var(--hsu-blue);">{{ info.type or 'Thiết bị' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label-text">Ngày bàn giao</span>
-                        <span class="value-text">{{ info.date }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label-text">Vị trí lắp đặt (Lầu/Tầng)</span>
-                        <span class="value-text"><i class="fas fa-location-dot" style="margin-right: 6px; font-size: 12px; color: var(--hsu-blue);"></i>{{ info.location or 'Văn phòng chính' }}</span>
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <span class="label-text" style="display: block; margin-bottom: 12px;">Cấu hình kỹ thuật chi tiết:</span>
-                        <div class="spec-box">
-                            {{ specs.spec if specs.spec else 'Thông số kỹ thuật đang được cập nhật...' }}
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Cấu hình chi tiết</label>
+                        <div style="background: var(--surface-2); padding: 15px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 13px; border: 1px solid var(--border); margin-top: 8px; line-height: 1.5;">
+                            {{ specs.spec if specs else "Không có dữ liệu cấu hình." }}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="sidebar">
-            <div class="card" style="text-align: center;">
-                <div class="card-label" style="justify-content: center;"><i class="fas fa-signal"></i> Trình trạng</div>
-                <div style="padding: 10px 0;">
-                    <span class="status-pill {% if info.status == 'Hoàn thành' or info.status == 'using' %}status-hoanthanh{% else %}status-choduyet{% endif %}">
-                        <i class="fas {% if info.status == 'Hoàn thành' or info.status == 'using' %}fa-check-double{% else %}fa-clock{% endif %}" style="margin-right: 6px;"></i>
-                        {{ info.status }}
-                    </span>
-                </div>
-                <p style="font-size: 11px; color: var(--text-soft); margin-top: 15px; line-height: 1.4;">
-                    Cập nhật lần cuối: {{ info.date }}
-                </p>
-            </div>
-
-            <div class="card">
-                <div class="card-label"><i class="fas fa-user-tie"></i> Nhân sự tiếp nhận</div>
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        {{ info.receiver[0]|upper if info.receiver else '?' }}
-                    </div>
-                    <div class="user-meta">
-                        <span class="name" style="display:block; font-weight:700; font-size: 15px; color: var(--text);">{{ info.receiver }}</span>
-                        <span class="dept" style="color: var(--hsu-blue); font-size:12px; font-weight: 600;">
-                            <i class="fas fa-building" style="margin-right: 4px;"></i>{{ info.department }}
-                        </span>
+                    <div>
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Hạn bảo hành</label>
+                        <span style="font-size: 15px; font-weight: 600; color: var(--hsu-red);">{{ info.warranty or 'Theo chính sách' }}</span>
                     </div>
                 </div>
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
-                    <p style="font-size: 12px; color: var(--text-soft); font-style: italic;">
-                        * Nhân viên chịu trách nhiệm bảo quản tài sản theo quy định.
-                    </p>
+
+                <div class="info-column">
+                    <h4 style="font-size: 14px; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;">
+                        <i class="fas fa-history" style="margin-right: 8px; color: var(--hsu-green);"></i>LỊCH TRÌNH & BÀN GIAO
+                    </h4>
+                    
+                    <div class="schedule-box" style="background: #ffffff !important; padding: 15px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; border: 1px solid var(--border);">
+                        <div>
+                            <label class="info-label" style="display: block; font-size: 10px; color: #64748b !important; font-weight: 700; text-transform: uppercase;">Ngày bàn giao</label>
+                            <span class="info-value-dark" style="font-size: 15px; font-weight: 700; color: #1e293b !important;">{{ info.date }}</span>
+                        </div>
+                        <div style="border-left: 2px solid var(--border); padding-left: 15px;">
+                            <label class="info-label" style="display: block; font-size: 10px; color: var(--hsu-red) !important; font-weight: 700; text-transform: uppercase;">Ngày trả dự kiến</label>
+                            <span style="font-size: 15px; font-weight: 700; color: var(--hsu-red) !important;">{{ info.return_date or '30/04/2027' }}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Người tiếp nhận</label>
+                        <span style="font-size: 18px; font-weight: 700; color: var(--hsu-blue);">{{ info.receiver }}</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Phòng ban</label>
+                        <span style="font-size: 16px; font-weight: 600;">{{ info.department }}</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Vị trí cụ thể</label>
+                        <span style="font-size: 16px; font-weight: 600;"><i class="fas fa-map-marker-alt" style="color: var(--hsu-red);"></i> {{ info.location }}</span>
+                    </div>
                 </div>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="{{ url_for('assign_edit', id=info.id) }}" class="btn-add-new" style="background: var(--surface-2); color: var(--text) !important; border: 1px solid var(--border); font-size: 13px;">
+                    <i class="fas fa-edit"></i> CHỈNH SỬA
+                </a>
+                
+                {% if info.status == 'Chờ duyệt' %}
+                <a href="{{ url_for('approve_request', id=info.id) }}" class="btn-add-new" style="font-size: 13px;">
+                    <i class="fas fa-check-double"></i> PHÊ DUYỆT PHIẾU
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
