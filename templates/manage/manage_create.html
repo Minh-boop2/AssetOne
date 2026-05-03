@@ -1,0 +1,147 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
+
+<section class="manage-page-container">
+    {# --- HEADER TRANG --- #}
+    <div class="assets-page__header" style="margin-bottom: 30px;">
+        <h1 class="assets-page__title" style="font-size: 28px; font-weight: 800; color: var(--text);">Thêm nhân sự mới</h1>
+        <p style="color: var(--text-soft); font-size: 14px;">Mã nhân viên được hệ thống khởi tạo tự động và duy nhất (Unique ID)</p>
+    </div>
+
+    {# --- FORM CONTAINER --- #}
+    <div class="m-overview-card" style="max-width: 1000px; margin: 0 auto; padding: 0; overflow: hidden;">
+        <form action="{{ url_for('manage_create') }}" method="POST">
+            
+            <div style="padding: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                
+                {# --- CỘT TRÁI: ĐỊNH DANH & MÃ --- #}
+                <div class="form-section">
+                    <h3 style="color: var(--hsu-blue); font-size: 14px; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-id-card"></i> Định danh nhân sự
+                    </h3>
+                    
+                    {# HIỂN THỊ MÃ NHÂN VIÊN KIỂU CARD #}
+                    <div class="m-filter-group" style="margin-bottom: 25px;">
+                        <label class="filter-label">Mã nhân viên hệ thống</label>
+                        <div class="asset-code-card">
+                            <div class="asset-code-header">
+                                <span class="badge status-hoanthanh" style="font-size: 10px; padding: 4px 12px;">
+                                    <i class="fas fa-check-circle"></i> ĐÃ XÁC THỰC
+                                </span>
+                                <span style="font-family: monospace; font-size: 11px; color: var(--text-soft); font-weight: 600;">ID UNIQUE</span>
+                            </div>
+                            <div class="asset-code-body">
+                                <span class="asset-code-display" id="emp_id_display">{{ auto_id }}</span>
+                                <button type="button" class="copy-btn" onclick="copyId()" title="Sao chép mã">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            {# Input hidden để gửi dữ liệu về server #}
+                            <input type="hidden" name="emp_id" value="{{ auto_id }}">
+                            <div class="asset-code-footer">
+                                <p><i class="fas fa-info-circle"></i> Mã này được tạo ngẫu nhiên và không thể chỉnh sửa.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="m-filter-group" style="margin-bottom: 20px;">
+                        <label class="filter-label">Họ và tên nhân viên</label>
+                        <input type="text" name="name" class="filter-control" placeholder="Ví dụ: Nguyễn Văn A" required>
+                    </div>
+
+                    <div class="m-filter-group" style="margin-bottom: 20px;">
+                        <label class="filter-label">Email công vụ</label>
+                        <input type="email" name="email" class="filter-control" placeholder="username@hsu.edu.vn" required>
+                    </div>
+
+                    {# THÊM MỤC SỐ ĐIỆN THOẠI Ở ĐÂY #}
+                    <div class="m-filter-group">
+                        <label class="filter-label">Số điện thoại liên lạc</label>
+                        <input type="tel" name="phone" class="filter-control" placeholder="Ví dụ: 090xxxxxxx" required>
+                    </div>
+                </div>
+
+                {# --- CỘT PHẢI: CÔNG TÁC & VỊ TRÍ --- #}
+                <div class="form-section">
+                    <h3 style="color: var(--hsu-blue); font-size: 14px; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-briefcase"></i> Thông tin công tác
+                    </h3>
+
+                    <div class="m-filter-group" style="margin-bottom: 20px;">
+                        <label class="filter-label">Phòng ban</label>
+                        <select name="department" class="filter-control" required>
+                            <option value="" disabled selected>-- Chọn phòng ban --</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="m-filter-group" style="margin-bottom: 20px;">
+                        <label class="filter-label">Chức vụ / Quyền hạn</label>
+                        <select name="role" class="filter-control" required>
+                            <option value="" disabled selected>-- Chọn chức vụ --</option>
+                            {% for r in roles %}
+                                <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="m-filter-group" style="margin-bottom: 20px;">
+                        <label class="filter-label">Vị trí tầng (Văn phòng)</label>
+                        <select name="floor" class="filter-control" required>
+                            <option value="" disabled selected>-- Chọn tầng làm việc --</option>
+                            {% for f in floors %}
+                                <option value="{{ f }}">{{ f }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="m-filter-group">
+                        <label class="filter-label">Ngày bắt đầu làm việc</label>
+                        <input type="date" name="start_date" id="start_date" class="filter-control" required>
+                    </div>
+                </div>
+            </div>
+
+            {# --- KHU VỰC NÚT BẤM --- #}
+            <div class="m-card-footer" style="justify-content: flex-end; gap: 15px; padding: 25px 40px; background: var(--surface-2);">
+                <a href="{{ url_for('manage') }}" class="page-btn" style="text-decoration: none; min-width: 120px;">Hủy bỏ</a>
+                <button type="submit" class="m-btn-add btn-add-new" style="border: none; cursor: pointer; padding: 0 35px; height: 42px;">
+                    <i class="fas fa-user-plus"></i> XÁC NHẬN THÊM MỚI
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+{# --- SCRIPTS --- #}
+<script>
+    /**
+     * Sao chép ID nhân viên vào Clipboard
+     */
+    function copyId() {
+        const code = document.getElementById('emp_id_display').innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            alert('Đã sao chép mã nhân viên: ' + code);
+        }).catch(err => {
+            console.error('Lỗi khi sao chép: ', err);
+        });
+    }
+
+    /**
+     * Thiết lập các giá trị mặc định khi tải trang
+     */
+    window.addEventListener('DOMContentLoaded', (event) => {
+        // Tự động set ngày hiện tại cho ô input date
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('start_date');
+        if (dateInput) {
+            dateInput.value = today;
+        }
+    });
+</script>
+{% endblock %}

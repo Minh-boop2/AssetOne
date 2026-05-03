@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
-# --- 1. KHO HÀNG CHỨA THÔNG SỐ KỸ THUẬT (Đã thêm trường 'type' để tương ứng) ---
+# --- 1. KHO HÀNG CHỨA THÔNG SỐ KỸ THUẬT ---
 INVENTORY_LIST = [
     {"name": "Laptop Dell XPS 15", "type": "Laptop", "spec": "Core i7-12700H, 16GB RAM, 512GB SSD NVMe, RTX 3050Ti", "warranty": "12 tháng"},
     {"name": "Laptop MacBook Pro M3", "type": "Laptop", "spec": "Apple M3 8-Core CPU, 10-Core GPU, 8GB RAM, 512GB SSD", "warranty": "24 tháng"},
@@ -23,7 +23,7 @@ INVENTORY_LIST = [
 DEPARTMENTS = ["Phòng Kỹ Thuật", "Phòng Hành Chính", "Phòng IT", "Phòng Thiết Kế", "Phòng Kế Toán", "Phòng Nhân Sự", "Marketing", "Phòng Đào Tạo"]
 ASSET_TYPES = ["Laptop", "Máy in", "Thiết bị mạng", "Màn hình", "Phụ kiện"]
 STATUS_OPTIONS = ["Hoàn thành", "Chờ duyệt", "Đang xử lý", "Đã từ chối"]
-LOCATIONS = ["Tầng 1", "Tầng 2", "Tầng 3", "Tầng 4", "Phòng Server", "Kho A"]
+LOCATIONS = ["Tầng 1", "Tầng 2", "Tầng 3", "Tầng 4", "Tầng 5", "Tầng 6", "Phòng Server", "Kho A"]
 ROLES = ["Admin", "Manager", "Staff"]
 USER_STATUS_OPTIONS = ["Hoạt động", "Ngưng hoạt động"]
 
@@ -49,20 +49,17 @@ ASSIGN_DATA = []
 prefix_map = {"Laptop": "LAP", "Máy in": "PRI", "Thiết bị mạng": "NET", "Màn hình": "MON", "Phụ kiện": "ACC"}
 
 for i in range(128):
-    # Chọn ngẫu nhiên một thiết bị thực tế từ kho
     inventory_item = random.choice(INVENTORY_LIST)
     asset_name = inventory_item["name"]
-    current_type = inventory_item["type"] # Lấy type tương ứng từ kho
+    current_type = inventory_item["type"]
     
     new_id_number = i + 1
     prefix = prefix_map.get(current_type, "AST")
     
-    # Tạo ngày ngẫu nhiên
     day = (i % 28) + 1
     month = 3 if i < 60 else 4
     date_str = f"{day:02d}/{month:02d}/2026"
     
-    # Trạng thái phân bổ
     if i % 7 == 0:
         status = "Chờ duyệt"
     elif i % 12 == 0:
@@ -87,27 +84,48 @@ for i in range(128):
 
 # --- 5. NHẬT KÝ HỆ THỐNG (Logs) ---
 DATABASE_LOGS = [
-    {"id": "L001", "user": "Admin", "dept": "IT", "action": "Cấp phát", "asset": "Laptop Dell XPS 15", "time": "2026-04-09 10:00", "type": "Thiết bị"},
+    {"id": "L001", "user": "Admin", "dept": "IT", "action": "Cấp phát", "asset": "Laptop Dell XPS 15", "time": "2026-04-09 10:00", "type": "Thiết thiết bị"},
     {"id": "L002", "user": "Admin", "dept": "IT", "action": "Cập nhật nhân sự", "asset": "Trần Văn Nam", "time": "2026-04-10 08:30", "type": "Nhân sự"},
     {"id": "L003", "asset_name": "Màn hình Dell 24 inch", "type": "Bàn giao", "detail": "Cấp cho phòng kế toán", "dept": "Kế toán", "user": "Nguyễn An", "status": "Hoàn thành", "time": "2026-04-15 10:00"},
     {"id": "L004", "asset_name": "Máy in HP Laser", "type": "Bảo trì", "detail": "Sửa lỗi kẹt giấy", "dept": "Nhân sự", "user": "Lê Hoa", "status": "Hoàn thành", "time": "2026-04-14 14:20"},
     {"id": "L005", "asset_name": "iPad Air 5", "type": "Thay đổi", "detail": "Nâng cấp dung lượng iCloud", "dept": "Thiết kế", "user": "Phạm Hùng", "status": "Hoàn thành", "time": "2026-04-14 16:45"},
 ]
 
-# --- 6. DANH SÁCH NHÂN SỰ CHI TIẾT ---
+# --- 6. DANH SÁCH NHÂN SỰ CHI TIẾT (USER_LIST_DATA) ---
 USER_LIST_DATA = []
-name_index = 0
-for idx, dept in enumerate(DEPARTMENTS):
-    for role in ["Admin", "Manager"]:
-        USER_LIST_DATA.append({
-            "id": f"HSU-{role[0]}{idx+1:03d}",
-            "name": FULL_NAMES[name_index % len(FULL_NAMES)],
-            "email": f"{role.lower()}.{idx+1}@hoasen.edu.vn",
-            "dept": dept,
-            "role": role,
-            "status": "Hoạt động"
-        })
-        name_index += 1
+
+# Hàm hỗ trợ tạo số điện thoại ngẫu nhiên
+def generate_fake_phone():
+    prefixes = ["090", "091", "098", "035", "038", "077", "086"]
+    return f"{random.choice(prefixes)}{random.randint(1000000, 9999999)}"
+
+# Hàm hỗ trợ tạo ngày gia nhập ngẫu nhiên (trong vòng 5 năm qua)
+def generate_join_date():
+    start_date = datetime(2021, 1, 1)
+    end_date = datetime(2026, 4, 1)
+    time_between_dates = end_date - start_date
+    days_between_dates = time_between_dates.days
+    random_number_of_days = random.randrange(days_between_dates)
+    random_date = start_date + timedelta(days=random_number_of_days)
+    return random_date.strftime("%d/%m/%Y")
+
+# Tạo khoảng 60 nhân sự để test phân trang và đếm số lượng
+for i in range(60):
+    role_choice = "Admin" if i < 5 else ("Manager" if i < 15 else "Staff")
+    dept_choice = DEPARTMENTS[i % len(DEPARTMENTS)]
+    loc_choice = f"Tầng {random.randint(1, 6)}" 
+    
+    USER_LIST_DATA.append({
+        "id": f"HSU-{str(i+1).zfill(3)}",
+        "name": FULL_NAMES[i % len(FULL_NAMES)],
+        "email": f"user{i+1}@hoasen.edu.vn",
+        "phone": generate_fake_phone(),          # CẬP NHẬT: SỐ ĐIỆN THOẠI
+        "created_at": generate_join_date(),       # CẬP NHẬT: NGÀY GIA NHẬP
+        "dept": dept_choice,
+        "position": loc_choice, 
+        "role": role_choice,
+        "status": "Hoạt động" if i % 10 != 0 else "Ngưng hoạt động"
+    })
 
 # --- 7. HÀM HỖ TRỢ ---
 def get_filter_counts():

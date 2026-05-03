@@ -1,60 +1,66 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<style>
-    .delete-bg {
-        min-height: 90vh;
-        background: radial-gradient(circle, #450a0a 0%, #0f172a 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
 
-    .delete-modal {
-        background: rgba(30, 41, 59, 0.8);
-        border: 1px solid #ef4444;
-        padding: 40px;
-        border-radius: 24px;
-        text-align: center;
-        max-width: 400px;
-        backdrop-filter: blur(10px);
-    }
-
-    .icon-danger {
-        width: 60px;
-        height: 60px;
-        background: #ef4444;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 30px;
-        color: white;
-    }
-
-    .btn-real-delete {
-        background: #ef4444;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 10px;
-        border: none;
-        font-weight: bold;
-        cursor: pointer;
-    }
-</style>
-
-<div class="delete-bg">
-    <div class="delete-modal">
-        <div class="icon-danger">✕</div>
-        <h2 style="color: white; margin-bottom: 10px;">Xóa nhân sự?</h2>
-        <p style="color: #94a3b8; margin-bottom: 30px;">
-            Bạn đang yêu cầu xóa <strong>{{ employee.name }}</strong>. Hành động này không thể hoàn tác.
-        </p>
-        <form method="POST" style="display: flex; gap: 15px; justify-content: center;">
-            <a href="{{ url_for('manage') }}" style="color: white; text-decoration: none; padding-top: 10px;">Hủy</a>
-            <button type="submit" class="btn-real-delete">Xác nhận xóa</button>
-        </form>
+<section class="manage-page" style="padding: 20px;">
+    {# --- TIÊU ĐỀ & NÚT QUAY LẠI --- #}
+    <div class="assets-page__header" style="max-width: 600px; margin: 0 auto 20px auto;">
+        <a href="{{ url_for('user_detail', id=user.id) }}" style="text-decoration: none; color: var(--text-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
+            <i class="fas fa-arrow-left"></i> Quay lại chi tiết
+        </a>
     </div>
-</div>
+
+    <div class="detail-card" style="max-width: 600px; margin: 0 auto; background: var(--surface); border-radius: 24px; border: 1px solid #fee2e2; box-shadow: 0 20px 40px rgba(220, 38, 38, 0.05); overflow: hidden;">
+        
+        {# --- HEADER CẢNH BÁO --- #}
+        <div style="background: #fef2f2; padding: 40px; text-align: center; border-bottom: 1px solid #fecaca;">
+            <div style="width: 80px; height: 80px; background: #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 32px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 24px; color: #991b1b; font-weight: 800;">Xác nhận xóa nhân sự</h2>
+            <p style="color: #b91c1c; margin-top: 10px; font-size: 14px; font-weight: 500;">Hành động này không thể hoàn tác. Mọi dữ liệu liên quan đến nhân sự này sẽ bị loại bỏ khỏi hệ thống.</p>
+        </div>
+
+        {# --- THÔNG TIN TÓM TẮT NHÂN SỰ --- #}
+        <div style="padding: 30px 40px;">
+            <div style="background: var(--surface-2); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 12px; color: var(--text-soft); font-weight: 600; text-transform: uppercase;">Mã nhân viên:</span>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text); font-family: 'Consolas', monospace;">{{ user.id }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 12px; color: var(--text-soft); font-weight: 600; text-transform: uppercase;">Họ và tên:</span>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text);">{{ user.name }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 12px; color: var(--text-soft); font-weight: 600; text-transform: uppercase;">Phòng ban:</span>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text);">{{ user.dept }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# --- NÚT HÀNH ĐỘNG --- #}
+            <form method="POST" action="{{ url_for('user_delete', id=user.id) }}" style="margin-top: 40px; display: flex; flex-direction: column; gap: 12px;">
+                <button type="submit" 
+                    style="width: 100%; background: #dc2626; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px rgba(220, 38, 38, 0.2); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-user-slash"></i> XÁC NHẬN XÓA VĨNH VIỄN
+                </button>
+                
+                <a href="{{ url_for('user_detail', id=user.id) }}" 
+                    style="width: 100%; background: var(--surface); color: var(--text-soft); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; text-align: center; text-decoration: none; transition: 0.3s;">
+                    Hủy bỏ
+                </a>
+            </form>
+        </div>
+
+        {# --- FOOTER GHI CHÚ --- #}
+        <div style="padding: 20px; background: var(--surface-2); border-top: 1px solid var(--border-color); text-align: center;">
+            <span style="font-size: 11px; color: var(--text-soft); font-style: italic;">
+                Lưu ý: Bạn nên <b>Khóa tài khoản</b> thay vì xóa nếu nhân sự này vẫn còn các tài sản/hợp đồng đang quản lý.
+            </span>
+        </div>
+    </div>
+</section>
 {% endblock %}
