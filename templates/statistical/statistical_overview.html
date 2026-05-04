@@ -1,1 +1,152 @@
-sss sss
+<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
+
+<section class="statistical-page">
+  <div class="statistical-container">
+
+    <div class="statistical-header">
+      <div>
+        <p class="statistical-label">Thống kê doanh thu</p>
+        <h2>Tổng quan lời - lỗ hệ thống</h2>
+        <p>Theo dõi doanh thu, chi phí, tiền lời và tiền lỗ theo từng tháng.</p>
+      </div>
+
+      <div class="mini-tabs">
+        <a href="{{ url_for('statistics_page') }}" class="mini-tab active">Doanh thu</a>
+        <a href="{{ url_for('statistical_employees') }}" class="mini-tab">Nhân viên</a>
+        <a href="{{ url_for('statistical_assets') }}" class="mini-tab">Tài sản</a>
+        <a href="{{ url_for('statistical_assign') }}" class="mini-tab">Cấp phát</a>
+        <a href="{{ url_for('statistical_report') }}" class="mini-tab">Báo cáo</a>
+      </div>
+    </div>
+
+    <div class="finance-card-grid">
+      {% for card in finance_cards %}
+      <div class="finance-card card-{{ card.class }}">
+        <div class="finance-card-top">
+          <span>{{ card.icon }}</span>
+          <p>{{ card.title }}</p>
+        </div>
+
+        <h3>{{ card.value }}</h3>
+        <small>{{ card.desc }}</small>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card chart-large">
+        <div class="chart-title">
+          <h3>Biểu đồ doanh thu theo tháng</h3>
+          <p>Đưa chuột vào từng cột để xem dữ liệu chi tiết. Kéo ngang để xem đủ các tháng.</p>
+        </div>
+
+        <div class="money-chart-scroll">
+          <div class="money-chart">
+            {% for item in finance_months %}
+            <div class="money-month-group">
+              <div class="money-bars">
+                <div class="money-bar bar-revenue has-tooltip" style="height: {{ item.revenue_height }}%;">
+                  <span class="chart-tooltip">Doanh thu: {{ item.revenue_text }}</span>
+                </div>
+
+                <div class="money-bar bar-cost has-tooltip" style="height: {{ item.cost_height }}%;">
+                  <span class="chart-tooltip">Chi phí: {{ item.cost_text }}</span>
+                </div>
+
+                <div class="money-bar bar-profit has-tooltip" style="height: {{ item.profit_height }}%;">
+                  <span class="chart-tooltip">Tiền lời: {{ item.profit_text }}</span>
+                </div>
+
+                <div class="money-bar bar-loss has-tooltip" style="height: {{ item.loss_height }}%;">
+                  <span class="chart-tooltip">Tiền lỗ: {{ item.loss_text }}</span>
+                </div>
+              </div>
+
+              <div class="money-month">{{ item.month }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="chart-note">
+          <span><i class="note-purple"></i>Doanh thu</span>
+          <span><i class="note-cyan"></i>Chi phí</span>
+          <span><i class="note-green"></i>Tiền lời</span>
+          <span><i class="note-orange"></i>Tiền lỗ</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <h3>Tỉ lệ tài chính</h3>
+          <p>Biểu đồ tròn tổng doanh thu, chi phí, lời và lỗ.</p>
+        </div>
+
+        <div class="donut-wrap">
+          <div
+            class="finance-donut has-tooltip"
+            style="
+              background: conic-gradient(
+                {% for item in finance_segments %}
+                  {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
+                {% endfor %}
+              );
+            "
+          >
+            <span class="chart-tooltip">Tổng lời: {{ total_profit_text }}</span>
+
+            <div class="donut-center">
+              <strong>{{ total_profit_text }}</strong>
+              <span>Tiền lời</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          {% for item in finance_segments %}
+          <div class="legend-row has-tooltip">
+            <div>
+              <span class="legend-dot dot-{{ item.class }}"></span>
+              {{ item.label }}
+            </div>
+
+            <strong>{{ item.percent }}%</strong>
+
+            <span class="chart-tooltip">
+              {{ item.label }}: {{ item.value_text }}
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="finance-table-card">
+      <div class="chart-title">
+        <h3>Chi tiết từng tháng</h3>
+        <p>Bảng tổng hợp doanh thu, chi phí, lời và lỗ.</p>
+      </div>
+
+      <div class="finance-table">
+        <div class="finance-row finance-head">
+          <div>Tháng</div>
+          <div>Doanh thu</div>
+          <div>Chi phí</div>
+          <div>Tiền lời</div>
+          <div>Tiền lỗ</div>
+        </div>
+
+        {% for item in finance_months %}
+        <div class="finance-row">
+          <div>{{ item.month }}</div>
+          <div>{{ item.revenue_text }}</div>
+          <div>{{ item.cost_text }}</div>
+          <div class="text-profit">{{ item.profit_text }}</div>
+          <div class="text-loss">{{ item.loss_text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</section>
