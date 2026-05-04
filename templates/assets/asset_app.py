@@ -11,15 +11,26 @@ DEFAULT_FILTER_COUNTS = {
         "all": 0,
         "laptop": 0,
         "pc": 0,
-        "printer": 0
+        "printer": 0,
+        "monitor": 0,
+        "phone": 0,
+        "projector": 0,
+        "other": 0,
     },
     "status": {
         "all": 0,
         "using": 0,
         "available": 0,
         "maintenance": 0,
-        "pending": 0
-    }
+        "broken": 0,
+        "pending": 0,
+    },
+    "department": {
+        "all": 0,
+    },
+    "location": {
+        "all": 0,
+    },
 }
 
 
