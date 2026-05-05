@@ -1,114 +1,137 @@
-{% extends 'main.html' %}
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/manage/manage.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=20"
+/>
 
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
+<section class="manage-detail-page">
+  <div class="manage-detail-wrap">
+    {% set action_id = user.db_id if user.db_id is defined and user.db_id else
+    user.id %} {% set is_active = user.status_code == 'HOAT_DONG' or user.status
+    == 'Hoạt động' or user.status == 'HOAT_DONG' %}
 
-<section class="manage-page" style="padding: 20px;">
-    {# --- TIÊU ĐỀ & NÚT QUAY LẠI --- #}
-    <div class="assets-page__header" style="max-width: 900px; margin: 0 auto 20px auto;">
-        <a href="{{ url_for('manage') }}" style="text-decoration: none; color: var(--text-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
-            <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </a>
-        <h1 class="assets-page__title" style="margin-top: 15px; font-size: 28px; font-weight: 800; color: var(--text);">Hồ sơ chi tiết nhân sự</h1>
+    <div class="detail-topbar">
+      <a href="{{ url_for('manage') }}" class="detail-back-link">
+        <span class="detail-back-icon">&laquo;</span>
+        <span>Quay lại</span>
+      </a>
     </div>
 
-    <div class="detail-card" style="max-width: 900px; margin: 0 auto; background: var(--surface); border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden;">
-        
-        {# --- PHẦN 1: HEADER INFO --- #}
-        <div style="background: var(--surface-2); padding: 30px 40px; border-bottom: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div style="background: var(--hsu-blue); color: white; padding: 10px 18px; border-radius: 12px; text-align: center;">
-                        <span style="display: block; font-size: 9px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">Mã nhân viên</span>
-                        <span style="font-size: 18px; font-weight: 800; font-family: 'Consolas', monospace;">{{ user.id }}</span>
-                    </div>
-                    <div>
-                        <h2 style="margin: 0; font-size: 24px; color: var(--text); font-weight: 800;">{{ user.name }}</h2>
-                    </div>
-                </div>
+    <h1 class="detail-page-title">Hồ sơ chi tiết nhân sự</h1>
 
-                <div style="background: var(--surface); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
-                    <span class="status-dot {% if user.status in ['Hoạt động', 'Đang hoạt động'] %}dot-active{% else %}dot-inactive{% endif %}"></span>
-                    <span style="font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase;">{{ user.status }}</span>
-                </div>
-            </div>
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <div class="detail-header-left">
+          <div class="employee-code-box">
+            <span class="label">Mã nhân viên</span>
+            <span class="value">{{ user.id }}</span>
+          </div>
+
+          <h2 class="employee-name">{{ user.name or 'Chưa có tên' }}</h2>
         </div>
 
-        {# --- PHẦN 2: CHI TIẾT NỘI DUNG --- #}
-        <div style="padding: 40px;">
-            <div class="info-grid" style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px;">
-                
-                {# --- CỘT TRÁI: THÔNG TIN CÁ NHÂN & LIÊN HỆ --- #}
-                <div class="info-column">
-                    <h4 style="font-size: 12px; color: var(--hsu-blue); border-bottom: 2px solid var(--hsu-blue); padding-bottom: 10px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
-                        <i class="fas fa-user-circle"></i> Thông tin cá nhân & Liên hệ
-                    </h4>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        {# Dòng Họ và Tên - Đã bỏ cục đen #}
-                        <div style="padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
-                            <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Họ và tên</label>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--text);">{{ user.name }}</span>
-                        </div>
-
-                        {# Dòng Email - Đã bỏ cục đen #}
-                        <div style="padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
-                            <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Email công vụ</label>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--text);">{{ user.email }}</span>
-                        </div>
-
-                        {# Dòng Số điện thoại - Đã bỏ cục đen #}
-                        <div>
-                            <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Số điện thoại</label>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--text);">{{ user.phone if user.phone else 'Chưa cập nhật' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {# --- CỘT PHẢI: VỊ TRÍ & CÔNG TÁC --- #}
-                <div class="info-column">
-                    <h4 style="font-size: 12px; color: var(--text-soft); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
-                        <i class="fas fa-briefcase"></i> Vị trí & Công tác
-                    </h4>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
-                        <div style="background: var(--surface-2); padding: 20px; border-radius: 15px; border-left: 5px solid var(--hsu-blue);">
-                            <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Phòng ban / Đơn vị</label>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--text);">{{ user.dept }}</span>
-                        </div>
-
-                        <div style="background: var(--surface-2); padding: 20px; border-radius: 15px; border-left: 5px solid var(--hsu-blue);">
-                            <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Vai trò hệ thống</label>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--hsu-blue); text-transform: uppercase;">{{ user.role }}</span>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div style="background: var(--surface-2); padding: 15px; border-radius: 12px; text-align: center;">
-                                <label style="display: block; font-size: 9px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Vị trí tầng</label>
-                                <span style="font-size: 14px; font-weight: 700; color: var(--text);">{{ user.position if user.position else '---' }}</span>
-                            </div>
-                            <div style="background: var(--surface-2); padding: 15px; border-radius: 12px; text-align: center;">
-                                <label style="display: block; font-size: 9px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Ngày tham gia</label>
-                                <span style="font-size: 14px; font-weight: 700; color: var(--text);">{{ user.created_at if user.created_at else '---' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {# --- PHẦN 3: NÚT HÀNH ĐỘNG --- #}
-            <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 15px;">
-                <a href="{{ url_for('user_edit', id=user.id) }}" class="m-btn-add" style="background: var(--surface); color: var(--text) !important; border: 1px solid var(--border-color); font-size: 13px; font-weight: 700; padding: 12px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-user-edit"></i> CHỈNH SỬA
-                </a>
-                
-                <a href="{{ url_for('user_delete', id=user.id) }}" 
-                    onclick="return confirm('Xác nhận xóa vĩnh viễn hồ sơ nhân sự này khỏi hệ thống?')"
-                    class="m-btn-add" style="background: var(--hsu-red); color: white !important; font-size: 13px; font-weight: 700; padding: 12px 30px; border-radius: 12px; border: none; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2); transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-trash-alt"></i> XÓA NHÂN SỰ
-                </a>
-            </div>
+        <div class="status-pill {{ 'active' if is_active else 'inactive' }}">
+          <span class="dot"></span>
+          <span>{{ user.status or 'Không rõ trạng thái' }}</span>
         </div>
+      </div>
+
+      <div class="detail-card-body">
+        <div class="detail-grid">
+          <div>
+            <h3 class="detail-section-title">Thông tin cá nhân & liên hệ</h3>
+
+            <div class="info-list">
+              <div class="info-item">
+                <div class="info-label">Họ và tên</div>
+                <div class="info-value">
+                  {{ user.name or 'Chưa có dữ liệu' }}
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Email công vụ</div>
+                <div class="info-value">
+                  {{ user.email or 'Chưa có dữ liệu' }}
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value">
+                  {{ user.phone or 'Chưa có dữ liệu' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="detail-section-title right">Vị trí & công tác</h3>
+
+            <div class="work-card">
+              <div class="work-card-label">Phòng ban / Đơn vị</div>
+              <div class="work-card-value">
+                {{ user.dept or 'Chưa có dữ liệu' }}
+              </div>
+            </div>
+
+            <div class="work-card">
+              <div class="work-card-label">Vai trò hệ thống</div>
+              <div class="work-card-value role">
+                {{ user.role or 'Chưa có dữ liệu' }}
+              </div>
+            </div>
+
+            <div class="mini-grid">
+              <div class="mini-card">
+                <div class="mini-card-label">Vị trí tầng</div>
+                <div class="mini-card-value">
+                  {{ user.position or 'Chưa sắp xếp' }}
+                </div>
+              </div>
+
+              <div class="mini-card">
+                <div class="mini-card-label">Ngày tham gia</div>
+                <div class="mini-card-value">
+                  {{ user.join_date or user.created_at or 'Chưa có dữ liệu' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <a
+            href="{{ url_for('manage') }}"
+            class="detail-btn detail-btn-secondary"
+          >
+            <i class="fas fa-list"></i>
+            Danh sách
+          </a>
+
+          <a
+            href="{{ url_for('user_edit', id=action_id) }}"
+            class="detail-btn detail-btn-primary"
+          >
+            <i class="fas fa-pen"></i>
+            Chỉnh sửa
+          </a>
+
+          <a
+            href="{{ url_for('user_delete', id=action_id) }}"
+            class="detail-btn detail-btn-danger"
+            onclick="return confirm('Bạn có chắc muốn xóa nhân sự này không?');"
+          >
+            <i class="fas fa-trash"></i>
+            Xóa nhân sự
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 {% endblock %}
