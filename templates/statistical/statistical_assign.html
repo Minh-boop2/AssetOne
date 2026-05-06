@@ -1,0 +1,165 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
+
+<section class="statistical-page">
+  <div class="statistical-container">
+
+    <div class="statistical-header">
+      <div>
+        <p class="statistical-label">Thống kê cấp phát</p>
+        <h2>Tình hình cấp phát tài sản</h2>
+        <p>Theo dõi trạng thái yêu cầu cấp phát và phòng ban sử dụng tài sản.</p>
+      </div>
+
+      <div class="mini-tabs">
+        <a href="{{ url_for('statistics_page') }}" class="mini-tab">Doanh thu</a>
+        <a href="{{ url_for('statistical_employees') }}" class="mini-tab">Nhân viên</a>
+        <a href="{{ url_for('statistical_assets') }}" class="mini-tab">Tài sản</a>
+        <a href="{{ url_for('statistical_assign') }}" class="mini-tab active">Cấp phát</a>
+        <a href="{{ url_for('statistical_report') }}" class="mini-tab">Báo cáo</a>
+      </div>
+    </div>
+
+    <div class="assign-summary-grid">
+      <div class="finance-card card-purple">
+        <div class="finance-card-top">
+          <span>📦</span>
+          <p>Tổng yêu cầu</p>
+        </div>
+        <h3>{{ assign_total }}</h3>
+        <small>Tất cả yêu cầu cấp phát trong hệ thống</small>
+      </div>
+
+      {% for item in status_segments %}
+      <div class="finance-card card-{{ item.class }}">
+        <div class="finance-card-top">
+          <span>
+            {% if item.label == "Hoàn thành" %}
+              ✅
+            {% elif item.label == "Chờ duyệt" %}
+              ⏳
+            {% elif item.label == "Đang xử lý" %}
+              🛠️
+            {% elif item.label == "Đã từ chối" %}
+              ❌
+            {% else %}
+              📌
+            {% endif %}
+          </span>
+          <p>{{ item.label }}</p>
+        </div>
+        <h3>{{ item.value_text }}</h3>
+        <small>{{ item.percent }}% tổng yêu cầu</small>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">
+          <h3>Trạng thái cấp phát</h3>
+          <p>Biểu đồ tròn theo trạng thái yêu cầu.</p>
+        </div>
+
+        <div class="donut-wrap">
+          <div
+            class="finance-donut has-tooltip"
+            style="
+              background: conic-gradient(
+                {% for item in status_segments %}
+                  {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
+                {% endfor %}
+              );
+            "
+          >
+            <span class="chart-tooltip">Tổng yêu cầu: {{ assign_total }}</span>
+
+            <div class="donut-center">
+              <strong>{{ assign_total }}</strong>
+              <span>Yêu cầu</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          {% for item in status_segments %}
+          <div class="legend-row has-tooltip">
+            <div>
+              <span class="legend-dot dot-{{ item.class }}"></span>
+              {{ item.label }}
+            </div>
+
+            <strong>{{ item.percent }}%</strong>
+
+            <span class="chart-tooltip">
+              {{ item.label }}: {{ item.value_text }} yêu cầu
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <h3>Cấp phát theo phòng ban</h3>
+          <p>Đưa chuột vào thanh để xem số lượng.</p>
+        </div>
+
+        <div class="horizontal-chart">
+          {% for item in dept_items %}
+          <div class="horizontal-row has-tooltip">
+            <div class="horizontal-name">{{ item.label }}</div>
+
+            <div class="horizontal-track">
+              <div
+                class="horizontal-fill fill-orange"
+                style="width: {{ item.percent }}%;"
+              ></div>
+            </div>
+
+            <strong>{{ item.value_text }}</strong>
+
+            <span class="chart-tooltip">
+              {{ item.label }}: {{ item.value_text }} yêu cầu
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {% if location_items is defined %}
+    <div class="chart-card">
+      <div class="chart-title">
+        <h3>Cấp phát theo vị trí</h3>
+        <p>Thống kê yêu cầu cấp phát theo tầng, kho hoặc phòng ban lưu trữ.</p>
+      </div>
+
+      <div class="horizontal-chart">
+        {% for item in location_items %}
+        <div class="horizontal-row has-tooltip">
+          <div class="horizontal-name">{{ item.label }}</div>
+
+          <div class="horizontal-track">
+            <div
+              class="horizontal-fill fill-purple"
+              style="width: {{ item.percent }}%;"
+            ></div>
+          </div>
+
+          <strong>{{ item.value_text }}</strong>
+
+          <span class="chart-tooltip">
+            {{ item.label }}: {{ item.value_text }} yêu cầu
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

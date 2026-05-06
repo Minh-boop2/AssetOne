@@ -1,2 +1,6 @@
-{% extends 'main.html' %} {% block content %} {% include
-'statistical/statistical_overview.html' %} {% endblock %}
+{% extends 'main.html' %}
+
+{% block content %}
+  {% set page_template = statistical_template|default('statistical/statistical_overview.html') %}
+  {% include page_template %}
+{% endblock %}

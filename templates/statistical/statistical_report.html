@@ -1,0 +1,87 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
+
+<section class="statistical-page">
+  <div class="statistical-container">
+
+    <div class="statistical-header">
+      <div>
+        <p class="statistical-label">Thống kê báo cáo</p>
+        <h2>Báo cáo hoạt động hệ thống</h2>
+        <p>Thống kê nhật ký thao tác và các hoạt động được ghi nhận.</p>
+      </div>
+
+      <div class="mini-tabs">
+        <a href="{{ url_for('statistics_page') }}" class="mini-tab">Doanh thu</a>
+        <a href="{{ url_for('statistical_employees') }}" class="mini-tab">Nhân viên</a>
+        <a href="{{ url_for('statistical_assets') }}" class="mini-tab">Tài sản</a>
+        <a href="{{ url_for('statistical_assign') }}" class="mini-tab">Cấp phát</a>
+        <a href="{{ url_for('statistical_report') }}" class="mini-tab active">Báo cáo</a>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">
+          <h3>Loại hoạt động</h3>
+          <p>Biểu đồ tròn theo loại nhật ký.</p>
+        </div>
+
+        <div class="donut-wrap">
+          <div
+            class="finance-donut"
+            style="
+              background: conic-gradient(
+                {% for item in log_segments %}
+                  {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
+                {% endfor %}
+              );
+            "
+          >
+            <div class="donut-center">
+              <strong>{{ report_total }}</strong>
+              <span>Log</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          {% for item in log_segments %}
+          <div class="legend-row has-tooltip">
+            <div>
+              <span class="legend-dot dot-{{ item.class }}"></span>
+              {{ item.label }}
+            </div>
+            <strong>{{ item.percent }}%</strong>
+            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} log</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">
+          <h3>Số lượng theo loại</h3>
+          <p>Đưa chuột vào thanh để xem chi tiết.</p>
+        </div>
+
+        <div class="horizontal-chart">
+          {% for item in log_items %}
+          <div class="horizontal-row has-tooltip">
+            <div class="horizontal-name">{{ item.label }}</div>
+            <div class="horizontal-track">
+              <div class="horizontal-fill fill-purple" style="width: {{ item.percent }}%;"></div>
+            </div>
+            <strong>{{ item.value_text }}</strong>
+            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} log</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
