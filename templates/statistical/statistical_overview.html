@@ -43,7 +43,7 @@
         <div class="money-chart-scroll">
           <div class="money-chart">
             {% for item in finance_months %}
-            <div class="money-month-group">
+            <div class="money-month-group {% if loop.first %}tooltip-left{% endif %} {% if loop.last %}tooltip-right{% endif %}">
               <div class="money-bars">
                 <div class="money-bar bar-revenue has-tooltip" style="height: {{ item.revenue_height }}%;">
                   <span class="chart-tooltip">Doanh thu: {{ item.revenue_text }}</span>
@@ -95,8 +95,8 @@
           >
             <span class="chart-tooltip">Tổng lời: {{ total_profit_text }}</span>
 
-            <div class="donut-center">
-              <strong>{{ total_profit_text }}</strong>
+            <div class="donut-center donut-center-finance">
+              <strong title="{{ total_profit_text }}">{{ total_profit_text }}</strong>
               <span>Tiền lời</span>
             </div>
           </div>

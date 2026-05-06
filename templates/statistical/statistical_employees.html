@@ -24,19 +24,28 @@
 
     <div class="simple-card-grid">
       <div class="finance-card card-purple">
-        <div class="finance-card-top"><span>👥</span><p>Tổng nhân viên</p></div>
+        <div class="finance-card-top">
+          <span>👥</span>
+          <p>Tổng nhân viên</p>
+        </div>
         <h3>{{ total_users }}</h3>
         <small>Toàn bộ nhân sự trong hệ thống</small>
       </div>
 
       <div class="finance-card card-green">
-        <div class="finance-card-top"><span>✅</span><p>Đang làm</p></div>
+        <div class="finance-card-top">
+          <span>✅</span>
+          <p>Đang làm</p>
+        </div>
         <h3>{{ active_users }}</h3>
         <small>Nhân viên đang hoạt động</small>
       </div>
 
       <div class="finance-card card-orange">
-        <div class="finance-card-top"><span>⛔</span><p>Đã nghỉ</p></div>
+        <div class="finance-card-top">
+          <span>⛔</span>
+          <p>Đã nghỉ</p>
+        </div>
         <h3>{{ inactive_users }}</h3>
         <small>Tài khoản ngưng hoạt động</small>
       </div>
@@ -46,12 +55,12 @@
       <div class="chart-card">
         <div class="chart-title">
           <h3>Tỉ lệ nhân sự</h3>
-          <p>Đưa chuột vào legend để xem số lượng.</p>
+          <p>Đưa chuột vào biểu đồ hoặc legend để xem số lượng.</p>
         </div>
 
         <div class="donut-wrap">
           <div
-            class="finance-donut"
+            class="finance-donut has-tooltip donut-employee"
             style="
               background: conic-gradient(
                 {% for item in employee_segments %}
@@ -60,6 +69,10 @@
               );
             "
           >
+            <span class="chart-tooltip donut-tooltip donut-tooltip-simple">
+              Nhân viên: {{ total_users }}
+            </span>
+
             <div class="donut-center">
               <strong>{{ total_users }}</strong>
               <span>Nhân viên</span>
@@ -74,8 +87,12 @@
               <span class="legend-dot dot-{{ item.class }}"></span>
               {{ item.label }}
             </div>
+
             <strong>{{ item.percent }}%</strong>
-            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} người</span>
+
+            <span class="chart-tooltip">
+              {{ item.label }}: {{ item.value_text }} người
+            </span>
           </div>
           {% endfor %}
         </div>
@@ -91,11 +108,16 @@
           {% for item in role_items %}
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
+
             <div class="horizontal-track">
               <div class="horizontal-fill fill-purple" style="width: {{ item.percent }}%;"></div>
             </div>
+
             <strong>{{ item.value_text }}</strong>
-            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} người</span>
+
+            <span class="chart-tooltip">
+              {{ item.label }}: {{ item.value_text }} người
+            </span>
           </div>
           {% endfor %}
         </div>
@@ -112,11 +134,16 @@
         {% for item in dept_items %}
         <div class="horizontal-row has-tooltip">
           <div class="horizontal-name">{{ item.label }}</div>
+
           <div class="horizontal-track">
             <div class="horizontal-fill fill-cyan" style="width: {{ item.percent }}%;"></div>
           </div>
+
           <strong>{{ item.value_text }}</strong>
-          <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} người</span>
+
+          <span class="chart-tooltip">
+            {{ item.label }}: {{ item.value_text }} người
+          </span>
         </div>
         {% endfor %}
       </div>
