@@ -1,0 +1,150 @@
+{# templates/manage/manage_table.html #}
+
+<div class="m-overview-card">
+  <div class="m-card-header">
+    <h3>Danh sách nhân sự hệ thống</h3>
+
+    {% if employees %}
+    <div class="pagination-info">
+      Hiển thị <b>{{ employees|length }}</b> trên <b>{{ total_records }}</b> kết
+      quả phù hợp
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- MACROS RENDER --- #} {% macro render_id(row) %}
+  <span class="m-emp-id">#{{ row.id }}</span>
+  {% endmacro %} {% macro render_emp_name(row) %}
+  <div class="m-emp-cell">
+    <div class="m-emp-avatar">
+      {{ row.name[0] | upper if row.name else '?' }}
+    </div>
+
+    <div class="m-emp-name">{{ row.name if row.name else 'Chưa có tên' }}</div>
+  </div>
+  {% endmacro %} {% macro render_position(row) %}
+  <span class="m-muted-text">
+    {{ row.position if row.position else 'Chưa sắp xếp' }}
+  </span>
+  {% endmacro %} {% macro render_role_badge(row) %} {% set r = row.role_code |
+  upper if row.role_code is defined and row.role_code else row.role | upper %}
+
+  <span
+    class="m-role-badge {% if r == 'ADMIN' %}m-role-admin{% elif r == 'QUAN_LY' or r == 'MANAGER' %}m-role-manager{% else %}m-role-staff{% endif %}"
+  >
+    {{ row.role }}
+  </span>
+  {% endmacro %} {% macro render_status(row) %} {% set s = row.status_code if
+  row.status_code is defined else row.status %}
+
+  <div class="m-status-cell">
+    <span
+      class="status-dot {% if s == 'HOAT_DONG' or row.status == 'Hoạt động' or row.status == 'Đang hoạt động' %}dot-active{% else %}dot-inactive{% endif %}"
+    ></span>
+    {{ row.status }}
+  </div>
+  {% endmacro %} {% macro render_emp_action(row) %} {% set action_id = row.db_id
+  if row.db_id is defined and row.db_id else row.id %}
+
+  <div class="action-menu-center">
+    <div class="action-menu">
+      <button type="button" class="action-menu__trigger">
+        <div class="action-menu__dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+
+      <div class="action-menu__dropdown">
+        <a
+          href="{{ url_for('user_detail', id=action_id) }}"
+          class="action-menu__item"
+        >
+          <i class="fas fa-eye"></i>
+          <span>Xem chi tiết</span>
+        </a>
+
+        <div class="action-menu__divider"></div>
+
+        <a
+          href="{{ url_for('user_delete', id=action_id) }}"
+          class="action-menu__item action-menu__item--danger"
+        >
+          <i class="fas fa-trash-alt"></i>
+          <span>Xóa nhân sự</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endmacro %} {% set columns = [ {"key": "id", "label": "MÃ NHÂN VIÊN",
+  "render": render_id}, {"key": "name", "label": "NHÂN VIÊN", "render":
+  render_emp_name}, {"key": "dept", "label": "PHÒNG BAN"}, {"key": "position",
+  "label": "VỊ TRÍ", "render": render_position}, {"key": "role", "label": "CHỨC
+  VỤ", "render": render_role_badge}, {"key": "status", "label": "TRẠNG THÁI",
+  "render": render_status}, {"key": "email", "label": "EMAIL"}, {"key":
+  "action", "label": "THAO TÁC", "render": render_emp_action, "align": "center"}
+  ] %} {% if employees %}
+  <div class="m-table-scroll-container">
+    {% set data = employees %} {% include 'components/table.html' %}
+  </div>
+
+  <div class="m-card-footer">
+    <div class="pagination-buttons">
+      <a
+        href="{{ url_for('manage', page=current_page-1, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn {{ 'disabled' if current_page <= 1 else '' }}"
+      >
+        « Trước
+      </a>
+
+      {% for p in range(1, total_pages + 1) %} {% if p >= current_page - 1 and p
+      <= current_page + 1 %}
+      <a
+        href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn {{ 'active' if p == current_page else '' }}"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %}
+
+      <a
+        href="{{ url_for('manage', page=current_page+1, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn {{ 'disabled' if current_page >= total_pages else '' }}"
+      >
+        Sau »
+      </a>
+    </div>
+  </div>
+  {% else %}
+  <div class="m-empty-state">
+    <i class="fas fa-search"></i>
+    <p>Không tìm thấy nhân viên nào khớp với tiêu chí lọc.</p>
+    <a href="{{ url_for('manage') }}">Xóa tất cả bộ lọc</a>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (e) {
+      const trigger = e.target.closest(".action-menu__trigger");
+
+      if (trigger) {
+        e.stopPropagation();
+
+        const dropdown = trigger.nextElementSibling;
+
+        document.querySelectorAll(".action-menu__dropdown").forEach((d) => {
+          if (d !== dropdown) d.classList.remove("show");
+        });
+
+        dropdown.classList.toggle("show");
+      } else {
+        document.querySelectorAll(".action-menu__dropdown").forEach((d) => {
+          d.classList.remove("show");
+        });
+      }
+    });
+  });
+</script>

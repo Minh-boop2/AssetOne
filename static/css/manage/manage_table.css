@@ -1,0 +1,553 @@
+/* =========================================
+   MANAGE TABLE CSS
+   Chỉ chứa phần bảng, action menu, badge, pagination
+   Đồng bộ màu theo assets table
+   ========================================= */
+
+/* =========================================
+   OVERVIEW TABLE CARD
+   ========================================= */
+
+.m-overview-card {
+    flex: 0 0 auto;
+    height: 320px;
+    min-height: 0;
+
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+
+    position: relative;
+    overflow: hidden !important;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.m-card-header {
+    flex-shrink: 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border) !important;
+    background: var(--surface) !important;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.m-card-header h3 {
+    margin: 0;
+    font-size: 16px !important;
+    font-weight: 700;
+    color: var(--text) !important;
+}
+
+.pagination-info,
+.m-card-meta {
+    position: static;
+    font-size: 13px !important;
+    color: var(--text-soft) !important;
+}
+
+.pagination-info b,
+.m-card-meta b {
+    color: var(--text) !important;
+}
+
+/* =========================================
+   TABLE SCROLL AREA
+   ========================================= */
+
+.m-table-scroll-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+
+    position: relative;
+    background: var(--surface) !important;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--surface);
+}
+
+.m-table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.m-table-scroll-container::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+.m-table-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.m-table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-soft);
+}
+
+/* =========================================
+   TABLE STYLE
+   ========================================= */
+
+.m-overview-card .custom-table,
+.m-overview-card .custom-table.assign-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    background: var(--surface) !important;
+}
+
+.m-overview-card .custom-table thead,
+.m-overview-card .custom-table.assign-table thead {
+    background: var(--surface-2) !important;
+}
+
+.m-overview-card .custom-table thead th,
+.m-overview-card .custom-table th,
+.m-overview-card .custom-table.assign-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    background: var(--surface-2) !important;
+    color: var(--text-soft) !important;
+
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--border) !important;
+
+    text-align: left;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+    white-space: nowrap;
+}
+
+.m-overview-card .custom-table tbody,
+.m-overview-card .custom-table.assign-table tbody {
+    background: var(--surface) !important;
+}
+
+.m-overview-card .custom-table tbody tr,
+.m-overview-card .custom-table.assign-table tbody tr {
+    background: var(--surface) !important;
+}
+
+.m-overview-card .custom-table tbody td,
+.m-overview-card .custom-table td,
+.m-overview-card .custom-table.assign-table tbody td {
+    padding: 16px !important;
+    border-bottom: 1px solid var(--border) !important;
+
+    background: var(--surface) !important;
+    color: var(--text) !important;
+
+    font-size: 14px !important;
+    vertical-align: middle;
+}
+
+.m-overview-card .custom-table tbody tr:hover,
+.m-overview-card .custom-table.assign-table tbody tr:hover {
+    background: var(--surface-2) !important;
+}
+
+.m-overview-card .custom-table tbody tr:hover td,
+.m-overview-card .custom-table.assign-table tbody tr:hover td {
+    background: var(--surface-2) !important;
+}
+
+/* =========================================
+   FIX INLINE STYLE TRONG MACRO
+   ========================================= */
+
+.m-overview-card .custom-table td,
+.m-overview-card .custom-table td div,
+.m-overview-card .custom-table td span,
+.m-overview-card .custom-table td a {
+    color: var(--text) !important;
+}
+
+.m-overview-card .custom-table td span[style*="var(--hsu-blue)"],
+.m-overview-card .custom-table td div[style*="var(--hsu-blue)"] {
+    color: var(--text) !important;
+}
+
+.m-overview-card .custom-table td span[style*="var(--text-soft)"],
+.m-overview-card .custom-table td div[style*="var(--text-soft)"] {
+    color: var(--text-soft) !important;
+}
+
+/* Avatar cũ đang inline style width 32px trong template */
+.m-overview-card .custom-table td div[style*="width: 32px"] {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+    background: var(--hsu-blue) !important;
+    color: #ffffff !important;
+}
+
+/* Nếu sau này đổi sang class thay vì inline */
+.m-emp-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.m-emp-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+
+    background: var(--hsu-blue) !important;
+    color: #ffffff !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.m-emp-name {
+    font-weight: 700;
+    color: var(--text) !important;
+}
+
+.m-emp-id {
+    font-weight: 700;
+    color: var(--text) !important;
+}
+
+.m-muted-text {
+    color: var(--text-soft) !important;
+    font-size: 13px;
+}
+
+/* =========================================
+   ACTION MENU
+   ========================================= */
+
+.action-menu-center {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.action-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.action-menu__trigger {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+
+    background: transparent !important;
+    color: var(--text-soft) !important;
+    cursor: pointer;
+    outline: none !important;
+    box-shadow: none !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: color 0.2s ease;
+}
+
+.action-menu__trigger:hover {
+    background: transparent !important;
+    color: var(--text) !important;
+}
+
+.action-menu__dots {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.action-menu__dots span {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: currentColor !important;
+    border-radius: 999px;
+}
+
+.action-menu__dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+
+    min-width: 180px;
+    width: 180px;
+    margin-top: 0;
+    padding: 8px;
+
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+
+    z-index: 1000;
+}
+
+.action-menu__dropdown.show {
+    display: block;
+    animation: fadeInMenu 0.2s ease;
+}
+
+.action-menu__item {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+
+    background: transparent;
+    color: var(--text) !important;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.action-menu__item:hover {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+}
+
+.action-menu__item--danger {
+    color: var(--hsu-red) !important;
+}
+
+.action-menu__item--danger:hover {
+    background: rgba(239, 59, 45, 0.08) !important;
+}
+
+.action-menu__divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
+
+/* =========================================
+   ROLE BADGES
+   ========================================= */
+
+.m-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: none;
+}
+
+.m-role-admin {
+    background: rgba(239, 59, 45, 0.12) !important;
+    color: var(--hsu-red) !important;
+}
+
+.m-role-manager {
+    background: rgba(31, 94, 255, 0.12) !important;
+    color: var(--hsu-blue) !important;
+}
+
+.m-role-staff {
+    background: rgba(100, 116, 139, 0.12) !important;
+    color: var(--text) !important;
+    border: none !important;
+}
+
+/* =========================================
+   STATUS
+   ========================================= */
+
+.m-status-cell {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text) !important;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.dot-active {
+    background-color: var(--hsu-green) !important;
+    box-shadow: none !important;
+}
+
+.dot-inactive {
+    background-color: var(--text-soft) !important;
+}
+
+/* Dòng trạng thái cũ đang inline style font-size: 13px */
+.m-overview-card .custom-table td div[style*="font-size: 13px"] {
+    color: var(--text) !important;
+}
+
+/* =========================================
+   EMPTY STATE
+   ========================================= */
+
+.m-empty-state {
+    padding: 60px;
+    text-align: center;
+    color: var(--text-soft);
+}
+
+.m-empty-state i {
+    font-size: 40px;
+    opacity: 0.2;
+    margin-bottom: 16px;
+}
+
+.m-empty-state a {
+    color: var(--hsu-blue);
+    font-size: 14px;
+    text-decoration: none;
+    margin-top: 8px;
+    display: inline-block;
+}
+
+/* =========================================
+   PAGINATION FOOTER
+   ========================================= */
+
+.m-card-footer {
+    flex-shrink: 0;
+    padding: 12px 20px !important;
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 0 18px 18px;
+
+    background: var(--surface) !important;
+
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.pagination-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 11px;
+    border-radius: 10px;
+    border: 1px solid var(--border) !important;
+
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(.disabled):not(.active) {
+    border-color: var(--hsu-blue) !important;
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+}
+
+.page-btn.active {
+    background: var(--hsu-blue) !important;
+    color: #fff !important;
+    border-color: var(--hsu-blue) !important;
+}
+
+.page-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* =========================================
+   RESPONSIVE TABLE
+   ========================================= */
+
+@media (max-width: 1200px) {
+    .m-overview-card {
+        height: 380px;
+        min-height: 0;
+    }
+
+    .m-table-scroll-container {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .m-card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+        padding: 14px 16px;
+    }
+
+    .m-card-header h3 {
+        font-size: 22px !important;
+    }
+
+    .m-overview-card {
+        height: 340px;
+        min-height: 0;
+    }
+
+    .m-table-scroll-container {
+        min-height: 0;
+    }
+
+    .m-card-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .m-overview-card .custom-table th,
+    .m-overview-card .custom-table td {
+        padding: 11px 14px !important;
+        font-size: 13px !important;
+    }
+}
