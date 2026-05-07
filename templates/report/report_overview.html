@@ -1,144 +1,409 @@
-<div class="report-page">
-    <div class="header-section">
-        <h1 class="page-title">Lịch sử Hoạt động Thiết bị</h1>
-        <p class="page-subtitle">Theo dõi toàn bộ nhật ký thay đổi và cấp phát tài sản hệ thống</p>
+{% set report_logs = logs if logs is defined and logs else [] %}
+{% set current_page = current_page|default(1) %}
+{% set total_pages = total_pages|default(1) %}
+{% set total_logs = total_logs|default(report_logs|length) %}
+
+{% set search_value = search_query|default(request.args.get('search', '')) %}
+{% set selected_dept = selected_dept|default(request.args.get('department', 'Tất cả')) %}
+{% set selected_type = selected_type|default(request.args.get('type', 'Tất cả')) %}
+{% set selected_status = selected_status|default(request.args.get('status', 'Tất cả')) %}
+
+{% set has_active_filter = (search_value|trim != '') or selected_dept != 'Tất cả' or selected_type != 'Tất cả' or selected_status != 'Tất cả' %}
+
+<section class="report-page">
+  <div class="report-page__header">
+    <h1 class="report-page__title">Báo cáo tài sản</h1>
+  </div>
+
+  <div class="report-filter-section">
+    <div class="filter-bar">
+      <input type="hidden" name="page" value="1" />
+
+      <div class="filter-item filter-item--search">
+        <label class="filter-label" for="reportSearch">Tìm kiếm</label>
+        <input
+          id="reportSearch"
+          class="filter-input"
+          type="text"
+          name="search"
+          placeholder="Tìm theo tên tài sản hoặc người dùng..."
+          value="{{ search_value }}"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="reportType">Loại thiết bị</label>
+
+        {% set type_options = [
+          {"value": "Tất cả", "label": "Tất cả loại"},
+          {"value": "laptop", "label": "Laptop"},
+          {"value": "pc", "label": "Máy tính bàn"},
+          {"value": "printer", "label": "Máy in"},
+          {"value": "monitor", "label": "Màn hình"},
+          {"value": "phone", "label": "Điện thoại"},
+          {"value": "projector", "label": "Máy chiếu"},
+          {"value": "tablet", "label": "Máy tính bảng"},
+          {"value": "other", "label": "Khác"}
+        ] %}
+
+        <select
+          id="reportType"
+          class="filter-native-select js-report-filter"
+          name="type"
+        >
+          {% for item in type_options %}
+            <option
+              value="{{ item.value }}"
+              {% if selected_type == item.value %}selected{% endif %}
+            >
+              {{ item.label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="reportDepartment">Phòng ban</label>
+
+        {% set dept_options = [
+          'IT',
+          'Kế toán',
+          'Nhân sự',
+          'Thiết kế',
+          'Phòng Kỹ Thuật',
+          'Phòng Nhân Sự',
+          'Phòng Kế Toán',
+          'Phòng Kinh Doanh',
+          'Phòng Marketing',
+          'Phòng IT',
+          'Kho thiết bị'
+        ] %}
+
+        <select
+          id="reportDepartment"
+          class="filter-native-select js-report-filter"
+          name="department"
+        >
+          <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>
+            Tất cả phòng
+          </option>
+
+          {% if selected_dept != 'Tất cả' and selected_dept not in dept_options %}
+            <option value="{{ selected_dept }}" selected>{{ selected_dept }}</option>
+          {% endif %}
+
+          {% for dept in dept_options %}
+            <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>
+              {{ dept }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="reportStatus">Trạng thái</label>
+
+        {% set status_options = [
+          {"value": "Tất cả", "label": "Tất cả trạng thái"},
+          {"value": "Hoàn thành", "label": "Hoàn thành"},
+          {"value": "Đang xử lý", "label": "Đang xử lý"},
+          {"value": "Chờ duyệt", "label": "Chờ duyệt"},
+          {"value": "Thất bại", "label": "Thất bại"},
+          {"value": "Đang sử dụng", "label": "Đang sử dụng"},
+          {"value": "Chưa sử dụng", "label": "Chưa sử dụng"},
+          {"value": "Bảo trì", "label": "Bảo trì"},
+          {"value": "Hỏng", "label": "Hỏng"}
+        ] %}
+
+        <select
+          id="reportStatus"
+          class="filter-native-select js-report-filter"
+          name="status"
+        >
+          {% for item in status_options %}
+            <option
+              value="{{ item.value }}"
+              {% if selected_status == item.value %}selected{% endif %}
+            >
+              {{ item.label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <a
+          href="{{ url_for('report_page') }}"
+          class="btn-reset {% if not has_active_filter %}is-hidden{% endif %}"
+          title="Xóa bộ lọc"
+          aria-label="Xóa bộ lọc"
+        >
+          ×
+        </a>
+
+        <button type="button" class="action-btn action-btn--primary action-btn--add">
+          + Báo cáo mới
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-table-section">
+    <div class="section-heading">
+      <div>
+        <h2 class="section-heading__title">Nhật ký tài sản</h2>
+      </div>
+
+      <div class="section-heading__meta">
+        Hiển thị {{ total_logs }} bản ghi
+      </div>
     </div>
 
-    <div class="audit-filter-bar">
-        <form method="GET" action="{{ url_for('report_page') }}" id="reportForm" style="display: flex; width: 100%; justify-content: space-between; align-items: flex-end; gap: 20px;">
-            
-            <div class="filter-group search-area">
-                <label class="input-label">Tìm kiếm</label>
-                <div class="input-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" name="search" placeholder="Tên tài sản, người thực hiện..." 
-                           value="{{ search_query if search_query else '' }}" autocomplete="off">
-                </div>
-            </div>
+    {% macro render_empty(value) %}
+      {% if value %}
+        <span>{{ value }}</span>
+      {% else %}
+        <span class="report-empty">—</span>
+      {% endif %}
+    {% endmacro %}
 
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label class="input-label">Phòng ban</label>
-                    <select name="department" class="custom-select" onchange="this.form.submit()">
-                        <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng ban</option>
-                        <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>Phòng IT</option>
-                        <option value="Kế toán" {% if selected_dept == 'Kế toán' %}selected{% endif %}>Phòng Kế toán</option>
-                    </select>
-                </div>
+    {% macro render_asset_type(row) %}
+      {% set asset_type = row.get('display_asset_type') %}
+      {% set asset_type_label = row.get('display_asset_type_label') %}
 
-                <div class="filter-group">
-                    <label class="input-label">Hoạt động</label>
-                    <select name="type" class="custom-select" onchange="this.form.submit()">
-                        <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả hoạt động</option>
-                        <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
-                        <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
-                    </select>
-                </div>
-                
-                <a href="{{ url_for('report_page') }}" class="btn-reset" id="btnReset" 
-                   {% if not search_query and selected_dept == 'Tất cả' and selected_type == 'Tất cả' %}style="display: none;"{% endif %} 
-                   title="Xóa lọc">
-                   &times;
-                </a>
-            </div>
-        </form>
+      {% if asset_type == 'laptop' %}
+        <span class="report-badge report-badge--laptop">Laptop</span>
+      {% elif asset_type == 'pc' %}
+        <span class="report-badge report-badge--pc">Máy tính bàn</span>
+      {% elif asset_type == 'printer' %}
+        <span class="report-badge report-badge--printer">Máy in</span>
+      {% elif asset_type == 'monitor' %}
+        <span class="report-badge report-badge--default">Màn hình</span>
+      {% elif asset_type == 'phone' %}
+        <span class="report-badge report-badge--default">Điện thoại</span>
+      {% elif asset_type == 'projector' %}
+        <span class="report-badge report-badge--default">Máy chiếu</span>
+      {% elif asset_type == 'tablet' %}
+        <span class="report-badge report-badge--default">Máy tính bảng</span>
+      {% elif asset_type_label %}
+        <span class="report-badge report-badge--default">{{ asset_type_label }}</span>
+      {% else %}
+        <span class="report-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_status(row) %}
+      {% set status = row.get('display_status') %}
+      {% set status_lower = status|lower if status else '' %}
+
+      {% if status_lower == 'đang sử dụng' %}
+        <span class="report-badge report-badge--using">Đang sử dụng</span>
+      {% elif status_lower == 'chưa sử dụng' %}
+        <span class="report-badge report-badge--available">Chưa sử dụng</span>
+      {% elif status_lower == 'bảo trì' %}
+        <span class="report-badge report-badge--maintenance">Bảo trì</span>
+      {% elif status_lower == 'hỏng' %}
+        <span class="report-badge report-badge--danger">Hỏng</span>
+      {% elif status_lower == 'hoàn thành' %}
+        <span class="report-badge report-badge--success">Hoàn thành</span>
+      {% elif status_lower == 'đang xử lý' %}
+        <span class="report-badge report-badge--maintenance">Đang xử lý</span>
+      {% elif status_lower == 'chờ duyệt' %}
+        <span class="report-badge report-badge--maintenance">Chờ duyệt</span>
+      {% elif status_lower == 'thất bại' %}
+        <span class="report-badge report-badge--danger">Thất bại</span>
+      {% elif status %}
+        <span class="report-badge report-badge--default">{{ status }}</span>
+      {% else %}
+        <span class="report-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    {% macro render_action(row) %}
+      {% set action = row.get('display_action') %}
+      {% set action_lower = action|lower if action else '' %}
+
+      {% if action_lower == 'cấp phát' %}
+        <span class="report-badge report-badge--assign">Cấp phát</span>
+      {% elif action_lower == 'bàn giao' %}
+        <span class="report-badge report-badge--handover">Bàn giao</span>
+      {% elif action_lower == 'bảo trì' %}
+        <span class="report-badge report-badge--maintenance">Bảo trì</span>
+      {% elif action_lower == 'thu hồi' %}
+        <span class="report-badge report-badge--return">Thu hồi</span>
+      {% elif action_lower == 'cập nhật' %}
+        <span class="report-badge report-badge--update">Cập nhật</span>
+      {% elif action_lower == 'thay đổi' %}
+        <span class="report-badge report-badge--change">Thay đổi</span>
+      {% elif action %}
+        <span class="report-badge report-badge--default">{{ action }}</span>
+      {% else %}
+        <span class="report-empty">—</span>
+      {% endif %}
+    {% endmacro %}
+
+    <div class="report-table-wrap">
+      <table class="custom-table report-table">
+        <thead>
+          <tr>
+            <th>Mã tài sản</th>
+            <th>Tên tài sản</th>
+            <th>Loại</th>
+            <th>Trạng thái</th>
+            <th>Người sử dụng</th>
+            <th>Phòng ban</th>
+            <th>Vị trí</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if report_logs %}
+            {% for row in report_logs %}
+              <tr>
+                <td>
+                  {{ render_empty(row.get('display_asset_code')) }}
+                </td>
+
+                <td>
+                  <strong class="report-asset-name">
+                    {{ row.get('display_asset_name') or '—' }}
+                  </strong>
+                </td>
+
+                <td>
+                  {{ render_asset_type(row) }}
+                </td>
+
+                <td>
+                  {{ render_status(row) }}
+                </td>
+
+                <td>
+                  {{ render_empty(row.get('display_user')) }}
+                </td>
+
+                <td>
+                  {{ render_empty(row.get('display_department')) }}
+                </td>
+
+                <td>
+                  {{ render_empty(row.get('display_location')) }}
+                </td>
+
+                <td>
+                  {{ render_action(row) }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8" class="table-empty-cell">
+                Không tìm thấy dữ liệu phù hợp.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
 
-    <div class="assets-table-section">
-        <table class="custom-table assign-table">
-            <thead>
-                <tr>
-                    <th width="80">MÃ</th>
-                    <th>THÔNG TIN TÀI SẢN</th>
-                    <th>HOẠT ĐỘNG</th>
-                    <th>NHÂN VIÊN</th>
-                    <th>PHÒNG BAN</th>
-                    <th>TRẠNG THÁI</th>
-                    <th class="col-time">THỜI GIAN</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if logs %}
-                    {% for log in logs %}
-                    <tr>
-                        <td class="txt-id">#{{ log.id }}</td>
-                        <td><strong>{{ log.asset_name }}</strong></td>
-                        <td><span class="badge-type">{{ log.type }}</span></td>
-                        <td>{{ log.user }}</td>
-                        <td>{{ log.dept }}</td>
-                        <td>
-                            <div class="status-wrapper">
-                                <span class="dot {% if log.status == 'Hoàn thành' %}dot-green{% else %}dot-orange{% endif %}"></span>
-                                <span style="font-weight: 700;">{{ log.status }}</span>
-                            </div>
-                        </td>
-                        <td class="col-time txt-time-val">{{ log.time }}</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px; color: var(--text-soft);">
-                            Không tìm thấy dữ liệu nhật ký phù hợp.
-                        </td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
+    <div class="pagination-container">
+      <div class="pagination-info">
+        Trang {{ current_page }} / {{ total_pages }}
+      </div>
 
-        <div class="pagination-container">
-            <div class="pagination-info">Trang <b>{{ current_page }}</b> / {{ total_pages }}</div>
-            <ul class="pagination-list">
-                <li>
-                    <a href="{{ url_for('report_page', page=current_page-1, search=search_query, department=selected_dept, type=selected_type) }}" 
-                       class="nav-btn {% if current_page <= 1 %}disabled{% endif %}">« Trước</a>
-                </li>
+      <ul class="pagination-list">
+        <li>
+          <a
+            class="{% if current_page <= 1 %}disabled{% endif %}"
+            href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, status=selected_status, page=current_page - 1) }}"
+          >
+            « Trước
+          </a>
+        </li>
 
-                {% for p in range(1, total_pages + 1) %}
-                    {% if p == current_page %}
-                        <li><a class="active">{{ p }}</a></li>
-                    {% elif p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
-                        <li><a href="{{ url_for('report_page', page=p, search=search_query, department=selected_dept, type=selected_type) }}">{{ p }}</a></li>
-                    {% elif p == current_page - 2 or p == current_page + 2 %}
-                        <li class="p-dots"><span>...</span></li>
-                    {% endif %}
-                {% endfor %}
+        {% for p in range(1, total_pages + 1) %}
+          {% if total_pages <= 7 or p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
+            <li>
+              <a
+                class="{% if p == current_page %}active{% endif %}"
+                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, status=selected_status, page=p) }}"
+              >
+                {{ p }}
+              </a>
+            </li>
+          {% elif p == current_page - 2 or p == current_page + 2 %}
+            <li>
+              <span class="pagination-dots">...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
 
-                <li>
-                    <a href="{{ url_for('report_page', page=current_page+1, search=search_query, department=selected_dept, type=selected_type) }}" 
-                       class="nav-btn {% if current_page >= total_pages %}disabled{% endif %}">Sau »</a>
-                </li>
-            </ul>
-        </div>
+        <li>
+          <a
+            class="{% if current_page >= total_pages %}disabled{% endif %}"
+            href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, status=selected_status, page=current_page + 1) }}"
+          >
+            Sau »
+          </a>
+        </li>
+      </ul>
     </div>
-</div>
+  </div>
+</section>
 
 <script>
-    const searchInput = document.getElementById('searchInput');
-    const reportForm = document.getElementById('reportForm');
-    const btnReset = document.getElementById('btnReset');
-    const deptSelect = document.querySelector('select[name="department"]');
-    const typeSelect = document.querySelector('select[name="type"]');
-    
-    let typingTimer;
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("reportForm");
+    const searchInput = document.getElementById("reportSearch");
+    const filterControls = document.querySelectorAll(".js-report-filter");
 
-    function checkFilters() {
-        const hasSearch = searchInput.value.trim() !== "";
-        const hasDept = deptSelect.value !== "Tất cả";
-        const hasType = typeSelect.value !== "Tất cả";
+    if (!form) return;
 
-        if (hasSearch || hasDept || hasType) {
-            btnReset.style.display = 'flex';
-        } else {
-            btnReset.style.display = 'none';
-        }
+    const pageInput = form.querySelector('input[name="page"]');
+    let searchTimer = null;
+    let lastSearchValue = searchInput ? searchInput.value.trim() : "";
+
+    function submitReportForm() {
+      if (pageInput) {
+        pageInput.value = "1";
+      }
+
+      form.submit();
     }
 
-    // Tự động submit sau khi ngừng gõ 500ms
-    searchInput.addEventListener('input', function() {
-        checkFilters();
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-            reportForm.submit();
-        }, 500);
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+          const currentValue = searchInput.value.trim();
+
+          if (currentValue !== lastSearchValue) {
+            lastSearchValue = currentValue;
+            submitReportForm();
+          }
+        }, 1000);
+      });
+
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          clearTimeout(searchTimer);
+
+          const currentValue = searchInput.value.trim();
+
+          if (currentValue !== lastSearchValue) {
+            lastSearchValue = currentValue;
+            submitReportForm();
+          }
+        }
+      });
+    }
+
+    filterControls.forEach(function (control) {
+      control.addEventListener("change", submitReportForm);
     });
+  });
 </script>
