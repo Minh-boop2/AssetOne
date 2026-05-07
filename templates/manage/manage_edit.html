@@ -1,196 +1,182 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/manage/manage.css') }}"
+/>
 
-<section class="manage-page" style="padding: 20px;">
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=1"
+/>
+
+<section class="manage-edit-page">
+  <div class="manage-edit-wrap">
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
 
-    {# --- TIÊU ĐỀ & NÚT QUAY LẠI --- #}
-    <div class="assets-page__header" style="max-width: 900px; margin: 0 auto 20px auto;">
-        <a href="{{ url_for('user_detail', id=action_id) }}"
-           style="text-decoration: none; color: var(--text-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;">
-            <i class="fas fa-arrow-left"></i> Hủy và quay lại
-        </a>
-
-        <h1 class="assets-page__title" style="margin-top: 15px; font-size: 28px; font-weight: 800; color: var(--text);">
-            Chỉnh sửa hồ sơ nhân sự
-        </h1>
-
-       
+    <div class="edit-topbar">
+      <a href="{{ url_for('user_detail', id=action_id) }}" class="edit-back-link">
+        <i class="fas fa-arrow-left"></i>
+        <span>Hủy và quay lại</span>
+      </a>
     </div>
 
-    <div class="detail-card" style="max-width: 900px; margin: 0 auto; background: var(--surface); border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden;">
-        
-        <form method="POST" action="{{ url_for('user_edit', id=action_id) }}">
-            {# --- PHẦN 1: HEADER INFO --- #}
-            <div style="background: var(--surface-2); padding: 30px 40px; border-bottom: 1px solid var(--border-color);">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div style="background: var(--hsu-blue); color: white; padding: 10px 18px; border-radius: 12px; text-align: center;">
-                        <span style="display: block; font-size: 9px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">
-                            Mã nhân viên
-                        </span>
-                        <span style="font-size: 18px; font-weight: 800; font-family: 'Consolas', monospace;">
-                            {{ user.id }}
-                        </span>
-                    </div>
+    <h1 class="edit-page-title">Chỉnh sửa hồ sơ nhân sự</h1>
 
-                    <div style="flex-grow: 1;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">
-                            Họ và tên nhân viên
-                        </label>
-                        <input type="text"
-                               name="name"
-                               value="{{ user.name }}"
-                               required
-                               style="width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--border-color); color: var(--text); padding: 10px 15px; border-radius: 10px; font-size: 18px; font-weight: 700; outline: none; transition: 0.3s;"
-                               onfocus="this.style.borderColor='var(--hsu-blue)'"
-                               onblur="this.style.borderColor='var(--border-color)'">
-                    </div>
-                </div>
+    <div class="edit-card">
+      <form method="POST" action="{{ url_for('user_edit', id=action_id) }}" class="edit-form">
+        <div class="edit-card-header">
+          <div class="edit-header-inner">
+            <div class="edit-code-box">
+              <span class="edit-code-label">Mã nhân viên</span>
+              <span class="edit-code-value">{{ user.id }}</span>
             </div>
 
-            {# --- PHẦN 2: CHI TIẾT NỘI DUNG CHỈNH SỬA --- #}
-            <div style="padding: 40px;">
-                <div class="info-grid" style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px;">
-                    
-                    {# --- CỘT TRÁI: THÔNG TIN CÁ NHÂN & LIÊN HỆ --- #}
-                    <div class="info-column">
-                        <h4 style="font-size: 12px; color: var(--hsu-blue); border-bottom: 2px solid var(--hsu-blue); padding-bottom: 10px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
-                            <i class="fas fa-user-circle"></i> Thông tin cá nhân & Liên hệ
-                        </h4>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div style="padding-bottom: 5px;">
-                                <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Email công vụ
-                                </label>
-                                <input type="email"
-                                       name="email"
-                                       value="{{ user.email }}"
-                                       required
-                                       style="width: 100%; background: var(--surface-2); border: 1px solid var(--border-color); color: var(--text); padding: 12px 15px; border-radius: 10px; font-size: 15px; outline: none;">
-                            </div>
-
-                            <div style="padding-bottom: 5px;">
-                                <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Số điện thoại
-                                </label>
-                                <input type="text"
-                                       name="phone"
-                                       value="{{ user.phone if user.phone else '' }}"
-                                       style="width: 100%; background: var(--surface-2); border: 1px solid var(--border-color); color: var(--text); padding: 12px 15px; border-radius: 10px; font-size: 15px; outline: none;">
-                            </div>
-
-                            <div>
-                                <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Trạng thái tài khoản
-                                </label>
-                                <select name="status"
-                                        style="width: 100%; background: var(--surface-2); border: 1px solid var(--border-color); color: var(--text); padding: 12px 15px; border-radius: 10px; font-size: 15px; outline: none; cursor: pointer;">
-                                    {% for status in user_status %}
-                                        {% set status_value = status.value if status.value is defined else status %}
-                                        {% set status_label = status.label if status.label is defined else status %}
-                                        <option value="{{ status_value }}" {% if user.status_code == status_value or user.status == status_label or user.status == status_value %}selected{% endif %}>
-                                            {{ status_label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Mật khẩu mới
-                                </label>
-                                <input type="password"
-                                       name="password"
-                                       placeholder="Để trống nếu không đổi mật khẩu"
-                                       style="width: 100%; background: var(--surface-2); border: 1px solid var(--border-color); color: var(--text); padding: 12px 15px; border-radius: 10px; font-size: 15px; outline: none;">
-                            </div>
-                        </div>
-                    </div>
-
-                    {# --- CỘT PHẢI: VỊ TRÍ & CÔNG TÁC --- #}
-                    <div class="info-column">
-                        <h4 style="font-size: 12px; color: var(--text-soft); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
-                            <i class="fas fa-briefcase"></i> Vị trí & Công tác
-                        </h4>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 20px;">
-                            <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Phòng ban / Đơn vị
-                                </label>
-                                <select name="department"
-                                        style="width: 100%; background: var(--surface-2); padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); color: var(--text); font-weight: 600; outline: none;">
-                                    {% for d in departments %}
-                                        <option value="{{ d }}" {% if user.dept == d %}selected{% endif %}>
-                                            {{ d }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Vai trò hệ thống
-                                </label>
-                                <select name="role"
-                                        style="width: 100%; background: var(--surface-2); padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); color: var(--hsu-blue); font-weight: 700; outline: none;">
-                                    {% for r in roles %}
-                                        {% set role_value = r.value if r.value is defined else r %}
-                                        {% set role_label = r.label if r.label is defined else r %}
-                                        <option value="{{ role_value }}" {% if user.role_code == role_value or user.role == role_label or user.role == role_value %}selected{% endif %}>
-                                            {{ role_label }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Vị trí tầng
-                                </label>
-                                <select name="floor"
-                                        style="width: 100%; background: var(--surface-2); padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); color: var(--text); font-weight: 600; outline: none;">
-                                    <option value="">Chưa sắp xếp</option>
-                                    {% for f in floors %}
-                                        <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
-                                            {{ f }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display: block; font-size: 10px; color: var(--text-soft); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-                                    Ngày tham gia
-                                </label>
-                                <input type="text"
-                                       value="{{ user.join_date or user.created_at or 'Chưa có dữ liệu' }}"
-                                       readonly
-                                       disabled
-                                       style="width: 100%; background: var(--surface); border: 1px solid var(--border-color); color: var(--text-soft); padding: 12px 15px; border-radius: 10px; font-size: 13px; cursor: not-allowed;">
-                               
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {# --- PHẦN 3: NÚT HÀNH ĐỘNG --- #}
-                <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 15px;">
-                    <a href="{{ url_for('user_detail', id=action_id) }}" 
-                       style="background: transparent; color: var(--text-soft); border: 1px solid var(--border-color); font-size: 13px; font-weight: 700; padding: 12px 30px; border-radius: 12px; text-decoration: none; transition: 0.3s; display: flex; align-items: center;">
-                        HỦY BỎ
-                    </a>
-                    
-                    <button type="submit" 
-                            style="background: var(--hsu-blue); color: white; font-size: 13px; font-weight: 700; padding: 12px 40px; border-radius: 12px; border: none; box-shadow: 0 10px 20px rgba(0, 82, 156, 0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-save"></i> LƯU THAY ĐỔI
-                    </button>
-                </div>
+            <div class="edit-name-box">
+              <label class="edit-label">Họ và tên nhân viên</label>
+              <input
+                type="text"
+                name="name"
+                value="{{ user.name }}"
+                required
+                class="edit-input name-input"
+              />
             </div>
-        </form>
+          </div>
+        </div>
+
+        <div class="edit-card-body">
+          <div class="edit-grid">
+            <div class="edit-column">
+              <h4 class="edit-section-title">
+                <i class="fas fa-user-circle"></i>
+                <span>Thông tin cá nhân & liên hệ</span>
+              </h4>
+
+              <div class="edit-field-list">
+                <div class="edit-field">
+                  <label class="edit-label">Email công vụ</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value="{{ user.email }}"
+                    required
+                    class="edit-input"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Số điện thoại</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value="{{ user.phone if user.phone else '' }}"
+                    class="edit-input"
+                  />
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Trạng thái tài khoản</label>
+                  <select name="status" class="edit-select">
+                    {% for status in user_status %}
+                      {% set status_value = status.value if status.value is defined else status %}
+                      {% set status_label = status.label if status.label is defined else status %}
+                      <option
+                        value="{{ status_value }}"
+                        {% if user.status_code == status_value or user.status == status_label or user.status == status_value %}selected{% endif %}
+                      >
+                        {{ status_label }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Mật khẩu mới</label>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Để trống nếu không đổi mật khẩu"
+                    class="edit-input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-column">
+              <h4 class="edit-section-title soft">
+                <i class="fas fa-briefcase"></i>
+                <span>Vị trí & công tác</span>
+              </h4>
+
+              <div class="edit-field-list">
+                <div class="edit-field">
+                  <label class="edit-label">Phòng ban / Đơn vị</label>
+                  <select name="department" class="edit-select">
+                    {% for d in departments %}
+                      <option value="{{ d }}" {% if user.dept == d %}selected{% endif %}>
+                        {{ d }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Vai trò hệ thống</label>
+                  <select name="role" class="edit-select role-select">
+                    {% for r in roles %}
+                      {% set role_value = r.value if r.value is defined else r %}
+                      {% set role_label = r.label if r.label is defined else r %}
+                      <option
+                        value="{{ role_value }}"
+                        {% if user.role_code == role_value or user.role == role_label or user.role == role_value %}selected{% endif %}
+                      >
+                        {{ role_label }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Vị trí tầng</label>
+                  <select name="floor" class="edit-select">
+                    <option value="">Chưa sắp xếp</option>
+                    {% for f in floors %}
+                      <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
+                        {{ f }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="edit-field">
+                  <label class="edit-label">Ngày tham gia</label>
+                  <input
+                    type="text"
+                    value="{{ user.join_date or user.created_at or 'Chưa có dữ liệu' }}"
+                    readonly
+                    disabled
+                    class="edit-input readonly-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-actions">
+            <a href="{{ url_for('user_detail', id=action_id) }}" class="edit-btn edit-btn-cancel">
+              Hủy bỏ
+            </a>
+
+            <button type="submit" class="edit-btn edit-btn-submit">
+              <i class="fas fa-save"></i>
+              Lưu thay đổi
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
 </section>
 {% endblock %}
