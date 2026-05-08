@@ -23,9 +23,14 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/components/table_toolbar.css') }}"
     />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components/sonner.css') }}"
+    />
   </head>
   <body id="app-body">
     {% include 'components/header.html' %} {% block content %}{% endblock %}
+     {% include 'components/sonner.html' %}
   </body>
   <script>
     const body = document.getElementById("app-body");

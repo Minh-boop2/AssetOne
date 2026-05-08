@@ -1,0 +1,279 @@
+<!-- templates/components/sonner.html -->
+
+<div id="sonner-viewport" class="sonner-viewport" aria-live="polite"></div>
+
+<script>
+  (function () {
+    const viewport = document.getElementById("sonner-viewport");
+
+    if (!viewport) return;
+
+    const icons = {
+      success: "circle-check",
+      error: "circle-x",
+      danger: "circle-x",
+      warning: "triangle-alert",
+      info: "info",
+      default: "bell",
+      message: "bell",
+      loading: "loader-circle",
+    };
+
+    const typeMap = {
+      success: "success",
+      error: "error",
+      danger: "error",
+      warning: "warning",
+      info: "info",
+      default: "default",
+      message: "default",
+      loading: "loading",
+    };
+
+    function normalizeType(type) {
+      return typeMap[type] || "default";
+    }
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function createIcon(type) {
+      const iconName = icons[type] || icons.default;
+
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        return `<i data-lucide="${iconName}"></i>`;
+      }
+
+      return "●";
+    }
+
+    function removeToast(toastEl) {
+      if (!toastEl || toastEl.classList.contains("sonner-removing")) return;
+
+      toastEl.classList.add("sonner-removing");
+
+      setTimeout(function () {
+        toastEl.remove();
+      }, 230);
+    }
+
+    function toast(options) {
+      const config =
+        typeof options === "string"
+          ? { title: options }
+          : options || {};
+
+      const id = config.id || `toast-${Date.now()}-${Math.random()}`;
+      const type = normalizeType(config.type || "default");
+      const title = config.title || "";
+      const description = config.description || "";
+      const duration =
+        typeof config.duration === "number" ? config.duration : 3500;
+
+      const oldToast = document.querySelector(`[data-sonner-id="${id}"]`);
+      if (oldToast) oldToast.remove();
+
+      const toastEl = document.createElement("div");
+      toastEl.className = "sonner-toast";
+      toastEl.dataset.type = type;
+      toastEl.dataset.sonnerId = id;
+      toastEl.setAttribute("role", type === "error" ? "alert" : "status");
+
+      toastEl.innerHTML = `
+        <div class="sonner-icon">
+          ${createIcon(type)}
+        </div>
+
+        <div class="sonner-content">
+          ${
+            title
+              ? `<div class="sonner-title">${escapeHTML(title)}</div>`
+              : ""
+          }
+
+          ${
+            description
+              ? `<div class="sonner-description">${escapeHTML(description)}</div>`
+              : ""
+          }
+
+          ${
+            config.actionText
+              ? `<button type="button" class="sonner-action">${escapeHTML(config.actionText)}</button>`
+              : ""
+          }
+        </div>
+
+        <button type="button" class="sonner-close" aria-label="Đóng thông báo">
+          ${
+            window.lucide
+              ? `<i data-lucide="x"></i>`
+              : "×"
+          }
+        </button>
+
+        ${
+          duration > 0
+            ? `<div class="sonner-progress" style="animation-duration:${duration}ms"></div>`
+            : ""
+        }
+      `;
+
+      viewport.appendChild(toastEl);
+
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons();
+      }
+
+      const closeBtn = toastEl.querySelector(".sonner-close");
+      closeBtn?.addEventListener("click", function () {
+        removeToast(toastEl);
+      });
+
+      const actionBtn = toastEl.querySelector(".sonner-action");
+      if (actionBtn && typeof config.onAction === "function") {
+        actionBtn.addEventListener("click", function () {
+          config.onAction();
+          removeToast(toastEl);
+        });
+      }
+
+      if (duration > 0) {
+        setTimeout(function () {
+          removeToast(toastEl);
+        }, duration);
+      }
+
+      return id;
+    }
+
+    toast.success = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "success",
+        title,
+        description,
+      });
+    };
+
+    toast.error = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "error",
+        title,
+        description,
+      });
+    };
+
+    toast.warning = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "warning",
+        title,
+        description,
+      });
+    };
+
+    toast.info = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "info",
+        title,
+        description,
+      });
+    };
+
+    toast.message = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "default",
+        title,
+        description,
+      });
+    };
+
+    toast.loading = function (title, description, options = {}) {
+      return toast({
+        ...options,
+        type: "loading",
+        title,
+        description,
+        duration: 0,
+      });
+    };
+
+    toast.dismiss = function (id) {
+      if (!id) {
+        document.querySelectorAll(".sonner-toast").forEach(removeToast);
+        return;
+      }
+
+      const toastEl = document.querySelector(`[data-sonner-id="${id}"]`);
+      removeToast(toastEl);
+    };
+
+    toast.promise = function (promise, messages = {}) {
+      const id = toast.loading(
+        messages.loading || "Đang xử lý...",
+        messages.loadingDescription || "",
+        { id: messages.id }
+      );
+
+      promise
+        .then(function (result) {
+          toast.success(
+            messages.success || "Thành công",
+            messages.successDescription || "",
+            { id }
+          );
+
+          return result;
+        })
+        .catch(function (error) {
+          toast.error(
+            messages.error || "Có lỗi xảy ra",
+            messages.errorDescription || "",
+            { id }
+          );
+
+          throw error;
+        });
+
+      return id;
+    };
+
+    window.sonner = toast;
+    window.toast = toast;
+  })();
+</script>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script type="application/json" id="flask-flash-messages">
+      {{ messages | tojson }}
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const flashScript = document.getElementById("flask-flash-messages");
+
+        if (!flashScript) return;
+
+        const messages = JSON.parse(flashScript.textContent || "[]");
+
+        messages.forEach(function ([category, message]) {
+          sonner({
+            type: category,
+            title: message,
+          });
+        });
+      });
+    </script>
+  {% endif %}
+{% endwith %}

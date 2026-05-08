@@ -422,6 +422,21 @@ body {
   color: #06b6d4;
 }
 
+.badge-monitor {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0ea5e9;
+}
+
+.badge-phone {
+  background: rgba(236, 72, 153, 0.12);
+  color: #ec4899;
+}
+
+.badge-projector {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+}
+
 .badge-using {
   background: rgba(16, 185, 129, 0.12);
   color: #10b981;
@@ -440,6 +455,11 @@ body {
 .badge-broken {
   background: rgba(239, 59, 45, 0.12);
   color: var(--hsu-red);
+}
+
+.badge-pending {
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--text-soft);
 }
 
 /* ===== ACTION MENU ===== */

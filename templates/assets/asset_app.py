@@ -1,9 +1,11 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, flash
 
 from .asset_backend import (
     DEFAULT_FILTER_COUNTS,
     fetch_assets_from_backend,
     fetch_asset_detail_from_backend,
+    fetch_asset_types_from_backend,
+    create_asset_to_backend,
     delete_asset_from_backend,
 )
 
@@ -46,10 +48,56 @@ def register_assets_routes(app):
 
     @app.route("/assets/create", methods=["GET", "POST"])
     def asset_create():
-        if request.method == "POST":
-            return redirect(url_for("assets_page"))
+        asset_types = fetch_asset_types_from_backend()
 
-        return render_template("assets/asset_create.html")
+        if request.method == "POST":
+            form_data = request.form.to_dict()
+
+            asset_type = form_data.get("type", "").strip()
+
+            payload = {
+                "asset_code": form_data.get("asset_code", "").strip(),
+                "asset_name": form_data.get("asset_name", "").strip(),
+
+                # Cho phép nhập custom loại thiết bị
+                "type": asset_type,
+                "category": asset_type,
+
+                "warranty": form_data.get("warranty", "").strip(),
+                "spec": form_data.get("spec", "").strip(),
+                "notes": form_data.get("spec", "").strip(),
+
+                # Mặc định khi tạo tài sản mới
+                # Chưa sử dụng, chưa có người nhận, chưa có phòng ban, chưa có vị trí
+                "status": "available",
+                "user": "",
+                "receiver": "",
+                "department": "",
+                "location": "",
+            }
+
+            success, result = create_asset_to_backend(payload)
+
+            if success:
+                flash("Thêm thiết bị thành công.", "success")
+                return redirect(url_for("assets_page"))
+
+            error_message = result.get("message", "Tạo tài sản thất bại")
+            flash(error_message, "danger")
+
+            return render_template(
+                "assets/asset_create.html",
+                error_message=error_message,
+                form_data=form_data,
+                asset_types=asset_types,
+            )
+
+        return render_template(
+            "assets/asset_create.html",
+            error_message=None,
+            form_data={},
+            asset_types=asset_types,
+        )
 
     @app.route("/assets/detail/<string:asset_id>")
     def asset_detail_view(asset_id):
@@ -62,11 +110,15 @@ def register_assets_routes(app):
         info["asset_name"] = info.get("asset_name") or info.get("asset") or ""
 
         specs = {
-            "spec": "Thông số kỹ thuật đang được cập nhật",
+            "spec": info.get("spec") or "Thông số kỹ thuật đang được cập nhật",
             "warranty": info.get("warranty") or "N/A",
         }
 
-        return render_template("assets/asset_detail.html", info=info, specs=specs)
+        return render_template(
+            "assets/asset_detail.html",
+            info=info,
+            specs=specs,
+        )
 
     @app.route("/assets/delete/<string:asset_id>", methods=["POST"])
     def asset_delete_view(asset_id):

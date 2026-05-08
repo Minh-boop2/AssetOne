@@ -13,6 +13,23 @@ from .assign_backend import (
 )
 
 
+def get_asset_categories_from_inventory():
+    inventory = get_inventory_from_assets_api()
+
+    categories = sorted(
+        list({
+            item.get("type") or item.get("category")
+            for item in inventory
+            if item.get("type") or item.get("category")
+        })
+    )
+
+    if not categories:
+        categories = DEFAULT_CATEGORIES
+
+    return inventory, categories
+
+
 def register_assign_routes(app):
     # --- 1. TRANG DANH SÁCH ---
     @app.route("/assign")
@@ -42,7 +59,7 @@ def register_assign_routes(app):
                 "department": selected_dept,
                 "status": selected_status,
                 "location": selected_loc,
-            }
+            },
         )
 
         if error:
@@ -63,6 +80,13 @@ def register_assign_routes(app):
         counts = convert_counts_for_template(data.get("filter_counts", {}))
 
         categories, departments, locations, status_options = build_filter_options(counts)
+
+        # Đồng bộ loại thiết bị của trang cấp phát với database tài sản hiện tại
+        # Không lấy loại từ lịch sử cấp phát nữa
+        inventory, asset_categories = get_asset_categories_from_inventory()
+
+        if asset_categories:
+            categories = asset_categories
 
         return render_template(
             "assign/assign_overview.html",
@@ -89,18 +113,7 @@ def register_assign_routes(app):
             flash("API tạo phiếu cấp phát chưa được bật.", "warning")
             return redirect(url_for("assign_page"))
 
-        inventory = get_inventory_from_assets_api()
-
-        inventory_types = sorted(
-            list({
-                item.get("type")
-                for item in inventory
-                if item.get("type")
-            })
-        )
-
-        if not inventory_types:
-            inventory_types = DEFAULT_CATEGORIES
+        inventory, inventory_types = get_asset_categories_from_inventory()
 
         return render_template(
             "assign/assign_create.html",
@@ -146,14 +159,14 @@ def register_assign_routes(app):
             flash("API cập nhật phiếu cấp phát chưa được bật.", "warning")
             return redirect(url_for("assign_detail", id=id))
 
-        inventory = get_inventory_from_assets_api()
+        inventory, inventory_types = get_asset_categories_from_inventory()
 
         return render_template(
             "assign/assign_edit.html",
             assign=assign,
             inventory=inventory,
             departments=DEFAULT_DEPARTMENTS,
-            categories=DEFAULT_CATEGORIES,
+            categories=inventory_types,
             locations=DEFAULT_LOCATIONS,
             status_options=DEFAULT_STATUS_OPTIONS,
         )

@@ -5,6 +5,7 @@ from urllib.parse import urlencode, quote
 
 
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
+BACKEND_ASSET_TYPES_API = "http://127.0.0.1:5001/api/assets/types"
 
 
 DEFAULT_FILTER_COUNTS = {
@@ -84,6 +85,54 @@ def fetch_asset_detail_from_backend(asset_id):
 
     except (URLError, HTTPError, TimeoutError, json.JSONDecodeError):
         return None
+
+
+def fetch_asset_types_from_backend():
+    try:
+        with urlopen(BACKEND_ASSET_TYPES_API, timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        return payload.get("items", [])
+
+    except (URLError, HTTPError, TimeoutError, json.JSONDecodeError):
+        return []
+
+
+def create_asset_to_backend(data):
+    payload = json.dumps(data).encode("utf-8")
+
+    req = Request(
+        BACKEND_ASSETS_API,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+
+    try:
+        with urlopen(req, timeout=5) as response:
+            raw = response.read().decode("utf-8")
+            result = json.loads(raw) if raw else {}
+
+        return True, result
+
+    except HTTPError as e:
+        try:
+            raw = e.read().decode("utf-8")
+            payload = json.loads(raw) if raw else {}
+        except Exception:
+            payload = {}
+
+        return False, {
+            "message": payload.get("message", f"Tạo tài sản thất bại. HTTP {e.code}")
+        }
+
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return False, {
+            "message": "Không thể kết nối đến backend để tạo tài sản."
+        }
 
 
 def delete_asset_from_backend(asset_id):

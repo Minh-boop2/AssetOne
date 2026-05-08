@@ -1,0 +1,218 @@
+/* static/css/components/sonner.css */
+
+:root {
+  --sonner-bg: #ffffff;
+  --sonner-text: #111827;
+  --sonner-muted: #6b7280;
+  --sonner-border: #e5e7eb;
+  --sonner-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+
+  --sonner-success: #16a34a;
+  --sonner-error: #dc2626;
+  --sonner-warning: #f59e0b;
+  --sonner-info: #2563eb;
+}
+
+body.dark {
+  --sonner-bg: #111827;
+  --sonner-text: #f9fafb;
+  --sonner-muted: #9ca3af;
+  --sonner-border: #374151;
+  --sonner-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+}
+
+.sonner-viewport {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.sonner-toast {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: flex-start;
+
+  min-height: 58px;
+  padding: 14px 14px;
+  border: 1px solid var(--sonner-border);
+  border-radius: 14px;
+  background: var(--sonner-bg);
+  color: var(--sonner-text);
+  box-shadow: var(--sonner-shadow);
+
+  pointer-events: auto;
+  overflow: hidden;
+
+  transform: translateX(120%);
+  opacity: 0;
+  animation: sonner-slide-in 0.28s ease forwards;
+}
+
+.sonner-toast.sonner-removing {
+  animation: sonner-slide-out 0.22s ease forwards;
+}
+
+@keyframes sonner-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sonner-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.sonner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.sonner-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sonner-content {
+  min-width: 0;
+}
+
+.sonner-title {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--sonner-text);
+}
+
+.sonner-description {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--sonner-muted);
+  word-break: break-word;
+}
+
+.sonner-close {
+  border: none;
+  background: transparent;
+  color: var(--sonner-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 8px;
+  line-height: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sonner-close:hover {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--sonner-text);
+}
+
+.sonner-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sonner-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation-name: sonner-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes sonner-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.sonner-toast[data-type="success"] .sonner-icon,
+.sonner-toast[data-type="success"] .sonner-progress {
+  color: var(--sonner-success);
+  background: var(--sonner-success);
+}
+
+.sonner-toast[data-type="error"] .sonner-icon,
+.sonner-toast[data-type="error"] .sonner-progress {
+  color: var(--sonner-error);
+  background: var(--sonner-error);
+}
+
+.sonner-toast[data-type="warning"] .sonner-icon,
+.sonner-toast[data-type="warning"] .sonner-progress {
+  color: var(--sonner-warning);
+  background: var(--sonner-warning);
+}
+
+.sonner-toast[data-type="info"] .sonner-icon,
+.sonner-toast[data-type="info"] .sonner-progress,
+.sonner-toast[data-type="default"] .sonner-icon,
+.sonner-toast[data-type="default"] .sonner-progress {
+  color: var(--sonner-info);
+  background: var(--sonner-info);
+}
+
+.sonner-action {
+  margin-top: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--sonner-border);
+  background: transparent;
+  color: var(--sonner-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sonner-action:hover {
+  background: rgba(148, 163, 184, 0.14);
+}
+
+@media (max-width: 520px) {
+  .sonner-viewport {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .sonner-toast {
+    width: 100%;
+  }
+}

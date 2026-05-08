@@ -8,28 +8,50 @@
   </span>
 </div>
 
-{% macro render_asset_type(row) %} {% if row.type == 'laptop' %}
-<span class="badge badge-type badge-laptop">Laptop</span>
-{% elif row.type == 'pc' %}
-<span class="badge badge-type badge-pc">Máy tính bàn</span>
-{% elif row.type == 'printer' %}
-<span class="badge badge-type badge-printer">Máy in</span>
+{% macro render_asset_type(row) %} {% set type_value = row.type or row.category
+or '' %} {% set type_labels = { 'laptop': 'Laptop', 'pc': 'Máy tính bàn',
+'printer': 'Máy in', 'monitor': 'Màn hình', 'phone': 'Điện thoại', 'projector':
+'Máy chiếu' } %} {% set type_label = type_labels.get(type_value, type_value) %}
+{% if type_value %}
+<span class="badge badge-type badge-{{ type_value|replace(' ', '-')|lower }}">
+  {{ type_label }}
+</span>
 {% else %}
-<span class="badge badge-type">Khác</span>
-{% endif %} {% endmacro %} {% macro render_status(row) %} {% if row.status ==
-'using' or row.status == 'Hoàn thành' or row.status == 'Đang sử dụng' %}
+<span class="asset-empty">—</span>
+{% endif %} {% endmacro %} {% macro render_status(row) %} {% set status_value =
+row.status or '' %} {% if status_value == 'using' or status_value == 'Hoàn
+thành' or status_value == 'Đang sử dụng' %}
 <span class="badge badge-using">Đang sử dụng</span>
-{% elif row.status == 'available' or row.status == 'Chưa sử dụng' %}
+
+{% elif status_value == 'available' or status_value == 'Chưa sử dụng' or
+status_value == 'Chưa dùng' %}
 <span class="badge badge-available">Chưa sử dụng</span>
-{% elif row.status == 'maintenance' or row.status == 'Bảo trì' %}
+
+{% elif status_value == 'maintenance' or status_value == 'Bảo trì' %}
 <span class="badge badge-maintenance">Bảo trì</span>
-{% elif row.status == 'broken' or row.status == 'Hỏng' %}
+
+{% elif status_value == 'broken' or status_value == 'Hỏng' or status_value ==
+'Chưa bảo trì' %}
 <span class="badge badge-broken">Hỏng</span>
+
+{% elif status_value == 'pending' or status_value == 'Chờ duyệt' %}
+<span class="badge badge-pending">Chờ duyệt</span>
+
 {% else %}
-<span class="badge badge-maintenance">Chờ duyệt</span>
+<span class="asset-empty">—</span>
 {% endif %} {% endmacro %} {% macro render_user(row) %} {% set name =
 row.receiver or row.user %} {% if name %}
 <span class="asset-user">{{ name }}</span>
+{% else %}
+<span class="asset-empty">—</span>
+{% endif %} {% endmacro %} {% macro render_department(row) %} {% if
+row.department %}
+<span>{{ row.department }}</span>
+{% else %}
+<span class="asset-empty">—</span>
+{% endif %} {% endmacro %} {% macro render_location(row) %} {% if row.location
+%}
+<span>{{ row.location }}</span>
 {% else %}
 <span class="asset-empty">—</span>
 {% endif %} {% endmacro %} {% macro render_warranty(row) %} {% if row.warranty
@@ -37,26 +59,29 @@ row.receiver or row.user %} {% if name %}
 <span class="asset-date">{{ row.warranty }}</span>
 {% else %}
 <span class="asset-empty">—</span>
-{% endif %} {% endmacro %} {% set columns = [ {"key": "asset_code", "label": "Mã
-tài sản"}, {"key": "asset", "label": "Tên tài sản"}, {"key": "type", "label":
-"Loại tài sản", "render": render_asset_type}, {"key": "status", "label": "Trạng
-thái", "render": render_status}, {"key": "user", "label": "Người sử dụng",
-"render": render_user}, {"key": "department", "label": "Phòng ban"}, {"key":
-"location", "label": "Vị trí"}, {"key": "warranty", "label": "Bảo hành đến",
-"render": render_warranty}, {"key": "action", "label": "Thao tác", "render":
-render_action} ] %} {% set data = assets if assets else [] %} {% include
+{% endif %} {% endmacro %} {% set columns = [ { "key": "asset_code", "label":
+"Mã tài sản" }, { "key": "asset", "label": "Tên tài sản" }, { "key": "type",
+"label": "Loại tài sản", "render": render_asset_type }, { "key": "status",
+"label": "Trạng thái", "render": render_status }, { "key": "user", "label":
+"Người sử dụng", "render": render_user }, { "key": "department", "label": "Phòng
+ban", "render": render_department }, { "key": "location", "label": "Vị trí",
+"render": render_location }, { "key": "warranty", "label": "Bảo hành đến",
+"render": render_warranty }, { "key": "action", "label": "Thao tác", "render":
+render_action } ] %} {% set data = assets if assets else [] %} {% include
 'components/table.html' %} {% if total_pages and total_pages > 1 %}
 <div class="pagination-container">
   <div class="pagination-info">
     Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
   </div>
+
   <ul class="pagination-list">
     <li>
       <a
         href="{{ url_for('assets_page', page=current_page-1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
         class="{{ 'disabled' if current_page == 1 }}"
-        >&laquo; Trước</a
       >
+        &laquo; Trước
+      </a>
     </li>
 
     {% for p in range(1, total_pages + 1) %} {% if p == 1 or p == total_pages or
@@ -65,8 +90,9 @@ render_action} ] %} {% set data = assets if assets else [] %} {% include
       <a
         href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
         class="{{ 'active' if p == current_page }}"
-        >{{ p }}</a
       >
+        {{ p }}
+      </a>
     </li>
     {% elif p == current_page - 2 or p == current_page + 2 %}
     <li class="pagination-dots">...</li>
@@ -76,8 +102,9 @@ render_action} ] %} {% set data = assets if assets else [] %} {% include
       <a
         href="{{ url_for('assets_page', page=current_page+1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
         class="{{ 'disabled' if current_page == total_pages }}"
-        >Sau &raquo;</a
       >
+        Sau &raquo;
+      </a>
     </li>
   </ul>
 </div>
