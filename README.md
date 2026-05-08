@@ -13,7 +13,6 @@ sau đó chỉ cần chạy ở dưới
 mac
 python app.py
 
-
 xong
 
 làm xong rồi thì hãy rồi có xác nhận của Minh thì dùng 2 lệnh sau
