@@ -1,4 +1,5 @@
 from flask import render_template, request, jsonify
+from collections import Counter
 import math
 import data
 
@@ -154,6 +155,24 @@ def register_report_routes(app):
         # CSS hiển thị khoảng 5 data, 5 data còn lại cuộn trong bảng.
         per_page = 10
 
+        # BỔ SUNG: tạo dữ liệu đếm cho filter loại báo cáo và trạng thái.
+        all_report_items = [
+            _prepare_report_log(idx, log)
+            for idx, log in enumerate(data.DATABASE_LOGS)
+        ]
+
+        type_counts = Counter(
+            item.get('display_report_type') or 'Khác'
+            for item in all_report_items
+        )
+
+        status_counts = Counter(
+            item.get('display_report_status') or 'Chờ'
+            for item in all_report_items
+        )
+
+        total_report_count = len(all_report_items)
+
         source_logs = list(enumerate(data.DATABASE_LOGS))
         filtered = source_logs
 
@@ -224,7 +243,12 @@ def register_report_routes(app):
             selected_status=selected_status,
             current_page=page,
             total_pages=total_pages,
-            per_page=per_page
+            per_page=per_page,
+
+            # BỔ SUNG: truyền số lượng xuống report_filter.html.
+            type_counts=type_counts,
+            status_counts=status_counts,
+            total_report_count=total_report_count
         )
 
     @app.route('/report/delete/<int:row_index>', methods=['POST'])

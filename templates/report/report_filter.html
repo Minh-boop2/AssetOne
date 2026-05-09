@@ -1,0 +1,551 @@
+{% set total_report_count = total_report_count|default(total_logs|default(0)) %}
+{% set type_counts = type_counts|default({}) %}
+{% set status_counts = status_counts|default({}) %}
+
+{% set report_type_options = [
+  'Cấp phát',
+  'Bàn giao',
+  'Bảo trì',
+  'Thu hồi',
+  'Cập nhật',
+  'Thay đổi',
+  'Thiết bị',
+  'Khác'
+] %}
+
+{% set report_status_options = [
+  'Chờ',
+  'Đã xem'
+] %}
+
+{% set dept_options = [
+  'IT',
+  'Kế toán',
+  'Nhân sự',
+  'Thiết kế',
+  'Marketing',
+  'Kinh doanh',
+  'Phòng Kỹ Thuật',
+  'Phòng Nhân Sự',
+  'Phòng Kế Toán',
+  'Phòng Kinh Doanh',
+  'Phòng Marketing',
+  'Phòng IT',
+  'Kho thiết bị'
+] %}
+
+{% set location_options = [
+  'Tầng 1',
+  'Tầng 2',
+  'Tầng 3',
+  'Tầng 4',
+  'Tầng 5',
+  'Phòng IT',
+  'Phòng họp A',
+  'Phòng họp B',
+  'Hội trường',
+  'Kho thiết bị'
+] %}
+
+<style>
+  .report-filter-section .report-count-select {
+    position: relative;
+    width: 100%;
+  }
+
+  .report-filter-section .report-count-select__button {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .report-filter-section .report-count-select__button:hover,
+  .report-filter-section .report-count-select.open .report-count-select__button {
+    border-color: var(--hsu-blue);
+  }
+
+  .report-filter-section .report-count-select__button:focus {
+    border-color: var(--hsu-blue);
+    box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+  }
+
+  .report-filter-section .report-count-select__value {
+    min-width: 0;
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .report-filter-section .report-count-select__label {
+    min-width: 0;
+    flex: 1;
+
+    font-size: 14px;
+    font-weight: 400;
+    text-align: left;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .report-filter-section .report-count-select__count {
+    min-width: 24px;
+    flex-shrink: 0;
+
+    text-align: right;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .report-filter-section .report-count-select__caret {
+    width: 12px;
+    min-width: 12px;
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--text-soft);
+    font-size: 10px;
+  }
+
+  .report-filter-section .report-count-select__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+
+    width: 100%;
+    padding: 6px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+
+    z-index: 500;
+    display: none;
+  }
+
+  .report-filter-section .report-count-select.open .report-count-select__menu {
+    display: block;
+  }
+
+  /* Scroll cố định nếu option >= 5, tính cả dòng "Tất cả" */
+  .report-filter-section .report-count-select__menu.is-scrollable {
+    max-height: 226px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--surface);
+  }
+
+  .report-filter-section .report-count-select__menu.is-scrollable::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .report-filter-section .report-count-select__menu.is-scrollable::-webkit-scrollbar-track {
+    background: var(--surface);
+    border-radius: 999px;
+  }
+
+  .report-filter-section .report-count-select__menu.is-scrollable::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+
+  .report-filter-section .report-count-select__menu.is-scrollable::-webkit-scrollbar-thumb:hover {
+    background: var(--text-soft);
+  }
+
+  .report-filter-section .report-count-select__option {
+    width: 100%;
+    padding: 10px 12px;
+
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    text-align: left;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .report-filter-section .report-count-select__option:hover {
+    background: var(--surface-2);
+  }
+
+  .report-filter-section .report-count-select__option.is-active {
+    background: rgba(31, 94, 255, 0.12);
+    color: var(--hsu-blue);
+    font-weight: 400;
+  }
+
+  .report-filter-section .report-count-select__option-label {
+    min-width: 0;
+    flex: 1;
+
+    font-size: 14px;
+    font-weight: 400;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .report-filter-section .report-count-select__option-count {
+    min-width: 24px;
+    flex-shrink: 0;
+
+    text-align: right;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<div class="report-filter-section">
+  <div class="filter-bar">
+    <input type="hidden" name="page" value="1" />
+
+    <div class="filter-item filter-item--search">
+      <label class="filter-label" for="reportSearch">Tìm kiếm</label>
+      <input
+        id="reportSearch"
+        class="filter-input"
+        type="text"
+        name="search"
+        placeholder="Tìm theo mã báo cáo, tên báo cáo hoặc người báo cáo..."
+        value="{{ search_value }}"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Loại báo cáo</label>
+
+      <div class="report-count-select" data-count-select>
+        <input
+          type="hidden"
+          class="js-report-filter"
+          name="type"
+          value="{{ selected_type or 'Tất cả' }}"
+        />
+
+        <button type="button" class="report-count-select__button">
+          <span class="report-count-select__value">
+            <span class="report-count-select__label">
+              {{ selected_type if selected_type and selected_type != 'Tất cả' else 'Tất cả loại' }}
+            </span>
+
+            <span class="report-count-select__count">
+              {{ total_report_count if not selected_type or selected_type == 'Tất cả' else type_counts.get(selected_type, 0) }}
+            </span>
+          </span>
+
+          <span class="report-count-select__caret">▼</span>
+        </button>
+
+        <div class="report-count-select__menu {% if (report_type_options|length + 1) >= 5 %}is-scrollable{% endif %}">
+          <button
+            type="button"
+            class="report-count-select__option {% if selected_type == 'Tất cả' %}is-active{% endif %}"
+            data-value="Tất cả"
+            data-label="Tất cả loại"
+            data-count="{{ total_report_count }}"
+          >
+            <span class="report-count-select__option-label">Tất cả loại</span>
+            <span class="report-count-select__option-count">{{ total_report_count }}</span>
+          </button>
+
+          {% for item in report_type_options %}
+            <button
+              type="button"
+              class="report-count-select__option {% if selected_type == item %}is-active{% endif %}"
+              data-value="{{ item }}"
+              data-label="{{ item }}"
+              data-count="{{ type_counts.get(item, 0) }}"
+            >
+              <span class="report-count-select__option-label">{{ item }}</span>
+              <span class="report-count-select__option-count">{{ type_counts.get(item, 0) }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Phòng ban</label>
+
+      <div class="report-count-select" data-count-select>
+        <input
+          type="hidden"
+          class="js-report-filter"
+          name="department"
+          value="{{ selected_dept or 'Tất cả' }}"
+        />
+
+        <button type="button" class="report-count-select__button">
+          <span class="report-count-select__value">
+            <span class="report-count-select__label">
+              {{ selected_dept if selected_dept and selected_dept != 'Tất cả' else 'Tất cả phòng' }}
+            </span>
+          </span>
+
+          <span class="report-count-select__caret">▼</span>
+        </button>
+
+        <div class="report-count-select__menu {% if (dept_options|length + 1) >= 5 %}is-scrollable{% endif %}">
+          <button
+            type="button"
+            class="report-count-select__option {% if selected_dept == 'Tất cả' %}is-active{% endif %}"
+            data-value="Tất cả"
+            data-label="Tất cả phòng"
+          >
+            <span class="report-count-select__option-label">Tất cả phòng</span>
+          </button>
+
+          {% if selected_dept != 'Tất cả' and selected_dept not in dept_options %}
+            <button
+              type="button"
+              class="report-count-select__option is-active"
+              data-value="{{ selected_dept }}"
+              data-label="{{ selected_dept }}"
+            >
+              <span class="report-count-select__option-label">{{ selected_dept }}</span>
+            </button>
+          {% endif %}
+
+          {% for dept in dept_options %}
+            <button
+              type="button"
+              class="report-count-select__option {% if selected_dept == dept %}is-active{% endif %}"
+              data-value="{{ dept }}"
+              data-label="{{ dept }}"
+            >
+              <span class="report-count-select__option-label">{{ dept }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Vị trí</label>
+
+      <div class="report-count-select" data-count-select>
+        <input
+          type="hidden"
+          class="js-report-filter"
+          name="location"
+          value="{{ selected_location or 'Tất cả' }}"
+        />
+
+        <button type="button" class="report-count-select__button">
+          <span class="report-count-select__value">
+            <span class="report-count-select__label">
+              {{ selected_location if selected_location and selected_location != 'Tất cả' else 'Tất cả vị trí' }}
+            </span>
+          </span>
+
+          <span class="report-count-select__caret">▼</span>
+        </button>
+
+        <div class="report-count-select__menu {% if (location_options|length + 1) >= 5 %}is-scrollable{% endif %}">
+          <button
+            type="button"
+            class="report-count-select__option {% if selected_location == 'Tất cả' %}is-active{% endif %}"
+            data-value="Tất cả"
+            data-label="Tất cả vị trí"
+          >
+            <span class="report-count-select__option-label">Tất cả vị trí</span>
+          </button>
+
+          {% if selected_location != 'Tất cả' and selected_location not in location_options %}
+            <button
+              type="button"
+              class="report-count-select__option is-active"
+              data-value="{{ selected_location }}"
+              data-label="{{ selected_location }}"
+            >
+              <span class="report-count-select__option-label">{{ selected_location }}</span>
+            </button>
+          {% endif %}
+
+          {% for location in location_options %}
+            <button
+              type="button"
+              class="report-count-select__option {% if selected_location == location %}is-active{% endif %}"
+              data-value="{{ location }}"
+              data-label="{{ location }}"
+            >
+              <span class="report-count-select__option-label">{{ location }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-item">
+      <label class="filter-label">Trạng thái</label>
+
+      <div class="report-count-select" data-count-select>
+        <input
+          type="hidden"
+          class="js-report-filter"
+          name="status"
+          value="{{ selected_status or 'Tất cả' }}"
+        />
+
+        <button type="button" class="report-count-select__button">
+          <span class="report-count-select__value">
+            <span class="report-count-select__label">
+              {{ selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái' }}
+            </span>
+
+            <span class="report-count-select__count">
+              {{ total_report_count if not selected_status or selected_status == 'Tất cả' else status_counts.get(selected_status, 0) }}
+            </span>
+          </span>
+
+          <span class="report-count-select__caret">▼</span>
+        </button>
+
+        <div class="report-count-select__menu">
+          <button
+            type="button"
+            class="report-count-select__option {% if selected_status == 'Tất cả' %}is-active{% endif %}"
+            data-value="Tất cả"
+            data-label="Tất cả trạng thái"
+            data-count="{{ total_report_count }}"
+          >
+            <span class="report-count-select__option-label">Tất cả trạng thái</span>
+            <span class="report-count-select__option-count">{{ total_report_count }}</span>
+          </button>
+
+          {% for item in report_status_options %}
+            <button
+              type="button"
+              class="report-count-select__option {% if selected_status == item %}is-active{% endif %}"
+              data-value="{{ item }}"
+              data-label="{{ item }}"
+              data-count="{{ status_counts.get(item, 0) }}"
+            >
+              <span class="report-count-select__option-label">{{ item }}</span>
+              <span class="report-count-select__option-count">{{ status_counts.get(item, 0) }}</span>
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <a
+        href="{{ url_for('report_page') }}"
+        class="btn-reset {% if not has_active_filter %}is-hidden{% endif %}"
+        title="Xóa bộ lọc"
+        aria-label="Xóa bộ lọc"
+      >
+        ×
+      </a>
+
+      <button type="button" class="action-btn action-btn--primary action-btn--add">
+        + Báo cáo mới
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
+    const trigger = selectBox.querySelector(".report-count-select__button");
+    const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+    const label = selectBox.querySelector(".report-count-select__label");
+    const count = selectBox.querySelector(".report-count-select__count");
+    const options = selectBox.querySelectorAll(".report-count-select__option");
+
+    if (!trigger || !hiddenInput) return;
+
+    trigger.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
+        if (otherSelectBox !== selectBox) {
+          otherSelectBox.classList.remove("open");
+        }
+      });
+
+      selectBox.classList.toggle("open");
+    });
+
+    options.forEach(function (option) {
+      option.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        hiddenInput.value = option.dataset.value || "Tất cả";
+
+        if (label) {
+          label.textContent = option.dataset.label || "";
+        }
+
+        if (count) {
+          count.textContent = option.dataset.count || "";
+        }
+
+        options.forEach(function (item) {
+          item.classList.remove("is-active");
+        });
+
+        option.classList.add("is-active");
+        selectBox.classList.remove("open");
+
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+  });
+
+  document.addEventListener("click", function () {
+    document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
+      selectBox.classList.remove("open");
+    });
+  });
+});
+</script>

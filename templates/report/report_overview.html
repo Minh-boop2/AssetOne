@@ -17,154 +17,7 @@
     <h1 class="report-page__title">Báo cáo tài sản</h1>
   </div>
 
-  <div class="report-filter-section">
-    <div class="filter-bar">
-      <input type="hidden" name="page" value="1" />
-
-      <div class="filter-item filter-item--search">
-        <label class="filter-label" for="reportSearch">Tìm kiếm</label>
-        <input
-          id="reportSearch"
-          class="filter-input"
-          type="text"
-          name="search"
-          placeholder="Tìm theo mã báo cáo, tên báo cáo hoặc người báo cáo..."
-          value="{{ search_value }}"
-          autocomplete="off"
-        />
-      </div>
-
-      <div class="filter-item">
-        <label class="filter-label" for="reportType">Loại báo cáo</label>
-        <select
-          id="reportType"
-          class="filter-native-select js-report-filter"
-          name="type"
-        >
-          <option value="Tất cả" {% if selected_type == 'Tất cả' %}selected{% endif %}>Tất cả loại</option>
-          <option value="Cấp phát" {% if selected_type == 'Cấp phát' %}selected{% endif %}>Cấp phát</option>
-          <option value="Bàn giao" {% if selected_type == 'Bàn giao' %}selected{% endif %}>Bàn giao</option>
-          <option value="Bảo trì" {% if selected_type == 'Bảo trì' %}selected{% endif %}>Bảo trì</option>
-          <option value="Thu hồi" {% if selected_type == 'Thu hồi' %}selected{% endif %}>Thu hồi</option>
-          <option value="Cập nhật" {% if selected_type == 'Cập nhật' %}selected{% endif %}>Cập nhật</option>
-          <option value="Thay đổi" {% if selected_type == 'Thay đổi' %}selected{% endif %}>Thay đổi</option>
-          <option value="Thiết bị" {% if selected_type == 'Thiết bị' %}selected{% endif %}>Thiết bị</option>
-          <option value="Khác" {% if selected_type == 'Khác' %}selected{% endif %}>Khác</option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label class="filter-label" for="reportDepartment">Phòng ban</label>
-
-        {% set dept_options = [
-          'IT',
-          'Kế toán',
-          'Nhân sự',
-          'Thiết kế',
-          'Marketing',
-          'Kinh doanh',
-          'Phòng Kỹ Thuật',
-          'Phòng Nhân Sự',
-          'Phòng Kế Toán',
-          'Phòng Kinh Doanh',
-          'Phòng Marketing',
-          'Phòng IT',
-          'Kho thiết bị'
-        ] %}
-
-        <select
-          id="reportDepartment"
-          class="filter-native-select js-report-filter"
-          name="department"
-        >
-          <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>
-            Tất cả phòng
-          </option>
-
-          {% if selected_dept != 'Tất cả' and selected_dept not in dept_options %}
-            <option value="{{ selected_dept }}" selected>{{ selected_dept }}</option>
-          {% endif %}
-
-          {% for dept in dept_options %}
-            <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>
-              {{ dept }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label class="filter-label" for="reportLocation">Vị trí</label>
-
-        {% set location_options = [
-          'Tầng 1',
-          'Tầng 2',
-          'Tầng 3',
-          'Tầng 4',
-          'Tầng 5',
-          'Phòng IT',
-          'Phòng họp A',
-          'Phòng họp B',
-          'Hội trường',
-          'Kho thiết bị'
-        ] %}
-
-        <select
-          id="reportLocation"
-          class="filter-native-select js-report-filter"
-          name="location"
-        >
-          <option value="Tất cả" {% if selected_location == 'Tất cả' %}selected{% endif %}>
-            Tất cả vị trí
-          </option>
-
-          {% if selected_location != 'Tất cả' and selected_location not in location_options %}
-            <option value="{{ selected_location }}" selected>{{ selected_location }}</option>
-          {% endif %}
-
-          {% for location in location_options %}
-            <option value="{{ location }}" {% if selected_location == location %}selected{% endif %}>
-              {{ location }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label class="filter-label" for="reportStatus">Trạng thái</label>
-        <select
-          id="reportStatus"
-          class="filter-native-select js-report-filter"
-          name="status"
-        >
-          <option value="Tất cả" {% if selected_status == 'Tất cả' %}selected{% endif %}>
-            Tất cả trạng thái
-          </option>
-          <option value="Chờ" {% if selected_status == 'Chờ' %}selected{% endif %}>
-            Chờ
-          </option>
-          <option value="Đã xem" {% if selected_status == 'Đã xem' %}selected{% endif %}>
-            Đã xem
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-actions">
-        <a
-          href="{{ url_for('report_page') }}"
-          class="btn-reset {% if not has_active_filter %}is-hidden{% endif %}"
-          title="Xóa bộ lọc"
-          aria-label="Xóa bộ lọc"
-        >
-          ×
-        </a>
-
-        <button type="button" class="action-btn action-btn--primary action-btn--add">
-          + Báo cáo mới
-        </button>
-      </div>
-    </div>
-  </div>
+  {% include 'report/report_filter.html' %}
 
   <div class="report-overview-card">
     <div class="report-card-header">
@@ -307,60 +160,60 @@
 
     <div class="report-card-footer">
       <div class="pagination-buttons">
-  <a
-    class="page-btn {% if current_page <= 1 %}disabled{% endif %}"
-    href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page - 1) }}"
-  >
-    « Trước
-  </a>
+        <a
+          class="page-btn {% if current_page <= 1 %}disabled{% endif %}"
+          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page - 1) }}"
+        >
+          « Trước
+        </a>
 
-  {% if total_pages <= 3 %}
-    {% for p in range(1, total_pages + 1) %}
-      <a
-        class="page-btn {% if p == current_page %}active{% endif %}"
-        href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-      >
-        {{ p }}
-      </a>
-    {% endfor %}
-  {% else %}
-    {% if current_page <= 2 %}
-      {% for p in range(1, 4) %}
-        <a
-          class="page-btn {% if p == current_page %}active{% endif %}"
-          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-        >
-          {{ p }}
-        </a>
-      {% endfor %}
-    {% elif current_page >= total_pages - 1 %}
-      {% for p in range(total_pages - 2, total_pages + 1) %}
-        <a
-          class="page-btn {% if p == current_page %}active{% endif %}"
-          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-        >
-          {{ p }}
-        </a>
-      {% endfor %}
-    {% else %}
-      {% for p in range(current_page - 1, current_page + 2) %}
-        <a
-          class="page-btn {% if p == current_page %}active{% endif %}"
-          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-        >
-          {{ p }}
-        </a>
-      {% endfor %}
-    {% endif %}
-  {% endif %}
+        {% if total_pages <= 3 %}
+          {% for p in range(1, total_pages + 1) %}
+            <a
+              class="page-btn {% if p == current_page %}active{% endif %}"
+              href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
+            >
+              {{ p }}
+            </a>
+          {% endfor %}
+        {% else %}
+          {% if current_page <= 2 %}
+            {% for p in range(1, 4) %}
+              <a
+                class="page-btn {% if p == current_page %}active{% endif %}"
+                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
+              >
+                {{ p }}
+              </a>
+            {% endfor %}
+          {% elif current_page >= total_pages - 1 %}
+            {% for p in range(total_pages - 2, total_pages + 1) %}
+              <a
+                class="page-btn {% if p == current_page %}active{% endif %}"
+                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
+              >
+                {{ p }}
+              </a>
+            {% endfor %}
+          {% else %}
+            {% for p in range(current_page - 1, current_page + 2) %}
+              <a
+                class="page-btn {% if p == current_page %}active{% endif %}"
+                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
+              >
+                {{ p }}
+              </a>
+            {% endfor %}
+          {% endif %}
+        {% endif %}
 
-  <a
-    class="page-btn {% if current_page >= total_pages %}disabled{% endif %}"
-    href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page + 1) }}"
-  >
-    Sau »
-  </a>
-</div>
+        <a
+          class="page-btn {% if current_page >= total_pages %}disabled{% endif %}"
+          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page + 1) }}"
+        >
+          Sau »
+        </a>
+      </div>
     </div>
   </div>
 </section>
