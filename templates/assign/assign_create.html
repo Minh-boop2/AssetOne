@@ -6,18 +6,18 @@
 <section class="assign-create-page">
     <div class="assets-page__header">
         <h1 class="assets-page__title">Tạo phiếu cấp phát mới</h1>
-        <p style="color: var(--text-soft); font-size: 14px;">Mã tài sản được hệ thống xác thực duy nhất (Unique ID)</p>
+        <p style="color: var(--text-soft); font-size: 14px; margin-bottom: 8px;">Mã tài sản được hệ thống xác thực duy nhất (Unique ID)</p>
     </div>
 
-    <div class="form-container" style="max-width: 1000px; margin: 0 auto; padding: 35px; border-radius: 20px;">
+    <div class="form-container" style="max-width: 920px; margin: 0 auto; padding: 24px; border-radius: 18px;">
         <form action="{{ url_for('assign_create') }}" method="POST">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
                 
                 <div class="form-section">
-                    <h3 style="color: var(--hsu-blue);"><i class="fas fa-tag"></i> ĐỊNH DANH & THIẾT BỊ</h3>
+                    <h3 style="color: var(--hsu-blue); margin: 0 0 16px; font-size: 18px;"><i class="fas fa-tag"></i> ĐỊNH DANH & THIẾT BỊ</h3>
                     
-                    <div class="filter-item" style="margin-bottom: 25px;">
+                    <div class="filter-item" style="margin-bottom: 18px;">
                         <label class="filter-label">MÃ TÀI SẢN HỆ THỐNG</label>
                         <div class="asset-code-card">
                             <div class="asset-code-header">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
 
-                    <div class="filter-item" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="margin-bottom: 16px;">
                         <label class="filter-label">CHỌN THIẾT BỊ TRONG KHO</label>
                         <select name="asset_name" id="asset_select" class="filter-control" required style="appearance: auto;">
                             <option value="" disabled selected>-- Chọn thiết bị --</option>
@@ -52,15 +52,15 @@
                     <div class="filter-item">
                         <label class="filter-label">CẤU HÌNH CHI TIẾT (TỰ ĐIỀN)</label>
                         <textarea name="spec" id="spec_area" class="filter-control" 
-                                  style="height: 140px; padding: 15px; resize: none; font-family: 'Consolas', monospace;" 
+                                  style="height: 110px; padding: 14px; resize: none; font-family: 'Consolas', monospace;" 
                                   placeholder="Thông số sẽ tự hiển thị..."></textarea>
                     </div>
                 </div>
 
                 <div class="form-section">
-                    <h3 style="color: var(--hsu-blue);"><i class="fas fa-user-check"></i> THÔNG TIN BÀN GIAO</h3>
+                    <h3 style="color: var(--hsu-blue); margin: 0 0 16px; font-size: 18px;"><i class="fas fa-user-check"></i> THÔNG TIN BÀN GIAO</h3>
 
-                    <div class="filter-item" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="margin-bottom: 16px;">
                         <label class="filter-label">LOẠI TÀI SẢN TƯƠNG ỨNG</label>
                         <select name="type" id="type_select" class="filter-control" required style="appearance: auto;">
                             <option value="" disabled selected>-- Chọn loại --</option>
@@ -74,12 +74,12 @@
                         </select>
                     </div>
 
-                    <div class="filter-item" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="margin-bottom: 16px;">
                         <label class="filter-label">HỌ TÊN NGƯỜI NHẬN</label>
                         <input type="text" name="receiver" class="filter-control" placeholder="Nhập tên nhân viên..." required>
                     </div>
 
-                    <div class="filter-item" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="margin-bottom: 16px;">
                         <label class="filter-label">PHÒNG BAN</label>
                         <select name="department" class="filter-control" required style="appearance: auto;">
                             {% for dept in departments %}
@@ -88,7 +88,7 @@
                         </select>
                     </div>
 
-                    <div class="filter-item" style="margin-bottom: 20px;">
+                    <div class="filter-item" style="margin-bottom: 16px;">
                         <label class="filter-label">VỊ TRÍ LẮP ĐẶT (TẦNG/KHO)</label>
                         <select name="location" class="filter-control" required style="appearance: auto;">
                             <option value="" disabled selected>-- Chọn vị trí --</option>
@@ -98,7 +98,7 @@
                         </select>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="filter-item">
                             <label class="filter-label">NGÀY BÀN GIAO</label>
                             <input type="date" name="date" id="current_date" class="filter-control" required>
@@ -111,9 +111,9 @@
                 </div>
             </div>
 
-            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 40px; padding-top: 25px; border-top: 1px solid var(--border);">
-                <a href="{{ url_for('assign_page') }}" class="page-btn" style="text-decoration: none; padding: 12px 30px;">Hủy bỏ</a>
-                <button type="submit" class="btn-add-new" style="padding: 12px 45px;">
+            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);">
+                <a href="{{ url_for('assign_page') }}" class="page-btn" style="text-decoration: none; padding: 12px 28px;">Hủy bỏ</a>
+                <button type="submit" class="btn-add-new" style="padding: 12px 34px;">
                     <i class="fas fa-save"></i> LƯU PHIẾU CẤP PHÁT
                 </button>
             </div>

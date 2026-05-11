@@ -311,6 +311,12 @@
     animation: fadeInMenu 0.2s ease;
 }
 
+/* FIX: Nếu gần cuối vùng bảng thì dropdown mở lên trên */
+.action-menu--drop-up .action-menu__dropdown {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
 .action-menu__item {
     width: 100%;
     padding: 10px 12px;

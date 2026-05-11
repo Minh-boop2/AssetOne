@@ -350,6 +350,34 @@ body {
     overflow-y: visible !important;
 }
 
+.filter-select__menu--scroll-5 {
+    max-height: 198px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.filter-select__menu--scroll-5::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-select__menu--scroll-5::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 999px;
+}
+
+.filter-select__menu--scroll-5::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+}
+
+.filter-select__menu--scroll-5::-webkit-scrollbar-thumb:hover {
+    background: var(--text-soft);
+}
+
 .filter-select__menu.show {
     display: block;
     animation: fadeInMenu 0.2s ease;
