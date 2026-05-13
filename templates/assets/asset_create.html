@@ -1,4 +1,6 @@
-{% extends 'main.html' %} {% block content %}
+{% extends 'main.html' %}
+
+{% block content %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/assets/assets.css') }}"
@@ -14,7 +16,9 @@
     <div class="asset-create-header">
       <div>
         <span class="asset-create-badge">NEW</span>
+
         <h2 class="asset-create-title">Thêm thiết bị mới</h2>
+
         <p class="asset-create-subtitle">
           Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.
         </p>
@@ -22,7 +26,9 @@
     </div>
 
     {% if error_message %}
-    <div class="asset-alert asset-alert--error">{{ error_message }}</div>
+      <div class="asset-alert asset-alert--error">
+        {{ error_message }}
+      </div>
     {% endif %}
 
     <form
@@ -36,6 +42,7 @@
           <label for="asset_code">
             Mã tài sản <span class="required-star">*</span>
           </label>
+
           <input
             id="asset_code"
             type="text"
@@ -46,6 +53,7 @@
             aria-required="true"
             aria-describedby="asset_code_error"
           />
+
           <div class="asset-field-error" id="asset_code_error">
             Vui lòng nhập mã tài sản.
           </div>
@@ -55,6 +63,7 @@
           <label for="asset_name">
             Tên tài sản <span class="required-star">*</span>
           </label>
+
           <input
             id="asset_name"
             type="text"
@@ -65,6 +74,7 @@
             aria-required="true"
             aria-describedby="asset_name_error"
           />
+
           <div class="asset-field-error" id="asset_name_error">
             Vui lòng nhập tên tài sản.
           </div>
@@ -75,6 +85,7 @@
         <label for="type">
           Loại thiết bị <span class="required-star">*</span>
         </label>
+
         <input
           id="type"
           type="text"
@@ -96,27 +107,38 @@
         </div>
 
         {% if asset_types %}
-        <div class="asset-type-suggestions">
-          <div class="asset-type-suggestions__title">Loại thiết bị hiện có</div>
+          <div class="asset-type-suggestions">
+            <div class="asset-type-suggestions__title">
+              Loại thiết bị hiện có
+            </div>
 
-          <div class="asset-type-suggestions__list">
-            {% for item in asset_types %}
-            <button
-              type="button"
-              class="asset-type-chip"
-              data-type="{{ item.value }}"
+            <div
+              class="asset-type-suggestions__list"
+              id="assetTypeSuggestionsList"
             >
-              <span>{{ item.value }}</span>
-              <small>{{ item.count }}</small>
-            </button>
-            {% endfor %}
+              {% for item in asset_types %}
+                <button
+                  type="button"
+                  class="asset-type-chip"
+                  data-type="{{ item.value }}"
+                  data-search="{{ item.value }}"
+                >
+                  <span>{{ item.value }}</span>
+                  <small>{{ item.count }}</small>
+                </button>
+              {% endfor %}
+
+              <div class="asset-type-empty" id="assetTypeEmpty">
+                Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
+              </div>
+            </div>
           </div>
-        </div>
         {% endif %}
       </div>
 
       <div class="asset-form-group">
         <label for="warranty">Bảo hành đến</label>
+
         <input
           id="warranty"
           type="text"
@@ -128,14 +150,13 @@
 
       <div class="asset-form-group">
         <label for="spec">Cấu hình / Ghi chú</label>
+
         <textarea
           id="spec"
           name="spec"
           rows="4"
           placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
-        >
-{{ form_data.get('spec', '') if form_data else '' }}</textarea
-        >
+        >{{ form_data.get('spec', '') if form_data else '' }}</textarea>
       </div>
 
       <div class="asset-create-actions">
@@ -153,6 +174,11 @@
 
 <script>
   const assetCreateForm = document.getElementById("assetCreateForm");
+  const typeInput = document.getElementById("type");
+  const assetTypeEmpty = document.getElementById("assetTypeEmpty");
+  const assetTypeChips = Array.from(
+    document.querySelectorAll(".asset-type-chip")
+  );
 
   const requiredFields = [
     {
@@ -171,6 +197,17 @@
       message: "Vui lòng nhập loại thiết bị.",
     },
   ];
+
+  let typeFilterTimer = null;
+  const typeFilterDelay = 500;
+
+  function normalizeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
 
   function showAssetToast(type, title, description) {
     if (window.sonner && typeof window.sonner[type] === "function") {
@@ -253,6 +290,49 @@
     return isValid;
   }
 
+  function setActiveChipByValue(value) {
+    const normalizedValue = normalizeText(value);
+
+    assetTypeChips.forEach((chip) => {
+      const chipValue = normalizeText(chip.dataset.type);
+
+      if (normalizedValue && chipValue === normalizedValue) {
+        chip.classList.add("is-active");
+      } else {
+        chip.classList.remove("is-active");
+      }
+    });
+  }
+
+  function filterAssetTypeChips() {
+    if (!typeInput || assetTypeChips.length === 0) return;
+
+    const keyword = normalizeText(typeInput.value);
+    let visibleCount = 0;
+
+    assetTypeChips.forEach((chip) => {
+      const typeValue = normalizeText(chip.dataset.type);
+      const searchValue = normalizeText(chip.dataset.search || chip.textContent);
+
+      const isMatch =
+        !keyword ||
+        typeValue.includes(keyword) ||
+        searchValue.includes(keyword);
+
+      chip.style.display = isMatch ? "inline-flex" : "none";
+
+      if (isMatch) {
+        visibleCount += 1;
+      }
+    });
+
+    if (assetTypeEmpty) {
+      assetTypeEmpty.classList.toggle("show", visibleCount === 0);
+    }
+
+    setActiveChipByValue(typeInput.value);
+  }
+
   requiredFields.forEach((field) => {
     const input = document.getElementById(field.id);
 
@@ -269,43 +349,64 @@
     });
   });
 
-  document.querySelectorAll(".asset-type-chip").forEach((button) => {
-    button.addEventListener("click", () => {
-      const typeInput = document.getElementById("type");
+  if (typeInput) {
+    filterAssetTypeChips();
 
-      typeInput.value = button.dataset.type;
+    typeInput.addEventListener("input", function () {
+      clearTimeout(typeFilterTimer);
+
+      typeFilterTimer = setTimeout(() => {
+        filterAssetTypeChips();
+      }, typeFilterDelay);
+    });
+
+    typeInput.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        this.value = "";
+        clearFieldError(this);
+        clearTimeout(typeFilterTimer);
+        filterAssetTypeChips();
+      }
+    });
+  }
+
+  assetTypeChips.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!typeInput) return;
+
+      typeInput.value = button.dataset.type || "";
       typeInput.focus();
       clearFieldError(typeInput);
 
-      document.querySelectorAll(".asset-type-chip").forEach((chip) => {
-        chip.classList.remove("is-active");
-      });
-
-      button.classList.add("is-active");
+      clearTimeout(typeFilterTimer);
+      filterAssetTypeChips();
+      setActiveChipByValue(typeInput.value);
     });
   });
 
-  assetCreateForm.addEventListener("submit", function (event) {
-    const isValid = validateAssetForm();
+  if (assetCreateForm) {
+    assetCreateForm.addEventListener("submit", function (event) {
+      const isValid = validateAssetForm();
 
-    if (!isValid) {
-      event.preventDefault();
+      if (!isValid) {
+        event.preventDefault();
 
-      showAssetToast(
-        "error",
-        "Thêm thiết bị không thành công",
-        "Vui lòng nhập đầy đủ các thông tin*.",
-      );
+        showAssetToast(
+          "error",
+          "Thêm thiết bị không thành công",
+          "Vui lòng nhập đầy đủ các thông tin*."
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (window.sonner) {
-      window.sonner.loading(
-        "Đang thêm thiết bị",
-        "Hệ thống đang xử lý thông tin...",
-      );
-    }
-  });
+      if (window.sonner) {
+        window.sonner.loading(
+          "Đang thêm thiết bị",
+          "Hệ thống đang xử lý thông tin..."
+        );
+      }
+    });
+  }
 </script>
 {% endblock %}

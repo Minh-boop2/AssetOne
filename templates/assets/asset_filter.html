@@ -1,58 +1,43 @@
-{% set selected_type = selected_type or 'Tất cả' %}
-{% set selected_dept = selected_dept or 'Tất cả' %}
-{% set selected_status = selected_status or 'Tất cả' %}
+{% set selected_type = selected_type or 'Tất cả' %} {% set selected_dept =
+selected_dept or 'Tất cả' %} {% set selected_status = selected_status or 'Tất
+cả' %} {% set type_counts = filter_counts.type if filter_counts and
+filter_counts.type else {} %} {% set dept_counts = filter_counts.department if
+filter_counts and filter_counts.department else {} %} {% set status_counts =
+filter_counts.status if filter_counts and filter_counts.status else {} %} {% set
+type_labels = { 'laptop': 'Laptop', 'pc': 'Máy tính bàn', 'printer': 'Máy in',
+'monitor': 'Màn hình', 'phone': 'Điện thoại', 'projector': 'Máy chiếu',
+'scanner': 'Máy quét', 'network': 'Thiết bị mạng', 'ups': 'UPS', 'camera':
+'Camera', 'speaker': 'Loa', 'microphone': 'Micro', 'keyboard': 'Bàn phím',
+'mouse': 'Chuột', 'tablet': 'Máy tính bảng', 'server': 'Máy chủ', 'router':
+'Router', 'switch': 'Switch', 'storage': 'Lưu trữ', 'accessory': 'Phụ kiện',
+'other': 'Khác' } %} {% set known_type_values = [ 'laptop', 'pc', 'printer',
+'monitor', 'phone', 'projector', 'scanner', 'network', 'ups', 'camera',
+'speaker', 'microphone', 'keyboard', 'mouse', 'tablet', 'server', 'router',
+'switch', 'storage', 'accessory', 'other' ] %} {% set status_labels = { 'using':
+'Đang sử dụng', 'available': 'Chưa sử dụng', 'maintenance': 'Bảo trì', 'broken':
+'Hỏng', 'pending': 'Chờ duyệt' } %} {% set selected_type_label =
+type_labels.get( selected_type, selected_type if selected_type and selected_type
+!= 'Tất cả' else 'Tất cả loại' ) %} {% set selected_type_count = (
+type_counts.get('all', 0) if selected_type == 'Tất cả' else
+type_counts.get(selected_type, 0) ) %} {% set selected_dept_label = (
+selected_dept if selected_dept and selected_dept != 'Tất cả' else 'Tất cả phòng'
+) %} {% set selected_dept_count = ( dept_counts.get('all', 0) if selected_dept
+== 'Tất cả' else dept_counts.get(selected_dept, 0) ) %} {% set
+selected_status_label = status_labels.get( selected_status, selected_status if
+selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái' ) %} {%
+set selected_status_count = ( status_counts.get('all', 0) if selected_status ==
+'Tất cả' else status_counts.get(selected_status, 0) ) %}
 
-{% set type_counts = filter_counts.type if filter_counts and filter_counts.type else {} %}
-{% set status_counts = filter_counts.status if filter_counts and filter_counts.status else {} %}
+<style>
+  .filter-select--department .filter-select__count,
+  .filter-select--department .filter-select__option-count {
+    display: none;
+  }
 
-{% set type_labels = {
-  'laptop': 'Laptop',
-  'pc': 'Máy tính bàn',
-  'printer': 'Máy in',
-  'monitor': 'Màn hình',
-  'phone': 'Điện thoại',
-  'projector': 'Máy chiếu',
-  'other': 'Khác'
-} %}
-
-{% set known_type_values = [
-  'laptop',
-  'pc',
-  'printer',
-  'monitor',
-  'phone',
-  'projector',
-  'other'
-] %}
-
-{% set status_labels = {
-  'using': 'Đang sử dụng',
-  'available': 'Chưa sử dụng',
-  'maintenance': 'Bảo trì',
-  'broken': 'Chưa bào trì',
-} %}
-
-{% set selected_type_label = type_labels.get(
-  selected_type,
-  selected_type if selected_type and selected_type != 'Tất cả' else 'Tất cả loại'
-) %}
-
-{% set selected_type_count = (
-  type_counts.get('all', 0)
-  if selected_type == 'Tất cả'
-  else type_counts.get(selected_type, 0)
-) %}
-
-{% set selected_status_label = status_labels.get(
-  selected_status,
-  'Tất cả trạng thái'
-) %}
-
-{% set selected_status_count = (
-  status_counts.get('all', 0)
-  if selected_status == 'Tất cả'
-  else status_counts.get(selected_status, 0)
-) %}
+  .filter-select--department .filter-select__option {
+    justify-content: flex-start;
+  }
+</style>
 
 <form action="{{ url_for('assets_page') }}" method="GET" id="filterForm">
   <div class="filter-bar">
@@ -65,19 +50,19 @@
         placeholder="Gõ để tìm tên hoặc mã tài sản (ASG...)"
         value="{{ search_q or '' }}"
         class="filter-input"
-      >
+      />
     </div>
 
     <div class="filter-item">
       <label class="filter-label">Loại thiết bị</label>
 
-      <div class="filter-select" data-filter-select>
+      <div class="filter-select filter-select--type" data-filter-select>
         <input
           type="hidden"
           name="type"
           value="{{ selected_type }}"
           data-filter-input
-        >
+        />
 
         <button type="button" class="filter-select__button" data-filter-toggle>
           <span class="filter-select__value">
@@ -102,127 +87,188 @@
             data-count="{{ type_counts.get('all', 0) }}"
           >
             <span class="filter-select__option-label">Tất cả loại</span>
-            <span class="filter-select__option-count">{{ type_counts.get('all', 0) }}</span>
+            <span class="filter-select__option-count"
+              >{{ type_counts.get('all', 0) }}</span
+            >
           </button>
 
-          {% for value in known_type_values %}
-            {% set count = type_counts.get(value, 0) %}
-            {% if count > 0 or selected_type == value %}
-              <button
-                type="button"
-                class="filter-select__option {% if selected_type == value %}is-active{% endif %}"
-                data-filter-option
-                data-value="{{ value }}"
-                data-label="{{ type_labels.get(value, value) }}"
-                data-count="{{ count }}"
-              >
-                <span class="filter-select__option-label">{{ type_labels.get(value, value) }}</span>
-                <span class="filter-select__option-count">{{ count }}</span>
-              </button>
-            {% endif %}
-          {% endfor %}
-
-          {% for value, count in type_counts|dictsort %}
-            {% if value != 'all' and value not in known_type_values and count > 0 %}
-              <button
-                type="button"
-                class="filter-select__option {% if selected_type == value %}is-active{% endif %}"
-                data-filter-option
-                data-value="{{ value }}"
-                data-label="{{ value }}"
-                data-count="{{ count }}"
-              >
-                <span class="filter-select__option-label">{{ value }}</span>
-                <span class="filter-select__option-count">{{ count }}</span>
-              </button>
-            {% endif %}
-          {% endfor %}
+          {% for value in known_type_values %} {% set count =
+          type_counts.get(value, 0) %} {% if count > 0 or selected_type == value
+          %}
+          <button
+            type="button"
+            class="filter-select__option {% if selected_type == value %}is-active{% endif %}"
+            data-filter-option
+            data-value="{{ value }}"
+            data-label="{{ type_labels.get(value, value) }}"
+            data-count="{{ count }}"
+          >
+            <span class="filter-select__option-label"
+              >{{ type_labels.get(value, value) }}</span
+            >
+            <span class="filter-select__option-count">{{ count }}</span>
+          </button>
+          {% endif %} {% endfor %} {% for value, count in type_counts|dictsort
+          %} {% if value != 'all' and value not in known_type_values and count >
+          0 %}
+          <button
+            type="button"
+            class="filter-select__option {% if selected_type == value %}is-active{% endif %}"
+            data-filter-option
+            data-value="{{ value }}"
+            data-label="{{ value }}"
+            data-count="{{ count }}"
+          >
+            <span class="filter-select__option-label">{{ value }}</span>
+            <span class="filter-select__option-count">{{ count }}</span>
+          </button>
+          {% endif %} {% endfor %}
         </div>
       </div>
     </div>
 
     <div class="filter-item">
       <label class="filter-label">Phòng ban</label>
-      <select
-        name="department"
-        onchange="this.form.submit()"
-        class="filter-native-select"
-      >
-        <option value="Tất cả" {% if selected_dept == 'Tất cả' %}selected{% endif %}>Tất cả phòng</option>
-        <option value="Phòng Kỹ Thuật" {% if selected_dept == 'Phòng Kỹ Thuật' %}selected{% endif %}>Phòng Kỹ Thuật</option>
-        <option value="Phòng Hành Chính" {% if selected_dept == 'Phòng Hành Chính' %}selected{% endif %}>Phòng Hành Chính</option>
-        <option value="Phòng Thiết Kế" {% if selected_dept == 'Phòng Thiết Kế' %}selected{% endif %}>Phòng Thiết Kế</option>
-        <option value="Phòng IT" {% if selected_dept == 'Phòng IT' %}selected{% endif %}>Phòng IT</option>
-        <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>IT</option>
-        <option value="Finance" {% if selected_dept == 'Finance' %}selected{% endif %}>Finance</option>
-        <option value="HR" {% if selected_dept == 'HR' %}selected{% endif %}>HR</option>
-        <option value="Marketing" {% if selected_dept == 'Marketing' %}selected{% endif %}>Marketing</option>
-        <option value="Admin" {% if selected_dept == 'Admin' %}selected{% endif %}>Admin</option>
-        <option value="Operations" {% if selected_dept == 'Operations' %}selected{% endif %}>Operations</option>
-      </select>
-    </div>
 
-   <div class="filter-item">
-  <label class="filter-label">Trạng thái</label>
+      <div class="filter-select filter-select--department" data-filter-select>
+        <input
+          type="hidden"
+          name="department"
+          value="{{ selected_dept }}"
+          data-filter-input
+        />
 
-  <div class="filter-select" data-filter-select>
-    <input
-      type="hidden"
-      name="status"
-      value="{{ selected_status }}"
-      data-filter-input
-    >
+        <button type="button" class="filter-select__button" data-filter-toggle>
+          <span class="filter-select__value">
+            <span class="filter-select__label" data-filter-current-label>
+              {{ selected_dept_label }}
+            </span>
 
-    <button type="button" class="filter-select__button" data-filter-toggle>
-      <span class="filter-select__value">
-        <span class="filter-select__label" data-filter-current-label>
-          {{ selected_status_label }}
-        </span>
-
-        <span class="filter-select__count" data-filter-current-count>
-          {{ selected_status_count }}
-        </span>
-      </span>
-      <span class="filter-select__caret">▼</span>
-    </button>
-
-    <div class="filter-select__menu">
-      <button
-        type="button"
-        class="filter-select__option {% if selected_status == 'Tất cả' %}is-active{% endif %}"
-        data-filter-option
-        data-value="Tất cả"
-        data-label="Tất cả trạng thái"
-        data-count="{{ status_counts.get('all', 0) }}"
-      >
-        <span class="filter-select__option-label">Tất cả trạng thái</span>
-        <span class="filter-select__option-count">{{ status_counts.get('all', 0) }}</span>
-      </button>
-
-      {% for value, label in status_labels.items() %}
-        {% set count = status_counts.get(value, 0) %}
-        <button
-          type="button"
-          class="filter-select__option {% if selected_status == value %}is-active{% endif %}"
-          data-filter-option
-          data-value="{{ value }}"
-          data-label="{{ label }}"
-          data-count="{{ count }}"
-        >
-          <span class="filter-select__option-label">{{ label }}</span>
-          <span class="filter-select__option-count">{{ count }}</span>
+            <span class="filter-select__count" data-filter-current-count>
+              {{ selected_dept_count }}
+            </span>
+          </span>
+          <span class="filter-select__caret">▼</span>
         </button>
-      {% endfor %}
+
+        <div class="filter-select__menu">
+          <button
+            type="button"
+            class="filter-select__option {% if selected_dept == 'Tất cả' %}is-active{% endif %}"
+            data-filter-option
+            data-value="Tất cả"
+            data-label="Tất cả phòng"
+            data-count="{{ dept_counts.get('all', 0) }}"
+          >
+            <span class="filter-select__option-label">Tất cả phòng</span>
+            <span class="filter-select__option-count"
+              >{{ dept_counts.get('all', 0) }}</span
+            >
+          </button>
+
+          {% for dept, count in dept_counts|dictsort %} {% if dept != 'all' and
+          (count > 0 or selected_dept == dept) %}
+          <button
+            type="button"
+            class="filter-select__option {% if selected_dept == dept %}is-active{% endif %}"
+            data-filter-option
+            data-value="{{ dept }}"
+            data-label="{{ dept }}"
+            data-count="{{ count }}"
+          >
+            <span class="filter-select__option-label">{{ dept }}</span>
+            <span class="filter-select__option-count">{{ count }}</span>
+          </button>
+          {% endif %} {% endfor %}
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+
+    <div class="filter-item">
+      <label class="filter-label">Trạng thái</label>
+
+      <div class="filter-select" data-filter-select>
+        <input
+          type="hidden"
+          name="status"
+          value="{{ selected_status }}"
+          data-filter-input
+        />
+
+        <button type="button" class="filter-select__button" data-filter-toggle>
+          <span class="filter-select__value">
+            <span class="filter-select__label" data-filter-current-label>
+              {{ selected_status_label }}
+            </span>
+
+            <span class="filter-select__count" data-filter-current-count>
+              {{ selected_status_count }}
+            </span>
+          </span>
+          <span class="filter-select__caret">▼</span>
+        </button>
+
+        <div class="filter-select__menu">
+          <button
+            type="button"
+            class="filter-select__option {% if selected_status == 'Tất cả' %}is-active{% endif %}"
+            data-filter-option
+            data-value="Tất cả"
+            data-label="Tất cả trạng thái"
+            data-count="{{ status_counts.get('all', 0) }}"
+          >
+            <span class="filter-select__option-label">Tất cả trạng thái</span>
+            <span class="filter-select__option-count"
+              >{{ status_counts.get('all', 0) }}</span
+            >
+          </button>
+
+          {% for value, label in status_labels.items() %} {% set count =
+          status_counts.get(value, 0) %} {% if count > 0 or selected_status ==
+          value %}
+          <button
+            type="button"
+            class="filter-select__option {% if selected_status == value %}is-active{% endif %}"
+            data-filter-option
+            data-value="{{ value }}"
+            data-label="{{ label }}"
+            data-count="{{ count }}"
+          >
+            <span class="filter-select__option-label">{{ label }}</span>
+            <span class="filter-select__option-count">{{ count }}</span>
+          </button>
+          {% endif %} {% endfor %} {% for value, count in status_counts|dictsort
+          %} {% if value != 'all' and value not in status_labels and count > 0
+          %}
+          <button
+            type="button"
+            class="filter-select__option {% if selected_status == value %}is-active{% endif %}"
+            data-filter-option
+            data-value="{{ value }}"
+            data-label="{{ value }}"
+            data-count="{{ count }}"
+          >
+            <span class="filter-select__option-label">{{ value }}</span>
+            <span class="filter-select__option-count">{{ count }}</span>
+          </button>
+          {% endif %} {% endfor %}
+        </div>
+      </div>
+    </div>
 
     <div class="filter-actions">
-      {% if search_q or (selected_type and selected_type != 'Tất cả') or (selected_dept and selected_dept != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
-        <a href="{{ url_for('assets_page') }}" class="btn-reset" title="Xóa lọc">✕</a>
+      {% if search_q or (selected_type and selected_type != 'Tất cả') or
+      (selected_dept and selected_dept != 'Tất cả') or (selected_status and
+      selected_status != 'Tất cả') %}
+      <a href="{{ url_for('assets_page') }}" class="btn-reset" title="Xóa lọc"
+        >✕</a
+      >
       {% endif %}
 
-      <a href="{{ url_for('asset_create') }}" class="action-btn action-btn--primary action-btn--add">
+      <a
+        href="{{ url_for('asset_create') }}"
+        class="action-btn action-btn--primary action-btn--add"
+      >
         + Thêm thiết bị
       </a>
     </div>

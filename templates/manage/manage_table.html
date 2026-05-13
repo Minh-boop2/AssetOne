@@ -12,13 +12,9 @@
     {% endif %}
   </div>
 
-  {# --- MACROS RENDER --- #}
-
-  {% macro render_id(row) %}
-  <span class="m-emp-id">#{{ row.id }}</span>
-  {% endmacro %}
-
-  {% macro render_emp_name(row) %}
+  {# --- MACROS RENDER --- #} {% macro render_id(row) %}
+  <span class="m-emp-id">{{ row.id }}</span>
+  {% endmacro %} {% macro render_emp_name(row) %}
   <div class="m-emp-cell">
     <div class="m-emp-avatar">
       {{ row.name[0] | upper if row.name else '?' }}
@@ -26,26 +22,20 @@
 
     <div class="m-emp-name">{{ row.name if row.name else 'Chưa có tên' }}</div>
   </div>
-  {% endmacro %}
-
-  {% macro render_position(row) %}
+  {% endmacro %} {% macro render_position(row) %}
   <span class="m-muted-text">
     {{ row.position if row.position else 'Chưa sắp xếp' }}
   </span>
-  {% endmacro %}
-
-  {% macro render_role_badge(row) %}
-  {% set r = row.role_code | upper if row.role_code is defined and row.role_code else row.role | upper %}
+  {% endmacro %} {% macro render_role_badge(row) %} {% set r = row.role_code |
+  upper if row.role_code is defined and row.role_code else row.role | upper %}
 
   <span
     class="m-role-badge {% if r == 'ADMIN' %}m-role-admin{% elif r == 'QUAN_LY' or r == 'MANAGER' %}m-role-manager{% else %}m-role-staff{% endif %}"
   >
     {{ row.role }}
   </span>
-  {% endmacro %}
-
-  {% macro render_status(row) %}
-  {% set s = row.status_code if row.status_code is defined else row.status %}
+  {% endmacro %} {% macro render_status(row) %} {% set s = row.status_code if
+  row.status_code is defined else row.status %}
 
   <div class="m-status-cell">
     <span
@@ -53,10 +43,8 @@
     ></span>
     {{ row.status }}
   </div>
-  {% endmacro %}
-
-  {% macro render_emp_action(row) %}
-  {% set action_id = row.db_id if row.db_id is defined and row.db_id else row.id %}
+  {% endmacro %} {% macro render_emp_action(row) %} {% set action_id = row.db_id
+  if row.db_id is defined and row.db_id else row.id %}
 
   <div class="action-menu-center">
     <div class="action-menu">
@@ -89,23 +77,16 @@
       </div>
     </div>
   </div>
-  {% endmacro %}
-
-  {% set columns = [
-    {"key": "id", "label": "MÃ NHÂN VIÊN", "render": render_id},
-    {"key": "name", "label": "NHÂN VIÊN", "render": render_emp_name},
-    {"key": "dept", "label": "PHÒNG BAN"},
-    {"key": "position", "label": "VỊ TRÍ", "render": render_position},
-    {"key": "role", "label": "CHỨC VỤ", "render": render_role_badge},
-    {"key": "status", "label": "TRẠNG THÁI", "render": render_status},
-    {"key": "email", "label": "EMAIL"},
-    {"key": "action", "label": "THAO TÁC", "render": render_emp_action, "align": "center"}
-  ] %}
-
-  {% if employees %}
+  {% endmacro %} {% set columns = [ {"key": "id", "label": "MÃ NHÂN VIÊN",
+  "render": render_id}, {"key": "name", "label": "NHÂN VIÊN", "render":
+  render_emp_name}, {"key": "dept", "label": "PHÒNG BAN"}, {"key": "position",
+  "label": "VỊ TRÍ", "render": render_position}, {"key": "role", "label": "CHỨC
+  VỤ", "render": render_role_badge}, {"key": "status", "label": "TRẠNG THÁI",
+  "render": render_status}, {"key": "email", "label": "EMAIL"}, {"key":
+  "action", "label": "THAO TÁC", "render": render_emp_action, "align": "center"}
+  ] %} {% if employees %}
   <div class="m-table-scroll-container">
-    {% set data = employees %}
-    {% include 'components/table.html' %}
+    {% set data = employees %} {% include 'components/table.html' %}
   </div>
 
   <div class="m-card-footer">
@@ -117,59 +98,47 @@
         « Trước
       </a>
 
-      {% if total_pages <= 3 %}
-        {% for p in range(1, total_pages + 1) %}
-          {% if p == current_page %}
-          <span class="page-btn active">{{ p }}</span>
-          {% else %}
-          <a
-            href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-            class="page-btn"
-          >
-            {{ p }}
-          </a>
-          {% endif %}
-        {% endfor %}
-      {% elif current_page <= 2 %}
-        {% for p in range(1, 4) %}
-          {% if p == current_page %}
-          <span class="page-btn active">{{ p }}</span>
-          {% else %}
-          <a
-            href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-            class="page-btn"
-          >
-            {{ p }}
-          </a>
-          {% endif %}
-        {% endfor %}
-      {% elif current_page >= total_pages - 1 %}
-        {% for p in range(total_pages - 2, total_pages + 1) %}
-          {% if p == current_page %}
-          <span class="page-btn active">{{ p }}</span>
-          {% else %}
-          <a
-            href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-            class="page-btn"
-          >
-            {{ p }}
-          </a>
-          {% endif %}
-        {% endfor %}
+      {% if total_pages <= 3 %} {% for p in range(1, total_pages + 1) %} {% if p
+      == current_page %}
+      <span class="page-btn active">{{ p }}</span>
       {% else %}
-        {% for p in range(current_page - 1, current_page + 2) %}
-          {% if p == current_page %}
-          <span class="page-btn active">{{ p }}</span>
-          {% else %}
-          <a
-            href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-            class="page-btn"
-          >
-            {{ p }}
-          </a>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
+      <a
+        href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% elif current_page <= 2 %} {% for p in range(1,
+      4) %} {% if p == current_page %}
+      <span class="page-btn active">{{ p }}</span>
+      {% else %}
+      <a
+        href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% elif current_page >= total_pages - 1 %} {% for
+      p in range(total_pages - 2, total_pages + 1) %} {% if p == current_page %}
+      <span class="page-btn active">{{ p }}</span>
+      {% else %}
+      <a
+        href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% else %} {% for p in range(current_page - 1,
+      current_page + 2) %} {% if p == current_page %}
+      <span class="page-btn active">{{ p }}</span>
+      {% else %}
+      <a
+        href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+        class="page-btn"
+      >
+        {{ p }}
+      </a>
+      {% endif %} {% endfor %} {% endif %}
 
       <a
         href="{{ url_for('manage', page=current_page+1, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
@@ -191,16 +160,18 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     function closeAllActionMenus(exceptDropdown = null) {
-      document.querySelectorAll(".action-menu__dropdown").forEach((dropdown) => {
-        if (dropdown !== exceptDropdown) {
-          dropdown.classList.remove("show");
+      document
+        .querySelectorAll(".action-menu__dropdown")
+        .forEach((dropdown) => {
+          if (dropdown !== exceptDropdown) {
+            dropdown.classList.remove("show");
 
-          const menu = dropdown.closest(".action-menu");
-          if (menu) {
-            menu.classList.remove("action-menu--drop-up");
+            const menu = dropdown.closest(".action-menu");
+            if (menu) {
+              menu.classList.remove("action-menu--drop-up");
+            }
           }
-        }
-      });
+        });
     }
 
     function updateDropdownDirection(menu, dropdown) {
@@ -267,11 +238,13 @@
       }
     });
 
-    document.querySelectorAll(".m-table-scroll-container").forEach((container) => {
-      container.addEventListener("scroll", function () {
-        closeAllActionMenus();
+    document
+      .querySelectorAll(".m-table-scroll-container")
+      .forEach((container) => {
+        container.addEventListener("scroll", function () {
+          closeAllActionMenus();
+        });
       });
-    });
 
     window.addEventListener("resize", function () {
       closeAllActionMenus();

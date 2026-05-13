@@ -3,6 +3,16 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/assgin/assign.css') }}"
 />
+{% set type_labels = { 'laptop': 'Laptop', 'pc': 'Máy tính bàn', 'desktop': 'Máy
+tính bàn', 'printer': 'Máy in', 'monitor': 'Màn hình', 'phone': 'Điện thoại',
+'projector': 'Máy chiếu', 'scanner': 'Máy quét', 'network': 'Thiết bị mạng',
+'ups': 'UPS', 'camera': 'Camera', 'webcam': 'Camera', 'speaker': 'Loa',
+'microphone': 'Micro', 'mic': 'Micro', 'keyboard': 'Bàn phím', 'mouse': 'Chuột',
+'tablet': 'Máy tính bảng', 'server': 'Máy chủ', 'router': 'Router', 'switch':
+'Switch', 'storage': 'Lưu trữ', 'accessory': 'Phụ kiện', 'other': 'Khác' } %} {%
+set selected_cat_value = selected_cat or 'Tất cả' %} {% set selected_cat_label =
+( type_labels.get(selected_cat_value|lower, selected_cat_value) if
+selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
 
 <section class="assign-page">
   <div class="assets-page__header">
@@ -39,9 +49,7 @@
         />
         <button type="button" class="filter-select__button">
           <span class="filter-select__value">
-            <span class="filter-select__label">
-              {{ selected_cat if selected_cat != 'Tất cả' else 'Tất cả loại' }}
-            </span>
+            <span class="filter-select__label"> {{ selected_cat_label }} </span>
             <span class="filter-select__count">
               {{ counts.get('total', 0) if selected_cat == 'Tất cả' else
               counts.get('categories', {}).get(selected_cat, 0) }}
@@ -62,13 +70,14 @@
             </span>
           </button>
 
-          {% for cat in categories %}
+          {% for cat in categories %} {% set cat_label =
+          type_labels.get(cat|lower, cat) %}
           <button
             type="button"
             class="filter-select__option"
             data-value="{{ cat }}"
           >
-            <span class="filter-select__option-label">{{ cat }}</span>
+            <span class="filter-select__option-label">{{ cat_label }}</span>
             <span class="filter-select__option-count">
               {{ counts.get('categories', {}).get(cat, 0) }}
             </span>
@@ -234,14 +243,17 @@
         <tbody>
           {% for row in assigns %}
           <tr>
-            <td class="asset-code">#{{ row.asset_code or '---' }}</td>
+            <td class="asset-code">{{ row.asset_code or '---' }}</td>
 
             <td class="font-bold">
               {{ row.asset or row.asset_name or '---' }}
             </td>
 
-            <td class="text-soft">{{ row.type or row.category or '---' }}</td>
-
+            {% set row_type = row.type or row.category or '' %}
+            <td class="text-soft">
+              {{ type_labels.get(row_type|lower, row_type) if row_type else
+              '---' }}
+            </td>
             <td>
               <div class="status-container">
                 <span

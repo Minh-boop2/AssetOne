@@ -1,4 +1,6 @@
-{% extends 'main.html' %} {% block content %}
+{% extends 'main.html' %}
+
+{% block content %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}"
@@ -17,17 +19,18 @@
     </div>
   </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %} {% if
-  messages %}
-  <div class="assign-detail-flashes">
-    {% for category, message in messages %}
-    <div class="assign-detail-alert assign-detail-alert--{{ category }}">
-      <span class="assign-icon-text">ℹ️</span>
-      <span>{{ message }}</span>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %} {% endwith %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="assign-detail-flashes">
+        {% for category, message in messages %}
+          <div class="assign-detail-alert assign-detail-alert--{{ category }}">
+            <span class="assign-icon-text">ℹ️</span>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
   <div class="assign-detail-card">
     <div class="assign-detail-hero">
@@ -62,9 +65,7 @@
         <div class="assign-info-grid">
           <div class="assign-info-item">
             <span>Phân loại</span>
-            <strong
-              >{{ info.type or info.category or 'Chưa phân loại' }}</strong
-            >
+            <strong>{{ info.type or info.category or 'Chưa phân loại' }}</strong>
           </div>
 
           <div class="assign-info-item">
@@ -75,8 +76,7 @@
           <div class="assign-info-item assign-info-item--full">
             <span>Cấu hình / ghi chú</span>
             <strong class="assign-info-code">
-              {{ specs.spec if specs else (info.spec or info.notes or 'Chưa có
-              dữ liệu cấu hình.') }}
+              {{ specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.') }}
             </strong>
           </div>
         </div>
@@ -91,9 +91,23 @@
         <div class="assign-info-grid">
           <div class="assign-info-item">
             <span>Người sử dụng</span>
-            <strong class="assign-highlight">
-              {{ info.receiver or info.user or 'Chưa cấp phát' }}
-            </strong>
+
+            {% set receiver_name = info.receiver or info.user %}
+            {% set receiver_id = info.employee_code or info.user_id or info.receiver_id %}
+
+            {% if receiver_name %}
+              <div class="assign-user-display">
+                <strong class="assign-highlight">
+                  {{ receiver_name }}
+                </strong>
+
+                <small class="assign-user-id">
+                  ID: {{ receiver_id or 'Chưa có ID' }}
+                </small>
+              </div>
+            {% else %}
+              <strong>Chưa cấp phát</strong>
+            {% endif %}
           </div>
 
           <div class="assign-info-item">
@@ -111,9 +125,15 @@
 
             <div class="assign-status-wrapper">
               <span
-                class="assign-detail-status {% if info.status == 'Đang sử dụng' %} assign-detail-status--using {% elif info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' %} assign-detail-status--free {% else %} assign-detail-status--pending {% endif %}"
+                class="assign-detail-status {% if info.status == 'Đang sử dụng' or info.status == 'using' %} assign-detail-status--using {% elif info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' or info.status == 'available' %} assign-detail-status--free {% else %} assign-detail-status--pending {% endif %}"
               >
-                {{ info.status or 'Chưa xác định' }}
+                {% if info.status == 'using' %}
+                  Đang sử dụng
+                {% elif info.status == 'available' %}
+                  Chưa sử dụng
+                {% else %}
+                  {{ info.status or 'Chưa xác định' }}
+                {% endif %}
               </span>
             </div>
           </div>
@@ -130,31 +150,31 @@
         Quay lại
       </a>
 
-      {% if info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' %}
-      <a
-        href="{{ url_for('assign_give', id=info.id) }}"
-        class="assign-detail-btn assign-detail-btn--primary"
-      >
-        <span class="assign-icon-text">＋</span>
-        Cấp phát
-      </a>
-      {% endif %} {% if info.status == 'Đang sử dụng' %}
-      <form
-        action="{{ url_for('assign_unassign', id=info.id) }}"
-        method="POST"
-        class="assign-detail-inline-form"
-        onsubmit="
-          return confirm('Bạn có chắc muốn thu hồi tài sản này không?');
-        "
-      >
-        <button
-          type="submit"
-          class="assign-detail-btn assign-detail-btn--warning"
+      {% if info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' or info.status == 'available' %}
+        <a
+          href="{{ url_for('assign_give', id=info.id) }}"
+          class="assign-detail-btn assign-detail-btn--primary"
         >
-          <span class="assign-icon-text">↩</span>
-          Thu hồi
-        </button>
-      </form>
+          <span class="assign-icon-text">＋</span>
+          Cấp phát
+        </a>
+      {% endif %}
+
+      {% if info.status == 'Đang sử dụng' or info.status == 'using' %}
+        <form
+          action="{{ url_for('assign_unassign', id=info.id) }}"
+          method="POST"
+          class="assign-detail-inline-form"
+          onsubmit="return confirm('Bạn có chắc muốn thu hồi tài sản này không?');"
+        >
+          <button
+            type="submit"
+            class="assign-detail-btn assign-detail-btn--warning"
+          >
+            <span class="assign-icon-text">↩</span>
+            Thu hồi
+          </button>
+        </form>
       {% endif %}
     </div>
   </div>

@@ -51,7 +51,71 @@ def can_unassign_asset(assign):
         return False
 
     return assign.get("status") == "Đang sử dụng"
+def enrich_assigned_user_info(info):
+    if not info:
+        return info
 
+    # Nếu đã có ID rồi thì không cần tìm lại
+    if info.get("employee_code") or info.get("user_id") or info.get("receiver_id"):
+        return info
+
+    receiver_name = (
+        info.get("receiver")
+        or info.get("user")
+        or ""
+    ).strip()
+
+    if not receiver_name:
+        return info
+
+    data, error = api_request(
+        "GET",
+        "/api/users",
+        params={
+            "page": 1,
+            "limit": 20,
+            "keyword": receiver_name,
+        },
+    )
+
+    if error or not data:
+        return info
+
+    users = data.get("data", [])
+
+    if not users:
+        return info
+
+    receiver_name_lower = receiver_name.lower()
+
+    matched_user = None
+
+    for user in users:
+        full_name = (user.get("full_name") or "").strip().lower()
+
+        if full_name == receiver_name_lower:
+            matched_user = user
+            break
+
+    if not matched_user:
+        matched_user = users[0]
+
+    info["employee_code"] = (
+        info.get("employee_code")
+        or matched_user.get("employee_code")
+        or ""
+    )
+
+    info["user_id"] = (
+        info.get("user_id")
+        or matched_user.get("id")
+        or matched_user.get("_id")
+        or ""
+    )
+
+    info["receiver_id"] = info.get("receiver_id") or info.get("user_id") or ""
+
+    return info
 
 def register_assign_routes(app):
     # --- 1. TRANG DANH SÁCH ---
@@ -209,6 +273,7 @@ def register_assign_routes(app):
         if error or not info:
             flash(error or "Không tìm thấy thông tin.", "danger")
             return redirect(url_for("assign_page"))
+        info = enrich_assigned_user_info(info)
 
         specs = {
             "spec": (

@@ -768,3 +768,11 @@ body:has(.assign-create-page) {
     gap: 20px !important;
   }
 }
+/* ===== ẨN SỐ ĐẾM - CHỈ FILTER PHÒNG BAN ===== */
+#select-department .filter-select__count,
+#select-department .filter-select__option-count {
+  display: none !important;
+}
+
+
+
