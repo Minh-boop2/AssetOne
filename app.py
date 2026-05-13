@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, session, redirect, url_for
 
 from templates.dashboard.dashboard_app import register_dashboard_routes
 from templates.assets.asset_app import register_assets_routes
@@ -12,6 +12,33 @@ from templates.statistical.statistical_app import register_statistical_routes
 
 app = Flask(__name__)
 app.secret_key = "hsu_assetone_2026"
+
+
+@app.before_request
+def require_login():
+    public_endpoints = {
+        "login_page",
+        "welcome_page",
+        "forgot_password",
+        "reset_password_page",
+        "logout",
+        "static",
+    }
+
+    if request.endpoint in public_endpoints:
+        return None
+
+    if request.path.startswith("/static/"):
+        return None
+
+    if request.endpoint is None:
+        return None
+
+    if not session.get("user"):
+        return redirect(url_for("login_page"))
+
+    return None
+
 
 register_dashboard_routes(app)
 register_assets_routes(app)
