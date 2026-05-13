@@ -37,17 +37,17 @@
     linear-gradient(180deg, #f8fafc 0%, var(--md-bg) 100%);
 }
 
-/* Không cho trang ngoài bị cuộn */
 html,
 body {
   height: 100%;
   overflow: hidden !important;
 }
 
-/* Dark mode */
 html[data-theme="dark"] .manage-detail-page,
 body.dark-mode .manage-detail-page,
-.dark-mode .manage-detail-page {
+body.dark-theme .manage-detail-page,
+.dark-mode .manage-detail-page,
+.dark-theme .manage-detail-page {
   --md-bg: #0b1220;
   --md-bg-soft: #101a2e;
   --md-surface: #111827;
@@ -86,7 +86,6 @@ body.dark-mode .manage-detail-page,
   flex-direction: column;
 }
 
-/* Topbar */
 .detail-topbar {
   flex-shrink: 0;
   display: flex;
@@ -129,7 +128,6 @@ body.dark-mode .manage-detail-page,
   letter-spacing: -0.45px;
 }
 
-/* Card chính */
 .detail-card {
   flex: 1 1 auto;
   min-height: 0;
@@ -148,6 +146,7 @@ body.dark-mode .manage-detail-page,
   padding: 24px 32px;
   background: linear-gradient(135deg, var(--md-surface-soft), var(--md-bg-soft));
   border-bottom: 1px solid var(--md-border);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -227,18 +226,11 @@ body.dark-mode .manage-detail-page,
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14);
 }
 
-html[data-theme="dark"] .status-pill.active .dot,
-body.dark-mode .status-pill.active .dot,
-.dark-mode .status-pill.active .dot {
-  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16);
-}
-
 .status-pill.inactive .dot {
   background: var(--md-text-muted);
   box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.16);
 }
 
-/* Chỉ phần body trong card được cuộn */
 .detail-card-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -246,9 +238,10 @@ body.dark-mode .status-pill.active .dot,
   background: var(--md-surface);
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-border) var(--md-bg);
 }
 
-/* Scrollbar bên trong card */
 .detail-card-body::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -265,11 +258,6 @@ body.dark-mode .status-pill.active .dot,
 
 .detail-card-body::-webkit-scrollbar-thumb:hover {
   background: var(--md-primary);
-}
-
-.detail-card-body {
-  scrollbar-width: thin;
-  scrollbar-color: var(--md-border) var(--md-bg);
 }
 
 .detail-grid {
@@ -374,7 +362,6 @@ body.dark-mode .status-pill.active .dot,
   word-break: break-word;
 }
 
-/* Actions */
 .detail-actions {
   display: flex;
   justify-content: flex-end;
@@ -390,15 +377,16 @@ body.dark-mode .status-pill.active .dot,
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 40px;
   padding: 0 20px;
   border-radius: 13px;
   font-size: 13px;
   font-weight: 900;
+  font-family: inherit;
   text-decoration: none;
   border: 1px solid transparent;
   transition: all 0.2s ease;
   cursor: pointer;
-  min-height: 40px;
 }
 
 .detail-btn-secondary {
@@ -435,7 +423,6 @@ body.dark-mode .status-pill.active .dot,
   box-shadow: 0 16px 32px rgba(239, 68, 68, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .manage-detail-page {
     height: calc(100dvh - var(--manage-header-height, 80px));
@@ -451,10 +438,7 @@ body.dark-mode .status-pill.active .dot,
     border-radius: 18px;
   }
 
-  .detail-card-header {
-    padding: 22px;
-  }
-
+  .detail-card-header,
   .detail-card-body {
     padding: 22px;
   }
@@ -499,10 +483,7 @@ body.dark-mode .status-pill.active .dot,
     margin-bottom: 10px;
   }
 
-  .detail-card-header {
-    padding: 18px;
-  }
-
+  .detail-card-header,
   .detail-card-body {
     padding: 18px;
   }

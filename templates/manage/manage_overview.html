@@ -6,15 +6,10 @@
 
 <section class="manage-page-container">
     <div class="assets-page__header">
-        <h1>
-            Quản lý nhân sự
-        </h1>
-        <p>
-            Quản lý thông tin, vai trò và trạng thái hoạt động của nhân viên hệ thống
-        </p>
+        <h1>Quản lý nhân sự</h1>
+        <p>Quản lý thông tin, vai trò và trạng thái hoạt động của nhân viên hệ thống</p>
     </div>
 
-    {# --- 1. THỐNG KÊ --- #}
     <div class="manage-stats-grid">
         <div class="manage-stat-card">
             <div class="m-stat-top">
@@ -49,11 +44,9 @@
         </div>
     </div>
 
-    {# --- LABEL FALLBACK --- #}
     {% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
     {% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
 
-    {# --- 2. THANH BỘ LỌC --- #}
     <div class="m-filter-section">
         <form action="{{ url_for('manage') }}" method="GET" id="filterForm">
             <div class="m-filter-group" style="flex: 1.2;">
@@ -61,9 +54,12 @@
                 <input
                     type="text"
                     name="search"
+                    id="searchInput"
                     placeholder="Tên, ID hoặc email..."
                     value="{{ search_q or '' }}"
                     class="m-filter-input"
+                    autocomplete="off"
+                    enterkeyhint="search"
                 >
             </div>
 
@@ -79,7 +75,7 @@
                         <span class="filter-count">
                             {{ stats.total if not selected_dept or selected_dept == 'Tất cả' else dept_counts.get(selected_dept, 0) }}
                         </span>
-                        <i class="fas fa-chevron-down" style="font-size: 9px; opacity: 0.5; margin-left: 8px;"></i>
+                        <i class="fas fa-chevron-down filter-arrow"></i>
                     </button>
 
                     <div class="filter-select__menu">
@@ -108,7 +104,7 @@
                         <span class="filter-count">
                             {{ stats.total if not selected_role or selected_role == 'Tất cả' else role_counts.get(selected_role, 0) }}
                         </span>
-                        <i class="fas fa-chevron-down" style="font-size: 9px; opacity: 0.5; margin-left: 8px;"></i>
+                        <i class="fas fa-chevron-down filter-arrow"></i>
                     </button>
 
                     <div class="filter-select__menu">
@@ -141,7 +137,7 @@
                         <span class="filter-count">
                             {{ stats.total if not selected_floor or selected_floor == 'Tất cả' else floor_counts.get(selected_floor, 0) }}
                         </span>
-                        <i class="fas fa-chevron-down" style="font-size: 9px; opacity: 0.5; margin-left: 8px;"></i>
+                        <i class="fas fa-chevron-down filter-arrow"></i>
                     </button>
 
                     <div class="filter-select__menu filter-select__menu--scroll-5">
@@ -170,7 +166,7 @@
                         <span class="filter-count">
                             {{ stats.total if not selected_status or selected_status == 'Tất cả' else status_counts.get(selected_status, 0) }}
                         </span>
-                        <i class="fas fa-chevron-down" style="font-size: 9px; opacity: 0.5; margin-left: 8px;"></i>
+                        <i class="fas fa-chevron-down filter-arrow"></i>
                     </button>
 
                     <div class="filter-select__menu">
@@ -192,55 +188,111 @@
             </div>
 
             {% if search_q or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
-                <a
-                    href="{{ url_for('manage') }}"
-                    class="m-filter-input m-filter-clear"
-                    title="Xóa bộ lọc"
-                >
+                <a href="{{ url_for('manage') }}" class="m-filter-input m-filter-clear" title="Xóa bộ lọc">
                     ✕
                 </a>
             {% endif %}
         </form>
 
         <a href="{{ url_for('manage_create') }}" class="m-btn-add">
-            <i class="fas fa-plus"></i> Thêm mới
+            <i class="fas fa-plus"></i>
+            Thêm mới
         </a>
     </div>
 
-    {# --- 3. BẢNG DỮ LIỆU --- #}
     {% include 'manage/manage_table.html' %}
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.filter-select').forEach(select => {
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('filterForm');
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.filter-select__menu').forEach(function (menu) {
+            menu.classList.remove('show');
+        });
+    }
+
+    function updateFilterDisplay(option) {
+        const select = option.closest('.filter-select');
+        if (!select) return;
+
+        const hiddenInput = select.querySelector('input[type="hidden"]');
+        const label = select.querySelector('.filter-select__label');
+        const count = select.querySelector('.filter-count');
+        const optionLabel = option.querySelector('.opt-label');
+        const optionCount = option.querySelector('.opt-count');
+        const menu = select.querySelector('.filter-select__menu');
+
+        if (hiddenInput) {
+            hiddenInput.value = option.dataset.value || 'Tất cả';
+        }
+
+        if (label && optionLabel) {
+            label.textContent = optionLabel.textContent.trim();
+        }
+
+        if (count && optionCount) {
+            count.textContent = optionCount.textContent.trim();
+        }
+
+        if (menu) {
+            menu.classList.remove('show');
+        }
+    }
+
+    function submitFilterByKeyboard() {
+        if (!form) return;
+        form.submit();
+    }
+
+    document.querySelectorAll('.filter-select').forEach(function (select) {
         const btn = select.querySelector('.filter-select__button');
         const menu = select.querySelector('.filter-select__menu');
-        const input = select.querySelector('input[type="hidden"]');
-        const form = document.getElementById('filterForm');
 
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
+        if (!btn || !menu) return;
 
-            document.querySelectorAll('.filter-select__menu').forEach(m => {
-                if (m !== menu) m.classList.remove('show');
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            document.querySelectorAll('.filter-select__menu').forEach(function (item) {
+                if (item !== menu) {
+                    item.classList.remove('show');
+                }
             });
 
             menu.classList.toggle('show');
         });
 
-        select.querySelectorAll('.filter-select__option').forEach(opt => {
-            opt.addEventListener('click', function() {
-                input.value = opt.dataset.value;
-                form.submit();
+        select.querySelectorAll('.filter-select__option').forEach(function (option) {
+            option.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                updateFilterDisplay(option);
             });
         });
     });
 
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.filter-select__menu').forEach(menu => {
-            menu.classList.remove('show');
-        });
+    document.addEventListener('click', function () {
+        closeAllDropdowns();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter') return;
+
+        const target = event.target;
+
+        if (
+            target.closest('.m-filter-section') ||
+            target === document.body ||
+            target === document.documentElement
+        ) {
+            event.preventDefault();
+            closeAllDropdowns();
+            submitFilterByKeyboard();
+        }
     });
 });
 </script>

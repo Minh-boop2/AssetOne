@@ -41,7 +41,7 @@ def register_manage_routes(app):
                 flash(message, "danger")
                 return redirect(url_for("manage_create"))
 
-            flash(message, "success")
+            flash("Thêm nhân sự thành công", "success")
             return redirect(url_for("manage"))
 
         page_data = get_create_page_data()
@@ -78,7 +78,7 @@ def register_manage_routes(app):
                 flash(message, "danger")
                 return redirect(url_for("user_edit", id=id))
 
-            flash(message, "success")
+            flash("Cập nhật nhân sự thành công", "success")
             return redirect(url_for("user_detail", id=id))
 
         page_data, error = get_edit_page_data(id)
@@ -112,6 +112,9 @@ def register_manage_routes(app):
     def user_delete(id):
         success, message, category = delete_user(id)
 
-        flash(message, category)
+        if not success:
+            flash(message, category)
+            return redirect(url_for("manage"))
 
+        flash("Xóa nhân sự thành công", category or "success")
         return redirect(url_for("manage"))

@@ -1,12 +1,8 @@
-{% extends 'main.html' %} {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_create.css') }}?v=3"
-/>
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_create.css') }}?v=70" />
 
 <section class="manage-create-page">
   <div class="manage-create-wrap">
@@ -23,30 +19,28 @@
 
     <div class="create-card">
       <form
-        action="{{ url_for('manage_create') }}"
-        method="POST"
+        id="createEmployeeForm"
         class="create-form"
+        method="POST"
+        action="{{ url_for('manage_create') }}"
+        novalidate
       >
         <input type="hidden" name="emp_id" value="{{ auto_id }}" />
 
-        <div class="create-grid">
+        <div class="create-grid" id="createGrid">
           <div class="create-column">
             <div class="section-title">
-              <i class="fas fa-id-card"></i>
               <span>Định danh nhân sự</span>
             </div>
 
             <div class="employee-code-card">
               <div class="employee-code-top">
-                <span class="verify-badge">
-                  <i class="fas fa-check-circle"></i>
-                  Đã xác thực
-                </span>
+                <span class="verify-badge">Đã xác thực</span>
                 <span class="unique-label">ID UNIQUE</span>
               </div>
 
               <div class="employee-code-main">
-                <div>
+                <div class="employee-code-text">
                   <span class="employee-code-label">Mã nhân viên</span>
                   <strong id="emp_id_display">{{ auto_id }}</strong>
                 </div>
@@ -54,105 +48,210 @@
                 <button
                   type="button"
                   class="copy-btn"
-                  onclick="copyId()"
+                  id="copyBtn"
                   title="Sao chép mã nhân viên"
+                  aria-label="Sao chép mã nhân viên"
                 >
-                  <i class="far fa-copy"></i>
+                  <svg class="copy-icon copy-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z" />
+                    <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25h6.75A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z" />
+                  </svg>
+
+                  <svg class="copy-icon copy-icon-success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9.55 16.55L4.8 11.8l1.4-1.4 3.35 3.35 8.25-8.25 1.4 1.4-9.65 9.65Z" />
+                  </svg>
                 </button>
               </div>
+
+              <p class="employee-code-note">
+                Mã nhân viên được tạo tự động để định danh nhân sự trong hệ thống.
+              </p>
             </div>
 
-            <div class="form-group">
-              <label>Họ và tên nhân viên</label>
+            <div class="form-group" data-field-group>
+              <label for="name">Họ và tên nhân viên</label>
               <input
+                id="name"
                 type="text"
                 name="name"
                 placeholder="Ví dụ: Nguyễn Văn A"
-                required
+                data-required="true"
+                data-message="Vui lòng nhập họ và tên nhân viên."
               />
+              <small class="form-error">Vui lòng nhập họ và tên nhân viên.</small>
             </div>
 
-            <div class="form-group">
-              <label>Email công vụ</label>
+            <div class="form-group" data-field-group>
+              <label for="email">Email công vụ</label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 placeholder="username@hoasen.edu.vn"
-                required
+                data-required="true"
+                data-message="Vui lòng nhập email công vụ."
+                data-email-message="Email công vụ không hợp lệ."
               />
+              <small class="form-error">Vui lòng nhập email công vụ.</small>
             </div>
 
-            <div class="form-group">
-              <label>Số điện thoại liên lạc</label>
+            <div class="form-group" data-field-group>
+              <label for="phone">Số điện thoại liên lạc</label>
               <input
-                type="tel"
+                id="phone"
+                type="text"
                 name="phone"
                 placeholder="Ví dụ: 090xxxxxxx"
-                required
+                data-required="true"
+                data-message="Vui lòng nhập số điện thoại."
               />
+              <small class="form-error">Vui lòng nhập số điện thoại.</small>
             </div>
 
-            <div class="form-group">
-              <label>Mật khẩu đăng nhập </label>
+            <div class="form-group" data-field-group>
+              <label for="password">Mật khẩu đăng nhập</label>
+
               <div class="password-field">
                 <input
+                  id="password"
                   type="password"
                   name="password"
-                  id="passwordInput"
-                  placeholder="Nhập mật khẩu cho nhân viên tối thiểu 6 ký t"
+                  placeholder="Nhập mật khẩu cho nhân viên tối thiểu 6 ký tự"
                   minlength="6"
-                  required
+                  data-required="true"
+                  data-message="Vui lòng nhập mật khẩu đăng nhập."
+                  data-min-message="Mật khẩu tối thiểu 6 ký tự."
                 />
+
                 <button
                   type="button"
+                  id="togglePasswordBtn"
                   class="password-toggle"
-                  onclick="togglePassword()"
-                  title="Ẩn / hiện mật khẩu"
+                  title="Hiện / ẩn mật khẩu"
+                  aria-label="Hiện / ẩn mật khẩu"
                 >
-                  <i class="fas fa-eye" id="passwordIcon"></i>
+                  <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5c5 0 8.8 3.1 10.5 7-1.7 3.9-5.5 7-10.5 7S3.2 15.9 1.5 12C3.2 8.1 7 5 12 5Zm0 2c-3.7 0-6.7 2.1-8.3 5 1.6 2.9 4.6 5 8.3 5s6.7-2.1 8.3-5C18.7 9.1 15.7 7 12 7Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 1.7a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Z" />
+                  </svg>
                 </button>
               </div>
+
+              <small class="form-error">Vui lòng nhập mật khẩu đăng nhập.</small>
             </div>
           </div>
 
           <div class="create-column">
             <div class="section-title">
-              <i class="fas fa-briefcase"></i>
               <span>Thông tin công tác</span>
             </div>
 
-            <div class="form-group">
-              <label>Phòng ban / Đơn vị</label>
-              <select name="department" required>
-                <option value="" disabled selected>-- Chọn phòng ban --</option>
+            <div class="form-group" data-field-group>
+              <label for="department">Phòng ban / Đơn vị</label>
+
+              <select
+                id="department"
+                name="department"
+                class="native-select"
+                data-required="true"
+                data-message="Vui lòng chọn phòng ban."
+              >
+                <option value="">-- Chọn phòng ban --</option>
                 {% for dept in departments %}
                 <option value="{{ dept }}">{{ dept }}</option>
                 {% endfor %}
               </select>
+
+              <div class="custom-select" data-custom-select data-target="department">
+                <button type="button" class="custom-select-trigger">
+                  <span>-- Chọn phòng ban --</span>
+                  <svg class="custom-select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6 1.4-1.4Z" />
+                  </svg>
+                </button>
+
+                <div class="custom-select-menu">
+                  <button type="button" class="custom-select-option is-placeholder" data-value="">-- Chọn phòng ban --</button>
+                  {% for dept in departments %}
+                  <button type="button" class="custom-select-option" data-value="{{ dept }}">{{ dept }}</button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <small class="form-error">Vui lòng chọn phòng ban.</small>
             </div>
 
-            <div class="form-group">
-              <label>Vai trò hệ thống</label>
-              <select name="role" required>
-                <option value="" disabled selected>-- Chọn vai trò --</option>
-                {% for r in roles %} {% set role_value = r.value if r.value is
-                defined else r %} {% set role_label = r.label if r.label is
-                defined else r %}
-                <option value="{{ role_value }}">{{ role_label }}</option>
+            <div class="form-group" data-field-group>
+              <label for="role">Vai trò hệ thống</label>
+
+              <select
+                id="role"
+                name="role"
+                class="native-select"
+                data-required="true"
+                data-message="Vui lòng chọn vai trò."
+              >
+                <option value="">-- Chọn vai trò --</option>
+                {% for r in roles %}
+                  {% set role_value = r.value if r.value is defined else r %}
+                  {% set role_label = r.label if r.label is defined else r %}
+                  <option value="{{ role_value }}">{{ role_label }}</option>
                 {% endfor %}
               </select>
+
+              <div class="custom-select" data-custom-select data-target="role">
+                <button type="button" class="custom-select-trigger">
+                  <span>-- Chọn vai trò --</span>
+                  <svg class="custom-select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6 1.4-1.4Z" />
+                  </svg>
+                </button>
+
+                <div class="custom-select-menu">
+                  <button type="button" class="custom-select-option is-placeholder" data-value="">-- Chọn vai trò --</button>
+                  {% for r in roles %}
+                    {% set role_value = r.value if r.value is defined else r %}
+                    {% set role_label = r.label if r.label is defined else r %}
+                    <button type="button" class="custom-select-option" data-value="{{ role_value }}">{{ role_label }}</button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <small class="form-error">Vui lòng chọn vai trò.</small>
             </div>
 
-            <div class="form-group">
-              <label>Vị trí tầng</label>
-              <select name="floor" required>
-                <option value="" disabled selected>
-                  -- Chọn tầng làm việc --
-                </option>
+            <div class="form-group" data-field-group>
+              <label for="floor">Vị trí tầng</label>
+
+              <select
+                id="floor"
+                name="floor"
+                class="native-select"
+                data-required="true"
+                data-message="Vui lòng chọn tầng làm việc."
+              >
+                <option value="">-- Chọn tầng làm việc --</option>
                 {% for f in floors %}
                 <option value="{{ f }}">{{ f }}</option>
                 {% endfor %}
               </select>
+
+              <div class="custom-select" data-custom-select data-target="floor">
+                <button type="button" class="custom-select-trigger">
+                  <span>-- Chọn tầng làm việc --</span>
+                  <svg class="custom-select-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6 1.4-1.4Z" />
+                  </svg>
+                </button>
+
+                <div class="custom-select-menu">
+                  <button type="button" class="custom-select-option is-placeholder" data-value="">-- Chọn tầng làm việc --</button>
+                  {% for f in floors %}
+                  <button type="button" class="custom-select-option" data-value="{{ f }}">{{ f }}</button>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <small class="form-error">Vui lòng chọn tầng làm việc.</small>
             </div>
 
             <div class="readonly-info-card">
@@ -168,7 +267,6 @@
                 <span>Ngày tham gia</span>
                 <strong id="today_display">Tự động theo giờ Việt Nam</strong>
               </div>
-              <i class="fas fa-calendar-alt"></i>
             </div>
 
             <div class="readonly-info-card">
@@ -176,71 +274,355 @@
                 <span>Cách đăng nhập</span>
                 <strong>Email + mật khẩu vừa tạo</strong>
               </div>
-              <i class="fas fa-user-lock"></i>
             </div>
           </div>
         </div>
 
         <div class="create-footer">
-          <a href="{{ url_for('manage') }}" class="btn-cancel"> Hủy bỏ </a>
-
-          <button type="submit" class="btn-submit">
-            <i class="fas fa-user-plus"></i>
-            Xác nhận thêm mới
-          </button>
+          <a href="{{ url_for('manage') }}" class="btn-cancel">Hủy bỏ</a>
+          <button type="submit" class="btn-submit">Xác nhận thêm mới</button>
         </div>
       </form>
     </div>
   </div>
+
+  <div class="create-toast" id="createToast" aria-hidden="true">
+    <div class="create-toast-icon"></div>
+    <div class="create-toast-content">
+      <strong id="createToastTitle">Thêm nhân sự không thành công</strong>
+      <span id="createToastMessage">Vui lòng nhập đầy đủ các thông tin bắt buộc.</span>
+    </div>
+    <button type="button" class="create-toast-close" id="closeToastBtn" aria-label="Đóng">
+      &times;
+    </button>
+  </div>
 </section>
 
 <script>
-  function copyId() {
-    const code = document.getElementById("emp_id_display").innerText;
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("createEmployeeForm");
+  const createGrid = document.getElementById("createGrid");
+  const copyBtn = document.getElementById("copyBtn");
+  const empIdDisplay = document.getElementById("emp_id_display");
+  const passwordInput = document.getElementById("password");
+  const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+  const todayDisplay = document.getElementById("today_display");
+  const toast = document.getElementById("createToast");
+  const closeToastBtn = document.getElementById("closeToastBtn");
+  const toastTitle = document.getElementById("createToastTitle");
+  const toastMessage = document.getElementById("createToastMessage");
 
-    navigator.clipboard
-      .writeText(code)
-      .then(() => {
-        alert("Đã sao chép mã nhân viên: " + code);
-      })
-      .catch((err) => {
-        console.error("Lỗi khi sao chép:", err);
-      });
-  }
-
-  function togglePassword() {
-    const input = document.getElementById("passwordInput");
-    const icon = document.getElementById("passwordIcon");
-
-    if (!input) return;
-
-    const isPassword = input.type === "password";
-    input.type = isPassword ? "text" : "password";
-
-    if (icon) {
-      icon.className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
-    }
-  }
+  let toastTimer = null;
+  let allowSubmit = false;
 
   function formatVietnamDate() {
-    const now = new Date();
+    if (!todayDisplay) return;
 
-    const formatted = now.toLocaleString("vi-VN", {
+    todayDisplay.textContent = new Date().toLocaleString("vi-VN", {
       timeZone: "Asia/Ho_Chi_Minh",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit",
+      minute: "2-digit"
     });
+  }
 
-    const display = document.getElementById("today_display");
+  function showToast(title, message) {
+    if (!toast) return;
 
-    if (display) {
-      display.innerText = formatted;
+    toastTitle.textContent = title;
+    toastMessage.textContent = message;
+    toast.classList.add("is-show");
+    toast.setAttribute("aria-hidden", "false");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4000);
+  }
+
+  function hideToast() {
+    if (!toast) return;
+
+    toast.classList.remove("is-show");
+    toast.setAttribute("aria-hidden", "true");
+  }
+
+  function getGroup(field) {
+    return field.closest("[data-field-group]");
+  }
+
+  function setError(field, message) {
+    const group = getGroup(field);
+    if (!group) return;
+
+    const error = group.querySelector(".form-error");
+    group.classList.add("has-error");
+
+    if (error) {
+      error.textContent = message || "Vui lòng nhập thông tin.";
     }
   }
 
-  window.addEventListener("DOMContentLoaded", formatVietnamDate);
+  function clearError(field) {
+    const group = getGroup(field);
+    if (!group) return;
+
+    group.classList.remove("has-error");
+  }
+
+  function focusField(field) {
+    const group = getGroup(field);
+    const trigger = group ? group.querySelector(".custom-select-trigger") : null;
+
+    if (trigger) {
+      trigger.focus();
+      return;
+    }
+
+    field.focus();
+  }
+
+  function validateField(field, showError = true) {
+    const value = (field.value || "").trim();
+    const type = field.getAttribute("type");
+    const minLength = field.getAttribute("minlength");
+
+    if (field.dataset.required === "true" && !value) {
+      if (showError) setError(field, field.dataset.message);
+      return false;
+    }
+
+    if (type === "email" && value) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailPattern.test(value)) {
+        if (showError) {
+          setError(field, field.dataset.emailMessage || "Email không hợp lệ.");
+        }
+
+        return false;
+      }
+    }
+
+    if (minLength && value.length < Number(minLength)) {
+      if (showError) {
+        setError(field, field.dataset.minMessage || "Dữ liệu chưa hợp lệ.");
+      }
+
+      return false;
+    }
+
+    clearError(field);
+    return true;
+  }
+
+  function validateForm() {
+    const fields = form.querySelectorAll("[data-required='true']");
+    let isValid = true;
+    let firstInvalid = null;
+
+    fields.forEach(function (field) {
+      const ok = validateField(field, true);
+
+      if (!ok) {
+        isValid = false;
+
+        if (!firstInvalid) {
+          firstInvalid = field;
+        }
+      }
+    });
+
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      setTimeout(function () {
+        focusField(firstInvalid);
+      }, 250);
+    }
+
+    return isValid;
+  }
+
+  function closeCustomSelects(exceptBox = null) {
+    document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+      if (box !== exceptBox) {
+        box.classList.remove("is-open");
+      }
+    });
+  }
+
+  function syncCustomSelect(box) {
+    const nativeSelect = document.getElementById(box.dataset.target);
+    const triggerText = box.querySelector(".custom-select-trigger span");
+    const options = box.querySelectorAll(".custom-select-option");
+
+    if (!nativeSelect || !triggerText) return;
+
+    let selectedText = "";
+
+    options.forEach(function (option) {
+      const selected = option.dataset.value === nativeSelect.value;
+      option.classList.toggle("is-selected", selected);
+
+      if (selected) {
+        selectedText = option.textContent.trim();
+      }
+    });
+
+    triggerText.textContent = selectedText || nativeSelect.options[0].textContent.trim();
+  }
+
+  function initCustomSelects() {
+    document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+      const nativeSelect = document.getElementById(box.dataset.target);
+      const trigger = box.querySelector(".custom-select-trigger");
+      const options = box.querySelectorAll(".custom-select-option");
+
+      if (!nativeSelect || !trigger) return;
+
+      syncCustomSelect(box);
+
+      trigger.addEventListener("click", function (event) {
+        event.stopPropagation();
+
+        const isOpen = box.classList.contains("is-open");
+        closeCustomSelects(box);
+        box.classList.toggle("is-open", !isOpen);
+      });
+
+      options.forEach(function (option) {
+        option.addEventListener("click", function (event) {
+          event.stopPropagation();
+
+          nativeSelect.value = option.dataset.value || "";
+          nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+          syncCustomSelect(box);
+          box.classList.remove("is-open");
+        });
+      });
+    });
+
+    document.addEventListener("click", function () {
+      closeCustomSelects();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeCustomSelects();
+      }
+    });
+
+    if (createGrid) {
+      createGrid.addEventListener("scroll", function () {
+        closeCustomSelects();
+      });
+    }
+  }
+
+  async function copyEmployeeId() {
+    if (!empIdDisplay || !copyBtn) return;
+
+    const text = empIdDisplay.textContent.trim();
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      const tempInput = document.createElement("input");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+    }
+
+    copyBtn.classList.add("copied");
+
+    setTimeout(function () {
+      copyBtn.classList.remove("copied");
+    }, 1200);
+  }
+
+  async function confirmSubmit() {
+    if (typeof window.toastConfirm === "function") {
+      return await window.toastConfirm({
+        type: "warning",
+        title: "Xác nhận thêm nhân sự",
+        message: "Bạn có chắc muốn thêm nhân sự mới này vào hệ thống không?",
+        confirmText: "Thêm mới",
+        cancelText: "Hủy",
+        danger: false,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    }
+
+    return confirm("Bạn có chắc muốn thêm nhân sự mới này vào hệ thống không?");
+  }
+
+  formatVietnamDate();
+  initCustomSelects();
+
+  if (closeToastBtn) {
+    closeToastBtn.addEventListener("click", hideToast);
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener("click", copyEmployeeId);
+  }
+
+  if (togglePasswordBtn && passwordInput) {
+    togglePasswordBtn.addEventListener("click", function () {
+      passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+    });
+  }
+
+  if (form) {
+    const fields = form.querySelectorAll("[data-required='true']");
+
+    fields.forEach(function (field) {
+      field.addEventListener("input", function () {
+        validateField(field, true);
+      });
+
+      field.addEventListener("change", function () {
+        validateField(field, true);
+
+        const group = getGroup(field);
+        const box = group ? group.querySelector("[data-custom-select]") : null;
+
+        if (box) {
+          syncCustomSelect(box);
+        }
+      });
+
+      field.addEventListener("blur", function () {
+        validateField(field, true);
+      });
+    });
+
+    form.addEventListener("submit", async function (event) {
+      if (allowSubmit) return;
+
+      event.preventDefault();
+
+      if (!validateForm()) {
+        showToast(
+          "Thêm nhân sự không thành công",
+          "Vui lòng nhập đầy đủ các thông tin bắt buộc."
+        );
+        return;
+      }
+
+      const confirmed = await confirmSubmit();
+
+      if (confirmed) {
+        allowSubmit = true;
+        form.submit();
+      }
+    });
+  }
+});
 </script>
 {% endblock %}

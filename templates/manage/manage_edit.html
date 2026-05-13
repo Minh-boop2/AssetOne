@@ -8,7 +8,7 @@
 
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=1"
+  href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=3"
 />
 
 <section class="manage-edit-page">
@@ -25,7 +25,12 @@
     <h1 class="edit-page-title">Chỉnh sửa hồ sơ nhân sự</h1>
 
     <div class="edit-card">
-      <form method="POST" action="{{ url_for('user_edit', id=action_id) }}" class="edit-form">
+      <form
+        method="POST"
+        action="{{ url_for('user_edit', id=action_id) }}"
+        class="edit-form"
+        id="editUserForm"
+      >
         <div class="edit-card-header">
           <div class="edit-header-inner">
             <div class="edit-code-box">
@@ -34,8 +39,9 @@
             </div>
 
             <div class="edit-name-box">
-              <label class="edit-label">Họ và tên nhân viên</label>
+              <label class="edit-label" for="edit-name">Họ và tên nhân viên</label>
               <input
+                id="edit-name"
                 type="text"
                 name="name"
                 value="{{ user.name }}"
@@ -46,7 +52,7 @@
           </div>
         </div>
 
-        <div class="edit-card-body">
+        <div class="edit-card-body" id="editCardBody">
           <div class="edit-grid">
             <div class="edit-column">
               <h4 class="edit-section-title">
@@ -56,8 +62,9 @@
 
               <div class="edit-field-list">
                 <div class="edit-field">
-                  <label class="edit-label">Email công vụ</label>
+                  <label class="edit-label" for="edit-email">Email công vụ</label>
                   <input
+                    id="edit-email"
                     type="email"
                     name="email"
                     value="{{ user.email }}"
@@ -67,8 +74,9 @@
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Số điện thoại</label>
+                  <label class="edit-label" for="edit-phone">Số điện thoại</label>
                   <input
+                    id="edit-phone"
                     type="text"
                     name="phone"
                     value="{{ user.phone if user.phone else '' }}"
@@ -77,8 +85,9 @@
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Trạng thái tài khoản</label>
-                  <select name="status" class="edit-select">
+                  <label class="edit-label" for="edit-status">Trạng thái tài khoản</label>
+
+                  <select id="edit-status" name="status" class="edit-native-select">
                     {% for status in user_status %}
                       {% set status_value = status.value if status.value is defined else status %}
                       {% set status_label = status.label if status.label is defined else status %}
@@ -90,11 +99,33 @@
                       </option>
                     {% endfor %}
                   </select>
+
+                  <div class="edit-custom-select" data-custom-select data-target="edit-status">
+                    <button type="button" class="edit-custom-select__trigger">
+                      <span></span>
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="edit-custom-select__menu">
+                      {% for status in user_status %}
+                        {% set status_value = status.value if status.value is defined else status %}
+                        {% set status_label = status.label if status.label is defined else status %}
+                        <button
+                          type="button"
+                          class="edit-custom-select__option"
+                          data-value="{{ status_value }}"
+                        >
+                          {{ status_label }}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Mật khẩu mới</label>
+                  <label class="edit-label" for="edit-password">Mật khẩu mới</label>
                   <input
+                    id="edit-password"
                     type="password"
                     name="password"
                     placeholder="Để trống nếu không đổi mật khẩu"
@@ -112,19 +143,40 @@
 
               <div class="edit-field-list">
                 <div class="edit-field">
-                  <label class="edit-label">Phòng ban / Đơn vị</label>
-                  <select name="department" class="edit-select">
+                  <label class="edit-label" for="edit-department">Phòng ban / Đơn vị</label>
+
+                  <select id="edit-department" name="department" class="edit-native-select">
                     {% for d in departments %}
                       <option value="{{ d }}" {% if user.dept == d %}selected{% endif %}>
                         {{ d }}
                       </option>
                     {% endfor %}
                   </select>
+
+                  <div class="edit-custom-select" data-custom-select data-target="edit-department">
+                    <button type="button" class="edit-custom-select__trigger">
+                      <span></span>
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="edit-custom-select__menu">
+                      {% for d in departments %}
+                        <button
+                          type="button"
+                          class="edit-custom-select__option"
+                          data-value="{{ d }}"
+                        >
+                          {{ d }}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Vai trò hệ thống</label>
-                  <select name="role" class="edit-select role-select">
+                  <label class="edit-label" for="edit-role">Vai trò hệ thống</label>
+
+                  <select id="edit-role" name="role" class="edit-native-select">
                     {% for r in roles %}
                       {% set role_value = r.value if r.value is defined else r %}
                       {% set role_label = r.label if r.label is defined else r %}
@@ -136,11 +188,33 @@
                       </option>
                     {% endfor %}
                   </select>
+
+                  <div class="edit-custom-select role-custom-select" data-custom-select data-target="edit-role">
+                    <button type="button" class="edit-custom-select__trigger">
+                      <span></span>
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="edit-custom-select__menu">
+                      {% for r in roles %}
+                        {% set role_value = r.value if r.value is defined else r %}
+                        {% set role_label = r.label if r.label is defined else r %}
+                        <button
+                          type="button"
+                          class="edit-custom-select__option"
+                          data-value="{{ role_value }}"
+                        >
+                          {{ role_label }}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Vị trí tầng</label>
-                  <select name="floor" class="edit-select">
+                  <label class="edit-label" for="edit-floor">Vị trí tầng</label>
+
+                  <select id="edit-floor" name="floor" class="edit-native-select">
                     <option value="">Chưa sắp xếp</option>
                     {% for f in floors %}
                       <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
@@ -148,11 +222,35 @@
                       </option>
                     {% endfor %}
                   </select>
+
+                  <div class="edit-custom-select" data-custom-select data-target="edit-floor">
+                    <button type="button" class="edit-custom-select__trigger">
+                      <span></span>
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="edit-custom-select__menu">
+                      <button type="button" class="edit-custom-select__option" data-value="">
+                        Chưa sắp xếp
+                      </button>
+
+                      {% for f in floors %}
+                        <button
+                          type="button"
+                          class="edit-custom-select__option"
+                          data-value="{{ f }}"
+                        >
+                          {{ f }}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
                 </div>
 
                 <div class="edit-field">
-                  <label class="edit-label">Ngày tham gia</label>
+                  <label class="edit-label" for="edit-join-date">Ngày tham gia</label>
                   <input
+                    id="edit-join-date"
                     type="text"
                     value="{{ user.join_date or user.created_at or 'Chưa có dữ liệu' }}"
                     readonly
@@ -179,4 +277,139 @@
     </div>
   </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const editUserForm = document.getElementById("editUserForm");
+  const editCardBody = document.getElementById("editCardBody");
+  let allowSubmit = false;
+
+  function closeCustomSelects(exceptBox = null) {
+    document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+      if (box !== exceptBox) {
+        box.classList.remove("is-open");
+      }
+    });
+  }
+
+  function syncCustomSelect(box) {
+    const select = document.getElementById(box.dataset.target);
+    const triggerText = box.querySelector(".edit-custom-select__trigger span");
+    const options = box.querySelectorAll(".edit-custom-select__option");
+
+    if (!select || !triggerText) return;
+
+    let selectedText = "";
+
+    options.forEach(function (option) {
+      const isSelected = option.dataset.value === select.value;
+      option.classList.toggle("is-selected", isSelected);
+
+      if (isSelected) {
+        selectedText = option.textContent.trim();
+      }
+    });
+
+    if (!selectedText && select.options.length) {
+      selectedText = select.options[select.selectedIndex].textContent.trim();
+    }
+
+    triggerText.textContent = selectedText;
+  }
+
+  function initCustomSelects() {
+    document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+      const select = document.getElementById(box.dataset.target);
+      const trigger = box.querySelector(".edit-custom-select__trigger");
+      const options = box.querySelectorAll(".edit-custom-select__option");
+
+      if (!select || !trigger) return;
+
+      syncCustomSelect(box);
+
+      trigger.addEventListener("click", function (event) {
+        event.stopPropagation();
+
+        const isOpen = box.classList.contains("is-open");
+
+        closeCustomSelects(box);
+        box.classList.toggle("is-open", !isOpen);
+      });
+
+      options.forEach(function (option) {
+        option.addEventListener("click", function (event) {
+          event.stopPropagation();
+
+          select.value = option.dataset.value || "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+
+          syncCustomSelect(box);
+          box.classList.remove("is-open");
+        });
+      });
+
+      select.addEventListener("change", function () {
+        syncCustomSelect(box);
+      });
+    });
+
+    document.addEventListener("click", function () {
+      closeCustomSelects();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeCustomSelects();
+      }
+    });
+
+    if (editCardBody) {
+      editCardBody.addEventListener("scroll", function () {
+        closeCustomSelects();
+      });
+    }
+
+    window.addEventListener("resize", function () {
+      closeCustomSelects();
+    });
+  }
+
+  initCustomSelects();
+
+  if (!editUserForm) return;
+
+  editUserForm.addEventListener("submit", async function (event) {
+    if (allowSubmit) return;
+
+    event.preventDefault();
+
+    if (!editUserForm.checkValidity()) {
+      editUserForm.reportValidity();
+      return;
+    }
+
+    let confirmed = false;
+
+    if (typeof window.toastConfirm === "function") {
+      confirmed = await window.toastConfirm({
+        type: "warning",
+        title: "Xác nhận lưu thay đổi",
+        message: "Bạn có chắc muốn lưu các thay đổi cho hồ sơ nhân sự này không?",
+        confirmText: "Lưu",
+        cancelText: "Hủy",
+        danger: false,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    } else {
+      confirmed = confirm("Bạn có chắc muốn lưu các thay đổi cho hồ sơ nhân sự này không?");
+    }
+
+    if (confirmed) {
+      allowSubmit = true;
+      editUserForm.submit();
+    }
+  });
+});
+</script>
 {% endblock %}

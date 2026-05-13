@@ -1,25 +1,42 @@
-{% extends 'main.html' %} {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assgin/assign.css') }}"
-/>
-{% set type_labels = { 'laptop': 'Laptop', 'pc': 'Máy tính bàn', 'desktop': 'Máy
-tính bàn', 'printer': 'Máy in', 'monitor': 'Màn hình', 'phone': 'Điện thoại',
-'projector': 'Máy chiếu', 'scanner': 'Máy quét', 'network': 'Thiết bị mạng',
-'ups': 'UPS', 'camera': 'Camera', 'webcam': 'Camera', 'speaker': 'Loa',
-'microphone': 'Micro', 'mic': 'Micro', 'keyboard': 'Bàn phím', 'mouse': 'Chuột',
-'tablet': 'Máy tính bảng', 'server': 'Máy chủ', 'router': 'Router', 'switch':
-'Switch', 'storage': 'Lưu trữ', 'accessory': 'Phụ kiện', 'other': 'Khác' } %} {%
-set selected_cat_value = selected_cat or 'Tất cả' %} {% set selected_cat_label =
-( type_labels.get(selected_cat_value|lower, selected_cat_value) if
-selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}" />
+
+{% set type_labels = {
+  'laptop': 'Laptop',
+  'pc': 'Máy tính bàn',
+  'desktop': 'Máy tính bàn',
+  'printer': 'Máy in',
+  'monitor': 'Màn hình',
+  'phone': 'Điện thoại',
+  'projector': 'Máy chiếu',
+  'scanner': 'Máy quét',
+  'network': 'Thiết bị mạng',
+  'ups': 'UPS',
+  'camera': 'Camera',
+  'webcam': 'Camera',
+  'speaker': 'Loa',
+  'microphone': 'Micro',
+  'mic': 'Micro',
+  'keyboard': 'Bàn phím',
+  'mouse': 'Chuột',
+  'tablet': 'Máy tính bảng',
+  'server': 'Máy chủ',
+  'router': 'Router',
+  'switch': 'Switch',
+  'storage': 'Lưu trữ',
+  'accessory': 'Phụ kiện',
+  'other': 'Khác'
+} %}
+
+{% set selected_cat_value = selected_cat or 'Tất cả' %}
+{% set selected_cat_label = type_labels.get(selected_cat_value|lower, selected_cat_value) if selected_cat_value != 'Tất cả' else 'Tất cả loại' %}
 
 <section class="assign-page">
   <div class="assets-page__header">
     <h1 class="assets-page__title">Quản lý cấp phát</h1>
-    <p style="color: var(--text-soft); font-size: 14px; margin-bottom: 12px">
-      Theo dõi danh sách và lịch sử bàn giao thiết bị nhân viên
-    </p>
+    <p>Theo dõi danh sách và lịch sử bàn giao thiết bị nhân viên</p>
   </div>
 
   <form
@@ -29,7 +46,7 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     class="filter-bar"
   >
     <div class="filter-item filter-item--search">
-      <label class="filter-label">TÌM KIẾM</label>
+      <label class="filter-label">Tìm kiếm</label>
       <input
         type="text"
         name="search"
@@ -40,47 +57,31 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     </div>
 
     <div class="filter-item">
-      <label class="filter-label">LOẠI THIẾT BỊ</label>
+      <label class="filter-label">Loại thiết bị</label>
       <div class="filter-select" id="select-category">
-        <input
-          type="hidden"
-          name="category"
-          value="{{ selected_cat or 'Tất cả' }}"
-        />
+        <input type="hidden" name="category" value="{{ selected_cat or 'Tất cả' }}" />
+
         <button type="button" class="filter-select__button">
           <span class="filter-select__value">
-            <span class="filter-select__label"> {{ selected_cat_label }} </span>
+            <span class="filter-select__label">{{ selected_cat_label }}</span>
             <span class="filter-select__count">
-              {{ counts.get('total', 0) if selected_cat == 'Tất cả' else
-              counts.get('categories', {}).get(selected_cat, 0) }}
+              {{ counts.get('total', 0) if selected_cat == 'Tất cả' else counts.get('categories', {}).get(selected_cat, 0) }}
             </span>
           </span>
           <i class="fas fa-chevron-down filter-select__caret"></i>
         </button>
 
         <div class="filter-select__menu">
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="Tất cả"
-          >
+          <button type="button" class="filter-select__option" data-value="Tất cả">
             <span class="filter-select__option-label">Tất cả loại</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('total', 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('total', 0) }}</span>
           </button>
 
-          {% for cat in categories %} {% set cat_label =
-          type_labels.get(cat|lower, cat) %}
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="{{ cat }}"
-          >
+          {% for cat in categories %}
+          {% set cat_label = type_labels.get(cat|lower, cat) %}
+          <button type="button" class="filter-select__option" data-value="{{ cat }}">
             <span class="filter-select__option-label">{{ cat_label }}</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('categories', {}).get(cat, 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('categories', {}).get(cat, 0) }}</span>
           </button>
           {% endfor %}
         </div>
@@ -88,49 +89,32 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     </div>
 
     <div class="filter-item">
-      <label class="filter-label">PHÒNG BAN</label>
+      <label class="filter-label">Phòng ban</label>
       <div class="filter-select" id="select-department">
-        <input
-          type="hidden"
-          name="department"
-          value="{{ selected_dept or 'Tất cả' }}"
-        />
+        <input type="hidden" name="department" value="{{ selected_dept or 'Tất cả' }}" />
+
         <button type="button" class="filter-select__button">
           <span class="filter-select__value">
             <span class="filter-select__label">
-              {{ selected_dept if selected_dept != 'Tất cả' else 'Tất cả phòng'
-              }}
+              {{ selected_dept if selected_dept != 'Tất cả' else 'Tất cả phòng' }}
             </span>
             <span class="filter-select__count">
-              {{ counts.get('total', 0) if selected_dept == 'Tất cả' else
-              counts.get('departments', {}).get(selected_dept, 0) }}
+              {{ counts.get('total', 0) if selected_dept == 'Tất cả' else counts.get('departments', {}).get(selected_dept, 0) }}
             </span>
           </span>
           <i class="fas fa-chevron-down filter-select__caret"></i>
         </button>
 
         <div class="filter-select__menu">
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="Tất cả"
-          >
+          <button type="button" class="filter-select__option" data-value="Tất cả">
             <span class="filter-select__option-label">Tất cả phòng</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('total', 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('total', 0) }}</span>
           </button>
 
           {% for dept in departments %}
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="{{ dept }}"
-          >
+          <button type="button" class="filter-select__option" data-value="{{ dept }}">
             <span class="filter-select__option-label">{{ dept }}</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('departments', {}).get(dept, 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('departments', {}).get(dept, 0) }}</span>
           </button>
           {% endfor %}
         </div>
@@ -138,75 +122,41 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     </div>
 
     <div class="filter-item">
-      <label class="filter-label">TRẠNG THÁI</label>
+      <label class="filter-label">Trạng thái</label>
       <div class="filter-select" id="select-status">
-        <input
-          type="hidden"
-          name="status"
-          value="{{ selected_status or 'Tất cả' }}"
-        />
+        <input type="hidden" name="status" value="{{ selected_status or 'Tất cả' }}" />
+
         <button type="button" class="filter-select__button">
           <span class="filter-select__value">
             <span class="filter-select__label">
-              {{ selected_status if selected_status != 'Tất cả' else 'Tất cả
-              trạng thái' }}
+              {{ selected_status if selected_status != 'Tất cả' else 'Tất cả trạng thái' }}
             </span>
             <span class="filter-select__count">
-              {{ counts.get('total', 0) if selected_status == 'Tất cả' else
-              counts.get('status', {}).get(selected_status, 0) }}
+              {{ counts.get('total', 0) if selected_status == 'Tất cả' else counts.get('status', {}).get(selected_status, 0) }}
             </span>
           </span>
           <i class="fas fa-chevron-down filter-select__caret"></i>
         </button>
 
         <div class="filter-select__menu">
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="Tất cả"
-          >
+          <button type="button" class="filter-select__option" data-value="Tất cả">
             <span class="filter-select__option-label">Tất cả trạng thái</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('total', 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('total', 0) }}</span>
           </button>
 
           {% for st in status_options %}
-          <button
-            type="button"
-            class="filter-select__option"
-            data-value="{{ st }}"
-          >
+          <button type="button" class="filter-select__option" data-value="{{ st }}">
             <span class="filter-select__option-label">{{ st }}</span>
-            <span class="filter-select__option-count">
-              {{ counts.get('status', {}).get(st, 0) }}
-            </span>
+            <span class="filter-select__option-count">{{ counts.get('status', {}).get(st, 0) }}</span>
           </button>
           {% endfor %}
         </div>
       </div>
     </div>
 
-    <div
-      class="filter-actions"
-      style="display: flex; gap: 8px; align-items: center"
-    >
-      {% if search_q or selected_dept != 'Tất cả' or selected_cat != 'Tất cả' or
-      selected_status != 'Tất cả' %}
-      <a
-        href="{{ url_for('assign_page') }}"
-        class="page-btn"
-        title="Xóa lọc"
-        style="
-          height: 42px;
-          width: 42px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-decoration: none;
-        "
-      >
+    <div class="filter-actions">
+      {% if search_q or selected_dept != 'Tất cả' or selected_cat != 'Tất cả' or selected_status != 'Tất cả' %}
+      <a href="{{ url_for('assign_page') }}" class="page-btn filter-clear-btn" title="Xóa lọc">
         ✕
       </a>
       {% endif %}
@@ -222,17 +172,14 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
       </div>
     </div>
 
-    <div
-      class="table-scroll"
-      style="overflow-x: auto; overflow-y: auto; width: 100%"
-    >
-      <table class="custom-table" style="min-width: 1100px">
+    <div class="table-scroll">
+      <table class="custom-table assign-table">
         <thead>
           <tr>
             <th>Mã tài sản</th>
-            <th style="min-width: 200px">Tên tài sản</th>
+            <th class="col-asset-name">Tên tài sản</th>
             <th>Loại</th>
-            <th style="min-width: 220px">Trạng thái</th>
+            <th class="col-status">Trạng thái</th>
             <th>Người sử dụng</th>
             <th>Phòng ban</th>
             <th>Vị trí</th>
@@ -251,13 +198,13 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
 
             {% set row_type = row.type or row.category or '' %}
             <td class="text-soft">
-              {{ type_labels.get(row_type|lower, row_type) if row_type else
-              '---' }}
+              {{ type_labels.get(row_type|lower, row_type) if row_type else '---' }}
             </td>
+
             <td>
               <div class="status-container">
                 <span
-                  class="badge {% if row.status == 'Đang sử dụng' %}status-hoanthanh{% elif row.status == 'Chưa dùng' %}status-reject{% endif %}"
+                  class="badge {% if row.status == 'Đang sử dụng' %}status-hoanthanh{% elif row.status == 'Chưa dùng' %}status-reject{% else %}status-dangxuly{% endif %}"
                 >
                   {{ row.status or '---' }}
                 </span>
@@ -271,28 +218,28 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
             <td>
               <div class="action-menu-center">
                 <div class="action-menu">
-                  <button type="button" class="action-menu__trigger">
+                  <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
                     <div class="action-menu__dots">
-                      <span></span><span></span><span></span>
+                      <span></span>
+                      <span></span>
+                      <span></span>
                     </div>
                   </button>
 
                   <div class="action-menu__dropdown">
-                    <a
-                      href="{{ url_for('assign_detail', id=row.id) }}"
-                      class="action-menu__item"
-                    >
-                      <i class="fas fa-eye"></i> Xem chi tiết
+                    <a href="{{ url_for('assign_detail', id=row.id) }}" class="action-menu__item">
+                      <i class="fas fa-eye"></i>
+                      <span>Xem chi tiết</span>
                     </a>
 
                     {% if row.status == 'Chưa dùng' %}
-                    <a
-                      href="{{ url_for('assign_give', id=row.id) }}"
-                      class="action-menu__item"
-                    >
-                      <i class="fas fa-user-plus"></i> Cấp phát
+                    <a href="{{ url_for('assign_give', id=row.id) }}" class="action-menu__item">
+                      <i class="fas fa-user-plus"></i>
+                      <span>Cấp phát</span>
                     </a>
-                    {% endif %} {% if row.status == 'Đang sử dụng' %}
+                    {% endif %}
+
+                    {% if row.status == 'Đang sử dụng' %}
                     <form
                       action="{{ url_for('assign_unassign', id=row.id) }}"
                       method="POST"
@@ -301,11 +248,9 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
                       data-asset-name="{{ row.asset or row.asset_name or '---' }}"
                       data-receiver="{{ row.receiver or row.user or '---' }}"
                     >
-                      <button
-                        type="submit"
-                        class="action-menu__item action-menu__item--warning"
-                      >
-                        <i class="fas fa-rotate-left"></i> Thu hồi
+                      <button type="submit" class="action-menu__item action-menu__item--warning">
+                        <i class="fas fa-rotate-left"></i>
+                        <span>Thu hồi</span>
                       </button>
                     </form>
                     {% endif %}
@@ -316,10 +261,7 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
           </tr>
           {% else %}
           <tr>
-            <td
-              colspan="8"
-              style="text-align: center; padding: 40px; color: var(--text-soft)"
-            >
+            <td colspan="8" class="empty-table-cell">
               Không tìm thấy dữ liệu phù hợp.
             </td>
           </tr>
@@ -341,48 +283,59 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
           « Trước
         </a>
 
-        {% if total_pages <= 3 %} {% for p in range(1, total_pages + 1) %} {% if
-        p == current_page %}
-        <span class="page-btn active">{{ p }}</span>
+        {% if total_pages <= 3 %}
+          {% for p in range(1, total_pages + 1) %}
+            {% if p == current_page %}
+            <span class="page-btn active">{{ p }}</span>
+            {% else %}
+            <a
+              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
+              class="page-btn"
+            >
+              {{ p }}
+            </a>
+            {% endif %}
+          {% endfor %}
+        {% elif current_page <= 2 %}
+          {% for p in range(1, 4) %}
+            {% if p == current_page %}
+            <span class="page-btn active">{{ p }}</span>
+            {% else %}
+            <a
+              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
+              class="page-btn"
+            >
+              {{ p }}
+            </a>
+            {% endif %}
+          {% endfor %}
+        {% elif current_page >= total_pages - 1 %}
+          {% for p in range(total_pages - 2, total_pages + 1) %}
+            {% if p == current_page %}
+            <span class="page-btn active">{{ p }}</span>
+            {% else %}
+            <a
+              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
+              class="page-btn"
+            >
+              {{ p }}
+            </a>
+            {% endif %}
+          {% endfor %}
         {% else %}
-        <a
-          href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn"
-        >
-          {{ p }}
-        </a>
-        {% endif %} {% endfor %} {% elif current_page <= 2 %} {% for p in
-        range(1, 4) %} {% if p == current_page %}
-        <span class="page-btn active">{{ p }}</span>
-        {% else %}
-        <a
-          href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn"
-        >
-          {{ p }}
-        </a>
-        {% endif %} {% endfor %} {% elif current_page >= total_pages - 1 %} {%
-        for p in range(total_pages - 2, total_pages + 1) %} {% if p ==
-        current_page %}
-        <span class="page-btn active">{{ p }}</span>
-        {% else %}
-        <a
-          href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn"
-        >
-          {{ p }}
-        </a>
-        {% endif %} {% endfor %} {% else %} {% for p in range(current_page - 1,
-        current_page + 2) %} {% if p == current_page %}
-        <span class="page-btn active">{{ p }}</span>
-        {% else %}
-        <a
-          href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn"
-        >
-          {{ p }}
-        </a>
-        {% endif %} {% endfor %} {% endif %}
+          {% for p in range(current_page - 1, current_page + 2) %}
+            {% if p == current_page %}
+            <span class="page-btn active">{{ p }}</span>
+            {% else %}
+            <a
+              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
+              class="page-btn"
+            >
+              {{ p }}
+            </a>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
 
         <a
           href="{{ url_for('assign_page', page=current_page+1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
@@ -396,51 +349,34 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
 </section>
 
 <script>
-  document.querySelectorAll(".filter-select").forEach((select) => {
-    const btn = select.querySelector(".filter-select__button");
-    const menu = select.querySelector(".filter-select__menu");
-    const input = select.querySelector('input[type="hidden"]');
-    const form = document.getElementById("filterForm");
+document.addEventListener("DOMContentLoaded", function () {
+  const filterForm = document.getElementById("filterForm");
 
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      document.querySelectorAll(".filter-select__menu").forEach((m) => {
-        if (m !== menu) {
-          m.classList.remove("show");
-        }
-      });
-
-      document.querySelectorAll(".action-menu__dropdown").forEach((d) => {
-        d.classList.remove("show");
-      });
-
-      document.querySelectorAll(".action-menu").forEach((menuItem) => {
-        menuItem.classList.remove("action-menu--drop-up");
-      });
-
-      menu.classList.toggle("show");
+  function closeFilterMenus(exceptMenu = null) {
+    document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
+      if (menu !== exceptMenu) {
+        menu.classList.remove("show");
+      }
     });
-
-    select.querySelectorAll(".filter-select__option").forEach((opt) => {
-      opt.addEventListener("click", () => {
-        input.value = opt.dataset.value;
-        form.submit();
-      });
-    });
-  });
+  }
 
   function closeAllActionMenus(exceptDropdown = null) {
-    document.querySelectorAll(".action-menu__dropdown").forEach((dropdown) => {
+    document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
       if (dropdown !== exceptDropdown) {
         dropdown.classList.remove("show");
 
         const menu = dropdown.closest(".action-menu");
+
         if (menu) {
           menu.classList.remove("action-menu--drop-up");
         }
       }
     });
+  }
+
+  function closeAllMenus() {
+    closeFilterMenus();
+    closeAllActionMenus();
   }
 
   function updateActionMenuDirection(menu, dropdown) {
@@ -475,27 +411,59 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     const receiver = form.dataset.receiver || "---";
 
     const message =
-      `Bạn có chắc muốn thu hồi tài sản này không?\n\n` +
-      `Mã tài sản: #${assetCode}\n` +
-      `Tên tài sản: ${assetName}\n` +
-      `Người đang sử dụng: ${receiver}`;
+      "Bạn có chắc muốn thu hồi tài sản này không?\n\n" +
+      "Mã tài sản: #" + assetCode + "\n" +
+      "Tên tài sản: " + assetName + "\n" +
+      "Người đang sử dụng: " + receiver;
 
     if (typeof window.toastConfirm === "function") {
-      return await window.toastConfirm(message, {
+      return await window.toastConfirm({
         type: "warning",
         title: "Xác nhận thu hồi",
+        message: message,
         confirmText: "Thu hồi",
         cancelText: "Hủy",
         danger: true,
+        closeOnBackdrop: false,
+        closeOnEsc: true
       });
     }
 
     return confirm(message);
   }
 
-  document.querySelectorAll(".action-menu__trigger").forEach((button) => {
-    button.addEventListener("click", (e) => {
-      e.stopPropagation();
+  document.querySelectorAll(".filter-select").forEach(function (select) {
+    const button = select.querySelector(".filter-select__button");
+    const menu = select.querySelector(".filter-select__menu");
+    const input = select.querySelector('input[type="hidden"]');
+
+    if (!button || !menu || !input) return;
+
+    button.addEventListener("click", function (event) {
+      event.stopPropagation();
+
+      const isOpen = menu.classList.contains("show");
+
+      closeFilterMenus(menu);
+      closeAllActionMenus();
+
+      menu.classList.toggle("show", !isOpen);
+    });
+
+    select.querySelectorAll(".filter-select__option").forEach(function (option) {
+      option.addEventListener("click", function () {
+        input.value = option.dataset.value;
+
+        if (filterForm) {
+          filterForm.submit();
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll(".action-menu__trigger").forEach(function (button) {
+    button.addEventListener("click", function (event) {
+      event.stopPropagation();
 
       const menu = button.closest(".action-menu");
       if (!menu) return;
@@ -505,10 +473,7 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
 
       const isOpen = dropdown.classList.contains("show");
 
-      document.querySelectorAll(".filter-select__menu").forEach((m) => {
-        m.classList.remove("show");
-      });
-
+      closeFilterMenus();
       closeAllActionMenus(dropdown);
 
       if (isOpen) {
@@ -520,7 +485,7 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     });
   });
 
-  document.querySelectorAll(".js-unassign-form").forEach((form) => {
+  document.querySelectorAll(".js-unassign-form").forEach(function (form) {
     form.addEventListener("submit", async function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -528,9 +493,9 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
       closeAllActionMenus();
 
       const submitButton = form.querySelector('button[type="submit"]');
-      const ok = await showUnassignConfirm(form);
+      const confirmed = await showUnassignConfirm(form);
 
-      if (!ok) return;
+      if (!confirmed) return;
 
       if (submitButton) {
         submitButton.disabled = true;
@@ -542,26 +507,19 @@ selected_cat_value != 'Tất cả' else 'Tất cả loại' ) %}
     });
   });
 
-  document.querySelectorAll(".table-scroll").forEach((container) => {
-    container.addEventListener("scroll", () => {
-      closeAllActionMenus();
-    });
+  document.querySelectorAll(".table-scroll").forEach(function (container) {
+    container.addEventListener("scroll", closeAllActionMenus);
   });
 
-  window.addEventListener("resize", () => {
-    closeAllActionMenus();
+  window.addEventListener("resize", closeAllMenus);
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeAllMenus();
+    }
   });
 
-  document.addEventListener("click", () => {
-    document
-      .querySelectorAll(".filter-select__menu, .action-menu__dropdown")
-      .forEach((d) => {
-        d.classList.remove("show");
-      });
-
-    document.querySelectorAll(".action-menu").forEach((menu) => {
-      menu.classList.remove("action-menu--drop-up");
-    });
-  });
+  document.addEventListener("click", closeAllMenus);
+});
 </script>
 {% endblock %}

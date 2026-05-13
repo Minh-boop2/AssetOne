@@ -1,18 +1,19 @@
-{% extends 'main.html' %} {% block content %}
+{% extends 'main.html' %}
+
+{% block content %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/manage/manage.css') }}"
 />
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=20"
+  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=22"
 />
 
 <section class="manage-detail-page">
   <div class="manage-detail-wrap">
-    {% set action_id = user.db_id if user.db_id is defined and user.db_id else
-    user.id %} {% set is_active = user.status_code == 'HOAT_DONG' or user.status
-    == 'Hoạt động' or user.status == 'HOAT_DONG' %}
+    {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
+    {% set is_active = user.status_code == 'HOAT_DONG' or user.status == 'Hoạt động' or user.status == 'HOAT_DONG' %}
 
     <div class="detail-topbar">
       <a href="{{ url_for('manage') }}" class="detail-back-link">
@@ -31,7 +32,9 @@
             <span class="value">{{ user.id }}</span>
           </div>
 
-          <h2 class="employee-name">{{ user.name or 'Chưa có tên' }}</h2>
+          <h2 class="employee-name">
+            {{ user.name or 'Chưa có tên' }}
+          </h2>
         </div>
 
         <div class="status-pill {{ 'active' if is_active else 'inactive' }}">
@@ -121,17 +124,50 @@
             Chỉnh sửa
           </a>
 
-          <a
-            href="{{ url_for('user_delete', id=action_id) }}"
+          <button
+            type="button"
             class="detail-btn detail-btn-danger"
-            onclick="return confirm('Bạn có chắc muốn xóa nhân sự này không?');"
+            id="deleteUserBtn"
+            data-delete-url="{{ url_for('user_delete', id=action_id) }}"
           >
             <i class="fas fa-trash"></i>
             Xóa nhân sự
-          </a>
+          </button>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const deleteUserBtn = document.getElementById("deleteUserBtn");
+
+  if (!deleteUserBtn) return;
+
+  deleteUserBtn.addEventListener("click", async function () {
+    const deleteUrl = deleteUserBtn.dataset.deleteUrl;
+    let confirmed = false;
+
+    if (typeof window.toastConfirm === "function") {
+      confirmed = await window.toastConfirm({
+        type: "error",
+        title: "Xác nhận xóa nhân sự",
+        message: "Bạn có chắc muốn xóa nhân sự này không? Hành động này không thể hoàn tác.",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+        danger: true,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    } else {
+      confirmed = confirm("Bạn có chắc muốn xóa nhân sự này không?");
+    }
+
+    if (confirmed) {
+      window.location.href = deleteUrl;
+    }
+  });
+});
+</script>
 {% endblock %}

@@ -1,7 +1,7 @@
 /* =========================================
    MANAGE TABLE CSS
    Chỉ chứa phần bảng, action menu, badge, pagination
-   Đồng bộ màu theo assets table
+   Tự thích ứng theo màn hình, máy chiếu, zoom trình duyệt
    ========================================= */
 
 /* =========================================
@@ -9,13 +9,15 @@
    ========================================= */
 
 .m-overview-card {
-    flex: 0 0 auto;
-    height: 320px;
-    min-height: 0;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: clamp(340px, 38vh, 520px);
+    height: clamp(360px, 42vh, 620px);
+    max-height: min(620px, 52vh);
 
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 18px;
+    border-radius: clamp(14px, 1vw, 18px);
     box-shadow: var(--shadow);
 
     position: relative;
@@ -27,27 +29,30 @@
 
 .m-card-header {
     flex-shrink: 0;
-    padding: 16px 20px;
+    padding: clamp(12px, 1vw, 16px) clamp(14px, 1.2vw, 20px);
     border-bottom: 1px solid var(--border) !important;
     background: var(--surface) !important;
 
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 14px;
 }
 
 .m-card-header h3 {
     margin: 0;
-    font-size: 16px !important;
+    font-size: clamp(15px, 1vw, 17px) !important;
     font-weight: 700;
     color: var(--text) !important;
+    line-height: 1.3;
 }
 
 .pagination-info,
 .m-card-meta {
     position: static;
-    font-size: 13px !important;
+    font-size: clamp(12px, 0.85vw, 13px) !important;
     color: var(--text-soft) !important;
+    white-space: nowrap;
 }
 
 .pagination-info b,
@@ -99,6 +104,7 @@
 .m-overview-card .custom-table,
 .m-overview-card .custom-table.assign-table {
     width: 100% !important;
+    min-width: 980px;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
     background: var(--surface) !important;
@@ -119,14 +125,15 @@
     background: var(--surface-2) !important;
     color: var(--text-soft) !important;
 
-    padding: 14px 16px !important;
+    padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
     border-bottom: 1px solid var(--border) !important;
 
     text-align: left;
-    font-size: 14px !important;
+    font-size: clamp(12px, 0.85vw, 14px) !important;
     font-weight: 700 !important;
     text-transform: none !important;
     white-space: nowrap;
+    line-height: 1.35;
 }
 
 .m-overview-card .custom-table tbody,
@@ -142,14 +149,15 @@
 .m-overview-card .custom-table tbody td,
 .m-overview-card .custom-table td,
 .m-overview-card .custom-table.assign-table tbody td {
-    padding: 16px !important;
+    padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
     border-bottom: 1px solid var(--border) !important;
 
     background: var(--surface) !important;
     color: var(--text) !important;
 
-    font-size: 14px !important;
+    font-size: clamp(12.5px, 0.9vw, 14px) !important;
     vertical-align: middle;
+    line-height: 1.4;
 }
 
 .m-overview-card .custom-table tbody tr:hover,
@@ -183,7 +191,6 @@
     color: var(--text-soft) !important;
 }
 
-/* Avatar cũ đang inline style width 32px trong template */
 .m-overview-card .custom-table td div[style*="width: 32px"] {
     width: 32px !important;
     height: 32px !important;
@@ -192,18 +199,30 @@
     color: #ffffff !important;
 }
 
-/* Nếu sau này đổi sang class thay vì inline */
+/* =========================================
+   EMPLOYEE CELL
+   ========================================= */
+
 .m-emp-cell {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: clamp(8px, 0.8vw, 12px);
+    min-width: 0;
+}
+
+.m-emp-avatar,
+.m-emp-avatar-img {
+    width: clamp(30px, 2vw, 34px) !important;
+    height: clamp(30px, 2vw, 34px) !important;
+    min-width: clamp(30px, 2vw, 34px);
+    max-width: clamp(30px, 2vw, 34px);
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
 }
 
 .m-emp-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-
     background: var(--hsu-blue) !important;
     color: #ffffff !important;
 
@@ -213,22 +232,27 @@
 
     font-weight: 700;
     font-size: 12px;
-    flex-shrink: 0;
 }
 
 .m-emp-name {
     font-weight: 700;
     color: var(--text) !important;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .m-emp-id {
     font-weight: 700;
     color: var(--text) !important;
+    white-space: nowrap;
 }
 
 .m-muted-text {
     color: var(--text-soft) !important;
-    font-size: 13px;
+    font-size: clamp(12px, 0.85vw, 13px);
+    white-space: nowrap;
 }
 
 /* =========================================
@@ -247,11 +271,11 @@
 }
 
 .action-menu__trigger {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     padding: 0;
     border: none;
-    border-radius: 0;
+    border-radius: 8px;
 
     background: transparent !important;
     color: var(--text-soft) !important;
@@ -263,11 +287,11 @@
     align-items: center;
     justify-content: center;
 
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
 .action-menu__trigger:hover {
-    background: transparent !important;
+    background: var(--surface-2) !important;
     color: var(--text) !important;
 }
 
@@ -308,10 +332,9 @@
 
 .action-menu__dropdown.show {
     display: block;
-    animation: fadeInMenu 0.2s ease;
+    animation: fadeInMenu 0.18s ease;
 }
 
-/* FIX: Nếu gần cuối vùng bảng thì dropdown mở lên trên */
 .action-menu--drop-up .action-menu__dropdown {
     top: auto;
     bottom: calc(100% + 8px);
@@ -352,6 +375,10 @@
     background: rgba(239, 59, 45, 0.08) !important;
 }
 
+.action-menu__svg {
+    flex-shrink: 0;
+}
+
 .action-menu__divider {
     height: 1px;
     background: var(--border);
@@ -368,10 +395,11 @@
     padding: 6px 12px;
     border-radius: 999px;
 
-    font-size: 12px;
+    font-size: clamp(11px, 0.78vw, 12px);
     font-weight: 700;
     line-height: 1.2;
     text-transform: none;
+    white-space: nowrap;
 }
 
 .m-role-admin {
@@ -397,8 +425,9 @@
 .m-status-cell {
     display: flex;
     align-items: center;
-    font-size: 13px;
+    font-size: clamp(12px, 0.85vw, 13px);
     color: var(--text) !important;
+    white-space: nowrap;
 }
 
 .status-dot {
@@ -407,6 +436,7 @@
     border-radius: 50%;
     display: inline-block;
     margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .dot-active {
@@ -418,7 +448,6 @@
     background-color: var(--text-soft) !important;
 }
 
-/* Dòng trạng thái cũ đang inline style font-size: 13px */
 .m-overview-card .custom-table td div[style*="font-size: 13px"] {
     color: var(--text) !important;
 }
@@ -428,15 +457,26 @@
    ========================================= */
 
 .m-empty-state {
-    padding: 60px;
+    flex: 1 1 auto;
+    padding: clamp(32px, 4vw, 60px);
     text-align: center;
     color: var(--text-soft);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .m-empty-state i {
-    font-size: 40px;
+    font-size: clamp(30px, 3vw, 40px);
     opacity: 0.2;
     margin-bottom: 16px;
+}
+
+.m-empty-state p {
+    margin: 0;
+    font-size: 14px;
 }
 
 .m-empty-state a {
@@ -453,7 +493,7 @@
 
 .m-card-footer {
     flex-shrink: 0;
-    padding: 12px 20px !important;
+    padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
     border-top: 1px solid var(--border) !important;
     border-radius: 0 0 18px 18px;
 
@@ -468,11 +508,12 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: nowrap;
 }
 
 .page-btn {
-    min-width: 36px;
-    height: 36px;
+    min-width: clamp(32px, 2.2vw, 36px);
+    height: clamp(32px, 2.2vw, 36px);
     padding: 0 11px;
     border-radius: 10px;
     border: 1px solid var(--border) !important;
@@ -481,7 +522,7 @@
     color: var(--text) !important;
     text-decoration: none;
 
-    font-size: 13px;
+    font-size: clamp(12px, 0.85vw, 13px);
     font-weight: 700;
 
     display: flex;
@@ -510,17 +551,75 @@
 }
 
 /* =========================================
+   ANIMATION
+   ========================================= */
+
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================
    RESPONSIVE TABLE
    ========================================= */
 
-@media (max-width: 1200px) {
+@media (min-width: 1600px) {
     .m-overview-card {
-        height: 380px;
-        min-height: 0;
+        height: clamp(420px, 44vh, 680px);
+        max-height: 680px;
     }
 
-    .m-table-scroll-container {
-        min-height: 0;
+    .m-overview-card .custom-table,
+    .m-overview-card .custom-table.assign-table {
+        min-width: 1100px;
+    }
+}
+
+@media (max-width: 1366px) {
+    .m-overview-card {
+        height: clamp(330px, 40vh, 500px);
+        max-height: 500px;
+    }
+
+    .m-overview-card .custom-table,
+    .m-overview-card .custom-table.assign-table {
+        min-width: 980px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .m-overview-card {
+        height: clamp(340px, 46vh, 540px);
+        max-height: 540px;
+    }
+
+    .m-overview-card .custom-table,
+    .m-overview-card .custom-table.assign-table {
+        min-width: 940px;
+    }
+}
+
+@media (max-width: 900px) {
+    .m-overview-card {
+        height: clamp(360px, 52vh, 560px);
+        max-height: 560px;
+        border-radius: 16px;
+    }
+
+    .m-card-header {
+        align-items: flex-start;
+    }
+
+    .m-overview-card .custom-table,
+    .m-overview-card .custom-table.assign-table {
+        min-width: 880px;
     }
 }
 
@@ -533,22 +632,26 @@
     }
 
     .m-card-header h3 {
-        font-size: 22px !important;
+        font-size: 18px !important;
+    }
+
+    .pagination-info,
+    .m-card-meta {
+        white-space: normal;
     }
 
     .m-overview-card {
-        height: 340px;
-        min-height: 0;
-    }
-
-    .m-table-scroll-container {
-        min-height: 0;
+        height: clamp(360px, 58vh, 600px);
+        max-height: 600px;
     }
 
     .m-card-footer {
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .pagination-buttons {
+        min-width: max-content;
     }
 
     .m-overview-card .custom-table th,
@@ -557,18 +660,24 @@
         font-size: 13px !important;
     }
 }
-.m-emp-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-.m-emp-avatar-img {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px;
-  max-width: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
+@media (max-width: 520px) {
+    .m-overview-card {
+        height: clamp(340px, 60vh, 560px);
+        max-height: 560px;
+        border-radius: 14px;
+    }
+
+    .m-overview-card .custom-table,
+    .m-overview-card .custom-table.assign-table {
+        min-width: 820px;
+    }
+
+    .m-card-header {
+        padding: 12px 14px;
+    }
+
+    .m-card-footer {
+        padding: 10px 14px !important;
+    }
 }
