@@ -1,3 +1,16 @@
+{% set current_user = session.get("user") or {} %}
+{% set default_avatar = url_for('static', filename='images/default-avatar.jpg') %}
+
+{% set role_labels = {
+  "ADMIN": "Quản trị hệ thống",
+  "QUAN_LY": "Quản lý",
+  "NHAN_VIEN": "Nhân viên"
+} %}
+
+{% set user_name = current_user.get("full_name") or "Người dùng" %}
+{% set user_role = current_user.get("role_label") or role_labels.get(current_user.get("role"), current_user.get("role") or "Chưa phân quyền") %}
+{% set user_avatar = current_user.get("avatar_url") or default_avatar %}
+
 <header class="header">
   <div class="header-left">
     <div class="brand-wrap">
@@ -69,10 +82,16 @@
           id="userMenuTrigger"
           type="button"
         >
-          <div class="user-avatar">A</div>
+          <img
+            src="{{ user_avatar }}"
+            alt="{{ user_name }}"
+            class="user-avatar user-avatar-img"
+            onerror="this.onerror=null; this.src='{{ default_avatar }}';"
+          />
+
           <div class="user-info">
-            <span class="user-name">Admin</span>
-            <span class="user-role">Quản trị hệ thống</span>
+            <span class="user-name">{{ user_name }}</span>
+            <span class="user-role">{{ user_role }}</span>
           </div>
         </button>
 
@@ -80,11 +99,13 @@
           <a href="{{ url_for('profile_page') }}" class="user-dropdown-item">
             Hồ sơ
           </a>
+
           <a href="{{ url_for('statistics_page') }}" class="user-dropdown-item">
             Thống kê
           </a>
+
           <a
-            href="{{ url_for('login_page') }}"
+            href="{{ url_for('logout') }}"
             class="user-dropdown-item user-dropdown-item--danger"
           >
             Đăng xuất
@@ -103,7 +124,6 @@
 
     const userMenuWrapper = document.getElementById("userMenuWrapper");
     const userMenuTrigger = document.getElementById("userMenuTrigger");
-    const userDropdown = document.getElementById("userDropdown");
 
     if (savedTheme === "dark") {
       root.setAttribute("data-theme", "dark");
@@ -129,7 +149,7 @@
 
     userMenuTrigger?.addEventListener("click", function (event) {
       event.stopPropagation();
-      userMenuWrapper.classList.toggle("open");
+      userMenuWrapper?.classList.toggle("open");
     });
 
     document.addEventListener("click", function (event) {

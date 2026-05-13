@@ -7,6 +7,7 @@ import requests
 
 API_BASE_URL = "http://127.0.0.1:5001/api"
 PER_PAGE = 10
+DEFAULT_AVATAR_URL = "/static/images/default-avatar.jpg"
 
 VN_TZ = timezone(timedelta(hours=7))
 
@@ -174,6 +175,7 @@ def map_user_for_template(user):
         "phone": user.get("phone") or "",
         "dept": user.get("department") or "",
         "position": user.get("floor") or "",
+        "avatar_url": user.get("avatar_url") or DEFAULT_AVATAR_URL,
 
         "role_code": role_code,
         "role": ROLE_LABELS.get(role_code, role_code),
@@ -227,7 +229,7 @@ def fetch_user_detail(user_db_id):
 
 def generate_unique_id():
     today = now_vietnam().strftime("%Y%m%d%H%M%S")
-    random_part = ''.join(random.choices(string.digits, k=3))
+    random_part = "".join(random.choices(string.digits, k=3))
 
     return f"HSU-{today}-{random_part}"
 
@@ -364,6 +366,7 @@ def create_user_from_form(form):
         "floor": form.get("floor"),
         "role": normalize_role(form.get("role")),
         "status": "HOAT_DONG",
+        "avatar_url": form.get("avatar_url") or DEFAULT_AVATAR_URL,
         "password": form.get("password") or "123",
     }
 
@@ -414,9 +417,13 @@ def update_user_from_form(user_id, form):
     }
 
     password = form.get("password")
+    avatar_url = form.get("avatar_url")
 
     if password:
         update_data["password"] = password
+
+    if avatar_url:
+        update_data["avatar_url"] = avatar_url
 
     payload, status_code = call_api(
         "PUT",

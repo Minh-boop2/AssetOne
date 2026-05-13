@@ -1,7 +1,5 @@
 /* =========================================
    LOGIN / FORGOT PASSWORD PAGE ONLY
-   Chỉ load ở login.html và forgot_password.html
-   Không cần sửa header.html
 ========================================= */
 
 /* Ẩn menu + avatar chỉ ở trang login/forgot */
@@ -52,7 +50,6 @@
 
 /* =========================================
    AUTH FORM
-   Font giống header: Arial, Helvetica, sans-serif
 ========================================= */
 
 .auth-wrapper,
@@ -66,7 +63,6 @@
 .auth-wrapper {
   width: 100%;
   min-height: calc(100vh - 86px);
-
   padding: 70px 16px 40px;
 
   display: flex;
@@ -80,7 +76,6 @@
 .login-card {
   width: 100%;
   max-width: 440px;
-
   padding: 48px;
 
   background: var(--surface);
@@ -91,7 +86,7 @@
 }
 
 .login-title {
-  margin: 0 0 18px;
+  margin: 0 0 28px;
 
   color: var(--hsu-blue);
   text-align: center;
@@ -176,6 +171,38 @@
   border-color: var(--hsu-blue);
   background: var(--surface);
   box-shadow: 0 0 0 4px rgba(31, 79, 163, 0.12);
+}
+
+/* Input lỗi */
+.login-card input.is-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Lỗi từng ô */
+.field-error {
+  margin: 8px 0 0;
+
+  color: #ef4444;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.field-error[hidden] {
+  display: none;
+}
+
+/* Lỗi đăng nhập sai tài khoản/mật khẩu */
+.login-error {
+  margin: 10px 0 0;
+
+  color: #ef4444;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
 }
 
 /* Ghi nhớ + quên mật khẩu */
@@ -299,6 +326,16 @@
   box-shadow: 0 0 0 4px rgba(142, 182, 255, 0.14);
 }
 
+:root[data-theme="dark"] .login-card input.is-invalid {
+  border-color: #ff8a8a !important;
+  box-shadow: 0 0 0 4px rgba(255, 138, 138, 0.14) !important;
+}
+
+:root[data-theme="dark"] .field-error,
+:root[data-theme="dark"] .login-error {
+  color: #ff8a8a;
+}
+
 /* Responsive */
 @media (max-width: 576px) {
   .auth-wrapper {
@@ -312,7 +349,7 @@
   }
 
   .login-title {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     font-size: 24px;
   }
 
@@ -333,4 +370,15 @@
   .btn-login {
     font-size: 15px;
   }
+}
+.login-success {
+  margin: 10px 0 0;
+  color: #22c55e;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+:root[data-theme="dark"] .login-success {
+  color: #86efac;
 }

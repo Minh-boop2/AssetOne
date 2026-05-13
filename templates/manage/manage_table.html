@@ -14,15 +14,21 @@
 
   {# --- MACROS RENDER --- #} {% macro render_id(row) %}
   <span class="m-emp-id">{{ row.id }}</span>
-  {% endmacro %} {% macro render_emp_name(row) %}
-  <div class="m-emp-cell">
-    <div class="m-emp-avatar">
-      {{ row.name[0] | upper if row.name else '?' }}
-    </div>
+  {% endmacro %}{% macro render_emp_name(row) %}
+{% set default_avatar = url_for('static', filename='images/default-avatar.jpg') %}
+{% set avatar_url = row.avatar_url if row.avatar_url is defined and row.avatar_url else default_avatar %}
 
-    <div class="m-emp-name">{{ row.name if row.name else 'Chưa có tên' }}</div>
-  </div>
-  {% endmacro %} {% macro render_position(row) %}
+<div class="m-emp-cell">
+  <img
+    src="{{ avatar_url }}"
+    alt="{{ row.name if row.name else 'Avatar' }}"
+    class="m-emp-avatar-img"
+    onerror="this.onerror=null; this.src='{{ default_avatar }}';"
+  />
+
+  <div class="m-emp-name">{{ row.name if row.name else 'Chưa có tên' }}</div>
+</div>
+{% endmacro %} {% macro render_position(row) %}
   <span class="m-muted-text">
     {{ row.position if row.position else 'Chưa sắp xếp' }}
   </span>
