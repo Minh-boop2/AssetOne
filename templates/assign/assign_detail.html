@@ -1,119 +1,162 @@
-{% extends 'main.html' %}
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}"
+/>
 
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}">
+<section class="assign-detail-page">
+  <div class="assign-detail-header">
+    <div>
+      <a href="{{ url_for('assign_page') }}" class="assign-detail-back">
+        <span class="assign-icon-text">←</span>
+        Quay lại danh sách
+      </a>
 
-<section class="assign-page">
-    <div class="assets-page__header">
-        <a href="{{ url_for('assign_page') }}" style="text-decoration: none; color: var(--hsu-blue); font-weight: 600; font-size: 13px;">
-            <i class="fas fa-chevron-left"></i> QUAY LẠI DANH SÁCH
-        </a>
-        <h1 class="assets-page__title" style="margin-top: 15px;">Thông tin chi tiết cấp phát</h1>
+      <h1>Thông tin chi tiết cấp phát</h1>
+      <p>Thông tin tài sản, trạng thái sử dụng và người đang được bàn giao.</p>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="assign-detail-flashes">
+    {% for category, message in messages %}
+    <div class="assign-detail-alert assign-detail-alert--{{ category }}">
+      <span class="assign-icon-text">ℹ️</span>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
+
+  <div class="assign-detail-card">
+    <div class="assign-detail-hero">
+      <div class="assign-detail-code-box">
+        <span>Mã tài sản</span>
+        <strong>#{{ info.asset_code or 'Chưa có mã' }}</strong>
+      </div>
+
+      <div class="assign-detail-title-box">
+        <h2>{{ info.asset or info.asset_name or 'Chưa có tên tài sản' }}</h2>
+
+        <div class="assign-detail-meta">
+          <span>
+            <span class="assign-icon-text">#</span>
+            ID: {{ info.id or info.mongo_id or 'Chưa có ID' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="assign-detail-qr" title="Mã QR tài sản">
+        <span>▦</span>
+      </div>
     </div>
 
-    <div class="detail-card" style="max-width: 950px; margin: 20px auto; background: var(--surface); border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden;">
-        
-        <div style="background: var(--surface-2); padding: 25px 35px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="background: var(--hsu-blue); color: white; padding: 10px 20px; border-radius: 12px; text-align: center;">
-                    <span style="display: block; font-size: 10px; font-weight: 700; opacity: 0.8; text-transform: uppercase;">Mã phiếu</span>
-                    <span style="font-size: 18px; font-weight: 800; font-family: 'Consolas', monospace;">{{ info.id }}</span>
-                </div>
-                <div>
-                    <h2 style="margin: 0; font-size: 22px; color: var(--text);">{{ info.asset }}</h2>
-                    <div style="display: flex; gap: 15px; margin-top: 5px;">
-                        <span style="color: var(--text-soft); font-size: 13px;"><i class="far fa-calendar-alt"></i> Ngày lập: <strong>{{ info.date }}</strong></span>
-                    </div>
-                </div>
-            </div>
-            <span class="badge 
-                {% if info.status == 'Hoàn thành' %}status-hoanthanh
-                {% elif info.status == 'Chờ duyệt' %}status-choduyet
-                {% elif info.status == 'Đã từ chối' %}status-reject
-                {% else %}status-dangxuly{% endif %}" style="padding: 10px 20px; font-size: 14px; border-radius: 30px;">
-                <i class="fas fa-circle" style="font-size: 8px; margin-right: 8px;"></i> {{ info.status }}
-            </span>
+    <div class="assign-detail-content">
+      <div class="assign-detail-section">
+        <div class="assign-detail-section-title">
+          <span class="assign-section-icon">⚙️</span>
+          <h3>Thông số kỹ thuật</h3>
         </div>
 
-        <div style="padding: 35px;">
-            <div style="background: rgba(0, 82, 156, 0.05); border: 1px dashed var(--hsu-blue); border-radius: 15px; padding: 20px; margin-bottom: 35px; display: flex; align-items: center; justify-content: space-between;">
-                <div>
-                    <span style="display: block; font-size: 11px; font-weight: 700; color: var(--hsu-blue); text-transform: uppercase; margin-bottom: 5px;">Mã định danh tài sản (Unique Asset Code)</span>
-                    <span style="font-size: 28px; font-weight: 900; color: var(--hsu-blue); font-family: 'Consolas', monospace; letter-spacing: 2px;">{{ info.asset_code }}</span>
-                </div>
-                <i class="fas fa-qrcode" style="font-size: 50px; color: var(--hsu-blue); opacity: 0.1;"></i>
-            </div>
+        <div class="assign-info-grid">
+          <div class="assign-info-item">
+            <span>Phân loại</span>
+            <strong
+              >{{ info.type or info.category or 'Chưa phân loại' }}</strong
+            >
+          </div>
 
-            <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px;">
-                
-                <div class="info-column">
-                    <h4 style="font-size: 14px; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;">
-                        <i class="fas fa-microchip" style="margin-right: 8px; color: var(--hsu-blue);"></i>THÔNG SỐ KỸ THUẬT
-                    </h4>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Phân loại</label>
-                        <span style="font-size: 16px; font-weight: 600;">{{ info.type }}</span>
-                    </div>
+          <div class="assign-info-item">
+            <span>Bảo hành</span>
+            <strong>{{ info.warranty or 'Chưa cập nhật bảo hành' }}</strong>
+          </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Cấu hình chi tiết</label>
-                        <div style="background: var(--surface-2); padding: 15px; border-radius: 10px; font-family: 'Consolas', monospace; font-size: 13px; border: 1px solid var(--border); margin-top: 8px; line-height: 1.5;">
-                            {{ specs.spec if specs else "Không có dữ liệu cấu hình." }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Hạn bảo hành</label>
-                        <span style="font-size: 15px; font-weight: 600; color: var(--hsu-red);">{{ info.warranty or 'Theo chính sách' }}</span>
-                    </div>
-                </div>
-
-                <div class="info-column">
-                    <h4 style="font-size: 14px; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;">
-                        <i class="fas fa-history" style="margin-right: 8px; color: var(--hsu-green);"></i>LỊCH TRÌNH & BÀN GIAO
-                    </h4>
-                    
-                    <div class="schedule-box" style="background: #ffffff !important; padding: 15px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; border: 1px solid var(--border);">
-                        <div>
-                            <label class="info-label" style="display: block; font-size: 10px; color: #64748b !important; font-weight: 700; text-transform: uppercase;">Ngày bàn giao</label>
-                            <span class="info-value-dark" style="font-size: 15px; font-weight: 700; color: #1e293b !important;">{{ info.date }}</span>
-                        </div>
-                        <div style="border-left: 2px solid var(--border); padding-left: 15px;">
-                            <label class="info-label" style="display: block; font-size: 10px; color: var(--hsu-red) !important; font-weight: 700; text-transform: uppercase;">Ngày trả dự kiến</label>
-                            <span style="font-size: 15px; font-weight: 700; color: var(--hsu-red) !important;">{{ info.return_date or '30/04/2027' }}</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Người tiếp nhận</label>
-                        <span style="font-size: 18px; font-weight: 700; color: var(--hsu-blue);">{{ info.receiver }}</span>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Phòng ban</label>
-                        <span style="font-size: 16px; font-weight: 600;">{{ info.department }}</span>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 11px; color: var(--text-soft); font-weight: 700; text-transform: uppercase;">Vị trí cụ thể</label>
-                        <span style="font-size: 16px; font-weight: 600;"><i class="fas fa-map-marker-alt" style="color: var(--hsu-red);"></i> {{ info.location }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
-                <a href="{{ url_for('assign_edit', id=info.id) }}" class="btn-add-new" style="background: var(--surface-2); color: var(--text) !important; border: 1px solid var(--border); font-size: 13px;">
-                    <i class="fas fa-edit"></i> CHỈNH SỬA
-                </a>
-                
-                {% if info.status == 'Chờ duyệt' %}
-                <a href="{{ url_for('approve_request', id=info.id) }}" class="btn-add-new" style="font-size: 13px;">
-                    <i class="fas fa-check-double"></i> PHÊ DUYỆT PHIẾU
-                </a>
-                {% endif %}
-            </div>
+          <div class="assign-info-item assign-info-item--full">
+            <span>Cấu hình / ghi chú</span>
+            <strong class="assign-info-code">
+              {{ specs.spec if specs else (info.spec or info.notes or 'Chưa có
+              dữ liệu cấu hình.') }}
+            </strong>
+          </div>
         </div>
+      </div>
+
+      <div class="assign-detail-section">
+        <div class="assign-detail-section-title">
+          <span class="assign-section-icon">👤</span>
+          <h3>Bàn giao & sử dụng</h3>
+        </div>
+
+        <div class="assign-info-grid">
+          <div class="assign-info-item">
+            <span>Người sử dụng</span>
+            <strong class="assign-highlight">
+              {{ info.receiver or info.user or 'Chưa cấp phát' }}
+            </strong>
+          </div>
+
+          <div class="assign-info-item">
+            <span>Phòng ban</span>
+            <strong>{{ info.department or 'Chưa có phòng ban' }}</strong>
+          </div>
+
+          <div class="assign-info-item">
+            <span>Vị trí</span>
+            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
+          </div>
+
+          <div class="assign-info-item">
+            <span>Trạng thái tài sản</span>
+
+            <div class="assign-status-wrapper">
+              <span
+                class="assign-detail-status {% if info.status == 'Đang sử dụng' %} assign-detail-status--using {% elif info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' %} assign-detail-status--free {% else %} assign-detail-status--pending {% endif %}"
+              >
+                {{ info.status or 'Chưa xác định' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <div class="assign-detail-footer">
+      <a
+        href="{{ url_for('assign_page') }}"
+        class="assign-detail-btn assign-detail-btn--secondary"
+      >
+        <span class="assign-icon-text">←</span>
+        Quay lại
+      </a>
+
+      {% if info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' %}
+      <a
+        href="{{ url_for('assign_give', id=info.id) }}"
+        class="assign-detail-btn assign-detail-btn--primary"
+      >
+        <span class="assign-icon-text">＋</span>
+        Cấp phát
+      </a>
+      {% endif %} {% if info.status == 'Đang sử dụng' %}
+      <form
+        action="{{ url_for('assign_unassign', id=info.id) }}"
+        method="POST"
+        class="assign-detail-inline-form"
+        onsubmit="
+          return confirm('Bạn có chắc muốn thu hồi tài sản này không?');
+        "
+      >
+        <button
+          type="submit"
+          class="assign-detail-btn assign-detail-btn--warning"
+        >
+          <span class="assign-icon-text">↩</span>
+          Thu hồi
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
 </section>
 {% endblock %}

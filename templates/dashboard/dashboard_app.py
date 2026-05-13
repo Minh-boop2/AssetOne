@@ -1,17 +1,17 @@
-from flask import render_template
-import data
+from flask import jsonify, render_template, request
+
+from .dashboard_backend import get_dashboard_overview_data
 
 
 def register_dashboard_routes(app):
-    @app.route('/')
+    @app.route("/")
     def dashboard_overview():
-        using_count = len([i for i in data.ASSIGN_DATA if i.get('status') == 'Hoàn thành'])
-        total_real = len(data.ASSIGN_DATA)
-        stats = {
-            "total": total_real,
-            "using": using_count,
-            "available": max(0, total_real - using_count - 10),
-            "maintenance": 10
-        }
-        recent_activities = data.ASSIGN_DATA[:4]
-        return render_template('dashboard/overview.html', stats=stats, activities=recent_activities)
+        return render_template("dashboard/overview.html")
+
+    @app.route("/api/dashboard/overview", methods=["GET"])
+    def dashboard_overview_api():
+        limit = request.args.get("limit", 4, type=int)
+
+        data = get_dashboard_overview_data(limit=limit)
+
+        return jsonify(data), 200

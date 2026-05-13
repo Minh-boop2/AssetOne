@@ -13,7 +13,7 @@
           <span class="stat-icon stat-icon-blue">💻</span>
           <span class="stat-label">Tổng tài sản</span>
         </div>
-        <div class="stat-value">128</div>
+        <div class="stat-value" id="dashboard-total-assets">128</div>
         <div class="stat-desc">Laptop, PC, máy in, thiết bị mạng...</div>
       </div>
 
@@ -22,10 +22,11 @@
           <span class="stat-icon stat-icon-green">✅</span>
           <span class="stat-label">Đang sử dụng</span>
         </div>
-        <div class="stat-value stat-success">92</div>
+        <div class="stat-value stat-success" id="dashboard-using-assets">92</div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-green"
+            id="dashboard-using-progress"
             style="width: 72%"
           ></div>
         </div>
@@ -37,10 +38,11 @@
           <span class="stat-icon stat-icon-gray">📦</span>
           <span class="stat-label">Chưa sử dụng</span>
         </div>
-        <div class="stat-value">26</div>
+        <div class="stat-value" id="dashboard-available-assets">26</div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-blue"
+            id="dashboard-available-progress"
             style="width: 20%"
           ></div>
         </div>
@@ -52,10 +54,11 @@
           <span class="stat-icon stat-icon-red">⚠️</span>
           <span class="stat-label">Đang hỏng / bảo trì</span>
         </div>
-        <div class="stat-value stat-danger">10</div>
+        <div class="stat-value stat-danger" id="dashboard-problem-assets">10</div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-red"
+            id="dashboard-problem-progress"
             style="width: 8%"
           ></div>
         </div>
@@ -67,7 +70,7 @@
       <div class="overview-card overview-card-large">
         <div class="card-header">
           <h3>Danh sách tài sản gần đây</h3>
-          <a href="#" class="card-link">Xem tất cả</a>
+          <a href="/assets" class="card-link">Xem tất cả</a>
         </div>
 
         <div class="asset-table">
@@ -78,38 +81,42 @@
             <div>Người sử dụng</div>
           </div>
 
-          <div class="asset-row">
-            <div>Laptop Dell XPS</div>
-            <div>KJX854</div>
-            <div>
-              <span class="status-badge status-using">Đang sử dụng</span>
+          <div id="recent-assets-body">
+            <div class="asset-row">
+              <div>Laptop Dell XPS</div>
+              <div>KJX854</div>
+              <div>
+                <span class="status-badge status-using">Đang sử dụng</span>
+              </div>
+              <div>Nguyễn Văn A</div>
             </div>
-            <div>Nguyễn Văn A</div>
-          </div>
 
-          <div class="asset-row">
-            <div>Máy in HP LaserJet</div>
-            <div>BD558</div>
-            <div>
-              <span class="status-badge status-using">Đang sử dụng</span>
+            <div class="asset-row">
+              <div>Máy in HP LaserJet</div>
+              <div>BD558</div>
+              <div>
+                <span class="status-badge status-using">Đang sử dụng</span>
+              </div>
+              <div>Nguyễn Văn B</div>
             </div>
-            <div>Nguyễn Văn B</div>
-          </div>
 
-          <div class="asset-row">
-            <div>PC Văn phòng Dell</div>
-            <div>TCS35</div>
-            <div>
-              <span class="status-badge status-free">Chưa sử dụng</span>
+            <div class="asset-row">
+              <div>PC Văn phòng Dell</div>
+              <div>TCS35</div>
+              <div>
+                <span class="status-badge status-free">Chưa sử dụng</span>
+              </div>
+              <div>—</div>
             </div>
-            <div>—</div>
-          </div>
 
-          <div class="asset-row">
-            <div>Router Mikrotik</div>
-            <div>MK220</div>
-            <div><span class="status-badge status-error">Bảo trì</span></div>
-            <div>Phòng IT</div>
+            <div class="asset-row">
+              <div>Router Mikrotik</div>
+              <div>MK220</div>
+              <div>
+                <span class="status-badge status-error">Bảo trì</span>
+              </div>
+              <div>Phòng IT</div>
+            </div>
           </div>
         </div>
       </div>
@@ -221,19 +228,126 @@
       </div>
     </div>
   </div>
-  <script>
-    // Hàm này tự động chạy để kiểm tra lựa chọn của Châu từ trang Login
-    (function() {
-        const savedTheme = localStorage.getItem('theme') || 'dark-theme';
-        // Áp dụng class vào thẻ body (hoặc thẻ section chính)
-        if (savedTheme === 'light-theme') {
-            document.body.classList.add('light-theme');
-            document.body.classList.remove('dark-theme');
-        } else {
-            document.body.classList.add('dark-theme');
-            document.body.classList.remove('light-theme');
-        }
-    })();
-</script>
-</section>
 
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem("theme") || "dark-theme";
+
+      if (savedTheme === "light-theme") {
+        document.body.classList.add("light-theme");
+        document.body.classList.remove("dark-theme");
+      } else {
+        document.body.classList.add("dark-theme");
+        document.body.classList.remove("light-theme");
+      }
+    })();
+
+    function setText(id, value) {
+      const element = document.getElementById(id);
+
+      if (!element) {
+        return;
+      }
+
+      element.textContent = value ?? 0;
+    }
+
+    function setProgress(id, value) {
+      const element = document.getElementById(id);
+
+      if (!element) {
+        return;
+      }
+
+      const percent = Number(value || 0);
+      element.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderStats(stats) {
+      setText("dashboard-total-assets", stats.total);
+      setText("dashboard-using-assets", stats.using);
+      setText("dashboard-available-assets", stats.available);
+      setText("dashboard-problem-assets", stats.problem);
+
+      setProgress("dashboard-using-progress", stats.using_percent);
+      setProgress("dashboard-available-progress", stats.available_percent);
+      setProgress("dashboard-problem-progress", stats.problem_percent);
+    }
+
+    function renderRecentAssets(items) {
+      const body = document.getElementById("recent-assets-body");
+
+      if (!body) {
+        return;
+      }
+
+      if (!items || items.length === 0) {
+        body.innerHTML = `
+          <div class="asset-row">
+            <div>Chưa có tài sản</div>
+            <div>—</div>
+            <div>
+              <span class="status-badge status-free">Trống</span>
+            </div>
+            <div>—</div>
+          </div>
+        `;
+        return;
+      }
+
+      body.innerHTML = items
+        .map((item) => {
+          const assetName = escapeHtml(item.asset_name || "—");
+          const assetCode = escapeHtml(item.asset_code || "—");
+          const statusLabel = escapeHtml(item.status_label || item.status || "—");
+          const statusClass = escapeHtml(item.status_class || "status-free");
+          const user = escapeHtml(item.user || "—");
+
+          return `
+            <div class="asset-row">
+              <div>${assetName}</div>
+              <div>${assetCode}</div>
+              <div>
+                <span class="status-badge ${statusClass}">${statusLabel}</span>
+              </div>
+              <div>${user}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    async function loadDashboardOverview() {
+      try {
+        const response = await fetch("/api/dashboard/overview?limit=4", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Không thể tải dữ liệu dashboard");
+        }
+
+        const data = await response.json();
+
+        renderStats(data.stats || {});
+        renderRecentAssets(data.recent_assets || []);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadDashboardOverview);
+  </script>
+</section>

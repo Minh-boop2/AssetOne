@@ -1,0 +1,502 @@
+/* static/css/components/toast.css */
+
+/* =========================
+   THEME VARIABLES
+   Light mode mặc định
+   Dark mode tự ăn theo:
+   body.dark / #app-body.dark / html.dark
+========================= */
+
+:root {
+  --toast-dialog-bg: #ffffff;
+  --toast-dialog-bg-soft: #f9fafb;
+  --toast-dialog-text: #111827;
+  --toast-dialog-muted: #6b7280;
+  --toast-dialog-border: #e5e7eb;
+  --toast-dialog-overlay: rgba(17, 24, 39, 0.55);
+  --toast-dialog-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+
+  --toast-dialog-success: #16a34a;
+  --toast-dialog-success-soft: rgba(22, 163, 74, 0.12);
+
+  --toast-dialog-error: #dc2626;
+  --toast-dialog-error-soft: rgba(220, 38, 38, 0.12);
+
+  --toast-dialog-warning: #f59e0b;
+  --toast-dialog-warning-soft: rgba(245, 158, 11, 0.14);
+
+  --toast-dialog-info: #2563eb;
+  --toast-dialog-info-soft: rgba(37, 99, 235, 0.12);
+
+  --toast-dialog-radius: 20px;
+}
+
+/* Dark mode: khớp với nút toggle header đang add class "dark" vào body#app-body */
+html.dark,
+body.dark,
+body#app-body.dark,
+#app-body.dark,
+[data-theme="dark"] {
+  --toast-dialog-bg: #111827;
+  --toast-dialog-bg-soft: #1f2937;
+  --toast-dialog-text: #f9fafb;
+  --toast-dialog-muted: #9ca3af;
+  --toast-dialog-border: #374151;
+  --toast-dialog-overlay: rgba(0, 0, 0, 0.7);
+  --toast-dialog-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+
+  --toast-dialog-success: #22c55e;
+  --toast-dialog-success-soft: rgba(34, 197, 94, 0.16);
+
+  --toast-dialog-error: #ef4444;
+  --toast-dialog-error-soft: rgba(239, 68, 68, 0.16);
+
+  --toast-dialog-warning: #fbbf24;
+  --toast-dialog-warning-soft: rgba(251, 191, 36, 0.17);
+
+  --toast-dialog-info: #60a5fa;
+  --toast-dialog-info-soft: rgba(96, 165, 250, 0.17);
+}
+
+/* =========================
+   ROOT / OVERLAY
+========================= */
+
+body.toast-dialog-open {
+  overflow: hidden;
+}
+
+.toast-dialog-root {
+  position: relative;
+  z-index: 100000;
+}
+
+.toast-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+  background: var(--toast-dialog-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  animation: toast-dialog-fade-in 0.18s ease forwards;
+}
+
+.toast-dialog-overlay.is-leaving {
+  animation: toast-dialog-fade-out 0.18s ease forwards;
+}
+
+/* =========================
+   DIALOG BOX
+========================= */
+
+.toast-dialog {
+  position: relative;
+
+  width: min(440px, 100%);
+  padding: 26px 24px 22px;
+
+  border: 1px solid var(--toast-dialog-border);
+  border-radius: var(--toast-dialog-radius);
+  background: var(--toast-dialog-bg);
+  color: var(--toast-dialog-text);
+  box-shadow: var(--toast-dialog-shadow);
+
+  outline: none;
+  overflow: hidden;
+
+  animation: toast-dialog-pop-in 0.2s ease forwards;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.toast-dialog::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--toast-dialog-info);
+}
+
+.toast-dialog-success::before {
+  background: var(--toast-dialog-success);
+}
+
+.toast-dialog-error::before,
+.toast-dialog-danger::before {
+  background: var(--toast-dialog-error);
+}
+
+.toast-dialog-warning::before {
+  background: var(--toast-dialog-warning);
+}
+
+.toast-dialog-info::before {
+  background: var(--toast-dialog-info);
+}
+
+.toast-dialog-overlay.is-leaving .toast-dialog {
+  animation: toast-dialog-pop-out 0.16s ease forwards;
+}
+
+/* =========================
+   CLOSE BUTTON
+========================= */
+
+.toast-dialog-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--toast-dialog-muted);
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.toast-dialog-x:hover {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--toast-dialog-text);
+}
+
+.toast-dialog-x:active {
+  transform: scale(0.95);
+}
+
+.toast-dialog-x svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================
+   ICON
+========================= */
+
+.toast-dialog-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  margin-bottom: 16px;
+
+  border-radius: 16px;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.toast-dialog-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.toast-dialog-success .toast-dialog-icon {
+  color: var(--toast-dialog-success);
+  background: var(--toast-dialog-success-soft);
+}
+
+.toast-dialog-error .toast-dialog-icon,
+.toast-dialog-danger .toast-dialog-icon {
+  color: var(--toast-dialog-error);
+  background: var(--toast-dialog-error-soft);
+}
+
+.toast-dialog-warning .toast-dialog-icon {
+  color: var(--toast-dialog-warning);
+  background: var(--toast-dialog-warning-soft);
+}
+
+.toast-dialog-info .toast-dialog-icon {
+  color: var(--toast-dialog-info);
+  background: var(--toast-dialog-info-soft);
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.toast-dialog-content {
+  padding-right: 22px;
+}
+
+.toast-dialog-title {
+  margin: 0;
+
+  color: var(--toast-dialog-text);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+
+  transition: color 0.2s ease;
+}
+
+.toast-dialog-message {
+  margin: 8px 0 0;
+
+  color: var(--toast-dialog-muted);
+  font-size: 14px;
+  line-height: 1.55;
+
+  white-space: pre-line;
+  word-break: break-word;
+
+  transition: color 0.2s ease;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.toast-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+.toast-dialog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 88px;
+  min-height: 40px;
+  padding: 0 16px;
+
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.toast-dialog-btn:active {
+  transform: scale(0.97);
+}
+
+.toast-dialog-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 2px;
+}
+
+/* Nút Hủy */
+.toast-dialog-btn-cancel {
+  border: 1px solid var(--toast-dialog-border);
+  background: transparent;
+  color: var(--toast-dialog-text);
+}
+
+.toast-dialog-btn-cancel:hover {
+  background: rgba(148, 163, 184, 0.14);
+}
+
+/* Nút OK / Xác nhận mặc định */
+.toast-dialog-btn-confirm {
+  border: 1px solid transparent;
+  background: var(--toast-dialog-info);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+}
+
+.toast-dialog-btn-confirm:hover {
+  opacity: 0.92;
+}
+
+/* Theo type */
+.toast-dialog-success .toast-dialog-btn-confirm {
+  background: var(--toast-dialog-success);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.22);
+}
+
+.toast-dialog-error .toast-dialog-btn-confirm,
+.toast-dialog-danger .toast-dialog-btn-confirm {
+  background: var(--toast-dialog-error);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.22);
+}
+
+.toast-dialog-warning .toast-dialog-btn-confirm {
+  background: var(--toast-dialog-warning);
+  color: #111827;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.24);
+}
+
+.toast-dialog-info .toast-dialog-btn-confirm {
+  background: var(--toast-dialog-info);
+  color: #ffffff;
+}
+
+/* Dark mode riêng cho nút warning để nhìn rõ hơn */
+body.dark .toast-dialog-warning .toast-dialog-btn-confirm,
+body#app-body.dark .toast-dialog-warning .toast-dialog-btn-confirm,
+#app-body.dark .toast-dialog-warning .toast-dialog-btn-confirm,
+html.dark .toast-dialog-warning .toast-dialog-btn-confirm {
+  color: #111827;
+}
+
+/* =========================
+   DARK MODE HARD OVERRIDE
+   Đảm bảo khi header toggle body.dark thì dialog đổi màu ngay
+========================= */
+
+body.dark .toast-dialog,
+body#app-body.dark .toast-dialog,
+#app-body.dark .toast-dialog,
+html.dark .toast-dialog {
+  background: var(--toast-dialog-bg);
+  color: var(--toast-dialog-text);
+  border-color: var(--toast-dialog-border);
+}
+
+body.dark .toast-dialog-title,
+body#app-body.dark .toast-dialog-title,
+#app-body.dark .toast-dialog-title,
+html.dark .toast-dialog-title {
+  color: var(--toast-dialog-text);
+}
+
+body.dark .toast-dialog-message,
+body#app-body.dark .toast-dialog-message,
+#app-body.dark .toast-dialog-message,
+html.dark .toast-dialog-message {
+  color: var(--toast-dialog-muted);
+}
+
+body.dark .toast-dialog-btn-cancel,
+body#app-body.dark .toast-dialog-btn-cancel,
+#app-body.dark .toast-dialog-btn-cancel,
+html.dark .toast-dialog-btn-cancel {
+  color: var(--toast-dialog-text);
+  border-color: var(--toast-dialog-border);
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes toast-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-dialog-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes toast-dialog-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-dialog-pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* Giảm motion nếu user bật reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .toast-dialog-overlay,
+  .toast-dialog-overlay.is-leaving,
+  .toast-dialog,
+  .toast-dialog-overlay.is-leaving .toast-dialog {
+    animation: none;
+  }
+
+  .toast-dialog,
+  .toast-dialog-btn,
+  .toast-dialog-x,
+  .toast-dialog-title,
+  .toast-dialog-message {
+    transition: none;
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 520px) {
+  .toast-dialog-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .toast-dialog {
+    width: 100%;
+    padding: 24px 20px 18px;
+    border-radius: 18px;
+  }
+
+  .toast-dialog-content {
+    padding-right: 18px;
+  }
+
+  .toast-dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .toast-dialog-btn {
+    width: 100%;
+  }
+}

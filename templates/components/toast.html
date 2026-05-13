@@ -1,0 +1,232 @@
+<!-- templates/components/toast.html -->
+
+<div id="toast-dialog-root" class="toast-dialog-root"></div>
+
+<script>
+  (function () {
+    const root = document.getElementById("toast-dialog-root");
+
+    if (!root) return;
+
+    const icons = {
+      success: `
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `,
+      error: `
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      `,
+      warning: `
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `,
+      info: `
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `,
+    };
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function normalizeOptions(messageOrOptions, options) {
+      if (typeof messageOrOptions === "object" && messageOrOptions !== null) {
+        return messageOrOptions;
+      }
+
+      return {
+        ...(options || {}),
+        message: messageOrOptions,
+      };
+    }
+
+    function lockBody() {
+      document.body.classList.add("toast-dialog-open");
+    }
+
+    function unlockBody() {
+      if (!document.querySelector(".toast-dialog-overlay")) {
+        document.body.classList.remove("toast-dialog-open");
+      }
+    }
+
+    function closeDialog(overlay, value, resolve) {
+      if (!overlay || overlay.classList.contains("is-leaving")) return;
+
+      overlay.classList.add("is-leaving");
+
+      setTimeout(function () {
+        overlay.remove();
+        unlockBody();
+        resolve(value);
+      }, 180);
+    }
+
+    function createDialog(rawOptions) {
+      const options = {
+        type: "warning",
+        title: "Thông báo",
+        message: "",
+        confirmText: "OK",
+        cancelText: "Hủy",
+        showCancel: false,
+        closeOnBackdrop: false,
+        closeOnEsc: true,
+        danger: false,
+        ...rawOptions,
+      };
+
+      const type = ["success", "error", "warning", "info"].includes(options.type)
+        ? options.type
+        : "info";
+
+      return new Promise(function (resolve) {
+        lockBody();
+
+        const overlay = document.createElement("div");
+        overlay.className = "toast-dialog-overlay";
+        overlay.setAttribute("role", "presentation");
+
+        overlay.innerHTML = `
+          <div
+            class="toast-dialog toast-dialog-${type} ${options.danger ? "toast-dialog-danger" : ""}"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="toast-dialog-title"
+            aria-describedby="toast-dialog-message"
+            tabindex="-1"
+          >
+            <button
+              type="button"
+              class="toast-dialog-x"
+              aria-label="Đóng"
+              data-toast-dialog-close
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </button>
+
+            <div class="toast-dialog-icon">
+              ${icons[type]}
+            </div>
+
+            <div class="toast-dialog-content">
+              <h3 id="toast-dialog-title" class="toast-dialog-title">
+                ${escapeHTML(options.title)}
+              </h3>
+
+              <p id="toast-dialog-message" class="toast-dialog-message">
+                ${escapeHTML(options.message)}
+              </p>
+            </div>
+
+            <div class="toast-dialog-actions">
+              ${
+                options.showCancel
+                  ? `<button type="button" class="toast-dialog-btn toast-dialog-btn-cancel" data-toast-dialog-cancel>
+                      ${escapeHTML(options.cancelText)}
+                    </button>`
+                  : ""
+              }
+
+              <button type="button" class="toast-dialog-btn toast-dialog-btn-confirm" data-toast-dialog-confirm>
+                ${escapeHTML(options.confirmText)}
+              </button>
+            </div>
+          </div>
+        `;
+
+        root.appendChild(overlay);
+
+        const dialog = overlay.querySelector(".toast-dialog");
+        const confirmBtn = overlay.querySelector("[data-toast-dialog-confirm]");
+        const cancelBtn = overlay.querySelector("[data-toast-dialog-cancel]");
+        const closeBtn = overlay.querySelector("[data-toast-dialog-close]");
+
+        setTimeout(function () {
+          dialog?.focus();
+        }, 0);
+
+        confirmBtn?.addEventListener("click", function () {
+          closeDialog(overlay, true, resolve);
+        });
+
+        cancelBtn?.addEventListener("click", function () {
+          closeDialog(overlay, false, resolve);
+        });
+
+        closeBtn?.addEventListener("click", function () {
+          closeDialog(overlay, false, resolve);
+        });
+
+        overlay.addEventListener("click", function (event) {
+          if (!options.closeOnBackdrop) return;
+          if (event.target === overlay) {
+            closeDialog(overlay, false, resolve);
+          }
+        });
+
+        function handleKeydown(event) {
+          if (!document.body.contains(overlay)) {
+            document.removeEventListener("keydown", handleKeydown);
+            return;
+          }
+
+          if (event.key === "Escape" && options.closeOnEsc) {
+            event.preventDefault();
+            closeDialog(overlay, false, resolve);
+          }
+        }
+
+        document.addEventListener("keydown", handleKeydown);
+      });
+    }
+
+    function toastAlert(messageOrOptions, options = {}) {
+      const config = normalizeOptions(messageOrOptions, options);
+
+      return createDialog({
+        type: config.type || "warning",
+        title: config.title || "Thông báo",
+        message: config.message || "",
+        confirmText: config.confirmText || "OK",
+        showCancel: false,
+        closeOnBackdrop: config.closeOnBackdrop ?? false,
+        closeOnEsc: config.closeOnEsc ?? true,
+      });
+    }
+
+    function toastConfirm(messageOrOptions, options = {}) {
+      const config = normalizeOptions(messageOrOptions, options);
+
+      return createDialog({
+        type: config.type || "warning",
+        title: config.title || "Xác nhận",
+        message: config.message || "",
+        confirmText: config.confirmText || "Xác nhận",
+        cancelText: config.cancelText || "Hủy",
+        showCancel: true,
+        danger: config.danger || false,
+        closeOnBackdrop: config.closeOnBackdrop ?? false,
+        closeOnEsc: config.closeOnEsc ?? true,
+      });
+    }
+
+    window.toastAlert = toastAlert;
+    window.toastConfirm = toastConfirm;
+    window.uiAlert = toastAlert;
+    window.uiConfirm = toastConfirm;
+  })();
+</script>

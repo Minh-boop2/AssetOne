@@ -1,0 +1,415 @@
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/assgin/assign_give.css') }}"
+/>
+
+<section class="assign-give-page">
+  <div class="assign-give-header">
+    <div>
+      <h1>Cấp phát tài sản</h1>
+    </div>
+
+    <a href="{{ url_for('assign_page') }}" class="assign-give-back">
+      <i class="fas fa-arrow-left"></i>
+      Quay lại
+    </a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %} {% if
+  messages %}
+  <div class="assign-give-flashes">
+    {% for category, message in messages %}
+    <div class="assign-give-alert assign-give-alert--{{ category }}">
+      <i class="fas fa-info-circle"></i>
+      <span>{{ message }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %} {% if not allow_assign %}
+  <div class="assign-give-alert assign-give-alert--warning">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span
+      >Tài sản này không ở trạng thái Chưa dùng nên không thể cấp phát.</span
+    >
+  </div>
+  {% endif %}
+
+  <div class="assign-give-grid">
+    <div class="assign-give-card">
+      <div class="assign-give-card__header">
+        <h2>Thông tin tài sản</h2>
+
+        <span
+          class="assign-give-status {% if info.status == 'Đang sử dụng' %}assign-give-status--using{% else %}assign-give-status--free{% endif %}"
+        >
+          {{ info.status or '---' }}
+        </span>
+      </div>
+
+      <div class="asset-summary">
+        <div class="asset-summary__item">
+          <span>Mã tài sản</span>
+          <strong>#{{ info.asset_code or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Tên tài sản</span>
+          <strong>{{ info.asset or info.asset_name or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Loại thiết bị</span>
+          <strong>{{ info.type or info.category or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Trạng thái</span>
+          <strong>{{ info.status or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Người sử dụng hiện tại</span>
+          <strong>{{ info.receiver or info.user or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Phòng ban hiện tại</span>
+          <strong>{{ info.department or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Vị trí hiện tại</span>
+          <strong>{{ info.location or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item">
+          <span>Bảo hành</span>
+          <strong>{{ info.warranty or '---' }}</strong>
+        </div>
+
+        <div class="asset-summary__item asset-summary__item--full">
+          <span>Thông số / ghi chú</span>
+          <strong>{{ info.spec or info.notes or '---' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="assign-give-card">
+      <div class="assign-give-card__header">
+        <h2>Chọn người nhận</h2>
+      </div>
+
+      <form method="POST" class="assign-give-form">
+        <label class="assign-give-label" for="userSearchInput">
+          Tìm kiếm người dùng
+        </label>
+
+        <input type="hidden" name="user_id" id="selectedUserId" />
+
+        <div
+          class="assign-user-search {% if not allow_assign %}is-disabled{% endif %}"
+          id="assignUserSearch"
+        >
+          <div class="assign-user-search__control">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              id="userSearchInput"
+              class="assign-user-search__input"
+              placeholder="Nhập tên, mã nhân viên, email, phòng ban..."
+              autocomplete="off"
+              {%
+              if
+              not
+              allow_assign
+              %}disabled{%
+              endif
+              %}
+            />
+          </div>
+
+          <div class="assign-user-search__results" id="userSearchResults">
+            <div class="assign-user-search__empty">
+              Nhập từ khóa để tìm người dùng.
+            </div>
+          </div>
+        </div>
+
+        <div class="selected-user-box" id="selectedUserBox">
+          <div class="selected-user-box__empty">
+            Chọn nhân viên để cấp phát.
+          </div>
+        </div>
+
+        <div class="assign-give-actions">
+          <a
+            href="{{ url_for('assign_page') }}"
+            class="assign-give-btn assign-give-btn--secondary"
+          >
+            Hủy
+          </a>
+
+          <button
+            type="submit"
+            class="assign-give-btn assign-give-btn--primary"
+            {%
+            if
+            not
+            allow_assign
+            %}disabled{%
+            endif
+            %}
+          >
+            <i class="fas fa-user-check"></i>
+            Cấp phát
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  const userSearchInput = document.getElementById("userSearchInput");
+  const userSearchResults = document.getElementById("userSearchResults");
+  const selectedUserId = document.getElementById("selectedUserId");
+  const selectedUserBox = document.getElementById("selectedUserBox");
+  const assignForm = document.querySelector(".assign-give-form");
+
+  let searchTimer = null;
+  let latestKeyword = "";
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function resetSelectedUser() {
+    if (selectedUserId) {
+      selectedUserId.value = "";
+    }
+
+    if (selectedUserBox) {
+      selectedUserBox.innerHTML = `
+        <div class="selected-user-box__empty">
+          Chọn nhân viên để cấp phát.
+        </div>
+      `;
+    }
+  }
+
+  function renderResultsLoading() {
+    userSearchResults.innerHTML = `
+      <div class="assign-user-search__empty">
+        Đang tìm kiếm...
+      </div>
+    `;
+  }
+
+  function renderResultsEmpty(message = "Không tìm thấy người dùng phù hợp.") {
+    userSearchResults.innerHTML = `
+      <div class="assign-user-search__empty">
+        ${escapeHtml(message)}
+      </div>
+    `;
+  }
+
+  function renderSelectedUser(user) {
+    const name = escapeHtml(user.full_name || "---");
+    const code = escapeHtml(user.employee_code || "---");
+    const email = escapeHtml(user.email || "---");
+    const phone = escapeHtml(user.phone || "---");
+    const department = escapeHtml(user.department || "---");
+    const floor = escapeHtml(user.floor || "---");
+    const avatarText =
+      name && name !== "---" ? name.charAt(0).toUpperCase() : "?";
+
+    selectedUserBox.innerHTML = `
+      <div class="selected-user-profile">
+        <div class="selected-user-avatar">
+          ${avatarText}
+        </div>
+
+        <div class="selected-user-info">
+          <h3>${name}</h3>
+          <p>${code} · ${email}</p>
+        </div>
+      </div>
+
+      <div class="selected-user-details">
+        <div>
+          <span>Số điện thoại</span>
+          <strong>${phone}</strong>
+        </div>
+
+        <div>
+          <span>Phòng ban</span>
+          <strong>${department}</strong>
+        </div>
+
+        <div>
+          <span>Vị trí / tầng</span>
+          <strong>${floor}</strong>
+        </div>
+      </div>
+    `;
+  }
+
+  function selectUser(user) {
+    selectedUserId.value = user.id || "";
+
+    userSearchInput.value = `${user.full_name || "---"}${user.employee_code ? " - " + user.employee_code : ""}`;
+
+    renderSelectedUser(user);
+
+    userSearchResults.innerHTML = "";
+  }
+
+  function renderUserResults(users) {
+    if (!users || users.length === 0) {
+      renderResultsEmpty();
+      return;
+    }
+
+    userSearchResults.innerHTML = users
+      .map((user, index) => {
+        const name = escapeHtml(user.full_name || "---");
+        const code = escapeHtml(user.employee_code || "---");
+        const email = escapeHtml(user.email || "---");
+        const department = escapeHtml(user.department || "---");
+        const floor = escapeHtml(user.floor || "---");
+        const phone = escapeHtml(user.phone || "---");
+
+        return `
+          <button
+            type="button"
+            class="assign-user-search__option"
+            data-index="${index}"
+            data-id="${escapeHtml(user.id || "")}"
+            data-name="${name}"
+            data-code="${code}"
+            data-email="${email}"
+            data-phone="${phone}"
+            data-department="${department}"
+            data-floor="${floor}"
+          >
+            <span class="assign-user-search__main">
+              <strong>${name}</strong>
+              <small>${code} · ${email}</small>
+            </span>
+
+            <span class="assign-user-search__meta">
+              ${department || "---"} · ${floor || "---"}
+            </span>
+          </button>
+        `;
+      })
+      .join("");
+
+    userSearchResults
+      .querySelectorAll(".assign-user-search__option")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const user = {
+            id: button.dataset.id,
+            full_name: button.dataset.name,
+            employee_code: button.dataset.code,
+            email: button.dataset.email,
+            phone: button.dataset.phone,
+            department: button.dataset.department,
+            floor: button.dataset.floor,
+          };
+
+          selectUser(user);
+        });
+      });
+  }
+
+  async function searchUsers(keyword) {
+    latestKeyword = keyword;
+
+    if (!keyword) {
+      resetSelectedUser();
+      renderResultsEmpty("Nhập từ khóa để tìm người dùng.");
+      return;
+    }
+
+    renderResultsLoading();
+
+    try {
+      const response = await fetch(
+        `/assign/users/search?keyword=${encodeURIComponent(keyword)}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Search user failed");
+      }
+
+      const data = await response.json();
+
+      if (latestKeyword !== keyword) {
+        return;
+      }
+
+      renderUserResults(data.items || []);
+    } catch (error) {
+      console.error(error);
+      renderResultsEmpty("Không thể tải danh sách người dùng.");
+    }
+  }
+
+  async function showUiAlert(message, options = {}) {
+    if (typeof window.toastAlert === "function") {
+      await window.toastAlert(message, {
+        type: options.type || "warning",
+        title: options.title || "Thông báo",
+        confirmText: options.confirmText || "OK",
+      });
+      return;
+    }
+
+    alert(message);
+  }
+
+  if (userSearchInput) {
+    userSearchInput.addEventListener("input", () => {
+      const keyword = userSearchInput.value.trim();
+
+      resetSelectedUser();
+
+      clearTimeout(searchTimer);
+
+      searchTimer = setTimeout(() => {
+        searchUsers(keyword);
+      }, 500);
+    });
+  }
+
+  if (assignForm) {
+    assignForm.addEventListener("submit", async function (event) {
+      if (!selectedUserId || !selectedUserId.value) {
+        event.preventDefault();
+
+        await showUiAlert("Vui lòng chọn người dùng nhận tài sản.", {
+          type: "warning",
+          title: "Thiếu thông tin",
+          confirmText: "Đã hiểu",
+        });
+
+        userSearchInput?.focus();
+      }
+    });
+  }
+</script>
+{% endblock %}

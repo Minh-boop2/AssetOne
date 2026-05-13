@@ -136,6 +136,7 @@ def build_filter_options(counts):
         "using",
         "available",
         "maintenance",
+        "broken",
     }
 
     statuses = [
@@ -196,3 +197,108 @@ def get_inventory_from_assets_api():
             inventory.append(normalized)
 
     return inventory
+
+
+def get_active_users_from_api():
+    data, error = api_request(
+        "GET",
+        "/api/users",
+        params={
+            "page": 1,
+            "limit": 1000,
+            "status": "HOAT_DONG",
+        }
+    )
+
+    if error or not data:
+        return []
+
+    return data.get("data", [])
+
+
+def assign_asset_to_user(asset_id, user_id):
+    return api_request(
+        "PATCH",
+        f"/api/assets/{asset_id}/assign",
+        json={
+            "user_id": user_id
+        },
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+    )
+
+
+def is_assignable_status(assign):
+    if not assign:
+        return False
+
+    status = assign.get("status")
+    asset_status = assign.get("asset_status")
+
+    return (
+        status in ["Chưa dùng", "Chưa sử dụng"]
+        or asset_status in ["available", "Chưa sử dụng"]
+    )
+def get_active_users_from_api(keyword=""):
+    data, error = api_request(
+        "GET",
+        "/api/users",
+        params={
+            "page": 1,
+            "limit": 1000,
+            "keyword": keyword,
+            "status": "HOAT_DONG",
+        }
+    )
+
+    if error or not data:
+        return []
+
+    return data.get("data", [])
+
+
+def assign_asset_to_user_api(asset_id, user_id):
+    data, error = api_request(
+        "PATCH",
+        f"/api/assets/{asset_id}/assign",
+        json={
+            "user_id": user_id
+        }
+    )
+
+    if error:
+        return False, {
+            "message": error
+        }
+
+    return True, data or {}
+def unassign_asset_from_user_api(asset_id):
+    data, error = api_request(
+        "PATCH",
+        f"/api/assets/{asset_id}/unassign",
+    )
+
+    if error:
+        return False, {
+            "message": error
+        }
+
+    return True, data or {}
+def get_active_users_from_api(keyword=""):
+    data, error = api_request(
+        "GET",
+        "/api/users",
+        params={
+            "page": 1,
+            "limit": 20,
+            "keyword": keyword,
+            "status": "HOAT_DONG",
+        }
+    )
+
+    if error or not data:
+        return []
+
+    return data.get("data", [])
