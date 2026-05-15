@@ -1,0 +1,377 @@
+/* ================= REPORT FILTER ================= */
+
+.report-filter-section {
+    flex-shrink: 0;
+}
+
+.filter-bar {
+    position: relative;
+    z-index: 50;
+
+    margin-bottom: 16px;
+    padding: 12px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.filter-item {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.filter-item--search {
+    flex: 2;
+}
+
+.filter-label {
+    color: var(--text-soft);
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ================= INPUT / SELECT BUTTON ================= */
+
+.filter-input,
+.report-count-select__button {
+    width: 100%;
+    height: 38px;
+    padding: 0 14px;
+
+    background: var(--surface-2);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+
+    transition: 0.2s ease;
+}
+
+.filter-input {
+    cursor: text;
+}
+
+.filter-input::placeholder {
+    color: var(--text-soft);
+    opacity: 1;
+}
+
+.filter-input:focus,
+.report-count-select__button:focus,
+.report-count-select.open .report-count-select__button,
+.report-count-select__button:hover {
+    border-color: var(--hsu-blue);
+}
+
+.filter-input:focus,
+.report-count-select__button:focus {
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+/* ================= COUNT SELECT ================= */
+
+.report-count-select {
+    position: relative;
+    width: 100%;
+}
+
+.report-count-select__button {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.report-count-select__value {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+}
+
+.report-count-select__label {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--text);
+    text-align: left;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.report-count-select__count {
+    margin-left: auto;
+    margin-right: 10px;
+
+    color: var(--text-soft);
+
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-count-select__caret {
+    flex-shrink: 0;
+
+    color: var(--text-soft);
+    font-size: 9px;
+    opacity: 0.7;
+}
+
+.report-count-select__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1001;
+
+    display: none;
+    width: 100%;
+    padding: 6px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+
+    overflow-x: hidden;
+}
+
+.report-count-select.open .report-count-select__menu {
+    display: block;
+    animation: reportFilterFadeIn 0.18s ease;
+}
+
+.report-count-select__menu.is-scrollable {
+    max-height: 198px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.report-count-select__option {
+    width: 100%;
+    padding: 10px 12px;
+
+    background: transparent;
+    color: var(--text);
+
+    border: 0;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    transition: 0.2s ease;
+}
+
+.report-count-select__option:hover {
+    background: var(--surface-2);
+    color: var(--hsu-blue);
+}
+
+.report-count-select__option.is-active {
+    background: var(--select-active-bg);
+    color: var(--select-active-text);
+}
+
+.report-count-select__option-label {
+    flex: 1;
+    min-width: 0;
+
+    text-align: left;
+    font-weight: 600;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.report-count-select__option-count {
+    margin-left: auto;
+
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ================= ACTIONS ================= */
+
+.filter-actions {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.action-btn,
+.btn-reset {
+    height: 38px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    font-family: inherit;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 0 18px;
+
+    background: var(--surface-2);
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    background: var(--surface);
+    text-decoration: none;
+}
+
+.action-btn--primary {
+    background: var(--hsu-blue);
+    border-color: var(--hsu-blue);
+    color: #ffffff;
+}
+
+.action-btn--primary:hover {
+    background: var(--hsu-blue-hover);
+    border-color: var(--hsu-blue-hover);
+    color: #ffffff;
+
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 94, 255, 0.24);
+}
+
+.action-btn--primary:visited,
+.action-btn--primary:active,
+.action-btn--primary:focus {
+    color: #ffffff;
+}
+
+.btn-reset {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+
+    background: var(--surface-2);
+    color: var(--hsu-red);
+
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.btn-reset:hover {
+    background: var(--danger-soft-bg);
+    border-color: rgba(239, 59, 45, 0.35);
+    text-decoration: none;
+}
+
+.btn-reset:visited,
+.btn-reset:active,
+.btn-reset:focus {
+    color: var(--hsu-red);
+    text-decoration: none;
+}
+
+.btn-reset.is-hidden {
+    display: none;
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes reportFilterFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1200px) {
+    .filter-bar {
+        flex-wrap: wrap;
+    }
+
+    .filter-item {
+        flex: 1 1 calc(50% - 10px);
+    }
+
+    .filter-item--search,
+    .filter-actions {
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 14px;
+    }
+
+    .filter-item,
+    .filter-item--search,
+    .filter-actions {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .btn-reset,
+    .action-btn--add {
+        flex: 1;
+    }
+}

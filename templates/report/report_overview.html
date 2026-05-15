@@ -1,395 +1,47 @@
-{% set report_logs = logs if logs is defined and logs else [] %}
-{% set current_page = current_page|default(1) %}
-{% set total_pages = total_pages|default(1) %}
-{% set total_logs = total_logs|default(report_logs|length) %}
-{% set per_page = per_page|default(10) %}
+{# templates/report/report_overview.html #}
 
-{% set search_value = search_query|default(request.args.get('search', '')) %}
-{% set selected_type = selected_type|default(request.args.get('type', 'Tất cả')) %}
-{% set selected_dept = selected_dept|default(request.args.get('department', 'Tất cả')) %}
-{% set selected_location = selected_location|default(request.args.get('location', 'Tất cả')) %}
-{% set selected_status = selected_status|default(request.args.get('status', 'Tất cả')) %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report/report.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_filter.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_table.css') }}">
 
-{% set has_active_filter = (search_value|trim != '') or selected_type != 'Tất cả' or selected_dept != 'Tất cả' or selected_location != 'Tất cả' or selected_status != 'Tất cả' %}
-
-<section class="report-page">
-  <div class="report-page__header">
-    <h1 class="report-page__title">Báo cáo tài sản</h1>
-  </div>
-
-  {% include 'report/report_filter.html' %}
-
-  <div class="report-overview-card">
-    <div class="report-card-header">
-      <h3>Nhật ký tài sản</h3>
-
-      <div class="report-card-meta">
-        Hiển thị  <b>{{ report_logs|length }}</b> trên <b>{{ total_logs }}</b> kết quả
-      </div>
-    </div>
-
-    {% macro render_empty(value) %}
-      {% if value %}
-        <span>{{ value }}</span>
-      {% else %}
-        <span class="report-empty">—</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_report_type(row) %}
-      {% set report_type = row.get('display_report_type') %}
-      {% set report_type_lower = report_type|lower if report_type else '' %}
-
-      {% if 'cấp phát' in report_type_lower %}
-        <span class="report-badge report-badge--blue">Cấp phát</span>
-      {% elif 'bàn giao' in report_type_lower %}
-        <span class="report-badge report-badge--slate">Bàn giao</span>
-      {% elif 'bảo trì' in report_type_lower %}
-        <span class="report-badge report-badge--orange">Bảo trì</span>
-      {% elif 'thu hồi' in report_type_lower %}
-        <span class="report-badge report-badge--purple">Thu hồi</span>
-      {% elif 'cập nhật' in report_type_lower %}
-        <span class="report-badge report-badge--cyan">Cập nhật</span>
-      {% elif 'thay đổi' in report_type_lower %}
-        <span class="report-badge report-badge--slate">Thay đổi</span>
-      {% elif 'thiết bị' in report_type_lower %}
-        <span class="report-badge report-badge--slate">Thiết bị</span>
-      {% elif report_type %}
-        <span class="report-badge report-badge--default">{{ report_type }}</span>
-      {% else %}
-        <span class="report-empty">—</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_report_status(row) %}
-      {% set status = row.get('display_report_status') %}
-
-      {% if status == 'Đã xem' %}
-        <span class="report-badge report-badge--success">Đã xem</span>
-      {% else %}
-        <span class="report-badge report-badge--pending">Chờ</span>
-      {% endif %}
-    {% endmacro %}
-
-    {% macro render_action_menu(row) %}
-      <div class="action-menu-center">
-        <div class="action-menu">
-          <button type="button" class="action-menu__trigger" aria-label="Mở thao tác">
-            <span class="action-menu__dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </button>
-
-          <div class="action-menu__dropdown">
-            <button
-              type="button"
-              class="action-menu__item js-view-report"
-              data-report-id="{{ row.get('id')|e }}"
-              data-report-code="{{ row.get('display_report_code')|e }}"
-              data-report-name="{{ row.get('display_report_name')|e }}"
-              data-report-type="{{ row.get('display_report_type')|e }}"
-              data-reporter="{{ row.get('display_reporter')|e }}"
-              data-department="{{ row.get('display_department')|e }}"
-              data-location="{{ row.get('display_location')|e }}"
-              data-status="{{ row.get('display_report_status')|e }}"
-            >
-              <span class="action-menu__icon">👁</span>
-              Xem chi tiết báo cáo
-            </button>
-
-            <button
-              type="button"
-              class="action-menu__item action-menu__item--danger js-delete-report"
-              data-delete-url="{{ url_for('delete_report_log', row_index=row.get('_row_index')) }}"
-            >
-              <span class="action-menu__icon">🗑</span>
-              Xóa báo cáo
-            </button>
-          </div>
+<form method="GET" action="{{ url_for('report_page') }}" id="reportForm">
+    <section class="report-page">
+        <div class="report-page__header">
+            <h1 class="report-page__title">Báo cáo tài sản</h1>
+            <p>Theo dõi nhật ký, trạng thái và thông tin báo cáo tài sản trong hệ thống</p>
         </div>
-      </div>
-    {% endmacro %}
 
-    <div class="report-table-scroll-container">
-      <table class="custom-table assign-table report-table">
-        <thead>
-          <tr>
-            <th>Mã báo cáo</th>
-            <th>Tên báo cáo</th>
-            <th>Loại</th>
-            <th>Trạng thái</th>
-            <th>Người báo cáo</th>
-            <th>Phòng ban</th>
-            <th>Vị trí</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
+        {% include "report/report_filter.html" %}
 
-        <tbody>
-          {% if report_logs %}
-            {% for row in report_logs %}
-              <tr>
-                <td>{{ render_empty(row.get('display_report_code')) }}</td>
-
-                <td>
-                  <strong class="report-name">
-                    {{ row.get('display_report_name') or '—' }}
-                  </strong>
-                </td>
-
-                <td>{{ render_report_type(row) }}</td>
-                <td>{{ render_report_status(row) }}</td>
-                <td>{{ render_empty(row.get('display_reporter')) }}</td>
-                <td>{{ render_empty(row.get('display_department')) }}</td>
-                <td>{{ render_empty(row.get('display_location')) }}</td>
-                <td>{{ render_action_menu(row) }}</td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="8" class="table-empty-cell">
-                Không tìm thấy dữ liệu phù hợp.
-              </td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="report-card-footer">
-      <div class="pagination-buttons">
-        <a
-          class="page-btn {% if current_page <= 1 %}disabled{% endif %}"
-          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page - 1) }}"
-        >
-          « Trước
-        </a>
-
-        {% if total_pages <= 3 %}
-          {% for p in range(1, total_pages + 1) %}
-            <a
-              class="page-btn {% if p == current_page %}active{% endif %}"
-              href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-            >
-              {{ p }}
-            </a>
-          {% endfor %}
-        {% else %}
-          {% if current_page <= 2 %}
-            {% for p in range(1, 4) %}
-              <a
-                class="page-btn {% if p == current_page %}active{% endif %}"
-                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-              >
-                {{ p }}
-              </a>
-            {% endfor %}
-          {% elif current_page >= total_pages - 1 %}
-            {% for p in range(total_pages - 2, total_pages + 1) %}
-              <a
-                class="page-btn {% if p == current_page %}active{% endif %}"
-                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-              >
-                {{ p }}
-              </a>
-            {% endfor %}
-          {% else %}
-            {% for p in range(current_page - 1, current_page + 2) %}
-              <a
-                class="page-btn {% if p == current_page %}active{% endif %}"
-                href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=p) }}"
-              >
-                {{ p }}
-              </a>
-            {% endfor %}
-          {% endif %}
-        {% endif %}
-
-        <a
-          class="page-btn {% if current_page >= total_pages %}disabled{% endif %}"
-          href="{{ url_for('report_page', search=search_value, type=selected_type, department=selected_dept, location=selected_location, status=selected_status, page=current_page + 1) }}"
-        >
-          Sau »
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+        {% include "report/report_table.html" %}
+    </section>
+</form>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("reportForm");
-  const searchInput = document.getElementById("reportSearch");
-  const filterControls = document.querySelectorAll(".js-report-filter");
+    const form = document.getElementById("reportForm");
 
-  if (!form) return;
+    if (!form) return;
 
-  const pageInput = form.querySelector('input[name="page"]');
-  let searchTimer = null;
-  let lastSearchValue = searchInput ? searchInput.value.trim() : "";
+    const pageInput = form.querySelector('input[name="page"]');
 
-  function submitReportForm() {
-    if (pageInput) {
-      pageInput.value = "1";
+    function submitReportForm() {
+        if (pageInput) {
+            pageInput.value = "1";
+        }
+
+        form.submit();
     }
 
-    form.submit();
-  }
+    document.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter") return;
 
-  if (searchInput) {
-    searchInput.addEventListener("input", function () {
-      clearTimeout(searchTimer);
+        const tagName = event.target.tagName ? event.target.tagName.toLowerCase() : "";
 
-      searchTimer = setTimeout(function () {
-        const currentValue = searchInput.value.trim();
+        if (tagName === "textarea") return;
 
-        if (currentValue !== lastSearchValue) {
-          lastSearchValue = currentValue;
-          submitReportForm();
-        }
-      }, 1000);
-    });
-
-    searchInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
         event.preventDefault();
-        clearTimeout(searchTimer);
-
-        const currentValue = searchInput.value.trim();
-
-        if (currentValue !== lastSearchValue) {
-          lastSearchValue = currentValue;
-          submitReportForm();
-        }
-      }
+        submitReportForm();
     });
-  }
-
-  filterControls.forEach(function (control) {
-    control.addEventListener("change", submitReportForm);
-  });
-
-  function closeAllActionMenus() {
-    document.querySelectorAll(".action-menu__dropdown.show").forEach(function (dropdown) {
-      dropdown.classList.remove("show");
-      dropdown.style.top = "";
-      dropdown.style.left = "";
-    });
-  }
-
-  function positionDropdown(trigger, dropdown) {
-    const rect = trigger.getBoundingClientRect();
-    const dropdownWidth = 210;
-    const dropdownHeight = 104;
-    const gap = 8;
-
-    let left = rect.right - dropdownWidth;
-    let top = rect.bottom + gap;
-
-    if (left < 8) {
-      left = 8;
-    }
-
-    if (left + dropdownWidth > window.innerWidth - 8) {
-      left = window.innerWidth - dropdownWidth - 8;
-    }
-
-    if (top + dropdownHeight > window.innerHeight - 8) {
-      top = rect.top - dropdownHeight - gap;
-    }
-
-    if (top < 8) {
-      top = 8;
-    }
-
-    dropdown.style.left = left + "px";
-    dropdown.style.top = top + "px";
-  }
-
-  document.addEventListener("click", function (event) {
-    const trigger = event.target.closest(".action-menu__trigger");
-
-    if (!trigger) {
-      if (!event.target.closest(".action-menu__dropdown")) {
-        closeAllActionMenus();
-      }
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const menu = trigger.closest(".action-menu");
-    const dropdown = menu.querySelector(".action-menu__dropdown");
-    const isOpen = dropdown.classList.contains("show");
-
-    closeAllActionMenus();
-
-    if (!isOpen) {
-      dropdown.classList.add("show");
-      positionDropdown(trigger, dropdown);
-    }
-  });
-
-  document.querySelectorAll(".report-table-scroll-container").forEach(function (scrollArea) {
-    scrollArea.addEventListener("scroll", closeAllActionMenus);
-  });
-
-  window.addEventListener("resize", closeAllActionMenus);
-
-  document.querySelectorAll(".js-view-report").forEach(function (button) {
-    button.addEventListener("click", function () {
-      closeAllActionMenus();
-
-      const message =
-        "Chi tiết báo cáo\n\n" +
-        "ID: " + (button.dataset.reportId || "—") + "\n" +
-        "Mã báo cáo: " + (button.dataset.reportCode || "—") + "\n" +
-        "Tên báo cáo: " + (button.dataset.reportName || "—") + "\n" +
-        "Loại: " + (button.dataset.reportType || "—") + "\n" +
-        "Trạng thái: " + (button.dataset.status || "—") + "\n" +
-        "Người báo cáo: " + (button.dataset.reporter || "—") + "\n" +
-        "Phòng ban: " + (button.dataset.department || "—") + "\n" +
-        "Vị trí: " + (button.dataset.location || "—");
-
-      alert(message);
-    });
-  });
-
-  document.querySelectorAll(".js-delete-report").forEach(function (button) {
-    button.addEventListener("click", function () {
-      closeAllActionMenus();
-
-      const deleteUrl = button.dataset.deleteUrl;
-
-      if (!deleteUrl) return;
-
-      const confirmed = confirm("Bạn có chắc muốn xóa báo cáo này không?");
-
-      if (!confirmed) return;
-
-      fetch(deleteUrl, {
-        method: "POST",
-        headers: {
-          "X-Requested-With": "XMLHttpRequest"
-        }
-      })
-        .then(function (response) {
-          if (!response.ok) {
-            throw new Error("Không thể xóa báo cáo.");
-          }
-
-          return response.json();
-        })
-        .then(function () {
-          window.location.reload();
-        })
-        .catch(function (error) {
-          alert(error.message || "Có lỗi xảy ra khi xóa báo cáo.");
-        });
-    });
-  });
 });
 </script>

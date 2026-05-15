@@ -1,0 +1,629 @@
+{% extends 'main.html' %}
+
+{% block content %}
+{% set auto_code = auto_report_id|default('Report-000000') %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_create.css') }}">
+
+<section class="report-create-page">
+    <div class="report-create-wrap">
+        <a href="{{ url_for('report_page') }}" class="report-create-back">
+            « Quay lại
+        </a>
+
+        <h1 class="report-create-title">Thêm báo cáo mới</h1>
+
+        <div class="report-create-card">
+            <form
+                id="reportCreateForm"
+                method="POST"
+                action="{{ url_for('new_report_page') }}"
+                class="report-create-form"
+                novalidate
+            >
+                <input type="hidden" id="report_code" name="report_code" value="{{ auto_code }}">
+                <input type="hidden" id="asset_code" name="asset_code" value="">
+                <input type="hidden" name="status" value="Chờ xử lý">
+
+                <div class="report-create-body">
+                    <div class="report-create-grid">
+                        <div class="report-create-column">
+                            <div class="report-section-heading">
+                                <span>Định danh báo cáo</span>
+                            </div>
+
+                            <div class="report-code-box">
+                                <div class="report-code-head">
+                                    <span>Đã xác thực</span>
+                                    <strong>ID UNIQUE</strong>
+                                </div>
+
+                                <div class="report-code-main">
+                                    <div>
+                                        <span>Mã báo cáo</span>
+                                        <strong id="reportCodeDisplay">{{ auto_code }}</strong>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="report-copy-btn"
+                                        id="copyReportCodeBtn"
+                                        title="Sao chép mã báo cáo"
+                                    >
+                                        <svg class="copy-icon copy-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z"/>
+                                            <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25H12A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z"/>
+                                        </svg>
+
+                                        <svg class="copy-icon copy-icon-success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M9.55 16.55 4.8 11.8l1.4-1.4 3.35 3.35 8.25-8.25 1.4 1.4-9.65 9.65Z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="report_name">Tên báo cáo</label>
+                                <input
+                                    id="report_name"
+                                    name="report_name"
+                                    type="text"
+                                    placeholder="Ví dụ: Báo cáo Cấp phát - Laptop Dell XPS 15"
+                                    data-required="true"
+                                    data-message="Vui lòng nhập tên báo cáo."
+                                >
+                                <small class="report-form-error">Vui lòng nhập tên báo cáo.</small>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="report_type">Loại báo cáo</label>
+
+                                <select
+                                    id="report_type"
+                                    name="report_type"
+                                    class="report-native-select"
+                                    data-required="true"
+                                    data-message="Vui lòng chọn loại báo cáo."
+                                >
+                                    <option value="">-- Chọn loại báo cáo --</option>
+                                    {% for item in report_type_options %}
+                                        <option value="{{ item }}">{{ item }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="report-custom-select" data-custom-select data-target="report_type">
+                                    <button type="button" class="report-custom-trigger">
+                                        <span>-- Chọn loại báo cáo --</span>
+                                        <b>▾</b>
+                                    </button>
+
+                                    <div class="report-custom-menu">
+                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn loại báo cáo --</button>
+                                        {% for item in report_type_options %}
+                                            <button type="button" class="report-custom-option" data-value="{{ item }}">{{ item }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <small class="report-form-error">Vui lòng chọn loại báo cáo.</small>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="reporter">Người báo cáo</label>
+                                <input
+                                    id="reporter"
+                                    name="reporter"
+                                    type="text"
+                                    placeholder="Ví dụ: Nguyễn An"
+                                    data-required="true"
+                                    data-message="Vui lòng nhập người báo cáo."
+                                >
+                                <small class="report-form-error">Vui lòng nhập người báo cáo.</small>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="reporter_role">Chức vụ</label>
+
+                                <select
+                                    id="reporter_role"
+                                    name="reporter_role"
+                                    class="report-native-select"
+                                    data-required="true"
+                                    data-message="Vui lòng chọn chức vụ."
+                                >
+                                    <option value="">-- Chọn chức vụ --</option>
+                                    {% for role in reporter_role_options|default(role_options|default(['Admin', 'Manager', 'Staff'])) %}
+                                        <option value="{{ role }}">{{ role }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="report-custom-select" data-custom-select data-target="reporter_role">
+                                    <button type="button" class="report-custom-trigger">
+                                        <span>-- Chọn chức vụ --</span>
+                                        <b>▾</b>
+                                    </button>
+
+                                    <div class="report-custom-menu">
+                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn chức vụ --</button>
+                                        {% for role in reporter_role_options|default(role_options|default(['Admin', 'Manager', 'Staff'])) %}
+                                            <button type="button" class="report-custom-option" data-value="{{ role }}">{{ role }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <small class="report-form-error">Vui lòng chọn chức vụ.</small>
+                            </div>
+
+                            <div class="report-form-group">
+                                <label for="asset_name">Tên tài sản</label>
+                                <input
+                                    id="asset_name"
+                                    name="asset_name"
+                                    type="text"
+                                    list="assetNameOptions"
+                                    placeholder="Ví dụ: Laptop Dell XPS 15"
+                                >
+
+                                <datalist id="assetNameOptions">
+                                    {% for asset in asset_options|default([]) %}
+                                        <option
+                                            value="{{ asset.name }}"
+                                            data-code="{{ asset.code }}"
+                                            data-type="{{ asset.type }}"
+                                            data-department="{{ asset.department }}"
+                                            data-location="{{ asset.location }}"
+                                        >
+                                            {{ asset.code }}{% if asset.code and asset.type %} - {% endif %}{{ asset.type }}
+                                        </option>
+                                    {% endfor %}
+                                </datalist>
+
+                                <small class="report-note-help">Không bắt buộc. Nếu để trống, hệ thống sẽ lưu là Chưa xác định.</small>
+                            </div>
+                        </div>
+
+                        <div class="report-create-column">
+                            <div class="report-section-heading">
+                                <span>Thông tin báo cáo</span>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="department">Phòng ban / Đơn vị</label>
+
+                                <select
+                                    id="department"
+                                    name="department"
+                                    class="report-native-select"
+                                    data-required="true"
+                                    data-message="Vui lòng chọn phòng ban."
+                                >
+                                    <option value="">-- Chọn phòng ban --</option>
+                                    {% for dept in department_options %}
+                                        <option value="{{ dept }}">{{ dept }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="report-custom-select" data-custom-select data-target="department">
+                                    <button type="button" class="report-custom-trigger">
+                                        <span>-- Chọn phòng ban --</span>
+                                        <b>▾</b>
+                                    </button>
+
+                                    <div class="report-custom-menu">
+                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn phòng ban --</button>
+                                        {% for dept in department_options %}
+                                            <button type="button" class="report-custom-option" data-value="{{ dept }}">{{ dept }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <small class="report-form-error">Vui lòng chọn phòng ban.</small>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="location">Vị trí</label>
+
+                                <select
+                                    id="location"
+                                    name="location"
+                                    class="report-native-select"
+                                    data-required="true"
+                                    data-message="Vui lòng chọn vị trí."
+                                >
+                                    <option value="">-- Chọn vị trí --</option>
+                                    {% for location in location_options %}
+                                        <option value="{{ location }}">{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="report-custom-select" data-custom-select data-target="location">
+                                    <button type="button" class="report-custom-trigger">
+                                        <span>-- Chọn vị trí --</span>
+                                        <b>▾</b>
+                                    </button>
+
+                                    <div class="report-custom-menu">
+                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn vị trí --</button>
+                                        {% for location in location_options %}
+                                            <button type="button" class="report-custom-option" data-value="{{ location }}">{{ location }}</button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <small class="report-form-error">Vui lòng chọn vị trí.</small>
+                            </div>
+
+                            <div class="report-form-group" data-field-group>
+                                <label for="description">Nội dung / Ghi chú</label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    placeholder="Nhập nội dung hoặc ghi chú cho báo cáo..."
+                                    data-required="true"
+                                    data-message="Vui lòng nhập nội dung báo cáo."
+                                ></textarea>
+                                <small class="report-form-error">Vui lòng nhập nội dung báo cáo.</small>
+                            </div>
+
+                            <div class="report-info-box">
+                                <span>Ngày tạo báo cáo</span>
+                                <strong id="timeDisplay">{{ current_time }}</strong>
+                                <input id="time" type="hidden" name="time" value="{{ current_time }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-create-footer">
+                    <a href="{{ url_for('report_page') }}" class="report-btn-cancel">Hủy bỏ</a>
+                    <button type="submit" class="report-btn-submit">Xác nhận thêm mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="report-create-toast" id="reportCreateToast">
+        <strong id="reportCreateToastTitle">Tạo báo cáo không thành công</strong>
+        <span id="reportCreateToastMessage">Vui lòng nhập đầy đủ thông tin bắt buộc.</span>
+        <button type="button" id="closeReportToastBtn">×</button>
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("reportCreateForm");
+    const timeInput = document.getElementById("time");
+    const timeDisplay = document.getElementById("timeDisplay");
+    const reportCodeInput = document.getElementById("report_code");
+    const reportCodeDisplay = document.getElementById("reportCodeDisplay");
+    const copyReportCodeBtn = document.getElementById("copyReportCodeBtn");
+    const assetNameInput = document.getElementById("asset_name");
+    const assetCodeInput = document.getElementById("asset_code");
+    const assetOptions = document.querySelectorAll("#assetNameOptions option");
+
+    const toast = document.getElementById("reportCreateToast");
+    const toastTitle = document.getElementById("reportCreateToastTitle");
+    const toastMessage = document.getElementById("reportCreateToastMessage");
+    const closeToastBtn = document.getElementById("closeReportToastBtn");
+
+    let allowSubmit = false;
+    let toastTimer = null;
+
+    function getVietnamDateTimeValue() {
+        const now = new Date();
+
+        const parts = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        }).formatToParts(now);
+
+        const map = {};
+
+        parts.forEach(function (part) {
+            map[part.type] = part.value;
+        });
+
+        return map.hour + ":" + map.minute + " " + map.day + "/" + map.month + "/" + map.year;
+    }
+
+    function updateRealTime() {
+        const value = getVietnamDateTimeValue();
+
+        if (timeInput) {
+            timeInput.value = value;
+        }
+
+        if (timeDisplay) {
+            timeDisplay.textContent = value;
+        }
+    }
+
+    function showToast(title, message) {
+        if (!toast) return;
+
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+
+        toast.classList.add("is-show");
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toast.classList.remove("is-show");
+        }, 3500);
+    }
+
+    function getGroup(field) {
+        return field.closest("[data-field-group]");
+    }
+
+    function setError(field, message) {
+        const group = getGroup(field);
+        if (!group) return;
+
+        const error = group.querySelector(".report-form-error");
+        group.classList.add("has-error");
+
+        if (error) {
+            error.textContent = message;
+        }
+    }
+
+    function clearError(field) {
+        const group = getGroup(field);
+        if (!group) return;
+
+        group.classList.remove("has-error");
+    }
+
+    function validateField(field) {
+        const value = (field.value || "").trim();
+
+        if (field.dataset.required === "true" && !value) {
+            setError(field, field.dataset.message || "Vui lòng nhập thông tin.");
+            return false;
+        }
+
+        clearError(field);
+        return true;
+    }
+
+    function validateForm() {
+        const fields = form.querySelectorAll("[data-required='true']");
+        let valid = true;
+        let firstInvalid = null;
+
+        fields.forEach(function (field) {
+            const ok = validateField(field);
+
+            if (!ok) {
+                valid = false;
+
+                if (!firstInvalid) {
+                    firstInvalid = field;
+                }
+            }
+        });
+
+        if (firstInvalid) {
+            const group = getGroup(firstInvalid);
+            const trigger = group ? group.querySelector(".report-custom-trigger") : null;
+
+            firstInvalid.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            setTimeout(function () {
+                if (trigger) {
+                    trigger.focus();
+                } else {
+                    firstInvalid.focus();
+                }
+            }, 250);
+        }
+
+        return valid;
+    }
+
+    function closeSelects(exceptBox = null) {
+        document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+            if (box !== exceptBox) {
+                box.classList.remove("is-open");
+            }
+        });
+    }
+
+    function syncSelect(box) {
+        const select = document.getElementById(box.dataset.target);
+        const text = box.querySelector(".report-custom-trigger span");
+        const options = box.querySelectorAll(".report-custom-option");
+
+        if (!select || !text) return;
+
+        let selectedText = "";
+
+        options.forEach(function (option) {
+            const selected = option.dataset.value === select.value;
+            option.classList.toggle("is-selected", selected);
+
+            if (selected) {
+                selectedText = option.textContent.trim();
+            }
+        });
+
+        text.textContent = selectedText || select.options[0].textContent.trim();
+    }
+
+    function initCustomSelects() {
+        document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+            const select = document.getElementById(box.dataset.target);
+            const trigger = box.querySelector(".report-custom-trigger");
+            const options = box.querySelectorAll(".report-custom-option");
+
+            if (!select || !trigger) return;
+
+            syncSelect(box);
+
+            trigger.addEventListener("click", function (event) {
+                event.stopPropagation();
+
+                const isOpen = box.classList.contains("is-open");
+
+                closeSelects(box);
+                box.classList.toggle("is-open", !isOpen);
+            });
+
+            options.forEach(function (option) {
+                option.addEventListener("click", function (event) {
+                    event.stopPropagation();
+
+                    select.value = option.dataset.value || "";
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+
+                    syncSelect(box);
+                    validateField(select);
+
+                    box.classList.remove("is-open");
+                });
+            });
+
+            select.addEventListener("change", function () {
+                syncSelect(box);
+                validateField(select);
+            });
+        });
+
+        document.addEventListener("click", function () {
+            closeSelects();
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeSelects();
+            }
+        });
+    }
+
+    function syncAssetCode() {
+        if (!assetNameInput || !assetCodeInput) return;
+
+        const value = assetNameInput.value.trim();
+        let matchedCode = "";
+
+        assetOptions.forEach(function (option) {
+            if (option.value.trim() === value) {
+                matchedCode = option.dataset.code || "";
+            }
+        });
+
+        assetCodeInput.value = matchedCode;
+    }
+
+    async function copyReportCode() {
+        if (!reportCodeInput || !copyReportCodeBtn) return;
+
+        const text = reportCodeInput.value.trim();
+
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (error) {
+            const tempInput = document.createElement("input");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+        }
+
+        copyReportCodeBtn.classList.add("copied");
+
+        setTimeout(function () {
+            copyReportCodeBtn.classList.remove("copied");
+        }, 1200);
+    }
+
+    async function confirmSubmit() {
+        if (typeof window.toastConfirm === "function") {
+            return await window.toastConfirm({
+                type: "warning",
+                title: "Xác nhận thêm báo cáo",
+                message: "Bạn có chắc muốn thêm báo cáo mới này vào hệ thống không?",
+                confirmText: "Thêm mới",
+                cancelText: "Hủy",
+                danger: false,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        }
+
+        return confirm("Bạn có chắc muốn thêm báo cáo mới này vào hệ thống không?");
+    }
+
+    updateRealTime();
+    setInterval(updateRealTime, 30000);
+
+    if (reportCodeInput && reportCodeDisplay) {
+        reportCodeDisplay.textContent = reportCodeInput.value.trim();
+    }
+
+    if (assetNameInput) {
+        assetNameInput.addEventListener("input", syncAssetCode);
+        assetNameInput.addEventListener("change", syncAssetCode);
+    }
+
+    if (copyReportCodeBtn) {
+        copyReportCodeBtn.addEventListener("click", copyReportCode);
+    }
+
+    if (closeToastBtn && toast) {
+        closeToastBtn.addEventListener("click", function () {
+            toast.classList.remove("is-show");
+        });
+    }
+
+    initCustomSelects();
+
+    if (form) {
+        const fields = form.querySelectorAll("[data-required='true']");
+
+        fields.forEach(function (field) {
+            field.addEventListener("input", function () {
+                validateField(field);
+            });
+
+            field.addEventListener("change", function () {
+                validateField(field);
+            });
+        });
+
+        form.addEventListener("submit", async function (event) {
+            if (allowSubmit) return;
+
+            event.preventDefault();
+            updateRealTime();
+            syncAssetCode();
+
+            if (!validateForm()) {
+                showToast(
+                    "Tạo báo cáo không thành công",
+                    "Vui lòng nhập đầy đủ thông tin bắt buộc."
+                );
+                return;
+            }
+
+            const confirmed = await confirmSubmit();
+
+            if (confirmed) {
+                allowSubmit = true;
+                form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

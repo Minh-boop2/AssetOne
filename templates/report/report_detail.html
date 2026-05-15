@@ -1,0 +1,265 @@
+{% extends 'main.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_detail.css') }}">
+
+{% macro show_value(value, fallback='Chưa có dữ liệu') %}
+    {{ value if value else fallback }}
+{% endmacro %}
+
+{% macro info_box(label, value, fallback='Chưa có dữ liệu') %}
+    <div class="report-detail-info-item">
+        <span>{{ label }}</span>
+        <strong>{{ show_value(value, fallback) }}</strong>
+    </div>
+{% endmacro %}
+
+{% macro mini_info(label, value, fallback='Chưa có dữ liệu') %}
+    <div class="report-detail-mini-item">
+        <span>{{ label }}</span>
+        <strong>{{ show_value(value, fallback) }}</strong>
+    </div>
+{% endmacro %}
+
+<section class="report-detail-page">
+    <div class="report-detail-wrap">
+        <div class="report-detail-topbar">
+            <a href="{{ url_for('report_page') }}" class="report-detail-back">
+                <span>&laquo;</span>
+                <strong>Quay lại</strong>
+            </a>
+        </div>
+
+        {% if not report %}
+            <div class="report-detail-empty-card">
+                <div class="report-detail-empty-icon">!</div>
+                <h1>Không tìm thấy báo cáo</h1>
+                <p>Báo cáo này có thể đã bị xóa hoặc không tồn tại trong hệ thống.</p>
+
+                <a href="{{ url_for('report_page') }}" class="report-detail-primary-btn">
+                    Về danh sách báo cáo
+                </a>
+            </div>
+        {% else %}
+            {% set report_type = report.display_report_type|default('Khác', true) %}
+            {% set report_status = report.display_report_status|default('Chờ xử lý', true) %}
+            {% set reporter = report.display_reporter|default('', true) %}
+            {% set detail = report.display_detail|default('', true) %}
+            {% set note = report.display_note|default('', true) %}
+
+            <div class="report-detail-header">
+                <div>
+                    <h1>Chi tiết báo cáo</h1>
+                    <p>Theo dõi đầy đủ thông tin, nội dung và trạng thái của báo cáo tài sản.</p>
+                </div>
+
+                <div class="report-detail-header-actions">
+                    <button type="button" class="report-detail-secondary-btn" id="copyReportCodeBtn">
+                        Sao chép mã
+                    </button>
+
+                    <button type="button" class="report-detail-primary-btn js-print-report">
+                        In báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-detail-main-card">
+                <div class="report-detail-hero">
+                    <div class="report-detail-id-card">
+                        <div>
+                            <span>Mã báo cáo</span>
+                            <strong id="reportCodeText">{{ show_value(report.display_report_code) }}</strong>
+                        </div>
+
+                        <div class="report-detail-copy-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z"/>
+                                <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25H12A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="report-detail-title-card">
+                        <span>Tên báo cáo</span>
+                        <h2>{{ show_value(report.display_report_name) }}</h2>
+                    </div>
+                </div>
+
+                <div class="report-detail-scroll">
+                    <div class="report-detail-grid">
+                        <div class="report-detail-left">
+                            <div class="report-detail-section">
+                                <div class="report-detail-section-title">
+                                    <span>Thông tin báo cáo</span>
+                                </div>
+
+                                <div class="report-detail-info-grid">
+                                    {{ info_box('Loại báo cáo', report_type, 'Khác') }}
+                                    {{ info_box('Trạng thái', report_status, 'Chờ xử lý') }}
+                                    {{ info_box('Mức độ ưu tiên', report.display_priority, 'Bình thường') }}
+                                    {{ info_box('Thời gian tạo', report.display_time) }}
+                                </div>
+                            </div>
+
+                            <div class="report-detail-section report-detail-section--content">
+                                <div class="report-detail-section-title">
+                                    <span>Nội dung báo cáo</span>
+                                </div>
+
+                                <div class="report-detail-content-box">
+                                    {% if detail %}
+                                        <p>{{ detail }}</p>
+                                    {% else %}
+                                        <p class="report-detail-muted">Chưa có nội dung báo cáo.</p>
+                                    {% endif %}
+                                </div>
+
+                                {% if note %}
+                                    <div class="report-detail-note-box">
+                                        <span>Ghi chú thêm</span>
+                                        <p>{{ note }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="report-detail-right">
+                            <div class="report-detail-section">
+                                <div class="report-detail-section-title report-detail-section-title--soft">
+                                    <span>Người báo cáo</span>
+                                </div>
+
+                                <div class="report-detail-person-card">
+                                    <div class="report-detail-avatar">
+                                        {{ (reporter[:1] if reporter else 'A')|upper }}
+                                    </div>
+
+                                    <div>
+                                        <h3>{{ show_value(reporter, 'Chưa xác định') }}</h3>
+                                        <p>{{ show_value(report.display_reporter_role, 'Chưa có chức vụ') }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="report-detail-mini-list">
+                                    {{ mini_info('Phòng ban', report.display_department) }}
+                                    {{ mini_info('Vị trí', report.display_location) }}
+                                </div>
+                            </div>
+
+                            <div class="report-detail-section">
+                                <div class="report-detail-section-title report-detail-section-title--soft">
+                                    <span>Tài sản liên quan</span>
+                                </div>
+
+                                <div class="report-detail-asset-card">
+                                    <div class="report-detail-asset-icon">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Zm9-2.3L6.4 8 12 10.8 17.6 8 12 5.2ZM5 9.6v5.7l6 3v-5.7l-6-3Zm8 8.7 6-3V9.6l-6 3v5.7Z"/>
+                                        </svg>
+                                    </div>
+
+                                    <div>
+                                        <h3>{{ show_value(report.display_asset_name, 'Chưa xác định') }}</h3>
+                                        <p>{{ show_value(report.display_asset_code, 'Không có mã tài sản') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-detail-footer">
+                    <a href="{{ url_for('report_page') }}" class="report-detail-secondary-btn">
+                        Quay lại danh sách
+                    </a>
+
+                    <button type="button" class="report-detail-primary-btn js-print-report">
+                        In báo cáo
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="report-detail-toast" id="reportDetailToast" aria-hidden="true">
+        <div class="report-detail-toast__icon"></div>
+        <strong id="reportDetailToastText">Đã sao chép mã báo cáo</strong>
+        <button type="button" id="closeReportDetailToast" aria-label="Đóng">×</button>
+        <div class="report-detail-toast__progress"></div>
+    </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const copyButton = document.getElementById("copyReportCodeBtn");
+    const reportCodeText = document.getElementById("reportCodeText");
+    const toast = document.getElementById("reportDetailToast");
+    const toastText = document.getElementById("reportDetailToastText");
+    const closeToastButton = document.getElementById("closeReportDetailToast");
+
+    let toastTimer = null;
+
+    function hideToast() {
+        if (!toast) return;
+
+        toast.classList.remove("is-show");
+        toast.setAttribute("aria-hidden", "true");
+    }
+
+    function showToast(message) {
+        if (!toast || !toastText) return;
+
+        toastText.textContent = message || "Thao tác thành công";
+        toast.classList.remove("is-show");
+
+        void toast.offsetWidth;
+
+        toast.classList.add("is-show");
+        toast.setAttribute("aria-hidden", "false");
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, 3200);
+    }
+
+    async function copyReportCode() {
+        if (!reportCodeText) return;
+
+        const text = reportCodeText.textContent.trim();
+
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (error) {
+            const input = document.createElement("input");
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            document.body.removeChild(input);
+        }
+
+        showToast("Đã sao chép mã báo cáo");
+    }
+
+    if (copyButton) {
+        copyButton.addEventListener("click", copyReportCode);
+    }
+
+    if (closeToastButton) {
+        closeToastButton.addEventListener("click", hideToast);
+    }
+
+    document.querySelectorAll(".js-print-report").forEach(function (button) {
+        button.addEventListener("click", function () {
+            window.print();
+        });
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            hideToast();
+        }
+    });
+});
+</script>
+{% endblock %}

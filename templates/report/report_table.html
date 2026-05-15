@@ -1,0 +1,388 @@
+{# templates/report/report_table.html #}
+
+<div class="report-overview-card">
+    <div class="report-card-header">
+        <h3>Nhật ký tài sản</h3>
+
+        {% if reports %}
+            <div class="report-card-meta">
+                Hiển thị <b>{{ reports|length }}</b> trên <b>{{ total_records }}</b> kết quả
+            </div>
+        {% endif %}
+    </div>
+
+    {% macro render_type_badge(row) %}
+        {% set type_text = row.display_report_type if row.display_report_type is defined and row.display_report_type else 'Khác' %}
+        {% set value = type_text|lower %}
+
+        <span
+            class="report-badge
+            {% if 'cấp phát' in value %}report-badge--blue
+            {% elif 'bàn giao' in value or 'thiết bị' in value %}report-badge--slate
+            {% elif 'bảo trì' in value or 'báo hỏng' in value or 'sự cố' in value %}report-badge--orange
+            {% elif 'thu hồi' in value %}report-badge--purple
+            {% elif 'cập nhật' in value or 'kiểm kê' in value %}report-badge--cyan
+            {% else %}report-badge--default
+            {% endif %}"
+        >
+            {{ type_text }}
+        </span>
+    {% endmacro %}
+
+    {% macro render_status_badge(row) %}
+        {% set status_text = row.display_report_status if row.display_report_status is defined and row.display_report_status else 'Chờ xử lý' %}
+
+        <span
+            class="report-badge
+            {% if status_text == 'Đã xem' or status_text == 'Hoàn thành' %}report-badge--success
+            {% elif status_text == 'Đang xử lý' %}report-badge--blue
+            {% elif status_text == 'Từ chối' %}report-badge--danger
+            {% else %}report-badge--pending
+            {% endif %}"
+        >
+            {{ status_text }}
+        </span>
+    {% endmacro %}
+
+    {% macro render_eye_icon() %}
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="action-menu__svg"
+        >
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+    {% endmacro %}
+
+    {% macro render_trash_icon() %}
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="action-menu__svg"
+        >
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"></path>
+            <path d="M19 6l-1 14c-.1 1.1-1 2-2.1 2H8.1C7 22 6.1 21.1 6 20L5 6"></path>
+            <path d="M10 11v6"></path>
+            <path d="M14 11v6"></path>
+        </svg>
+    {% endmacro %}
+
+    {% macro render_action(row) %}
+        {% set row_index = row._row_index if row._row_index is defined else row.get('_row_index') %}
+        {% set report_name = row.display_report_name if row.display_report_name is defined and row.display_report_name else 'báo cáo này' %}
+
+        <div class="action-menu-center">
+            <div class="action-menu">
+                <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
+                    <div class="action-menu__dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+
+                <div class="action-menu__dropdown">
+                    <a
+                        href="{{ url_for('report_detail_page', row_index=row_index) }}"
+                        class="action-menu__item"
+                    >
+                        {{ render_eye_icon() }}
+                        <span>Xem chi tiết báo cáo</span>
+                    </a>
+
+                    <div class="action-menu__divider"></div>
+
+                    <button
+                        type="button"
+                        class="action-menu__item action-menu__item--danger delete-report-action"
+                        data-delete-url="{{ url_for('delete_report_log', row_index=row_index) }}"
+                        data-report-name="{{ report_name }}"
+                    >
+                        {{ render_trash_icon() }}
+                        <span>Xóa báo cáo</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endmacro %}
+
+    {% set columns = [
+        {"key": "display_report_code", "label": "MÃ BÁO CÁO"},
+        {"key": "display_report_name", "label": "TÊN BÁO CÁO"},
+        {"key": "display_report_type", "label": "LOẠI", "render": render_type_badge},
+        {"key": "display_report_status", "label": "TRẠNG THÁI", "render": render_status_badge},
+        {"key": "display_reporter", "label": "NGƯỜI BÁO CÁO"},
+        {"key": "display_department", "label": "PHÒNG BAN"},
+        {"key": "display_location", "label": "VỊ TRÍ"},
+        {"key": "action", "label": "THAO TÁC", "render": render_action, "align": "center"}
+    ] %}
+
+    {% set safe_current_page = current_page|default(1) %}
+    {% set safe_total_pages = total_pages|default(1) %}
+    {% set prev_page = safe_current_page - 1 if safe_current_page > 1 else 1 %}
+    {% set next_page = safe_current_page + 1 if safe_current_page < safe_total_pages else safe_total_pages %}
+
+    {% if reports %}
+        <div class="report-table-scroll-container">
+            {% set data = reports %}
+            {% include "components/table.html" %}
+        </div>
+
+        <div class="report-card-footer">
+            <div class="report-pagination-info">
+                Trang <b>{{ safe_current_page }}</b> / <b>{{ safe_total_pages }}</b>
+            </div>
+
+            <div class="pagination-buttons">
+                <a
+                    href="{{ url_for('report_page', page=prev_page, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                    class="page-btn {{ 'disabled' if safe_current_page <= 1 else '' }}"
+                    aria-disabled="{{ 'true' if safe_current_page <= 1 else 'false' }}"
+                >
+                    « Trước
+                </a>
+
+                {% if safe_total_pages <= 3 %}
+                    {% for p in range(1, safe_total_pages + 1) %}
+                        {% if p == safe_current_page %}
+                            <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                            <a
+                                href="{{ url_for('report_page', page=p, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                                class="page-btn"
+                            >
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% elif safe_current_page <= 2 %}
+                    {% for p in range(1, 4) %}
+                        {% if p == safe_current_page %}
+                            <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                            <a
+                                href="{{ url_for('report_page', page=p, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                                class="page-btn"
+                            >
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% elif safe_current_page >= safe_total_pages - 1 %}
+                    {% for p in range(safe_total_pages - 2, safe_total_pages + 1) %}
+                        {% if p == safe_current_page %}
+                            <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                            <a
+                                href="{{ url_for('report_page', page=p, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                                class="page-btn"
+                            >
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    {% for p in range(safe_current_page - 1, safe_current_page + 2) %}
+                        {% if p == safe_current_page %}
+                            <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                            <a
+                                href="{{ url_for('report_page', page=p, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                                class="page-btn"
+                            >
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                <a
+                    href="{{ url_for('report_page', page=next_page, search=search_q, type=selected_type, department=selected_dept, location=selected_location, status=selected_status) }}"
+                    class="page-btn {{ 'disabled' if safe_current_page >= safe_total_pages else '' }}"
+                    aria-disabled="{{ 'true' if safe_current_page >= safe_total_pages else 'false' }}"
+                >
+                    Sau »
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="report-empty-state">
+            <p>Không tìm thấy dữ liệu báo cáo nào khớp với tiêu chí lọc.</p>
+            <a href="{{ url_for('report_page') }}">Xóa tất cả bộ lọc</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function closeAllActionMenus(exceptDropdown = null) {
+        document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
+            if (dropdown !== exceptDropdown) {
+                dropdown.classList.remove("show");
+
+                const menu = dropdown.closest(".action-menu");
+
+                if (menu) {
+                    menu.classList.remove("action-menu--drop-up");
+                }
+            }
+        });
+    }
+
+    function updateDropdownDirection(menu, dropdown) {
+        const trigger = menu.querySelector(".action-menu__trigger");
+        const scrollContainer = menu.closest(".report-table-scroll-container");
+
+        if (!trigger || !scrollContainer || !dropdown) return;
+
+        menu.classList.remove("action-menu--drop-up");
+
+        dropdown.style.visibility = "hidden";
+        dropdown.classList.add("show");
+
+        const triggerRect = trigger.getBoundingClientRect();
+        const dropdownHeight = dropdown.offsetHeight;
+        const containerRect = scrollContainer.getBoundingClientRect();
+
+        const gap = 8;
+        const spaceBelow = containerRect.bottom - triggerRect.bottom - gap;
+        const spaceAbove = triggerRect.top - containerRect.top - gap;
+
+        if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+            menu.classList.add("action-menu--drop-up");
+        }
+
+        dropdown.style.visibility = "";
+    }
+
+    async function confirmDeleteReport(button) {
+        const deleteUrl = button.getAttribute("data-delete-url");
+        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+
+        if (!deleteUrl) return;
+
+        closeAllActionMenus();
+
+        let confirmed = false;
+
+        if (typeof window.toastConfirm === "function") {
+            confirmed = await window.toastConfirm({
+                type: "error",
+                title: "Xác nhận xóa báo cáo",
+                message: "Bạn có chắc muốn xóa " + reportName + " không? Hành động này không thể hoàn tác.",
+                confirmText: "Xóa",
+                cancelText: "Hủy",
+                danger: true,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        } else {
+            confirmed = confirm("Bạn có chắc muốn xóa " + reportName + " không?");
+        }
+
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(deleteUrl, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const result = await response.json().catch(function () {
+                return {};
+            });
+
+            if (!response.ok || result.success === false) {
+                alert(result.message || "Xóa báo cáo thất bại.");
+                return;
+            }
+
+            if (typeof window.toastSuccess === "function") {
+                window.toastSuccess(result.message || "Xóa báo cáo thành công");
+                setTimeout(function () {
+                    window.location.reload();
+                }, 900);
+            } else {
+                alert(result.message || "Xóa báo cáo thành công");
+                window.location.reload();
+            }
+        } catch (error) {
+            alert("Có lỗi xảy ra khi xóa báo cáo.");
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        const deleteButton = event.target.closest(".delete-report-action");
+        const trigger = event.target.closest(".action-menu__trigger");
+        const clickedInsideDropdown = event.target.closest(".action-menu__dropdown");
+
+        if (deleteButton) {
+            event.preventDefault();
+            event.stopPropagation();
+            confirmDeleteReport(deleteButton);
+            return;
+        }
+
+        if (clickedInsideDropdown) {
+            return;
+        }
+
+        if (trigger) {
+            event.stopPropagation();
+
+            const menu = trigger.closest(".action-menu");
+
+            if (!menu) return;
+
+            const dropdown = menu.querySelector(".action-menu__dropdown");
+
+            if (!dropdown) return;
+
+            const isOpen = dropdown.classList.contains("show");
+
+            closeAllActionMenus(dropdown);
+
+            if (isOpen) {
+                dropdown.classList.remove("show");
+                menu.classList.remove("action-menu--drop-up");
+            } else {
+                updateDropdownDirection(menu, dropdown);
+            }
+
+            return;
+        }
+
+        closeAllActionMenus();
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeAllActionMenus();
+        }
+    });
+
+    document.querySelectorAll(".report-table-scroll-container").forEach(function (container) {
+        container.addEventListener("scroll", closeAllActionMenus);
+    });
+
+    window.addEventListener("resize", closeAllActionMenus);
+});
+</script>

@@ -1,0 +1,546 @@
+/* ================= REPORT TABLE CARD ================= */
+
+.report-overview-card {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: clamp(340px, 38vh, 520px);
+    height: clamp(360px, 42vh, 620px);
+    max-height: min(620px, 52vh);
+
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: clamp(14px, 1vw, 18px);
+    box-shadow: var(--shadow);
+
+    overflow: hidden !important;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.report-card-header,
+.report-card-footer {
+    flex-shrink: 0;
+
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.report-card-header {
+    padding: clamp(12px, 1vw, 16px) clamp(14px, 1.2vw, 20px);
+    border-bottom: 1px solid var(--border) !important;
+    justify-content: space-between;
+}
+
+.report-card-header h3 {
+    margin: 0;
+
+    color: var(--text) !important;
+
+    font-size: clamp(15px, 1vw, 17px) !important;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.report-card-meta,
+.report-pagination-info {
+    color: var(--text-soft) !important;
+
+    font-size: clamp(12px, 0.85vw, 13px) !important;
+    white-space: nowrap;
+}
+
+.report-card-meta b,
+.report-pagination-info b {
+    color: var(--text) !important;
+}
+
+/* ================= TABLE SCROLL ================= */
+
+.report-table-scroll-container {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    background: var(--surface) !important;
+
+    overflow: auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--surface);
+}
+
+.report-table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.report-table-scroll-container::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+.report-table-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.report-table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-soft);
+}
+
+/* ================= TABLE ================= */
+
+.report-overview-card .custom-table {
+    width: 100% !important;
+    min-width: 980px;
+
+    background: var(--surface) !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+}
+
+.report-overview-card .custom-table thead {
+    background: var(--surface-2) !important;
+}
+
+.report-overview-card .custom-table th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
+
+    background: var(--surface-2) !important;
+    color: var(--text-soft) !important;
+
+    border-bottom: 1px solid var(--border) !important;
+
+    text-align: left;
+    font-size: clamp(12px, 0.85vw, 14px) !important;
+    font-weight: 700 !important;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.report-overview-card .custom-table td {
+    padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
+
+    background: var(--surface) !important;
+    color: var(--text) !important;
+
+    border-bottom: 1px solid var(--border) !important;
+
+    font-size: clamp(12.5px, 0.9vw, 14px) !important;
+    line-height: 1.4;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.report-overview-card .custom-table tbody tr:hover td {
+    background: var(--surface-2) !important;
+}
+
+/* ================= CELLS ================= */
+
+.report-code {
+    color: var(--text) !important;
+
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.report-name {
+    display: inline-block;
+    max-width: clamp(220px, 20vw, 360px);
+
+    color: var(--text) !important;
+
+    font-weight: 700;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.report-empty {
+    color: var(--text-soft) !important;
+}
+
+/* ================= BADGES ================= */
+
+.report-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    font-size: clamp(11px, 0.78vw, 12px);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.report-badge--default,
+.report-badge--slate {
+    background: rgba(100, 116, 139, 0.12) !important;
+    color: var(--text) !important;
+}
+
+.report-badge--blue {
+    background: rgba(31, 94, 255, 0.12) !important;
+    color: var(--hsu-blue) !important;
+}
+
+.report-badge--purple {
+    background: rgba(139, 92, 246, 0.12) !important;
+    color: var(--hsu-purple) !important;
+}
+
+.report-badge--cyan {
+    background: rgba(6, 182, 212, 0.12) !important;
+    color: var(--hsu-cyan) !important;
+}
+
+.report-badge--orange,
+.report-badge--pending {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: var(--hsu-warning) !important;
+}
+
+.report-badge--success {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: var(--hsu-green) !important;
+}
+
+.report-badge--danger {
+    background: rgba(239, 59, 45, 0.12) !important;
+    color: var(--hsu-red) !important;
+}
+
+/* ================= ACTION MENU ================= */
+
+.action-menu-center {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+.action-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.action-menu__trigger {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    background: transparent !important;
+    color: var(--text-soft) !important;
+
+    border: 0;
+    border-radius: 8px;
+    outline: none !important;
+    box-shadow: none !important;
+
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s ease;
+}
+
+.action-menu__trigger:hover {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+}
+
+.action-menu__dots {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.action-menu__dots span {
+    width: 3px;
+    height: 3px;
+
+    background: currentColor !important;
+    border-radius: 999px;
+}
+
+.action-menu__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1000;
+
+    display: none;
+    width: 210px;
+    min-width: 210px;
+    padding: 8px;
+
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.action-menu__dropdown.show {
+    display: block;
+    animation: reportFadeInMenu 0.18s ease;
+}
+
+.action-menu--drop-up .action-menu__dropdown {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+.action-menu__item {
+    width: 100%;
+    padding: 10px 12px;
+
+    background: transparent;
+    color: var(--text) !important;
+
+    border: 0;
+    border-radius: 10px;
+
+    text-align: left;
+    text-decoration: none;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    transition: 0.18s ease;
+}
+
+.action-menu__item:hover {
+    background: var(--surface-2) !important;
+}
+
+.action-menu__item--danger {
+    color: var(--hsu-red) !important;
+}
+
+.action-menu__item--danger:hover {
+    background: rgba(239, 59, 45, 0.08) !important;
+}
+
+.action-menu__svg {
+    flex-shrink: 0;
+}
+
+.action-menu__divider {
+    height: 1px;
+    margin: 4px 0;
+    background: var(--border);
+}
+
+/* ================= FOOTER / PAGINATION ================= */
+
+.report-card-footer {
+    padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
+
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 0 18px 18px;
+
+    justify-content: space-between;
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.page-btn {
+    min-width: clamp(32px, 2.2vw, 36px);
+    height: clamp(32px, 2.2vw, 36px);
+    padding: 0 11px;
+
+    background: var(--surface) !important;
+    color: var(--text) !important;
+
+    border: 1px solid var(--border) !important;
+    border-radius: 10px;
+
+    text-decoration: none;
+
+    font-size: clamp(12px, 0.85vw, 13px);
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s ease;
+}
+
+.page-btn:hover:not(.disabled):not(.active) {
+    background: var(--surface-2) !important;
+    border-color: var(--hsu-blue) !important;
+}
+
+.page-btn.active {
+    background: var(--hsu-blue) !important;
+    color: #ffffff !important;
+    border-color: var(--hsu-blue) !important;
+}
+
+.page-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ================= EMPTY STATE ================= */
+
+.report-empty-state {
+    flex: 1 1 auto;
+    padding: clamp(32px, 4vw, 60px);
+
+    color: var(--text-soft);
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.report-empty-state a {
+    margin-top: 8px;
+
+    color: var(--hsu-blue);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes reportFadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (min-width: 1600px) {
+    .report-overview-card {
+        height: clamp(420px, 44vh, 680px);
+        max-height: 680px;
+    }
+
+    .report-overview-card .custom-table {
+        min-width: 1100px;
+    }
+}
+
+@media (max-width: 1366px) {
+    .report-overview-card {
+        height: clamp(330px, 40vh, 500px);
+        max-height: 500px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .report-overview-card {
+        height: clamp(340px, 46vh, 540px);
+        max-height: 540px;
+    }
+
+    .report-overview-card .custom-table {
+        min-width: 940px;
+    }
+}
+
+@media (max-width: 900px) {
+    .report-overview-card {
+        height: clamp(360px, 52vh, 560px);
+        max-height: 560px;
+    }
+
+    .report-overview-card .custom-table {
+        min-width: 880px;
+    }
+}
+
+@media (max-width: 768px) {
+    .report-card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+
+    .report-card-meta,
+    .report-pagination-info {
+        white-space: normal;
+    }
+
+    .report-overview-card {
+        height: clamp(360px, 58vh, 600px);
+        max-height: 600px;
+    }
+
+    .report-card-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        overflow-x: auto;
+    }
+
+    .pagination-buttons {
+        min-width: max-content;
+    }
+
+    .report-overview-card .custom-table th,
+    .report-overview-card .custom-table td {
+        padding: 11px 14px !important;
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .report-overview-card {
+        height: clamp(340px, 60vh, 560px);
+        max-height: 560px;
+        border-radius: 14px;
+    }
+
+    .report-overview-card .custom-table {
+        min-width: 820px;
+    }
+
+    .report-card-header,
+    .report-card-footer {
+        padding: 12px 14px !important;
+    }
+}
