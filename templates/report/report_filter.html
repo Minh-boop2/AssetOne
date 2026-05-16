@@ -251,6 +251,69 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    const AUTO_SEARCH_DELAY = 500;
+    let autoSearchTimer = null;
+
+    const filterSection = document.querySelector(".report-filter-section");
+    const reportSearchInput = document.getElementById("reportSearch");
+
+    function getReportFilterForm() {
+        if (!filterSection) return null;
+
+        return filterSection.closest("form");
+    }
+
+    function resetReportPageToFirst() {
+        if (!filterSection) return;
+
+        const pageInput = filterSection.querySelector('input[name="page"]');
+
+        if (pageInput) {
+            pageInput.value = "1";
+        }
+    }
+
+    function submitReportFilters() {
+        if (!filterSection) return;
+
+        resetReportPageToFirst();
+
+        const filterForm = getReportFilterForm();
+
+        if (filterForm) {
+            if (typeof filterForm.requestSubmit === "function") {
+                filterForm.requestSubmit();
+            } else {
+                filterForm.submit();
+            }
+
+            return;
+        }
+
+        const params = new URLSearchParams();
+
+        filterSection.querySelectorAll("input[name]").forEach(function (input) {
+            params.set(input.name, input.value || "");
+        });
+
+        const targetUrl = window.location.pathname + "?" + params.toString();
+
+        window.location.href = targetUrl;
+    }
+
+    function scheduleReportAutoSearch() {
+        clearTimeout(autoSearchTimer);
+
+        autoSearchTimer = setTimeout(function () {
+            submitReportFilters();
+        }, AUTO_SEARCH_DELAY);
+    }
+
+    function submitReportFiltersNow() {
+        clearTimeout(autoSearchTimer);
+        submitReportFilters();
+    }
+
     document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
         const trigger = selectBox.querySelector(".report-count-select__button");
         const hiddenInput = selectBox.querySelector('input[type="hidden"]');
@@ -297,6 +360,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
             });
+        });
+    });
+
+    if (reportSearchInput) {
+        reportSearchInput.addEventListener("input", function () {
+            scheduleReportAutoSearch();
+        });
+
+        reportSearchInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitReportFiltersNow();
+            }
+        });
+    }
+
+    document.querySelectorAll(".js-report-filter").forEach(function (filterInput) {
+        filterInput.addEventListener("change", function () {
+            scheduleReportAutoSearch();
         });
     });
 

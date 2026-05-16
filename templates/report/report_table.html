@@ -231,6 +231,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    let allowDeleteSubmit = false;
+
     function closeAllActionMenus(exceptDropdown = null) {
         document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
             if (dropdown !== exceptDropdown) {
@@ -271,6 +273,28 @@ document.addEventListener("DOMContentLoaded", function () {
         dropdown.style.visibility = "";
     }
 
+    function createAndSubmitDeleteForm(deleteUrl) {
+        if (!deleteUrl) return;
+
+        const deleteForm = document.createElement("form");
+
+        deleteForm.method = "POST";
+        deleteForm.action = deleteUrl;
+        deleteForm.style.display = "none";
+        deleteForm.setAttribute("data-report-delete-submit-form", "true");
+
+        const nextInput = document.createElement("input");
+        nextInput.type = "hidden";
+        nextInput.name = "next";
+        nextInput.value = window.location.href;
+
+        deleteForm.appendChild(nextInput);
+        document.body.appendChild(deleteForm);
+
+        allowDeleteSubmit = true;
+        deleteForm.submit();
+    }
+
     async function confirmDeleteReport(button) {
         const deleteUrl = button.getAttribute("data-delete-url");
         const reportName = button.getAttribute("data-report-name") || "báo cáo này";
@@ -298,35 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!confirmed) return;
 
-        try {
-            const response = await fetch(deleteUrl, {
-                method: "POST",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            });
-
-            const result = await response.json().catch(function () {
-                return {};
-            });
-
-            if (!response.ok || result.success === false) {
-                alert(result.message || "Xóa báo cáo thất bại.");
-                return;
-            }
-
-            if (typeof window.toastSuccess === "function") {
-                window.toastSuccess(result.message || "Xóa báo cáo thành công");
-                setTimeout(function () {
-                    window.location.reload();
-                }, 900);
-            } else {
-                alert(result.message || "Xóa báo cáo thành công");
-                window.location.reload();
-            }
-        } catch (error) {
-            alert("Có lỗi xảy ra khi xóa báo cáo.");
-        }
+        createAndSubmitDeleteForm(deleteUrl);
     }
 
     document.addEventListener("click", function (event) {
@@ -335,8 +331,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const clickedInsideDropdown = event.target.closest(".action-menu__dropdown");
 
         if (deleteButton) {
+            if (allowDeleteSubmit) return;
+
             event.preventDefault();
             event.stopPropagation();
+
             confirmDeleteReport(deleteButton);
             return;
         }

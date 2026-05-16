@@ -343,11 +343,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function showToast(title, message) {
-        if (!toast) return;
+    function showFallbackToast(title, message) {
+        if (!toast) {
+            alert(title + (message ? "\n" + message : ""));
+            return;
+        }
 
-        toastTitle.textContent = title;
-        toastMessage.textContent = message;
+        if (toastTitle) {
+            toastTitle.textContent = title;
+        }
+
+        if (toastMessage) {
+            toastMessage.textContent = message;
+        }
 
         toast.classList.add("is-show");
 
@@ -355,6 +363,24 @@ document.addEventListener("DOMContentLoaded", function () {
         toastTimer = setTimeout(function () {
             toast.classList.remove("is-show");
         }, 3500);
+    }
+
+    function showToast(title, message, type = "error") {
+        if (window.sonner && typeof window.sonner[type] === "function") {
+            window.sonner[type](title, message);
+            return;
+        }
+
+        if (typeof window.sonner === "function") {
+            window.sonner({
+                type: type,
+                title: title,
+                description: message
+            });
+            return;
+        }
+
+        showFallbackToast(title, message);
     }
 
     function getGroup(field) {
@@ -582,6 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (closeToastBtn && toast) {
         closeToastBtn.addEventListener("click", function () {
+            clearTimeout(toastTimer);
             toast.classList.remove("is-show");
         });
     }
@@ -611,7 +638,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!validateForm()) {
                 showToast(
                     "Tạo báo cáo không thành công",
-                    "Vui lòng nhập đầy đủ thông tin bắt buộc."
+                    "Vui lòng nhập đầy đủ thông tin bắt buộc.",
+                    "error"
                 );
                 return;
             }
