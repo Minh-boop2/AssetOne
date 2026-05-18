@@ -46,8 +46,9 @@
 
     {% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
     {% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
+    {% set has_filter = search_q or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
 
-    <div class="m-filter-section">
+    <div class="m-filter-section" id="manageFilterSection">
         <form action="{{ url_for('manage') }}" method="GET" id="filterForm">
             <div class="m-filter-group" style="flex: 1.2;">
                 <label class="m-filter-label">TÌM KIẾM</label>
@@ -187,30 +188,69 @@
                 </div>
             </div>
 
-            {% if search_q or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
-                <a href="{{ url_for('manage') }}" class="m-filter-input m-filter-clear" title="Xóa bộ lọc">
-                    ✕
-                </a>
-            {% endif %}
+            <button
+                type="button"
+                id="clearFiltersBtn"
+                class="m-filter-input m-filter-clear"
+                title="Xóa bộ lọc"
+                {% if not has_filter %}hidden{% endif %}
+            >
+                ✕
+            </button>
         </form>
 
         <a href="{{ url_for('manage_create') }}" class="m-btn-add">
             <i class="fas fa-plus"></i>
-            Thêm mới
+            + Thêm mới
         </a>
     </div>
 
-    {% include 'manage/manage_table.html' %}
+    <div id="manageTableZone">
+        {% include 'manage/manage_table.html' %}
+    </div>
 </section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('filterForm');
+    const searchInput = document.getElementById('searchInput');
+    const tableZone = document.getElementById('manageTableZone');
+    const filterSection = document.getElementById('manageFilterSection');
+    const clearBtn = document.getElementById('clearFiltersBtn');
+
+    let searchTimer = null;
+    let activeRequest = null;
+    let requestId = 0;
 
     function closeAllDropdowns() {
         document.querySelectorAll('.filter-select__menu').forEach(function (menu) {
             menu.classList.remove('show');
         });
+    }
+
+    function hasActiveFilters() {
+        if (!form) return false;
+
+        const data = new FormData(form);
+
+        for (const [key, value] of data.entries()) {
+            const cleanValue = String(value || '').trim();
+
+            if (key === 'search' && cleanValue) {
+                return true;
+            }
+
+            if (key !== 'search' && cleanValue && cleanValue !== 'Tất cả') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function updateClearButton() {
+        if (!clearBtn) return;
+        clearBtn.hidden = !hasActiveFilters();
     }
 
     function updateFilterDisplay(option) {
@@ -239,11 +279,122 @@ document.addEventListener('DOMContentLoaded', function () {
         if (menu) {
             menu.classList.remove('show');
         }
+
+        updateClearButton();
     }
 
-    function submitFilterByKeyboard() {
+    function buildUrlFromForm() {
+        const params = new URLSearchParams();
+        const data = new FormData(form);
+
+        for (const [key, value] of data.entries()) {
+            const cleanValue = String(value || '').trim();
+
+            if (!cleanValue || cleanValue === 'Tất cả') {
+                continue;
+            }
+
+            params.set(key, cleanValue);
+        }
+
+        const query = params.toString();
+        return query ? `${form.action}?${query}` : form.action;
+    }
+
+    function setLoading(isLoading) {
+        tableZone?.classList.toggle('is-updating', isLoading);
+        filterSection?.classList.toggle('is-filtering', isLoading);
+    }
+
+    async function loadManageTable(url, updateHistory = true) {
+        if (!tableZone) return;
+
+        const currentRequestId = ++requestId;
+
+        if (activeRequest) {
+            activeRequest.abort();
+        }
+
+        activeRequest = new AbortController();
+        setLoading(true);
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                signal: activeRequest.signal
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể tải dữ liệu nhân sự.');
+            }
+
+            const data = await response.json();
+
+            if (currentRequestId !== requestId) {
+                return;
+            }
+
+            tableZone.innerHTML = data.table_html || '';
+
+            if (updateHistory) {
+                window.history.replaceState({}, '', url);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error(error);
+            }
+        } finally {
+            if (currentRequestId === requestId) {
+                setLoading(false);
+                activeRequest = null;
+            }
+        }
+    }
+
+    function submitFilter() {
         if (!form) return;
-        form.submit();
+
+        closeAllDropdowns();
+        updateClearButton();
+        loadManageTable(buildUrlFromForm(), true);
+    }
+
+    function submitFilterDebounced() {
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+            submitFilter();
+        }, 420);
+    }
+
+    function resetFilters() {
+        if (!form) return;
+
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        document.querySelectorAll('.filter-select').forEach(function (select) {
+            const firstOption = select.querySelector('.filter-select__option[data-value="Tất cả"]');
+            if (firstOption) {
+                updateFilterDisplay(firstOption);
+            }
+        });
+
+        closeAllDropdowns();
+        updateClearButton();
+        loadManageTable(form.action, true);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            updateClearButton();
+            submitFilterDebounced();
+        });
     }
 
     document.querySelectorAll('.filter-select').forEach(function (select) {
@@ -271,9 +422,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.stopPropagation();
 
                 updateFilterDisplay(option);
+                submitFilter();
             });
         });
     });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            resetFilters();
+        });
+    }
+
+    if (tableZone) {
+        tableZone.addEventListener('click', function (event) {
+            const link = event.target.closest('a');
+
+            if (!link) return;
+
+            const url = new URL(link.href, window.location.origin);
+
+            if (url.origin === window.location.origin && url.pathname === new URL(form.action, window.location.origin).pathname) {
+                event.preventDefault();
+                closeAllDropdowns();
+                loadManageTable(url.toString(), true);
+            }
+        });
+    }
 
     document.addEventListener('click', function () {
         closeAllDropdowns();
@@ -290,10 +465,13 @@ document.addEventListener('DOMContentLoaded', function () {
             target === document.documentElement
         ) {
             event.preventDefault();
-            closeAllDropdowns();
-            submitFilterByKeyboard();
+
+            clearTimeout(searchTimer);
+            submitFilter();
         }
     });
+
+    updateClearButton();
 });
 </script>
 {% endblock %}

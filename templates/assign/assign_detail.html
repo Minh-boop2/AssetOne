@@ -6,6 +6,13 @@
   href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}"
 />
 
+{% set assign_id = info.id or info.mongo_id %}
+{% set asset_name = info.asset or info.asset_name or 'Chưa có tên tài sản' %}
+{% set asset_code = info.asset_code or 'Chưa có mã' %}
+{% set asset_status = info.status or 'Chưa xác định' %}
+{% set is_using = asset_status == 'Đang sử dụng' or asset_status == 'using' %}
+{% set is_free = asset_status == 'Chưa dùng' or asset_status == 'Chưa sử dụng' or asset_status == 'available' %}
+
 <section class="assign-detail-page">
   <div class="assign-detail-header">
     <div>
@@ -19,33 +26,20 @@
     </div>
   </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="assign-detail-flashes">
-        {% for category, message in messages %}
-          <div class="assign-detail-alert assign-detail-alert--{{ category }}">
-            <span class="assign-icon-text">ℹ️</span>
-            <span>{{ message }}</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
   <div class="assign-detail-card">
     <div class="assign-detail-hero">
       <div class="assign-detail-code-box">
         <span>Mã tài sản</span>
-        <strong>#{{ info.asset_code or 'Chưa có mã' }}</strong>
+        <strong>#{{ asset_code }}</strong>
       </div>
 
       <div class="assign-detail-title-box">
-        <h2>{{ info.asset or info.asset_name or 'Chưa có tên tài sản' }}</h2>
+        <h2>{{ asset_name }}</h2>
 
         <div class="assign-detail-meta">
           <span>
             <span class="assign-icon-text">#</span>
-            ID: {{ info.id or info.mongo_id or 'Chưa có ID' }}
+            ID: {{ assign_id or 'Chưa có ID' }}
           </span>
         </div>
       </div>
@@ -125,14 +119,14 @@
 
             <div class="assign-status-wrapper">
               <span
-                class="assign-detail-status {% if info.status == 'Đang sử dụng' or info.status == 'using' %} assign-detail-status--using {% elif info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' or info.status == 'available' %} assign-detail-status--free {% else %} assign-detail-status--pending {% endif %}"
+                class="assign-detail-status {% if is_using %}assign-detail-status--using{% elif is_free %}assign-detail-status--free{% else %}assign-detail-status--pending{% endif %}"
               >
-                {% if info.status == 'using' %}
+                {% if asset_status == 'using' %}
                   Đang sử dụng
-                {% elif info.status == 'available' %}
+                {% elif asset_status == 'available' %}
                   Chưa sử dụng
                 {% else %}
-                  {{ info.status or 'Chưa xác định' }}
+                  {{ asset_status }}
                 {% endif %}
               </span>
             </div>
@@ -150,9 +144,9 @@
         Quay lại
       </a>
 
-      {% if info.status == 'Chưa dùng' or info.status == 'Chưa sử dụng' or info.status == 'available' %}
+      {% if is_free %}
         <a
-          href="{{ url_for('assign_give', id=info.id) }}"
+          href="{{ url_for('assign_give', id=assign_id) }}"
           class="assign-detail-btn assign-detail-btn--primary"
         >
           <span class="assign-icon-text">＋</span>
@@ -160,12 +154,14 @@
         </a>
       {% endif %}
 
-      {% if info.status == 'Đang sử dụng' or info.status == 'using' %}
+      {% if is_using %}
         <form
-          action="{{ url_for('assign_unassign', id=info.id) }}"
+          action="{{ url_for('assign_unassign', id=assign_id) }}"
           method="POST"
-          class="assign-detail-inline-form"
-          onsubmit="return confirm('Bạn có chắc muốn thu hồi tài sản này không?');"
+          class="assign-detail-inline-form js-assign-unassign-form"
+          data-asset-code="{{ asset_code }}"
+          data-asset-name="{{ asset_name }}"
+          data-receiver="{{ info.receiver or info.user or 'Chưa có người sử dụng' }}"
         >
           <button
             type="submit"
@@ -178,5 +174,188 @@
       {% endif %}
     </div>
   </div>
+
+  <div
+    class="assign-confirm-backdrop"
+    id="assignUnassignModal"
+    aria-hidden="true"
+    hidden
+  >
+    <div
+      class="assign-confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="assignUnassignTitle"
+    >
+      <button
+        type="button"
+        class="assign-confirm-close"
+        id="assignConfirmClose"
+        aria-label="Đóng"
+      >
+        ×
+      </button>
+
+      <div class="assign-confirm-icon">
+        <span>↩</span>
+      </div>
+
+      <h2 id="assignUnassignTitle">Xác nhận thu hồi tài sản</h2>
+
+      <p class="assign-confirm-message">
+        Bạn có chắc muốn thu hồi tài sản này khỏi người đang sử dụng không?
+      </p>
+
+      <div class="assign-confirm-summary">
+        <div>
+          <span>Mã tài sản</span>
+          <strong>#{{ asset_code }}</strong>
+        </div>
+
+        <div>
+          <span>Tên tài sản</span>
+          <strong>{{ asset_name }}</strong>
+        </div>
+
+        <div>
+          <span>Người sử dụng</span>
+          <strong>{{ info.receiver or info.user or 'Chưa có người sử dụng' }}</strong>
+        </div>
+      </div>
+
+      <div class="assign-confirm-actions">
+        <button
+          type="button"
+          class="assign-confirm-btn assign-confirm-btn--cancel"
+          id="assignConfirmCancel"
+        >
+          Hủy
+        </button>
+
+        <button
+          type="button"
+          class="assign-confirm-btn assign-confirm-btn--danger"
+          id="assignConfirmSubmit"
+        >
+          Thu hồi
+        </button>
+      </div>
+    </div>
+  </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modal = document.getElementById("assignUnassignModal");
+  const closeBtn = document.getElementById("assignConfirmClose");
+  const cancelBtn = document.getElementById("assignConfirmCancel");
+  const submitBtn = document.getElementById("assignConfirmSubmit");
+  const unassignForm = document.querySelector(".js-assign-unassign-form");
+
+  let pendingForm = null;
+  let isSubmitting = false;
+
+  function openModal(form) {
+    if (!modal || !form) return;
+
+    pendingForm = form;
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("assign-confirm-open");
+
+    requestAnimationFrame(function () {
+      modal.classList.add("is-open");
+    });
+
+    setTimeout(function () {
+      if (submitBtn) {
+        submitBtn.focus();
+      }
+    }, 80);
+  }
+
+  function closeModal() {
+    if (!modal || isSubmitting) return;
+
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("assign-confirm-open");
+
+    setTimeout(function () {
+      modal.hidden = true;
+      pendingForm = null;
+    }, 180);
+  }
+
+  function showProgressToast(form) {
+    const assetCode = form?.dataset?.assetCode || "tài sản";
+
+    const notify = window.sonner || window.toast;
+
+    if (typeof notify === "function") {
+      notify({
+        id: "assign-unassign-progress",
+        type: "warning",
+        title: "Đang thu hồi tài sản",
+        description: "Đang xử lý thu hồi #" + assetCode + ". Vui lòng chờ...",
+        duration: 2800
+      });
+    }
+  }
+
+  if (unassignForm) {
+    unassignForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      openModal(unassignForm);
+    });
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", function () {
+      if (!pendingForm || isSubmitting) return;
+
+      isSubmitting = true;
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add("is-loading");
+
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+      }
+
+      if (closeBtn) {
+        closeBtn.disabled = true;
+      }
+
+      showProgressToast(pendingForm);
+
+      setTimeout(function () {
+        pendingForm.submit();
+      }, 160);
+    });
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", closeModal);
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeModal);
+  }
+
+  if (modal) {
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal && modal.classList.contains("is-open")) {
+      closeModal();
+    }
+  });
+});
+</script>
 {% endblock %}
