@@ -23,7 +23,10 @@
         <span>Xem chi tiết</span>
       </a>
 
-      <a href="#" class="action-menu__item">
+      <a
+        href="{{ url_for('asset_edit', asset_id=row.id or row.asset_code) }}"
+        class="action-menu__item"
+      >
         <span class="action-menu__icon">✏️</span>
         <span>Chỉnh sửa</span>
       </a>

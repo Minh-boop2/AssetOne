@@ -1,7 +1,9 @@
 import json
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlencode
+
+from flask import session
 
 
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
@@ -53,6 +55,44 @@ STATUS_BADGE_CLASSES = {
 }
 
 
+def get_current_user():
+    return session.get("user") or session.get("current_user") or {}
+
+
+def get_current_user_id():
+    user_id = session.get("current_user_id")
+
+    if user_id:
+        return str(user_id)
+
+    user = get_current_user()
+
+    if user.get("id"):
+        return str(user.get("id"))
+
+    if user.get("_id"):
+        return str(user.get("_id"))
+
+    return ""
+
+
+def build_headers():
+    headers = {
+        "Accept": "application/json",
+    }
+
+    current_user_id = get_current_user_id()
+
+    # Quan trọng:
+    # Backend /api/assets dùng X-User-Id để phân quyền và lọc dữ liệu.
+    # ADMIN / QUAN_LY: full tài sản.
+    # NHAN_VIEN: chỉ tài sản của chính mình.
+    if current_user_id:
+        headers["X-User-Id"] = current_user_id
+
+    return headers
+
+
 def safe_percent(value, total):
     if not total:
         return 0
@@ -69,6 +109,27 @@ def normalize_limit(limit):
     return max(1, min(limit, 20))
 
 
+def empty_dashboard_assets_payload(limit=4, message=None, status_code=None):
+    return {
+        "items": [],
+        "pagination": {
+            "page": 1,
+            "per_page": limit,
+            "total_items": 0,
+            "total_pages": 1,
+        },
+        "filter_counts": DEFAULT_FILTER_COUNTS,
+        "scope": {},
+        "message": message,
+        "status_code": status_code,
+    }
+
+
+def parse_json_response(response):
+    raw = response.read().decode("utf-8")
+    return json.loads(raw) if raw else {}
+
+
 def fetch_dashboard_assets_from_backend(limit=4):
     limit = normalize_limit(limit)
 
@@ -83,26 +144,41 @@ def fetch_dashboard_assets_from_backend(limit=4):
 
     api_url = f"{BACKEND_ASSETS_API}?{urlencode(params)}"
 
+    req = Request(
+        api_url,
+        method="GET",
+        headers=build_headers(),
+    )
+
     try:
-        with urlopen(api_url, timeout=5) as response:
-            payload = json.loads(response.read().decode("utf-8"))
+        with urlopen(req, timeout=5) as response:
+            return parse_json_response(response)
 
-        return payload
+    except HTTPError as e:
+        try:
+            payload = json.loads(e.read().decode("utf-8"))
+        except Exception:
+            payload = {}
 
-    except (URLError, HTTPError, TimeoutError, json.JSONDecodeError):
-        return {
-            "items": [],
-            "pagination": {
-                "page": 1,
-                "per_page": limit,
-                "total_items": 0,
-                "total_pages": 1,
-            },
-            "filter_counts": DEFAULT_FILTER_COUNTS,
-        }
+        return empty_dashboard_assets_payload(
+            limit=limit,
+            message=payload.get(
+                "message",
+                f"Lấy dữ liệu dashboard thất bại. HTTP {e.code}"
+            ),
+            status_code=e.code,
+        )
+
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return empty_dashboard_assets_payload(
+            limit=limit,
+            message="Không thể kết nối đến backend để lấy dữ liệu dashboard.",
+            status_code=500,
+        )
 
 
 def build_dashboard_stats(filter_counts):
+    filter_counts = filter_counts or DEFAULT_FILTER_COUNTS
     status_counts = filter_counts.get("status", {})
 
     total = status_counts.get("all", 0)
@@ -127,6 +203,7 @@ def build_dashboard_stats(filter_counts):
 
 
 def build_recent_asset_item(asset):
+    asset = asset or {}
     status = asset.get("status") or "pending"
 
     user_display = (
@@ -163,4 +240,7 @@ def get_dashboard_overview_data(limit=4):
     return {
         "stats": stats,
         "recent_assets": recent_assets,
+        "scope": payload.get("scope", {}),
+        "message": payload.get("message"),
+        "status_code": payload.get("status_code"),
     }

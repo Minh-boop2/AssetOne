@@ -3,6 +3,7 @@ import string
 from datetime import datetime, timezone, timedelta
 
 import requests
+from flask import session
 
 
 API_BASE_URL = "http://127.0.0.1:5001/api"
@@ -40,6 +41,43 @@ ROLE_LABELS = {item["value"]: item["label"] for item in ROLE_OPTIONS}
 STATUS_LABELS = {item["value"]: item["label"] for item in STATUS_OPTIONS}
 
 
+def get_current_user():
+    return session.get("user") or session.get("current_user") or {}
+
+
+def get_current_user_id():
+    user_id = session.get("current_user_id")
+
+    if user_id:
+        return str(user_id)
+
+    user = get_current_user()
+
+    if user.get("id"):
+        return str(user.get("id"))
+
+    if user.get("_id"):
+        return str(user.get("_id"))
+
+    return ""
+
+
+def build_headers(extra_headers=None):
+    headers = {
+        "Accept": "application/json",
+    }
+
+    current_user_id = get_current_user_id()
+
+    if current_user_id:
+        headers["X-User-Id"] = current_user_id
+
+    if extra_headers:
+        headers.update(extra_headers)
+
+    return headers
+
+
 def now_vietnam():
     return datetime.now(VN_TZ)
 
@@ -75,11 +113,14 @@ def format_datetime_vietnam(value):
 
 
 def call_api(method, path, **kwargs):
+    headers = build_headers(kwargs.pop("headers", None))
+
     try:
         response = requests.request(
             method,
             f"{API_BASE_URL}{path}",
             timeout=8,
+            headers=headers,
             **kwargs
         )
 
@@ -367,7 +408,7 @@ def create_user_from_form(form):
         "role": normalize_role(form.get("role")),
         "status": "HOAT_DONG",
         "avatar_url": form.get("avatar_url") or DEFAULT_AVATAR_URL,
-        "password": form.get("password") or "123",
+        "password": form.get("password") or "123456",
     }
 
     payload, status_code = call_api("POST", "/users", json=new_user)
@@ -463,7 +504,9 @@ def toggle_user_status(user_id):
     payload, status_code = call_api(
         "PUT",
         f"/users/{user_id}",
-        json={"status": new_status}
+        json={
+            "status": new_status
+        }
     )
 
     if status_code >= 400 or not payload.get("success"):

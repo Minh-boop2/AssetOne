@@ -9,15 +9,6 @@ from .login_backend import (
 )
 
 
-ROLE_LABELS = {
-    "ADMIN": "Quản trị hệ thống",
-    "QUAN_LY": "Quản lý",
-    "NHAN_VIEN": "Nhân viên",
-}
-
-DEFAULT_AVATAR_URL = "/static/imgages/default-avatar.jpg"
-
-
 def register_login_routes(app):
     app.permanent_session_lifetime = timedelta(days=7)
 
@@ -34,7 +25,7 @@ def register_login_routes(app):
             success, message, user = login_user_from_form(request.form)
 
             if not success:
-                session["login_error"] = "Sai tài khoản hoặc mật khẩu"
+                session["login_error"] = message or "Sai tài khoản hoặc mật khẩu"
                 session["login_email"] = request.form.get("email", "")
                 session["login_remember"] = True if request.form.get("remember") else False
 
@@ -44,26 +35,11 @@ def register_login_routes(app):
             session.pop("login_email", None)
             session.pop("login_remember", None)
 
-            role = user.get("role")
-
-            if role not in ROLE_LABELS:
-                session.clear()
-                session["login_error"] = "Tài khoản chưa được phân quyền hợp lệ"
-                return redirect(url_for('login_page'))
-
-            session["user"] = {
-                "id": str(user.get("id") or user.get("_id") or ""),
-                "employee_code": user.get("employee_code"),
-                "email": user.get("email"),
-                "full_name": user.get("full_name") or "Người dùng",
-                "phone": user.get("phone"),
-                "department": user.get("department"),
-                "floor": user.get("floor"),
-                "role": role,
-                "role_label": ROLE_LABELS.get(role, role),
-                "status": user.get("status"),
-                "avatar_url": user.get("avatar_url") or DEFAULT_AVATAR_URL,
-            }
+            # user lúc này đã được login_backend chuẩn hóa sẵn:
+            # có id, role, permissions, can, is_admin
+            session["user"] = user
+            session["current_user"] = user
+            session["current_user_id"] = user["id"]
 
             if request.form.get("remember"):
                 session.permanent = True

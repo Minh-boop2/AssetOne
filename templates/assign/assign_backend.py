@@ -1,7 +1,9 @@
 import os
 import random
 import string
+
 import requests
+from flask import session
 
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5001")
@@ -43,16 +45,68 @@ DEFAULT_STATUS_OPTIONS = [
 ]
 
 
+def get_current_user():
+    return session.get("user") or session.get("current_user") or {}
+
+
+def get_current_user_id():
+    user_id = session.get("current_user_id")
+
+    if user_id:
+        return str(user_id)
+
+    user = get_current_user()
+
+    if user.get("id"):
+        return str(user.get("id"))
+
+    if user.get("_id"):
+        return str(user.get("_id"))
+
+    return ""
+
+
+def build_headers(extra_headers=None, has_json_body=False):
+    headers = {
+        "Accept": "application/json",
+    }
+
+    current_user_id = get_current_user_id()
+
+    # Quan trọng:
+    # API backend dùng X-User-Id để check permission_required(...)
+    # và lọc dữ liệu theo role.
+    if current_user_id:
+        headers["X-User-Id"] = current_user_id
+
+    if has_json_body:
+        headers["Content-Type"] = "application/json"
+
+    if extra_headers:
+        headers.update(extra_headers)
+
+    return headers
+
+
 def api_url(path):
     return f"{API_BASE_URL}{path}"
 
 
 def api_request(method, path, **kwargs):
+    extra_headers = kwargs.pop("headers", None)
+    has_json_body = "json" in kwargs
+
+    headers = build_headers(
+        extra_headers=extra_headers,
+        has_json_body=has_json_body,
+    )
+
     try:
         response = requests.request(
             method,
             api_url(path),
             timeout=REQUEST_TIMEOUT,
+            headers=headers,
             **kwargs
         )
 
@@ -62,7 +116,11 @@ def api_request(method, path, **kwargs):
             data = {}
 
         if response.status_code >= 400:
-            message = data.get("message") or f"Lỗi API {response.status_code}"
+            message = (
+                data.get("message")
+                or data.get("error")
+                or f"Lỗi API {response.status_code}"
+            )
             return None, message
 
         return data, None
@@ -114,6 +172,8 @@ def convert_counts_for_template(filter_counts):
 
 
 def build_filter_options(counts):
+    counts = counts or {}
+
     categories = list((counts.get("categories") or {}).keys())
     departments = list((counts.get("departments") or {}).keys())
     locations = list((counts.get("locations") or {}).keys())
@@ -153,20 +213,29 @@ def build_filter_options(counts):
 
 
 def normalize_inventory_item(item):
+    item = item or {}
+
     return {
-        "name": item.get("name")
-        or item.get("asset_name")
-        or item.get("asset")
-        or "",
-
-        "type": item.get("type")
-        or item.get("category")
-        or "",
-
-        "spec": item.get("spec")
-        or item.get("notes")
-        or item.get("description")
-        or "",
+        "id": item.get("id") or item.get("_id") or item.get("mongo_id") or "",
+        "asset_code": item.get("asset_code") or "",
+        "name": (
+            item.get("name")
+            or item.get("asset_name")
+            or item.get("asset")
+            or ""
+        ),
+        "type": (
+            item.get("type")
+            or item.get("category")
+            or ""
+        ),
+        "spec": (
+            item.get("spec")
+            or item.get("notes")
+            or item.get("description")
+            or ""
+        ),
+        "status": item.get("status") or "",
     }
 
 
@@ -184,7 +253,7 @@ def get_inventory_from_assets_api():
         }
     )
 
-    if error:
+    if error or not data:
         return []
 
     items = data.get("items", [])
@@ -199,55 +268,13 @@ def get_inventory_from_assets_api():
     return inventory
 
 
-def get_active_users_from_api():
-    data, error = api_request(
-        "GET",
-        "/api/users",
-        params={
-            "page": 1,
-            "limit": 1000,
-            "status": "HOAT_DONG",
-        }
-    )
-
-    if error or not data:
-        return []
-
-    return data.get("data", [])
-
-
-def assign_asset_to_user(asset_id, user_id):
-    return api_request(
-        "PATCH",
-        f"/api/assets/{asset_id}/assign",
-        json={
-            "user_id": user_id
-        },
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-    )
-
-
-def is_assignable_status(assign):
-    if not assign:
-        return False
-
-    status = assign.get("status")
-    asset_status = assign.get("asset_status")
-
-    return (
-        status in ["Chưa dùng", "Chưa sử dụng"]
-        or asset_status in ["available", "Chưa sử dụng"]
-    )
 def get_active_users_from_api(keyword=""):
     data, error = api_request(
         "GET",
         "/api/users",
         params={
             "page": 1,
-            "limit": 1000,
+            "limit": 20,
             "keyword": keyword,
             "status": "HOAT_DONG",
         }
@@ -274,6 +301,8 @@ def assign_asset_to_user_api(asset_id, user_id):
         }
 
     return True, data or {}
+
+
 def unassign_asset_from_user_api(asset_id):
     data, error = api_request(
         "PATCH",
@@ -286,19 +315,16 @@ def unassign_asset_from_user_api(asset_id):
         }
 
     return True, data or {}
-def get_active_users_from_api(keyword=""):
-    data, error = api_request(
-        "GET",
-        "/api/users",
-        params={
-            "page": 1,
-            "limit": 20,
-            "keyword": keyword,
-            "status": "HOAT_DONG",
-        }
+
+
+def is_assignable_status(assign):
+    if not assign:
+        return False
+
+    status = assign.get("status")
+    asset_status = assign.get("asset_status")
+
+    return (
+        status in ["Chưa dùng", "Chưa sử dụng"]
+        or asset_status in ["available", "Chưa sử dụng"]
     )
-
-    if error or not data:
-        return []
-
-    return data.get("data", [])

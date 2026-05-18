@@ -4,6 +4,15 @@ import requests
 API_BASE_URL = "http://127.0.0.1:5001"
 
 
+ROLE_LABELS = {
+    "ADMIN": "Quản trị hệ thống",
+    "QUAN_LY": "Quản lý",
+    "NHAN_VIEN": "Nhân viên",
+}
+
+DEFAULT_AVATAR_URL = "/static/imgages/default-avatar.jpg"
+
+
 def parse_response(response):
     try:
         result = response.json()
@@ -17,6 +26,46 @@ def parse_response(response):
         return False, result.get("message", "Thao tác thất bại"), None
 
     return True, result.get("message", "Thành công"), result.get("data")
+
+
+def build_user_session(user):
+    if not user:
+        return None
+
+    role = user.get("role")
+    user_id = str(user.get("id") or user.get("_id") or "")
+
+    permissions = user.get("permissions")
+    can = user.get("can")
+    is_admin = user.get("is_admin")
+
+    if permissions is None:
+        permissions = {}
+
+    if can is None:
+        can = {}
+
+    if is_admin is None:
+        is_admin = role == "ADMIN"
+
+    return {
+        "id": user_id,
+        "employee_code": user.get("employee_code"),
+        "email": user.get("email"),
+        "full_name": user.get("full_name") or "Người dùng",
+        "phone": user.get("phone"),
+        "department": user.get("department"),
+        "floor": user.get("floor"),
+        "role": role,
+        "role_label": ROLE_LABELS.get(role, role),
+        "status": user.get("status"),
+        "avatar_url": user.get("avatar_url") or DEFAULT_AVATAR_URL,
+
+        # Dữ liệu phân quyền cho frontend ẩn/hiện menu, nút, action
+        "is_admin": is_admin,
+        "permissions": permissions,
+        "can": can,
+    }
 
 
 def login_user_from_form(form):
@@ -38,7 +87,25 @@ def login_user_from_form(form):
             timeout=5
         )
 
-        return parse_response(response)
+        success, message, user = parse_response(response)
+
+        if not success:
+            return success, message, None
+
+        if not user:
+            return False, "Backend không trả về thông tin user", None
+
+        role = user.get("role")
+
+        if role not in ROLE_LABELS:
+            return False, "Tài khoản chưa được phân quyền hợp lệ", None
+
+        user_session = build_user_session(user)
+
+        if not user_session or not user_session.get("id"):
+            return False, "Tài khoản thiếu ID user", None
+
+        return True, message, user_session
 
     except requests.exceptions.ConnectionError:
         return False, "Không kết nối được backend API. Hãy chạy app database port 5001", None
