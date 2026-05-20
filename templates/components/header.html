@@ -1,4 +1,5 @@
 {% set current_user = session.get("user") or {} %}
+{% set current_role = current_user.get("role") %}
 {% set default_avatar = url_for('static', filename='images/default-avatar.jpg') %}
 
 {% set role_labels = {
@@ -8,7 +9,7 @@
 } %}
 
 {% set user_name = current_user.get("full_name") or "Người dùng" %}
-{% set user_role = current_user.get("role_label") or role_labels.get(current_user.get("role"), current_user.get("role") or "Chưa phân quyền") %}
+{% set user_role = current_user.get("role_label") or role_labels.get(current_role, current_role or "Chưa phân quyền") %}
 {% set user_avatar = current_user.get("avatar_url") or default_avatar %}
 
 <header class="header">
@@ -42,19 +43,21 @@
         Tài sản
       </a>
 
-      <a
-        href="{{ url_for('assign_page') }}"
-        class="nav-link {% if request.endpoint == 'assign_page' %}active{% endif %}"
-      >
-        Cấp phát
-      </a>
+      {% if current_role != "NHAN_VIEN" %}
+        <a
+          href="{{ url_for('assign_page') }}"
+          class="nav-link {% if request.endpoint == 'assign_page' %}active{% endif %}"
+        >
+          Cấp phát
+        </a>
 
-      <a
-        href="{{ url_for('manage') }}"
-        class="nav-link {% if request.endpoint == 'manage' %}active{% endif %}"
-      >
-        Quản lý
-      </a>
+        <a
+          href="{{ url_for('manage') }}"
+          class="nav-link {% if request.endpoint == 'manage' %}active{% endif %}"
+        >
+          Quản lý
+        </a>
+      {% endif %}
 
       <a
         href="{{ url_for('report_page') }}"
@@ -100,9 +103,11 @@
             Hồ sơ
           </a>
 
-          <a href="{{ url_for('statistics_page') }}" class="user-dropdown-item">
-            Thống kê
-          </a>
+          {% if current_role != "NHAN_VIEN" %}
+            <a href="{{ url_for('statistics_page') }}" class="user-dropdown-item">
+              Thống kê
+            </a>
+          {% endif %}
 
           <a
             href="{{ url_for('logout') }}"
