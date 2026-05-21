@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 
 from .manage_backend import (
     get_manage_page_data,
@@ -61,6 +61,19 @@ def manage_permission_context():
     }
 
 
+def is_ajax_request():
+    return (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accept_mimetypes.best == "application/json"
+    )
+
+
+def clean_manage_page_data(page_data):
+    page_data.pop("users_error", None)
+    page_data.pop("stats_error", None)
+    return page_data
+
+
 def register_manage_routes(app):
 
     @app.route("/manage")
@@ -78,13 +91,24 @@ def register_manage_routes(app):
         if page_data.get("stats_error"):
             flash(page_data["stats_error"], "danger")
 
-        page_data.pop("users_error", None)
-        page_data.pop("stats_error", None)
+        page_data = clean_manage_page_data(page_data)
+        context = {
+            **page_data,
+            **manage_permission_context(),
+        }
+
+        if is_ajax_request():
+            return jsonify({
+                "ok": True,
+                "table_html": render_template(
+                    "manage/manage_table.html",
+                    **context
+                ),
+            })
 
         return render_template(
             "manage/manage_overview.html",
-            **page_data,
-            **manage_permission_context(),
+            **context
         )
 
     @app.route("/manage/create", methods=["GET", "POST"])

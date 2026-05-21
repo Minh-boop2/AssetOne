@@ -1,8 +1,4 @@
-/* =========================================
-   ASSIGN MODULE CSS
-   Dùng chính cho trang Quản lý cấp phát
-   Bố cục table giống Manage overview-card
-========================================= */
+
 
 :root {
   --bg: #f8fafc;
@@ -60,8 +56,6 @@ body:has(.assign-page) {
   box-sizing: border-box;
 }
 
-/* ===== SCROLLBAR ===== */
-
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -79,8 +73,6 @@ body:has(.assign-page) {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--hsu-blue);
 }
-
-/* ===== HEADER ===== */
 
 .assets-page__header {
   flex-shrink: 0;
@@ -101,8 +93,6 @@ body:has(.assign-page) {
   font-size: clamp(13px, 0.95vw, 14px);
   line-height: 1.5;
 }
-
-/* ===== FILTER BAR ===== */
 
 .filter-bar {
   flex-shrink: 0;
@@ -163,8 +153,6 @@ body:has(.assign-page) {
   background: var(--surface);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
-
-/* ===== FILTER SELECT ===== */
 
 .filter-select {
   position: relative;
@@ -268,16 +256,37 @@ body:has(.assign-page) {
   align-items: flex-end;
 }
 
-.filter-clear-btn {
+.page-btn.filter-clear-btn {
   width: clamp(38px, 2.8vw, 42px);
   min-width: clamp(38px, 2.8vw, 42px);
   height: clamp(38px, 2.8vw, 42px);
   padding: 0;
+  color: var(--hsu-red) !important;
+  border-color: var(--border) !important;
+  background: var(--surface-2) !important;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* =========================================
-   TABLE CONTAINER - GIỐNG MANAGE
-========================================= */
+.page-btn.filter-clear-btn[hidden] {
+  display: none !important;
+}
+
+.page-btn.filter-clear-btn:hover:not(.disabled):not(.active) {
+  color: var(--hsu-red) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+.page-btn.filter-clear-btn:focus {
+  border-color: rgba(239, 68, 68, 0.65) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
 
 .table-container {
   flex: 1 1 auto;
@@ -285,17 +294,18 @@ body:has(.assign-page) {
   min-height: clamp(340px, 38vh, 520px);
   height: clamp(360px, 42vh, 620px);
   max-height: min(620px, 52vh);
-
   background: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: clamp(14px, 1vw, 18px);
   box-shadow: var(--shadow);
-
   position: relative;
   overflow: hidden !important;
-
   display: flex;
   flex-direction: column;
+}
+
+.table-container.is-loading {
+  cursor: progress;
 }
 
 .table-header-wrapper {
@@ -303,7 +313,6 @@ body:has(.assign-page) {
   padding: clamp(12px, 1vw, 16px) clamp(14px, 1.2vw, 20px);
   border-bottom: 1px solid var(--border) !important;
   background: var(--surface) !important;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -333,13 +342,10 @@ body:has(.assign-page) {
   min-height: 0;
   width: 100%;
   max-height: none !important;
-
   overflow-x: auto !important;
   overflow-y: auto !important;
-
   position: relative;
   background: var(--surface) !important;
-
   scrollbar-width: thin;
   scrollbar-color: var(--border) var(--surface);
 }
@@ -362,8 +368,6 @@ body:has(.assign-page) {
   background: var(--text-soft);
 }
 
-/* ===== TABLE ===== */
-
 .custom-table,
 .custom-table.assign-table {
   width: 100% !important;
@@ -382,13 +386,10 @@ body:has(.assign-page) {
   position: sticky;
   top: 0;
   z-index: 20;
-
   background: var(--surface-2) !important;
   color: var(--text-soft) !important;
-
   padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
   border-bottom: 1px solid var(--border) !important;
-
   text-align: left;
   font-size: clamp(12px, 0.85vw, 14px) !important;
   font-weight: 700 !important;
@@ -406,10 +407,8 @@ body:has(.assign-page) {
 .custom-table td {
   padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
   border-bottom: 1px solid var(--border) !important;
-
   background: var(--surface) !important;
   color: var(--text) !important;
-
   font-size: clamp(12.5px, 0.9vw, 14px) !important;
   vertical-align: middle;
   line-height: 1.4;
@@ -434,8 +433,6 @@ body:has(.assign-page) {
   color: var(--text-soft) !important;
 }
 
-/* ===== TEXT UTILS ===== */
-
 .text-center {
   text-align: center !important;
 }
@@ -454,8 +451,6 @@ body:has(.assign-page) {
   font-weight: 700;
   white-space: nowrap;
 }
-
-/* ===== BADGES ===== */
 
 .badge {
   display: inline-flex;
@@ -495,8 +490,6 @@ body:has(.assign-page) {
   gap: 12px;
 }
 
-/* ===== ACTION MENU ===== */
-
 .action-menu {
   position: relative;
 }
@@ -513,17 +506,14 @@ body:has(.assign-page) {
   padding: 0;
   border: none;
   border-radius: 8px;
-
   background: transparent !important;
   color: var(--text-soft) !important;
   cursor: pointer;
   outline: none !important;
   box-shadow: none !important;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   transition: 0.2s ease;
 }
 
@@ -555,10 +545,8 @@ body:has(.assign-page) {
   top: calc(100% + 8px);
   right: 0;
   z-index: 1000;
-
   width: 190px;
   padding: 8px;
-
   background: var(--surface) !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px;
@@ -580,7 +568,6 @@ body:has(.assign-page) {
   padding: 10px 12px;
   border: none;
   border-radius: 10px;
-
   background: transparent;
   color: var(--text) !important;
   text-decoration: none;
@@ -589,11 +576,9 @@ body:has(.assign-page) {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-
   display: flex;
   align-items: center;
   gap: 10px;
-
   transition: 0.18s ease;
 }
 
@@ -622,16 +607,12 @@ body:has(.assign-page) {
   background: rgba(245, 158, 11, 0.12) !important;
 }
 
-/* ===== PAGINATION - GIỐNG MANAGE ===== */
-
 .pagination {
   flex-shrink: 0;
   padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
   border-top: 1px solid var(--border) !important;
   border-radius: 0 0 18px 18px;
-
   background: var(--surface) !important;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -661,18 +642,14 @@ body:has(.assign-page) {
   padding: 0 11px;
   border-radius: 10px;
   border: 1px solid var(--border) !important;
-
   background: var(--surface) !important;
   color: var(--text) !important;
   text-decoration: none;
-
   font-size: clamp(12px, 0.85vw, 13px);
   font-weight: 700;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   transition: 0.2s ease;
 }
 
@@ -698,8 +675,6 @@ body:has(.assign-page) {
   pointer-events: none;
 }
 
-/* ===== ANIMATION ===== */
-
 @keyframes fadeInMenu {
   from {
     opacity: 0;
@@ -711,8 +686,6 @@ body:has(.assign-page) {
     transform: translateY(0);
   }
 }
-
-/* ===== RESPONSIVE ===== */
 
 @media (min-width: 1600px) {
   .table-container {

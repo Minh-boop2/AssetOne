@@ -1,3 +1,4 @@
+
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
 
 from .assign_backend import (
@@ -16,12 +17,47 @@ from .assign_backend import (
 )
 
 
+TYPE_LABELS = {
+    "laptop": "Laptop",
+    "pc": "Máy tính bàn",
+    "desktop": "Máy tính bàn",
+    "printer": "Máy in",
+    "monitor": "Màn hình",
+    "phone": "Điện thoại",
+    "projector": "Máy chiếu",
+    "scanner": "Máy quét",
+    "network": "Thiết bị mạng",
+    "ups": "UPS",
+    "camera": "Camera",
+    "webcam": "Camera",
+    "speaker": "Loa",
+    "microphone": "Micro",
+    "mic": "Micro",
+    "keyboard": "Bàn phím",
+    "mouse": "Chuột",
+    "tablet": "Máy tính bảng",
+    "server": "Máy chủ",
+    "router": "Router",
+    "switch": "Switch",
+    "storage": "Lưu trữ",
+    "accessory": "Phụ kiện",
+    "other": "Khác",
+}
+
+
 def get_current_user():
     return session.get("user") or session.get("current_user") or {}
 
 
 def is_logged_in():
     return bool(get_current_user())
+
+
+def is_ajax_request():
+    return (
+        request.args.get("ajax") == "1"
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    )
 
 
 def user_can(module_key, action):
@@ -31,8 +67,6 @@ def user_can(module_key, action):
     if user.get("is_admin") or role == "ADMIN":
         return True
 
-    # Fallback cho QUAN_LY nếu session can chưa cập nhật sau khi sửa permission_model.
-    # Backend API vẫn là lớp chặn chính.
     if module_key == "assign" and role == "QUAN_LY":
         return action in ["view", "create", "update", "delete", "approve"]
 
@@ -76,11 +110,13 @@ def get_asset_categories_from_inventory():
     inventory = get_inventory_from_assets_api()
 
     categories = sorted(
-        list({
-            item.get("type") or item.get("category")
-            for item in inventory
-            if item.get("type") or item.get("category")
-        })
+        list(
+            {
+                item.get("type") or item.get("category")
+                for item in inventory
+                if item.get("type") or item.get("category")
+            }
+        )
     )
 
     if not categories:
@@ -109,19 +145,106 @@ def can_unassign_asset(assign):
     return assign.get("status") == "Đang sử dụng"
 
 
+def get_type_label(value):
+    if not value:
+        return "---"
+
+    return TYPE_LABELS.get(str(value).lower(), value)
+
+
+def get_status_class(status):
+    if status == "Đang sử dụng":
+        return "status-hoanthanh"
+
+    if status in ["Chưa dùng", "Chưa sử dụng"]:
+        return "status-reject"
+
+    return "status-dangxuly"
+
+
+def build_assign_row_payload(row):
+    row_id = (
+        row.get("id")
+        or row.get("_id")
+        or row.get("assign_id")
+        or row.get("asset_id")
+        or ""
+    )
+
+    row_type = row.get("type") or row.get("category") or ""
+    row_status = row.get("status") or "---"
+    asset_name = row.get("asset") or row.get("asset_name") or "---"
+    asset_code = row.get("asset_code") or "---"
+    receiver = row.get("receiver") or row.get("user") or "---"
+
+    detail_url = url_for("assign_detail", id=row_id) if row_id else "#"
+    give_url = url_for("assign_give", id=row_id) if row_id else "#"
+    unassign_url = url_for("assign_unassign", id=row_id) if row_id else "#"
+
+    return {
+        "id": row_id,
+        "asset_code": asset_code,
+        "asset_name": asset_name,
+        "type": row_type or "---",
+        "type_label": get_type_label(row_type),
+        "status": row_status,
+        "status_class": get_status_class(row_status),
+        "receiver": receiver,
+        "department": row.get("department") or "---",
+        "location": row.get("location") or "---",
+        "can_assign": can_assign_asset(row),
+        "can_unassign": can_unassign_asset(row),
+        "detail_url": detail_url,
+        "give_url": give_url,
+        "unassign_url": unassign_url,
+    }
+
+
+def build_assign_ajax_payload(
+    assigns,
+    counts,
+    pagination,
+    search_q,
+    selected_dept,
+    selected_cat,
+    selected_loc,
+    selected_status,
+    scope,
+):
+    current_page = pagination.get("page", 1)
+    total_pages = pagination.get("total_pages", 1)
+    total_items = pagination.get("total_items", 0)
+
+    return {
+        "success": True,
+        "items": [build_assign_row_payload(row) for row in assigns],
+        "counts": counts,
+        "pagination": {
+            "page": current_page,
+            "per_page": pagination.get("per_page", 10),
+            "total_items": total_items,
+            "total_pages": total_pages,
+            "shown": len(assigns),
+        },
+        "filters": {
+            "search": search_q,
+            "department": selected_dept,
+            "category": selected_cat,
+            "location": selected_loc,
+            "status": selected_status,
+        },
+        "scope": scope,
+    }
+
+
 def enrich_assigned_user_info(info):
     if not info:
         return info
 
-    # Nếu đã có ID rồi thì không cần tìm lại
     if info.get("employee_code") or info.get("user_id") or info.get("receiver_id"):
         return info
 
-    receiver_name = (
-        info.get("receiver")
-        or info.get("user")
-        or ""
-    ).strip()
+    receiver_name = (info.get("receiver") or info.get("user") or "").strip()
 
     if not receiver_name:
         return info
@@ -145,7 +268,6 @@ def enrich_assigned_user_info(info):
         return info
 
     receiver_name_lower = receiver_name.lower()
-
     matched_user = None
 
     for user in users:
@@ -159,9 +281,7 @@ def enrich_assigned_user_info(info):
         matched_user = users[0]
 
     info["employee_code"] = (
-        info.get("employee_code")
-        or matched_user.get("employee_code")
-        or ""
+        info.get("employee_code") or matched_user.get("employee_code") or ""
     )
 
     info["user_id"] = (
@@ -177,12 +297,20 @@ def enrich_assigned_user_info(info):
 
 
 def register_assign_routes(app):
-    # --- 1. TRANG DANH SÁCH ---
     @app.route("/assign")
     def assign_page():
+        ajax = is_ajax_request()
         permission_redirect = require_assign_permission("view")
 
         if permission_redirect:
+            if ajax:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": "Bạn không có quyền xem dữ liệu cấp phát.",
+                    }
+                ), 403
+
             return permission_redirect
 
         search_q = request.args.get("search", "", type=str).strip()
@@ -214,6 +342,23 @@ def register_assign_routes(app):
         )
 
         if error:
+            if ajax:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": error,
+                        "items": [],
+                        "counts": {},
+                        "pagination": {
+                            "page": 1,
+                            "per_page": per_page,
+                            "total_items": 0,
+                            "total_pages": 1,
+                            "shown": 0,
+                        },
+                    }
+                ), 500
+
             flash(error, "danger")
             data = {
                 "items": [],
@@ -234,11 +379,25 @@ def register_assign_routes(app):
 
         categories, departments, locations, status_options = build_filter_options(counts)
 
-        # Đồng bộ loại thiết bị với database tài sản hiện tại
         inventory, asset_categories = get_asset_categories_from_inventory()
 
         if asset_categories:
             categories = asset_categories
+
+        if ajax:
+            return jsonify(
+                build_assign_ajax_payload(
+                    assigns=assigns,
+                    counts=counts,
+                    pagination=pagination,
+                    search_q=search_q,
+                    selected_dept=selected_dept,
+                    selected_cat=selected_cat,
+                    selected_loc=selected_loc,
+                    selected_status=selected_status,
+                    scope=scope,
+                )
+            )
 
         return render_template(
             "assign/assign_overview.html",
@@ -257,32 +416,33 @@ def register_assign_routes(app):
             selected_loc=selected_loc,
             selected_status=selected_status,
             scope=scope,
+            type_labels=TYPE_LABELS,
             **assign_permission_context(),
         )
 
-    # --- 2. API SEARCH USER CHO TRANG CẤP PHÁT ---
     @app.route("/assign/users/search", methods=["GET"])
     def assign_search_users():
         if not is_logged_in():
-            return jsonify({
-                "message": "Bạn chưa đăng nhập.",
-                "items": [],
-            }), 401
+            return jsonify(
+                {
+                    "message": "Bạn chưa đăng nhập.",
+                    "items": [],
+                }
+            ), 401
 
         if not user_can("assign", "update") and not user_can("assign", "create"):
-            return jsonify({
-                "message": "Bạn không có quyền tìm người nhận tài sản.",
-                "items": [],
-            }), 403
+            return jsonify(
+                {
+                    "message": "Bạn không có quyền tìm người nhận tài sản.",
+                    "items": [],
+                }
+            ), 403
 
         keyword = request.args.get("keyword", "", type=str).strip()
         users = get_active_users_from_api(keyword=keyword)
 
-        return jsonify({
-            "items": users
-        }), 200
+        return jsonify({"items": users}), 200
 
-    # --- 3. TRANG TẠO MỚI ---
     @app.route("/assign/create", methods=["GET", "POST"])
     def assign_create():
         permission_redirect = require_assign_permission("create")
@@ -307,7 +467,6 @@ def register_assign_routes(app):
             **assign_permission_context(),
         )
 
-    # --- 4. TRANG CẤP PHÁT ---
     @app.route("/assign/give/<string:id>", methods=["GET", "POST"])
     def assign_give(id):
         permission_redirect = require_assign_permission("update")
@@ -354,7 +513,6 @@ def register_assign_routes(app):
             **assign_permission_context(),
         )
 
-    # --- 5. TRANG CHI TIẾT ---
     @app.route("/assign/detail/<string:id>")
     def assign_detail(id):
         permission_redirect = require_assign_permission("view")
@@ -371,11 +529,9 @@ def register_assign_routes(app):
         info = enrich_assigned_user_info(info)
 
         specs = {
-            "spec": (
-                info.get("spec")
-                or info.get("notes")
-                or "Không có dữ liệu cấu hình."
-            )
+            "spec": info.get("spec")
+            or info.get("notes")
+            or "Không có dữ liệu cấu hình."
         }
 
         return render_template(
@@ -385,7 +541,6 @@ def register_assign_routes(app):
             **assign_permission_context(),
         )
 
-    # --- 6. THU HỒI TÀI SẢN ---
     @app.route("/assign/unassign/<string:id>", methods=["POST"])
     def assign_unassign(id):
         permission_redirect = require_assign_permission("update")
@@ -412,7 +567,6 @@ def register_assign_routes(app):
         flash("Thu hồi tài sản thành công.", "success")
         return redirect(url_for("assign_page"))
 
-    # --- 7. TRANG CHỈNH SỬA ---
     @app.route("/assign/edit/<string:id>", methods=["GET", "POST"])
     def assign_edit(id):
         permission_redirect = require_assign_permission("update")
@@ -443,7 +597,6 @@ def register_assign_routes(app):
             **assign_permission_context(),
         )
 
-    # --- 8. ACTION PHÊ DUYỆT ---
     @app.route("/assign/approve/<string:id>")
     def approve_request(id):
         permission_redirect = require_assign_permission("approve")
@@ -460,7 +613,6 @@ def register_assign_routes(app):
 
         return redirect(url_for("assign_page"))
 
-    # --- 9. ACTION TỪ CHỐI ---
     @app.route("/assign/reject/<string:id>")
     def reject_request(id):
         permission_redirect = require_assign_permission("approve")
@@ -477,7 +629,6 @@ def register_assign_routes(app):
 
         return redirect(url_for("assign_page"))
 
-    # --- 10. ACTION XÓA ---
     @app.route("/assign/delete/<string:id>")
     def delete_assign_route(id):
         permission_redirect = require_assign_permission("delete")

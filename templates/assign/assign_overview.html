@@ -1,9 +1,10 @@
+
 {% extends 'main.html' %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}" />
 
-{% set type_labels = {
+{% set type_labels = type_labels or {
   'laptop': 'Laptop',
   'pc': 'Máy tính bàn',
   'desktop': 'Máy tính bàn',
@@ -39,12 +40,10 @@
     <p>Theo dõi danh sách và lịch sử bàn giao thiết bị nhân viên</p>
   </div>
 
-  <form
-    action="{{ url_for('assign_page') }}"
-    method="GET"
-    id="filterForm"
-    class="filter-bar"
-  >
+  <form action="{{ url_for('assign_page') }}" method="GET" id="filterForm" class="filter-bar">
+    <input type="hidden" name="page" value="{{ current_page or 1 }}" id="filterPageInput" />
+    <input type="hidden" name="per_page" value="10" />
+
     <div class="filter-item filter-item--search">
       <label class="filter-label">Tìm kiếm</label>
       <input
@@ -53,6 +52,8 @@
         placeholder="Gõ tên, mã tài sản hoặc người dùng..."
         value="{{ search_q or '' }}"
         class="filter-control"
+        id="assignSearchInput"
+        autocomplete="off"
       />
     </div>
 
@@ -155,20 +156,24 @@
     </div>
 
     <div class="filter-actions">
-      {% if search_q or selected_dept != 'Tất cả' or selected_cat != 'Tất cả' or selected_status != 'Tất cả' %}
-      <a href="{{ url_for('assign_page') }}" class="page-btn filter-clear-btn" title="Xóa lọc">
+      <a
+        href="{{ url_for('assign_page') }}"
+        class="page-btn filter-clear-btn"
+        id="assignClearFilter"
+        title="Xóa lọc"
+        {% if not search_q and selected_dept == 'Tất cả' and selected_cat == 'Tất cả' and selected_status == 'Tất cả' %}hidden{% endif %}
+      >
         ✕
       </a>
-      {% endif %}
     </div>
   </form>
 
-  <div class="table-container">
+  <div class="table-container" id="assignTableContainer">
     <div class="table-header-wrapper">
       <h2 class="table-list-title">Danh sách cấp phát tài sản</h2>
       <div class="table-info-count">
-        Hiển thị <strong>{{ assigns|length }}</strong> trên
-        <strong>{{ total_items }}</strong> bản ghi
+        Hiển thị <strong id="assignShownCount">{{ assigns|length }}</strong> trên
+        <strong id="assignTotalCount">{{ total_items }}</strong> bản ghi
       </div>
     </div>
 
@@ -187,14 +192,11 @@
           </tr>
         </thead>
 
-        <tbody>
+        <tbody id="assignTableBody">
           {% for row in assigns %}
           <tr>
             <td class="asset-code">{{ row.asset_code or '---' }}</td>
-
-            <td class="font-bold">
-              {{ row.asset or row.asset_name or '---' }}
-            </td>
+            <td class="font-bold">{{ row.asset or row.asset_name or '---' }}</td>
 
             {% set row_type = row.type or row.category or '' %}
             <td class="text-soft">
@@ -271,14 +273,15 @@
     </div>
 
     <div class="pagination">
-      <div class="pagination-info">
+      <div class="pagination-info" id="assignPaginationInfo">
         Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
       </div>
 
-      <div class="pagination-controls">
+      <div class="pagination-controls" id="assignPaginationControls">
         <a
           href="{{ url_for('assign_page', page=current_page-1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn page-btn--nav {% if current_page <= 1 %}disabled{% endif %}"
+          class="page-btn page-btn--nav js-assign-page-link {% if current_page <= 1 %}disabled{% endif %}"
+          data-page="{{ current_page - 1 }}"
         >
           « Trước
         </a>
@@ -288,12 +291,7 @@
             {% if p == current_page %}
             <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a
-              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
+            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% elif current_page <= 2 %}
@@ -301,12 +299,7 @@
             {% if p == current_page %}
             <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a
-              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
+            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% elif current_page >= total_pages - 1 %}
@@ -314,12 +307,7 @@
             {% if p == current_page %}
             <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a
-              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
+            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% else %}
@@ -327,19 +315,15 @@
             {% if p == current_page %}
             <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a
-              href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
+            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% endif %}
 
         <a
           href="{{ url_for('assign_page', page=current_page+1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
-          class="page-btn page-btn--nav {% if current_page >= total_pages %}disabled{% endif %}"
+          class="page-btn page-btn--nav js-assign-page-link {% if current_page >= total_pages %}disabled{% endif %}"
+          data-page="{{ current_page + 1 }}"
         >
           Sau »
         </a>
@@ -351,6 +335,26 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const filterForm = document.getElementById("filterForm");
+  const pageInput = document.getElementById("filterPageInput");
+  const tableContainer = document.getElementById("assignTableContainer");
+  const tableBody = document.getElementById("assignTableBody");
+  const shownCount = document.getElementById("assignShownCount");
+  const totalCount = document.getElementById("assignTotalCount");
+  const paginationInfo = document.getElementById("assignPaginationInfo");
+  const paginationControls = document.getElementById("assignPaginationControls");
+  const clearFilter = document.getElementById("assignClearFilter");
+  const searchInput = document.getElementById("assignSearchInput");
+
+  let activeRequest = null;
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
   function closeFilterMenus(exceptMenu = null) {
     document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
@@ -377,6 +381,76 @@ document.addEventListener("DOMContentLoaded", function () {
   function closeAllMenus() {
     closeFilterMenus();
     closeAllActionMenus();
+  }
+
+  function getFormParams(page = 1) {
+    const params = new URLSearchParams(new FormData(filterForm));
+
+    params.set("page", page);
+    params.set("per_page", params.get("per_page") || "10");
+
+    return params;
+  }
+
+  function getCleanUrl(params) {
+    const cleanParams = new URLSearchParams(params);
+    cleanParams.delete("ajax");
+
+    return `${filterForm.action}?${cleanParams.toString()}`;
+  }
+
+  function isFilterActive() {
+    const params = new URLSearchParams(new FormData(filterForm));
+
+    return Boolean(
+      (params.get("search") || "").trim()
+      || params.get("category") !== "Tất cả"
+      || params.get("department") !== "Tất cả"
+      || params.get("status") !== "Tất cả"
+    );
+  }
+
+  function updateClearButton() {
+    if (!clearFilter) return;
+
+    clearFilter.hidden = !isFilterActive();
+  }
+
+  function setSelectDisplay(selectBox, option) {
+    const labelEl = selectBox.querySelector(".filter-select__label");
+    const countEl = selectBox.querySelector(".filter-select__count");
+    const optionLabel = option.querySelector(".filter-select__option-label");
+    const optionCount = option.querySelector(".filter-select__option-count");
+
+    if (labelEl && optionLabel) {
+      labelEl.textContent = optionLabel.textContent.trim();
+    }
+
+    if (countEl && optionCount) {
+      countEl.textContent = optionCount.textContent.trim();
+    }
+  }
+
+  function resetSelect(selectId, labelText) {
+    const selectBox = document.getElementById(selectId);
+    if (!selectBox) return;
+
+    const input = selectBox.querySelector('input[type="hidden"]');
+    const labelEl = selectBox.querySelector(".filter-select__label");
+    const countEl = selectBox.querySelector(".filter-select__count");
+    const allOptionCount = selectBox.querySelector('.filter-select__option[data-value="Tất cả"] .filter-select__option-count');
+
+    if (input) {
+      input.value = "Tất cả";
+    }
+
+    if (labelEl) {
+      labelEl.textContent = labelText;
+    }
+
+    if (countEl && allOptionCount) {
+      countEl.textContent = allOptionCount.textContent.trim();
+    }
   }
 
   function updateActionMenuDirection(menu, dropdown) {
@@ -432,6 +506,271 @@ document.addEventListener("DOMContentLoaded", function () {
     return confirm(message);
   }
 
+  function renderRows(items) {
+    if (!items || !items.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8" class="empty-table-cell">
+            Không tìm thấy dữ liệu phù hợp.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    tableBody.innerHTML = items.map(function (row) {
+      const assignLink = row.can_assign
+        ? `
+          <a href="${escapeHtml(row.give_url)}" class="action-menu__item">
+            <i class="fas fa-user-plus"></i>
+            <span>Cấp phát</span>
+          </a>
+        `
+        : "";
+
+      const unassignForm = row.can_unassign
+        ? `
+          <form
+            action="${escapeHtml(row.unassign_url)}"
+            method="POST"
+            class="action-menu__form js-unassign-form"
+            data-asset-code="${escapeHtml(row.asset_code)}"
+            data-asset-name="${escapeHtml(row.asset_name)}"
+            data-receiver="${escapeHtml(row.receiver)}"
+          >
+            <button type="submit" class="action-menu__item action-menu__item--warning">
+              <i class="fas fa-rotate-left"></i>
+              <span>Thu hồi</span>
+            </button>
+          </form>
+        `
+        : "";
+
+      return `
+        <tr>
+          <td class="asset-code">${escapeHtml(row.asset_code)}</td>
+          <td class="font-bold">${escapeHtml(row.asset_name)}</td>
+          <td class="text-soft">${escapeHtml(row.type_label)}</td>
+          <td>
+            <div class="status-container">
+              <span class="badge ${escapeHtml(row.status_class)}">
+                ${escapeHtml(row.status)}
+              </span>
+            </div>
+          </td>
+          <td class="font-bold">${escapeHtml(row.receiver)}</td>
+          <td>${escapeHtml(row.department)}</td>
+          <td>${escapeHtml(row.location)}</td>
+          <td>
+            <div class="action-menu-center">
+              <div class="action-menu">
+                <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
+                  <div class="action-menu__dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </button>
+
+                <div class="action-menu__dropdown">
+                  <a href="${escapeHtml(row.detail_url)}" class="action-menu__item">
+                    <i class="fas fa-eye"></i>
+                    <span>Xem chi tiết</span>
+                  </a>
+                  ${assignLink}
+                  ${unassignForm}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function getPaginationPages(current, total) {
+    const pages = [];
+
+    if (total <= 3) {
+      for (let page = 1; page <= total; page++) pages.push(page);
+      return pages;
+    }
+
+    if (current <= 2) {
+      return [1, 2, 3];
+    }
+
+    if (current >= total - 1) {
+      return [total - 2, total - 1, total];
+    }
+
+    return [current - 1, current, current + 1];
+  }
+
+  function renderPagination(pagination) {
+    const current = Number(pagination.page || 1);
+    const total = Math.max(Number(pagination.total_pages || 1), 1);
+    const pages = getPaginationPages(current, total);
+
+    paginationInfo.innerHTML = `Trang <strong>${current}</strong> / ${total}`;
+
+    const prevClass = current <= 1 ? "disabled" : "";
+    const nextClass = current >= total ? "disabled" : "";
+
+    let html = `
+      <a href="${escapeHtml(getCleanUrl(getFormParams(current - 1)))}"
+        class="page-btn page-btn--nav js-assign-page-link ${prevClass}"
+        data-page="${current - 1}">
+        « Trước
+      </a>
+    `;
+
+    pages.forEach(function (page) {
+      if (page === current) {
+        html += `<span class="page-btn active">${page}</span>`;
+      } else {
+        html += `
+          <a href="${escapeHtml(getCleanUrl(getFormParams(page)))}"
+            class="page-btn js-assign-page-link"
+            data-page="${page}">
+            ${page}
+          </a>
+        `;
+      }
+    });
+
+    html += `
+      <a href="${escapeHtml(getCleanUrl(getFormParams(current + 1)))}"
+        class="page-btn page-btn--nav js-assign-page-link ${nextClass}"
+        data-page="${current + 1}">
+        Sau »
+      </a>
+    `;
+
+    paginationControls.innerHTML = html;
+    bindPaginationLinks();
+  }
+
+  function bindActionMenus() {
+    document.querySelectorAll(".action-menu__trigger").forEach(function (button) {
+      button.onclick = function (event) {
+        event.stopPropagation();
+
+        const menu = button.closest(".action-menu");
+        if (!menu) return;
+
+        const dropdown = menu.querySelector(".action-menu__dropdown");
+        if (!dropdown) return;
+
+        const isOpen = dropdown.classList.contains("show");
+
+        closeFilterMenus();
+        closeAllActionMenus(dropdown);
+
+        if (isOpen) {
+          dropdown.classList.remove("show");
+          menu.classList.remove("action-menu--drop-up");
+        } else {
+          updateActionMenuDirection(menu, dropdown);
+        }
+      };
+    });
+
+    document.querySelectorAll(".js-unassign-form").forEach(function (form) {
+      form.onsubmit = async function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        closeAllActionMenus();
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const confirmed = await showUnassignConfirm(form);
+
+        if (!confirmed) return;
+
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.style.opacity = "0.65";
+          submitButton.style.pointerEvents = "none";
+        }
+
+        form.submit();
+      };
+    });
+  }
+
+  function bindPaginationLinks() {
+    document.querySelectorAll(".js-assign-page-link").forEach(function (link) {
+      link.onclick = function (event) {
+        event.preventDefault();
+
+        if (link.classList.contains("disabled")) return;
+
+        loadAssignData(Number(link.dataset.page || 1), true);
+      };
+    });
+  }
+
+  async function loadAssignData(page = 1, pushState = true) {
+    if (!filterForm || !tableContainer) return;
+
+    closeAllMenus();
+
+    if (activeRequest) {
+      activeRequest.abort();
+    }
+
+    activeRequest = new AbortController();
+
+    if (pageInput) {
+      pageInput.value = page;
+    }
+
+    const params = getFormParams(page);
+    const cleanUrl = getCleanUrl(params);
+
+    params.set("ajax", "1");
+
+    tableContainer.classList.add("is-loading");
+
+    try {
+      const response = await fetch(`${filterForm.action}?${params.toString()}`, {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json"
+        },
+        signal: activeRequest.signal
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Không thể tải dữ liệu cấp phát.");
+      }
+
+      renderRows(data.items);
+      renderPagination(data.pagination);
+
+      shownCount.textContent = data.pagination.shown;
+      totalCount.textContent = data.pagination.total_items;
+
+      updateClearButton();
+      bindActionMenus();
+
+      if (pushState) {
+        window.history.pushState({}, "", cleanUrl);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    } finally {
+      tableContainer.classList.remove("is-loading");
+      activeRequest = null;
+    }
+  }
+
   document.querySelectorAll(".filter-select").forEach(function (select) {
     const button = select.querySelector(".filter-select__button");
     const menu = select.querySelector(".filter-select__menu");
@@ -451,67 +790,58 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     select.querySelectorAll(".filter-select__option").forEach(function (option) {
-      option.addEventListener("click", function () {
-        input.value = option.dataset.value;
+      option.addEventListener("click", function (event) {
+        event.stopPropagation();
 
-        if (filterForm) {
-          filterForm.submit();
-        }
+        input.value = option.dataset.value;
+        setSelectDisplay(select, option);
+
+        loadAssignData(1, true);
       });
     });
   });
 
-  document.querySelectorAll(".action-menu__trigger").forEach(function (button) {
-    button.addEventListener("click", function (event) {
-      event.stopPropagation();
-
-      const menu = button.closest(".action-menu");
-      if (!menu) return;
-
-      const dropdown = menu.querySelector(".action-menu__dropdown");
-      if (!dropdown) return;
-
-      const isOpen = dropdown.classList.contains("show");
-
-      closeFilterMenus();
-      closeAllActionMenus(dropdown);
-
-      if (isOpen) {
-        dropdown.classList.remove("show");
-        menu.classList.remove("action-menu--drop-up");
-      } else {
-        updateActionMenuDirection(menu, dropdown);
-      }
-    });
-  });
-
-  document.querySelectorAll(".js-unassign-form").forEach(function (form) {
-    form.addEventListener("submit", async function (event) {
+  if (filterForm) {
+    filterForm.addEventListener("submit", function (event) {
       event.preventDefault();
-      event.stopPropagation();
+      loadAssignData(1, true);
+    });
+  }
 
-      closeAllActionMenus();
+  if (searchInput) {
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        loadAssignData(1, true);
+      }
+    });
+  }
 
-      const submitButton = form.querySelector('button[type="submit"]');
-      const confirmed = await showUnassignConfirm(form);
+  if (clearFilter) {
+    clearFilter.addEventListener("click", function (event) {
+      event.preventDefault();
 
-      if (!confirmed) return;
-
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.style.opacity = "0.65";
-        submitButton.style.pointerEvents = "none";
+      if (searchInput) {
+        searchInput.value = "";
       }
 
-      form.submit();
+      resetSelect("select-category", "Tất cả loại");
+      resetSelect("select-department", "Tất cả phòng");
+      resetSelect("select-status", "Tất cả trạng thái");
+
+      loadAssignData(1, true);
     });
-  });
+  }
 
   document.querySelectorAll(".table-scroll").forEach(function (container) {
     container.addEventListener("scroll", closeAllActionMenus);
   });
 
   window.addEventListener("resize", closeAllMenus);
+
+  window.addEventListener("popstate", function () {
+    window.location.reload();
+  });
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
@@ -520,6 +850,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   document.addEventListener("click", closeAllMenus);
+
+  bindActionMenus();
+  bindPaginationLinks();
+  updateClearButton();
 });
 </script>
 {% endblock %}

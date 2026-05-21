@@ -190,6 +190,10 @@ body {
     z-index: 50;
 }
 
+.m-filter-section.is-filtering {
+    cursor: progress;
+}
+
 .m-filter-section form {
     display: flex;
     flex: 1;
@@ -253,12 +257,26 @@ body {
 
 .m-filter-clear {
     width: 42px;
+    min-width: 42px;
+    padding: 0;
     text-decoration: none;
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--surface-2);
+    color: var(--hsu-red);
     cursor: pointer;
+}
+
+.m-filter-clear:hover {
+    border-color: rgba(239, 59, 45, 0.5);
+    background: rgba(239, 59, 45, 0.1);
+    color: var(--hsu-red);
+}
+
+.m-filter-clear[hidden] {
+    display: none !important;
 }
 
 .filter-select {
@@ -388,6 +406,26 @@ body {
     opacity: 0.95;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(31, 94, 255, 0.24);
+}
+
+#manageTableZone {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#manageTableZone > * {
+    min-height: 0;
+}
+
+#manageTableZone.is-updating {
+    cursor: progress;
+}
+
+#manageTableZone.is-updating * {
+    cursor: progress;
 }
 
 @keyframes fadeInMenu {
