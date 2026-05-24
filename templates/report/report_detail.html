@@ -3,6 +3,295 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_detail.css') }}">
 
+<style>
+    .report-detail-action-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .report-detail-approve-btn,
+    .report-detail-reject-btn,
+    .report-detail-download-all-btn,
+    .report-file-download-btn,
+    .report-file-preview-btn {
+        border: 0;
+        outline: 0;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 700;
+        border-radius: 12px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    .report-detail-approve-btn,
+    .report-detail-reject-btn,
+    .report-detail-download-all-btn {
+        min-height: 42px;
+        padding: 0 16px;
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+    }
+
+    .report-detail-approve-btn {
+        background: #16a34a;
+    }
+
+    .report-detail-reject-btn {
+        background: #dc2626;
+    }
+
+    .report-detail-download-all-btn {
+        background: #2563eb;
+    }
+
+    .report-detail-approve-btn:hover,
+    .report-detail-reject-btn:hover,
+    .report-detail-download-all-btn:hover,
+    .report-file-download-btn:hover,
+    .report-file-preview-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .report-detail-action-disabled {
+        opacity: 0.58;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .report-file-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .report-file-card {
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 16px;
+        padding: 14px;
+        background: #fff;
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .report-file-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .report-file-icon svg,
+    .report-file-download-btn svg,
+    .report-file-preview-btn svg,
+    .report-detail-download-all-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+    }
+
+    .report-file-info {
+        min-width: 0;
+    }
+
+    .report-file-info strong {
+        display: block;
+        color: #0f172a;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .report-file-info span {
+        display: block;
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .report-file-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .report-file-preview-btn {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 9px 11px;
+    }
+
+    .report-file-download-btn {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 9px 11px;
+    }
+
+    .report-detail-file-empty {
+        margin-top: 12px;
+        padding: 16px;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .report-file-preview-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, 0.66);
+    }
+
+    .report-file-preview-modal.is-show {
+        display: flex;
+    }
+
+    .report-file-preview-dialog {
+        width: min(960px, 100%);
+        max-height: min(760px, 92vh);
+        background: #fff;
+        border-radius: 22px;
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .report-file-preview-head {
+        padding: 16px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .report-file-preview-head h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #0f172a;
+        word-break: break-word;
+    }
+
+    .report-file-preview-head p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .report-file-preview-close {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 0;
+        background: #f1f5f9;
+        color: #0f172a;
+        cursor: pointer;
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .report-file-preview-body {
+        padding: 18px;
+        overflow: auto;
+        background: #f8fafc;
+        min-height: 260px;
+    }
+
+    .report-file-preview-body img {
+        display: block;
+        max-width: 100%;
+        max-height: 620px;
+        margin: 0 auto;
+        border-radius: 16px;
+        background: #fff;
+    }
+
+    .report-file-preview-body iframe {
+        width: 100%;
+        height: 620px;
+        border: 0;
+        border-radius: 16px;
+        background: #fff;
+    }
+
+    .report-file-preview-empty {
+        min-height: 260px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #475569;
+        gap: 8px;
+    }
+
+    .report-file-preview-empty strong {
+        color: #0f172a;
+        font-size: 18px;
+    }
+
+    .report-file-preview-foot {
+        padding: 14px 18px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .report-file-preview-download {
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        background: #2563eb;
+        color: #fff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+    }
+
+    @media (max-width: 720px) {
+        .report-file-card {
+            grid-template-columns: 40px 1fr;
+        }
+
+        .report-file-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-end;
+        }
+
+        .report-detail-action-row {
+            width: 100%;
+        }
+
+        .report-detail-approve-btn,
+        .report-detail-reject-btn,
+        .report-detail-download-all-btn {
+            flex: 1;
+        }
+    }
+</style>
+
 {% macro show_value(value, fallback='Chưa có dữ liệu') %}
     {{ value if value else fallback }}
 {% endmacro %}
@@ -19,6 +308,36 @@
         <span>{{ label }}</span>
         <strong>{{ show_value(value, fallback) }}</strong>
     </div>
+{% endmacro %}
+
+{% macro download_icon() %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 16.5 6.75 11.25l1.4-1.4L11 12.7V3h2v9.7l2.85-2.85 1.4 1.4L12 16.5ZM5 21a2 2 0 0 1-2-2v-3h2v3h14v-3h2v3a2 2 0 0 1-2 2H5Z"/>
+    </svg>
+{% endmacro %}
+
+{% macro file_icon() %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 7V3.5L18.5 9H13Z"/>
+    </svg>
+{% endmacro %}
+
+{% macro eye_icon() %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5c6.5 0 10 7 10 7s-3.5 7-10 7S2 12 2 12s3.5-7 10-7Zm0 2C7.9 7 5.2 10.4 4.3 12c.9 1.6 3.6 5 7.7 5s6.8-3.4 7.7-5C18.8 10.4 16.1 7 12 7Zm0 2.5A2.5 2.5 0 1 1 12 14a2.5 2.5 0 0 1 0-5Z"/>
+    </svg>
+{% endmacro %}
+
+{% macro check_icon() %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9.2 16.2 4.8 11.8l-1.4 1.4 5.8 5.8L21 7.2l-1.4-1.4L9.2 16.2Z"/>
+    </svg>
+{% endmacro %}
+
+{% macro x_icon() %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.4 1.4Z"/>
+    </svg>
 {% endmacro %}
 
 <section class="report-detail-page">
@@ -41,11 +360,14 @@
                 </a>
             </div>
         {% else %}
+            {% set row_index = report._row_index|default(report.row_index|default(report.report_id|default(report.id|default(report.display_report_code, true), true), true), true) %}
             {% set report_type = report.display_report_type|default('Khác', true) %}
             {% set report_status = report.display_report_status|default('Chờ xử lý', true) %}
             {% set reporter = report.display_reporter|default('', true) %}
             {% set detail = report.display_detail|default('', true) %}
             {% set note = report.display_note|default('', true) %}
+            {% set report_files = report.files|default([], true) %}
+            {% set can_process = report_status == 'Chờ xử lý' or report_status == 'Đang xử lý' %}
 
             <div class="report-detail-header">
                 <div>
@@ -54,9 +376,35 @@
                 </div>
 
                 <div class="report-detail-header-actions">
-                    <button type="button" class="report-detail-primary-btn js-print-report">
-                        In báo cáo
-                    </button>
+                    <div class="report-detail-action-row">
+                        {% if can_process %}
+                            <button
+                                type="button"
+                                class="report-detail-approve-btn js-approve-report"
+                                data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
+                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                                data-report-type="{{ report_type }}"
+                            >
+                                {{ check_icon() }}
+                                <span>Duyệt</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="report-detail-reject-btn js-reject-report"
+                                data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
+                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                            >
+                                {{ x_icon() }}
+                                <span>Từ chối</span>
+                            </button>
+                        {% else %}
+                            <button type="button" class="report-detail-approve-btn report-detail-action-disabled" disabled>
+                                {{ check_icon() }}
+                                <span>Đã xử lý</span>
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -68,12 +416,12 @@
                             <strong id="reportCodeText">{{ show_value(report.display_report_code) }}</strong>
                         </div>
 
-                        <div class="report-detail-copy-icon" aria-hidden="true">
+                        <button type="button" class="report-detail-copy-icon" id="copyReportCodeBtn" aria-label="Sao chép mã báo cáo">
                             <svg viewBox="0 0 24 24">
                                 <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z"/>
                                 <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25H12A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z"/>
                             </svg>
-                        </div>
+                        </button>
                     </div>
 
                     <div class="report-detail-title-card">
@@ -118,6 +466,92 @@
                                     </div>
                                 {% endif %}
                             </div>
+
+                            <div class="report-detail-section">
+                                <div class="report-detail-section-title">
+                                    <span>File đính kèm</span>
+
+                                    {% if report_files %}
+                                        <button type="button" class="report-detail-download-all-btn js-download-all-files">
+                                            {{ download_icon() }}
+                                            <span>Tải tất cả</span>
+                                        </button>
+                                    {% endif %}
+                                </div>
+
+                                {% if report_files %}
+                                    <div class="report-file-list">
+                                        {% for file in report_files %}
+                                            {% set file_name = file.original_name|default(file.name|default(file.stored_name|default('File đính kèm', true), true), true) %}
+                                            {% set file_url = file.url|default('', true) %}
+                                            {% set file_ext = file.extension|default('', true) %}
+                                            {% set file_mime = file.mime_type|default('', true) %}
+                                            {% set file_size = file.size|default('', true) %}
+                                            {% set download_url = file_url ~ ('&download=1' if '?' in file_url else '?download=1') if file_url else '' %}
+
+                                            <div
+                                                class="report-file-card"
+                                                data-file-card
+                                                data-file-name="{{ file_name }}"
+                                                data-file-url="{{ file_url }}"
+                                                data-file-download-url="{{ download_url }}"
+                                                data-file-extension="{{ file_ext }}"
+                                                data-file-mime="{{ file_mime }}"
+                                                data-file-size="{{ file_size }}"
+                                            >
+                                                <div class="report-file-icon">
+                                                    {{ file_icon() }}
+                                                </div>
+
+                                                <div class="report-file-info">
+                                                    <strong>{{ file_name }}</strong>
+                                                    <span>
+                                                        {% if file_ext %}.{{ file_ext }}{% else %}Không rõ định dạng{% endif %}
+                                                        {% if file_size %} · {{ file_size }} bytes{% endif %}
+                                                    </span>
+                                                </div>
+
+                                                <div class="report-file-actions">
+                                                    <button
+                                                        type="button"
+                                                        class="report-file-preview-btn js-preview-file"
+                                                        data-file-name="{{ file_name }}"
+                                                        data-file-url="{{ file_url }}"
+                                                        data-file-download-url="{{ download_url }}"
+                                                        data-file-extension="{{ file_ext }}"
+                                                        data-file-mime="{{ file_mime }}"
+                                                        data-file-size="{{ file_size }}"
+                                                    >
+                                                        {{ eye_icon() }}
+                                                        <span>Xem</span>
+                                                    </button>
+
+                                                    {% if download_url %}
+                                                        <a
+                                                            href="{{ download_url }}"
+                                                            class="report-file-download-btn js-file-download-link"
+                                                            download
+                                                            title="Tải file"
+                                                        >
+                                                            {{ download_icon() }}
+                                                            <span>Tải</span>
+                                                        </a>
+                                                    {% else %}
+                                                        <button type="button" class="report-file-download-btn report-detail-action-disabled" disabled>
+                                                            {{ download_icon() }}
+                                                            <span>Tải</span>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="report-detail-file-empty">
+                                        Báo cáo này chưa có file đính kèm.
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="report-detail-right">
@@ -156,9 +590,50 @@
                                     </div>
 
                                     <div>
-                                        <h3>{{ show_value(report.display_asset_name, 'Chưa xác định') }}</h3>
-                                        <p>{{ show_value(report.display_asset_code, 'Không có mã tài sản') }}</p>
+                                        {% if report.asset_names %}
+                                            <h3>{{ report.asset_names }}</h3>
+                                            <p>{{ report.asset_codes|default('Nhiều tài sản', true) }}</p>
+                                        {% else %}
+                                            <h3>{{ show_value(report.display_asset_name, 'Chưa xác định') }}</h3>
+                                            <p>{{ show_value(report.display_asset_code, 'Không có mã tài sản') }}</p>
+                                        {% endif %}
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="report-detail-section">
+                                <div class="report-detail-section-title report-detail-section-title--soft">
+                                    <span>Thao tác xử lý</span>
+                                </div>
+
+                                <div class="report-detail-action-row">
+                                    {% if can_process %}
+                                        <button
+                                            type="button"
+                                            class="report-detail-approve-btn js-approve-report"
+                                            data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
+                                            data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                                            data-report-type="{{ report_type }}"
+                                        >
+                                            {{ check_icon() }}
+                                            <span>Duyệt</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="report-detail-reject-btn js-reject-report"
+                                            data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
+                                            data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                                        >
+                                            {{ x_icon() }}
+                                            <span>Từ chối</span>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="report-detail-approve-btn report-detail-action-disabled" disabled>
+                                            {{ check_icon() }}
+                                            <span>Báo cáo đã xử lý</span>
+                                        </button>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -170,9 +645,37 @@
                         Quay lại danh sách
                     </a>
 
-                    <button type="button" class="report-detail-primary-btn js-print-report">
-                        In báo cáo
-                    </button>
+                    <div class="report-detail-action-row">
+                        {% if report_files %}
+                            <button type="button" class="report-detail-download-all-btn js-download-all-files">
+                                {{ download_icon() }}
+                                <span>Tải tất cả file</span>
+                            </button>
+                        {% endif %}
+
+                        {% if can_process %}
+                            <button
+                                type="button"
+                                class="report-detail-approve-btn js-approve-report"
+                                data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
+                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                                data-report-type="{{ report_type }}"
+                            >
+                                {{ check_icon() }}
+                                <span>Duyệt</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="report-detail-reject-btn js-reject-report"
+                                data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
+                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
+                            >
+                                {{ x_icon() }}
+                                <span>Từ chối</span>
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         {% endif %}
@@ -180,9 +683,31 @@
 
     <div class="report-detail-toast" id="reportDetailToast" aria-hidden="true">
         <div class="report-detail-toast__icon"></div>
-        <strong id="reportDetailToastText">Đã sao chép mã báo cáo</strong>
+        <strong id="reportDetailToastText">Thao tác thành công</strong>
         <button type="button" id="closeReportDetailToast" aria-label="Đóng">×</button>
         <div class="report-detail-toast__progress"></div>
+    </div>
+
+    <div class="report-file-preview-modal" id="filePreviewModal" aria-hidden="true">
+        <div class="report-file-preview-dialog">
+            <div class="report-file-preview-head">
+                <div>
+                    <h3 id="filePreviewTitle">Xem trước file</h3>
+                    <p id="filePreviewMeta">Đang tải thông tin file...</p>
+                </div>
+
+                <button type="button" class="report-file-preview-close" id="closeFilePreviewModal" aria-label="Đóng">×</button>
+            </div>
+
+            <div class="report-file-preview-body" id="filePreviewBody"></div>
+
+            <div class="report-file-preview-foot">
+                <a href="#" class="report-file-preview-download" id="filePreviewDownload" download>
+                    {{ download_icon() }}
+                    <span>Tải file này</span>
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -193,6 +718,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const toast = document.getElementById("reportDetailToast");
     const toastText = document.getElementById("reportDetailToastText");
     const closeToastButton = document.getElementById("closeReportDetailToast");
+
+    const filePreviewModal = document.getElementById("filePreviewModal");
+    const filePreviewTitle = document.getElementById("filePreviewTitle");
+    const filePreviewMeta = document.getElementById("filePreviewMeta");
+    const filePreviewBody = document.getElementById("filePreviewBody");
+    const filePreviewDownload = document.getElementById("filePreviewDownload");
+    const closeFilePreviewModal = document.getElementById("closeFilePreviewModal");
 
     let toastTimer = null;
 
@@ -237,6 +769,243 @@ document.addEventListener("DOMContentLoaded", function () {
         showToast("Đã sao chép mã báo cáo");
     }
 
+    function getDownloadUrl(url) {
+        if (!url) return "";
+
+        if (url.includes("download=1")) {
+            return url;
+        }
+
+        return url + (url.includes("?") ? "&" : "?") + "download=1";
+    }
+
+    function getExtension(fileName, extension) {
+        if (extension) {
+            return String(extension).replace(".", "").toLowerCase();
+        }
+
+        const name = String(fileName || "");
+        const parts = name.split(".");
+
+        if (parts.length <= 1) {
+            return "";
+        }
+
+        return parts.pop().toLowerCase();
+    }
+
+    function formatSize(size) {
+        const number = Number(size || 0);
+
+        if (!number) {
+            return "Không rõ dung lượng";
+        }
+
+        if (number >= 1024 * 1024) {
+            return (number / 1024 / 1024).toFixed(2) + " MB";
+        }
+
+        if (number >= 1024) {
+            return (number / 1024).toFixed(2) + " KB";
+        }
+
+        return number + " bytes";
+    }
+
+    function isImageExtension(extension) {
+        return ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(extension);
+    }
+
+    function isPdfExtension(extension) {
+        return extension === "pdf";
+    }
+
+    function openFilePreview(button) {
+        if (!filePreviewModal || !filePreviewBody) return;
+
+        const fileName = button.getAttribute("data-file-name") || "File đính kèm";
+        const fileUrl = button.getAttribute("data-file-url") || "";
+        const downloadUrl = button.getAttribute("data-file-download-url") || getDownloadUrl(fileUrl);
+        const extension = getExtension(fileName, button.getAttribute("data-file-extension") || "");
+        const mime = button.getAttribute("data-file-mime") || "Không rõ MIME type";
+        const size = formatSize(button.getAttribute("data-file-size") || "");
+
+        if (filePreviewTitle) {
+            filePreviewTitle.textContent = fileName;
+        }
+
+        if (filePreviewMeta) {
+            filePreviewMeta.textContent = "Định dạng: " + (extension ? "." + extension : "Không rõ") + " · " + mime + " · " + size;
+        }
+
+        if (filePreviewDownload) {
+            filePreviewDownload.href = downloadUrl || fileUrl || "#";
+        }
+
+        filePreviewBody.innerHTML = "";
+
+        if (!fileUrl) {
+            filePreviewBody.innerHTML = [
+                '<div class="report-file-preview-empty">',
+                '<strong>Không có đường dẫn file</strong>',
+                '<p>Không thể xem trước hoặc tải file này vì thiếu URL.</p>',
+                '</div>'
+            ].join("");
+        } else if (isImageExtension(extension)) {
+            const image = document.createElement("img");
+            image.src = fileUrl;
+            image.alt = fileName;
+            filePreviewBody.appendChild(image);
+        } else if (isPdfExtension(extension)) {
+            const iframe = document.createElement("iframe");
+            iframe.src = fileUrl;
+            iframe.title = fileName;
+            filePreviewBody.appendChild(iframe);
+        } else {
+            filePreviewBody.innerHTML = [
+                '<div class="report-file-preview-empty">',
+                '<strong>Không hỗ trợ xem trước trực tiếp</strong>',
+                '<p>File này có thể là Word, Excel, PowerPoint hoặc file nén. Bạn hãy tải xuống để mở bằng ứng dụng phù hợp.</p>',
+                '</div>'
+            ].join("");
+        }
+
+        filePreviewModal.classList.add("is-show");
+        filePreviewModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closePreview() {
+        if (!filePreviewModal || !filePreviewBody) return;
+
+        filePreviewModal.classList.remove("is-show");
+        filePreviewModal.setAttribute("aria-hidden", "true");
+        filePreviewBody.innerHTML = "";
+    }
+
+    function downloadAllFiles() {
+        const links = Array.from(document.querySelectorAll(".js-file-download-link"))
+            .map(function (link) {
+                return link.getAttribute("href");
+            })
+            .filter(Boolean);
+
+        if (!links.length) {
+            showToast("Không có file để tải");
+            return;
+        }
+
+        links.forEach(function (url, index) {
+            setTimeout(function () {
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "";
+                a.style.display = "none";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, index * 350);
+        });
+
+        showToast("Đang tải " + links.length + " file");
+    }
+
+    function submitAction(actionUrl, fields) {
+        const form = document.createElement("form");
+
+        form.method = "POST";
+        form.action = actionUrl;
+        form.style.display = "none";
+
+        Object.keys(fields || {}).forEach(function (key) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = fields[key];
+            form.appendChild(input);
+        });
+
+        const nextInput = document.createElement("input");
+        nextInput.type = "hidden";
+        nextInput.name = "next";
+        nextInput.value = window.location.href;
+        form.appendChild(nextInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    async function confirmApprove(button) {
+        const actionUrl = button.getAttribute("data-action-url");
+        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+        const reportType = button.getAttribute("data-report-type") || "";
+
+        if (!actionUrl) return;
+
+        let message = "Bạn có chắc muốn duyệt " + reportName + " không?";
+
+        if (reportType === "Báo hỏng") {
+            message += " Sau khi duyệt, tài sản liên quan sẽ chuyển sang trạng thái hỏng.";
+        } else if (reportType === "Cần cấp mới") {
+            message += " Sau khi duyệt, hệ thống sẽ xử lý cấp phát tài sản theo báo cáo.";
+        }
+
+        let confirmed = false;
+
+        if (typeof window.toastConfirm === "function") {
+            confirmed = await window.toastConfirm({
+                type: "warning",
+                title: "Xác nhận duyệt báo cáo",
+                message: message,
+                confirmText: "Duyệt",
+                cancelText: "Hủy",
+                danger: false,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        } else {
+            confirmed = confirm(message);
+        }
+
+        if (!confirmed) return;
+
+        submitAction(actionUrl, {
+            approval_note: "Duyệt từ trang chi tiết báo cáo"
+        });
+    }
+
+    async function confirmReject(button) {
+        const actionUrl = button.getAttribute("data-action-url");
+        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+
+        if (!actionUrl) return;
+
+        const message = "Bạn có chắc muốn từ chối " + reportName + " không? Báo cáo sẽ được chuyển sang trạng thái đã hủy/từ chối.";
+
+        let confirmed = false;
+
+        if (typeof window.toastConfirm === "function") {
+            confirmed = await window.toastConfirm({
+                type: "error",
+                title: "Xác nhận từ chối báo cáo",
+                message: message,
+                confirmText: "Từ chối",
+                cancelText: "Hủy",
+                danger: true,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        } else {
+            confirmed = confirm(message);
+        }
+
+        if (!confirmed) return;
+
+        submitAction(actionUrl, {
+            cancel_reason: "Từ chối từ trang chi tiết báo cáo",
+            reason: "Từ chối từ trang chi tiết báo cáo"
+        });
+    }
+
     if (copyButton) {
         copyButton.addEventListener("click", copyReportCode);
     }
@@ -245,15 +1014,62 @@ document.addEventListener("DOMContentLoaded", function () {
         closeToastButton.addEventListener("click", hideToast);
     }
 
-    document.querySelectorAll(".js-print-report").forEach(function (button) {
+    if (closeFilePreviewModal) {
+        closeFilePreviewModal.addEventListener("click", closePreview);
+    }
+
+    if (filePreviewModal) {
+        filePreviewModal.addEventListener("click", function (event) {
+            if (event.target === filePreviewModal) {
+                closePreview();
+            }
+        });
+    }
+
+    document.querySelectorAll(".js-preview-file").forEach(function (button) {
         button.addEventListener("click", function () {
-            window.print();
+            openFilePreview(button);
+        });
+    });
+
+    document.querySelectorAll("[data-file-card]").forEach(function (card) {
+        card.addEventListener("click", function (event) {
+            if (
+                event.target.closest(".report-file-actions") ||
+                event.target.closest("a") ||
+                event.target.closest("button")
+            ) {
+                return;
+            }
+
+            const previewButton = card.querySelector(".js-preview-file");
+
+            if (previewButton) {
+                openFilePreview(previewButton);
+            }
+        });
+    });
+
+    document.querySelectorAll(".js-download-all-files").forEach(function (button) {
+        button.addEventListener("click", downloadAllFiles);
+    });
+
+    document.querySelectorAll(".js-approve-report").forEach(function (button) {
+        button.addEventListener("click", function () {
+            confirmApprove(button);
+        });
+    });
+
+    document.querySelectorAll(".js-reject-report").forEach(function (button) {
+        button.addEventListener("click", function () {
+            confirmReject(button);
         });
     });
 
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             hideToast();
+            closePreview();
         }
     });
 });

@@ -1,7 +1,11 @@
 {% extends 'main.html' %}
 
 {% block content %}
-{% set auto_code = auto_report_id|default('Report-000000') %}
+{% set auto_code = auto_report_id|default('Report-000000', true) %}
+{% set reporter_name = current_user_name|default(current_admin_name|default('Chưa xác định', true), true) %}
+{% set reporter_role = current_user_role|default(current_admin_role|default('Chưa xác định', true), true) %}
+{% set reporter_department = current_user_department|default('Chưa cập nhật', true) %}
+{% set reporter_location = current_user_location|default('Chưa cập nhật', true) %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_create.css') }}">
 
@@ -18,12 +22,26 @@
                 id="reportCreateForm"
                 method="POST"
                 action="{{ url_for('new_report_page') }}"
+                enctype="multipart/form-data"
                 class="report-create-form"
                 novalidate
             >
                 <input type="hidden" id="report_code" name="report_code" value="{{ auto_code }}">
+
+                <input type="hidden" id="asset_id" name="asset_id" value="">
                 <input type="hidden" id="asset_code" name="asset_code" value="">
+                <input type="hidden" id="asset_name" name="asset_name" value="">
+
+                <input type="hidden" id="asset_ids" name="asset_ids" value="">
+                <input type="hidden" id="asset_codes" name="asset_codes" value="">
+                <input type="hidden" id="asset_names" name="asset_names" value="">
+
                 <input type="hidden" name="status" value="Chờ xử lý">
+
+                <input type="hidden" id="reporter" name="reporter" value="{{ reporter_name }}">
+                <input type="hidden" id="reporter_role" name="reporter_role" value="{{ reporter_role }}">
+                <input type="hidden" id="department" name="department" value="{{ reporter_department }}">
+                <input type="hidden" id="location" name="location" value="{{ reporter_location }}">
 
                 <div class="report-create-body">
                     <div class="report-create-grid">
@@ -68,7 +86,7 @@
                                     id="report_name"
                                     name="report_name"
                                     type="text"
-                                    placeholder="Ví dụ: Báo cáo Cấp phát - Laptop Dell XPS 15"
+                                    placeholder="Ví dụ: Báo hỏng - Laptop Dell XPS 15"
                                     data-required="true"
                                     data-message="Vui lòng nhập tên báo cáo."
                                 >
@@ -98,9 +116,22 @@
                                     </button>
 
                                     <div class="report-custom-menu">
-                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn loại báo cáo --</button>
+                                        <button
+                                            type="button"
+                                            class="report-custom-option is-placeholder"
+                                            data-value=""
+                                        >
+                                            -- Chọn loại báo cáo --
+                                        </button>
+
                                         {% for item in report_type_options %}
-                                            <button type="button" class="report-custom-option" data-value="{{ item }}">{{ item }}</button>
+                                            <button
+                                                type="button"
+                                                class="report-custom-option"
+                                                data-value="{{ item }}"
+                                            >
+                                                {{ item }}
+                                            </button>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -108,149 +139,84 @@
                                 <small class="report-form-error">Vui lòng chọn loại báo cáo.</small>
                             </div>
 
-                            <div class="report-form-group" data-field-group>
-                                <label for="reporter">Người báo cáo</label>
-                                <input
-                                    id="reporter"
-                                    name="reporter"
-                                    type="text"
-                                    placeholder="Ví dụ: Nguyễn An"
-                                    data-required="true"
-                                    data-message="Vui lòng nhập người báo cáo."
-                                >
-                                <small class="report-form-error">Vui lòng nhập người báo cáo.</small>
+                            <div class="report-info-box">
+                                <span>Người báo cáo</span>
+                                <strong>{{ reporter_name }}</strong>
                             </div>
 
-                            <div class="report-form-group" data-field-group>
-                                <label for="reporter_role">Chức vụ</label>
+                            <div class="report-form-group" data-field-group id="assetFieldGroup">
+                                <label for="asset_name">Tài sản đang sở hữu</label>
 
-                                <select
-                                    id="reporter_role"
-                                    name="reporter_role"
-                                    class="report-native-select"
-                                    data-required="true"
-                                    data-message="Vui lòng chọn chức vụ."
-                                >
-                                    <option value="">-- Chọn chức vụ --</option>
-                                    {% for role in reporter_role_options|default(role_options|default(['Admin', 'Manager', 'Staff'])) %}
-                                        <option value="{{ role }}">{{ role }}</option>
-                                    {% endfor %}
-                                </select>
-
-                                <div class="report-custom-select" data-custom-select data-target="reporter_role">
-                                    <button type="button" class="report-custom-trigger">
-                                        <span>-- Chọn chức vụ --</span>
+                                <div class="report-custom-select" data-asset-select>
+                                    <button
+                                        type="button"
+                                        class="report-custom-trigger"
+                                        id="assetTrigger"
+                                    >
+                                        <span id="assetSelectedText">-- Chọn tài sản đang sở hữu --</span>
                                         <b>▾</b>
                                     </button>
 
                                     <div class="report-custom-menu">
-                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn chức vụ --</button>
-                                        {% for role in reporter_role_options|default(role_options|default(['Admin', 'Manager', 'Staff'])) %}
-                                            <button type="button" class="report-custom-option" data-value="{{ role }}">{{ role }}</button>
-                                        {% endfor %}
+                                        {% if asset_options|default([]) %}
+                                            <button
+                                                type="button"
+                                                class="report-custom-option is-placeholder"
+                                                data-clear-assets="true"
+                                            >
+                                                -- Bỏ chọn tất cả --
+                                            </button>
+
+                                            {% for asset in asset_options|default([]) %}
+                                                {% set option_id = asset.id|default('', true) %}
+                                                {% set option_code = asset.code|default(asset.asset_code|default('', true), true) %}
+                                                {% set option_name = asset.name|default(asset.asset_name|default('', true), true) %}
+                                                {% set option_department = asset.department|default('', true) %}
+                                                {% set option_location = asset.location|default('', true) %}
+
+                                                <button
+                                                    type="button"
+                                                    class="report-custom-option"
+                                                    data-asset-id="{{ option_id }}"
+                                                    data-asset-code="{{ option_code }}"
+                                                    data-asset-name="{{ option_name }}"
+                                                    data-asset-department="{{ option_department }}"
+                                                    data-asset-location="{{ option_location }}"
+                                                >
+                                                    <strong>
+                                                        {{ option_code }}{% if option_code and option_name %} - {% endif %}{{ option_name }}
+                                                    </strong>
+                                                </button>
+                                            {% endfor %}
+                                        {% else %}
+                                            <button
+                                                type="button"
+                                                class="report-custom-option is-placeholder"
+                                                disabled
+                                            >
+                                                Bạn chưa có tài sản đang sở hữu
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
 
-                                <small class="report-form-error">Vui lòng chọn chức vụ.</small>
-                            </div>
+                                <div
+                                    id="assetSelectedList"
+                                    class="report-note-help"
+                                    style="display: none; margin-top: 10px;"
+                                ></div>
 
-                            <div class="report-form-group">
-                                <label for="asset_name">Tên tài sản</label>
-                                <input
-                                    id="asset_name"
-                                    name="asset_name"
-                                    type="text"
-                                    list="assetNameOptions"
-                                    placeholder="Ví dụ: Laptop Dell XPS 15"
-                                >
+                                <small class="report-note-help">
+                                    Với loại “Báo hỏng” hoặc “Cần cấp mới”, bạn phải chọn ít nhất một tài sản đang sở hữu.
+                                </small>
 
-                                <datalist id="assetNameOptions">
-                                    {% for asset in asset_options|default([]) %}
-                                        <option
-                                            value="{{ asset.name }}"
-                                            data-code="{{ asset.code }}"
-                                            data-type="{{ asset.type }}"
-                                            data-department="{{ asset.department }}"
-                                            data-location="{{ asset.location }}"
-                                        >
-                                            {{ asset.code }}{% if asset.code and asset.type %} - {% endif %}{{ asset.type }}
-                                        </option>
-                                    {% endfor %}
-                                </datalist>
-
-                                <small class="report-note-help">Không bắt buộc. Nếu để trống, hệ thống sẽ lưu là Chưa xác định.</small>
+                                <small class="report-form-error">Vui lòng chọn tài sản đang sở hữu.</small>
                             </div>
                         </div>
 
                         <div class="report-create-column">
                             <div class="report-section-heading">
                                 <span>Thông tin báo cáo</span>
-                            </div>
-
-                            <div class="report-form-group" data-field-group>
-                                <label for="department">Phòng ban / Đơn vị</label>
-
-                                <select
-                                    id="department"
-                                    name="department"
-                                    class="report-native-select"
-                                    data-required="true"
-                                    data-message="Vui lòng chọn phòng ban."
-                                >
-                                    <option value="">-- Chọn phòng ban --</option>
-                                    {% for dept in department_options %}
-                                        <option value="{{ dept }}">{{ dept }}</option>
-                                    {% endfor %}
-                                </select>
-
-                                <div class="report-custom-select" data-custom-select data-target="department">
-                                    <button type="button" class="report-custom-trigger">
-                                        <span>-- Chọn phòng ban --</span>
-                                        <b>▾</b>
-                                    </button>
-
-                                    <div class="report-custom-menu">
-                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn phòng ban --</button>
-                                        {% for dept in department_options %}
-                                            <button type="button" class="report-custom-option" data-value="{{ dept }}">{{ dept }}</button>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-
-                                <small class="report-form-error">Vui lòng chọn phòng ban.</small>
-                            </div>
-
-                            <div class="report-form-group" data-field-group>
-                                <label for="location">Vị trí</label>
-
-                                <select
-                                    id="location"
-                                    name="location"
-                                    class="report-native-select"
-                                    data-required="true"
-                                    data-message="Vui lòng chọn vị trí."
-                                >
-                                    <option value="">-- Chọn vị trí --</option>
-                                    {% for location in location_options %}
-                                        <option value="{{ location }}">{{ location }}</option>
-                                    {% endfor %}
-                                </select>
-
-                                <div class="report-custom-select" data-custom-select data-target="location">
-                                    <button type="button" class="report-custom-trigger">
-                                        <span>-- Chọn vị trí --</span>
-                                        <b>▾</b>
-                                    </button>
-
-                                    <div class="report-custom-menu">
-                                        <button type="button" class="report-custom-option is-placeholder" data-value="">-- Chọn vị trí --</button>
-                                        {% for location in location_options %}
-                                            <button type="button" class="report-custom-option" data-value="{{ location }}">{{ location }}</button>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-
-                                <small class="report-form-error">Vui lòng chọn vị trí.</small>
                             </div>
 
                             <div class="report-form-group" data-field-group>
@@ -263,6 +229,19 @@
                                     data-message="Vui lòng nhập nội dung báo cáo."
                                 ></textarea>
                                 <small class="report-form-error">Vui lòng nhập nội dung báo cáo.</small>
+                            </div>
+
+                            <div class="report-form-group">
+                                <label for="files">File đính kèm</label>
+                                <input
+                                    id="files"
+                                    name="files"
+                                    type="file"
+                                    multiple
+                                >
+                                <small class="report-note-help">
+                                    Có thể tải ảnh, PDF, Word, Excel hoặc file nén nếu cần.
+                                </small>
                             </div>
 
                             <div class="report-info-box">
@@ -294,12 +273,29 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("reportCreateForm");
     const timeInput = document.getElementById("time");
     const timeDisplay = document.getElementById("timeDisplay");
+
+    const reportNameInput = document.getElementById("report_name");
+    const reportTypeSelect = document.getElementById("report_type");
+
     const reportCodeInput = document.getElementById("report_code");
     const reportCodeDisplay = document.getElementById("reportCodeDisplay");
     const copyReportCodeBtn = document.getElementById("copyReportCodeBtn");
-    const assetNameInput = document.getElementById("asset_name");
+
+    const assetSelectBox = document.querySelector("[data-asset-select]");
+    const assetTrigger = document.getElementById("assetTrigger");
+    const assetSelectedText = document.getElementById("assetSelectedText");
+    const assetSelectedList = document.getElementById("assetSelectedList");
+    const assetOptionButtons = document.querySelectorAll(
+        "[data-asset-select] .report-custom-option"
+    );
+
+    const assetIdInput = document.getElementById("asset_id");
     const assetCodeInput = document.getElementById("asset_code");
-    const assetOptions = document.querySelectorAll("#assetNameOptions option");
+    const assetNameInput = document.getElementById("asset_name");
+
+    const assetIdsInput = document.getElementById("asset_ids");
+    const assetCodesInput = document.getElementById("asset_codes");
+    const assetNamesInput = document.getElementById("asset_names");
 
     const toast = document.getElementById("reportCreateToast");
     const toastTitle = document.getElementById("reportCreateToastTitle");
@@ -308,6 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let allowSubmit = false;
     let toastTimer = null;
+    let reportNameTouched = false;
+    let selectedAssets = [];
 
     function getVietnamDateTimeValue() {
         const now = new Date();
@@ -406,6 +404,25 @@ document.addEventListener("DOMContentLoaded", function () {
         group.classList.remove("has-error");
     }
 
+    function setAssetError(message) {
+        const group = document.getElementById("assetFieldGroup");
+        if (!group) return;
+
+        const error = group.querySelector(".report-form-error");
+        group.classList.add("has-error");
+
+        if (error) {
+            error.textContent = message;
+        }
+    }
+
+    function clearAssetError() {
+        const group = document.getElementById("assetFieldGroup");
+        if (!group) return;
+
+        group.classList.remove("has-error");
+    }
+
     function validateField(field) {
         const value = (field.value || "").trim();
 
@@ -418,50 +435,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return true;
     }
 
-    function validateForm() {
-        const fields = form.querySelectorAll("[data-required='true']");
-        let valid = true;
-        let firstInvalid = null;
+    function isAssetRequiredByType() {
+        if (!reportTypeSelect) return false;
 
-        fields.forEach(function (field) {
-            const ok = validateField(field);
+        const type = (reportTypeSelect.value || "").trim();
 
-            if (!ok) {
-                valid = false;
-
-                if (!firstInvalid) {
-                    firstInvalid = field;
-                }
-            }
-        });
-
-        if (firstInvalid) {
-            const group = getGroup(firstInvalid);
-            const trigger = group ? group.querySelector(".report-custom-trigger") : null;
-
-            firstInvalid.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
-            setTimeout(function () {
-                if (trigger) {
-                    trigger.focus();
-                } else {
-                    firstInvalid.focus();
-                }
-            }, 250);
-        }
-
-        return valid;
+        return type === "Báo hỏng" || type === "Cần cấp mới";
     }
 
     function closeSelects(exceptBox = null) {
-        document.querySelectorAll("[data-custom-select]").forEach(function (box) {
-            if (box !== exceptBox) {
-                box.classList.remove("is-open");
-            }
-        });
+        document
+            .querySelectorAll("[data-custom-select], [data-asset-select]")
+            .forEach(function (box) {
+                if (box !== exceptBox) {
+                    box.classList.remove("is-open");
+                }
+            });
     }
 
     function syncSelect(box) {
@@ -485,7 +474,244 @@ document.addEventListener("DOMContentLoaded", function () {
         text.textContent = selectedText || select.options[0].textContent.trim();
     }
 
-    function initCustomSelects() {
+    function updateAssetRequirement() {
+        if (!assetSelectBox) return;
+
+        if (isAssetRequiredByType()) {
+            assetSelectBox.classList.add("is-required");
+        } else {
+            assetSelectBox.classList.remove("is-required");
+            clearAssetError();
+        }
+    }
+
+    function getAssetKey(asset) {
+        return asset.id || asset.code || asset.name;
+    }
+
+    function optionToAsset(option) {
+        return {
+            id: option.dataset.assetId || "",
+            code: option.dataset.assetCode || "",
+            name: option.dataset.assetName || "",
+            department: option.dataset.assetDepartment || "",
+            location: option.dataset.assetLocation || ""
+        };
+    }
+
+    function hasAsset(asset) {
+        const key = getAssetKey(asset);
+
+        return selectedAssets.some(function (item) {
+            return getAssetKey(item) === key;
+        });
+    }
+
+    function syncSelectedAssets() {
+        const firstAsset = selectedAssets[0] || {};
+
+        if (assetIdInput) {
+            assetIdInput.value = firstAsset.id || "";
+        }
+
+        if (assetCodeInput) {
+            assetCodeInput.value = firstAsset.code || "";
+        }
+
+        if (assetNameInput) {
+            assetNameInput.value = firstAsset.name || "";
+        }
+
+        if (assetIdsInput) {
+            assetIdsInput.value = selectedAssets.map(function (item) {
+                return item.id;
+            }).filter(Boolean).join(",");
+        }
+
+        if (assetCodesInput) {
+            assetCodesInput.value = selectedAssets.map(function (item) {
+                return item.code;
+            }).filter(Boolean).join(",");
+        }
+
+        if (assetNamesInput) {
+            assetNamesInput.value = selectedAssets.map(function (item) {
+                return item.name;
+            }).filter(Boolean).join(",");
+        }
+
+        assetOptionButtons.forEach(function (option) {
+            if (option.dataset.clearAssets === "true") {
+                return;
+            }
+
+            const asset = optionToAsset(option);
+            option.classList.toggle("is-selected", hasAsset(asset));
+        });
+
+        if (assetSelectedText) {
+            if (selectedAssets.length === 0) {
+                assetSelectedText.textContent = "-- Chọn tài sản đang sở hữu --";
+            } else if (selectedAssets.length === 1) {
+                const asset = selectedAssets[0];
+                assetSelectedText.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
+            } else {
+                assetSelectedText.textContent = "Đã chọn " + selectedAssets.length + " tài sản";
+            }
+        }
+
+        renderSelectedAssets();
+        clearAssetError();
+        autoFillReportName();
+    }
+
+    function renderSelectedAssets() {
+        if (!assetSelectedList) return;
+
+        assetSelectedList.innerHTML = "";
+
+        if (selectedAssets.length === 0) {
+            assetSelectedList.style.display = "none";
+            return;
+        }
+
+        assetSelectedList.style.display = "block";
+
+        selectedAssets.forEach(function (asset) {
+            const item = document.createElement("div");
+            item.style.display = "flex";
+            item.style.alignItems = "center";
+            item.style.justifyContent = "space-between";
+            item.style.gap = "10px";
+            item.style.marginTop = "6px";
+
+            const text = document.createElement("span");
+            text.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.textContent = "×";
+            removeButton.setAttribute("data-remove-asset-key", getAssetKey(asset));
+            removeButton.style.cursor = "pointer";
+
+            item.appendChild(text);
+            item.appendChild(removeButton);
+            assetSelectedList.appendChild(item);
+        });
+    }
+
+    function clearSelectedAssets() {
+        selectedAssets = [];
+        syncSelectedAssets();
+    }
+
+    function toggleAsset(option) {
+        if (!option || option.disabled) return;
+
+        if (option.dataset.clearAssets === "true") {
+            clearSelectedAssets();
+            return;
+        }
+
+        const asset = optionToAsset(option);
+        const key = getAssetKey(asset);
+
+        if (!key) return;
+
+        if (hasAsset(asset)) {
+            selectedAssets = selectedAssets.filter(function (item) {
+                return getAssetKey(item) !== key;
+            });
+        } else {
+            selectedAssets.push(asset);
+        }
+
+        syncSelectedAssets();
+    }
+
+    function autoFillReportName() {
+        if (!reportNameInput || !reportTypeSelect) return;
+
+        const reportType = (reportTypeSelect.value || "").trim();
+
+        if (!reportType || selectedAssets.length === 0) return;
+        if (reportNameTouched) return;
+
+        if (reportType === "Báo hỏng" || reportType === "Cần cấp mới") {
+            if (selectedAssets.length === 1) {
+                reportNameInput.value = reportType + " - " + selectedAssets[0].name;
+            } else {
+                reportNameInput.value = reportType + " - " + selectedAssets.length + " tài sản";
+            }
+
+            validateField(reportNameInput);
+        }
+    }
+
+    function validateAssetSelection() {
+        if (!isAssetRequiredByType()) {
+            clearAssetError();
+            return true;
+        }
+
+        if (selectedAssets.length === 0) {
+            setAssetError("Vui lòng chọn ít nhất một tài sản đang sở hữu trong danh sách.");
+            return false;
+        }
+
+        clearAssetError();
+        return true;
+    }
+
+    function validateForm() {
+        updateAssetRequirement();
+
+        const fields = form.querySelectorAll("[data-required='true']");
+        let valid = true;
+        let firstInvalid = null;
+
+        fields.forEach(function (field) {
+            const ok = validateField(field);
+
+            if (!ok) {
+                valid = false;
+
+                if (!firstInvalid) {
+                    firstInvalid = field;
+                }
+            }
+        });
+
+        if (!validateAssetSelection()) {
+            valid = false;
+
+            if (!firstInvalid) {
+                firstInvalid = assetTrigger;
+            }
+        }
+
+        if (firstInvalid) {
+            const group = getGroup(firstInvalid) || document.getElementById("assetFieldGroup");
+            const trigger = group ? group.querySelector(".report-custom-trigger") : null;
+
+            firstInvalid.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            setTimeout(function () {
+                if (trigger) {
+                    trigger.focus();
+                } else {
+                    firstInvalid.focus();
+                }
+            }, 250);
+        }
+
+        return valid;
+    }
+
+    function initNormalCustomSelects() {
         document.querySelectorAll("[data-custom-select]").forEach(function (box) {
             const select = document.getElementById(box.dataset.target);
             const trigger = box.querySelector(".report-custom-trigger");
@@ -514,6 +740,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     syncSelect(box);
                     validateField(select);
 
+                    if (select.id === "report_type") {
+                        updateAssetRequirement();
+                        autoFillReportName();
+                    }
+
                     box.classList.remove("is-open");
                 });
             });
@@ -521,33 +752,56 @@ document.addEventListener("DOMContentLoaded", function () {
             select.addEventListener("change", function () {
                 syncSelect(box);
                 validateField(select);
+
+                if (select.id === "report_type") {
+                    updateAssetRequirement();
+                    autoFillReportName();
+                }
             });
-        });
-
-        document.addEventListener("click", function () {
-            closeSelects();
-        });
-
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") {
-                closeSelects();
-            }
         });
     }
 
-    function syncAssetCode() {
-        if (!assetNameInput || !assetCodeInput) return;
+    function initAssetSelect() {
+        if (!assetSelectBox || !assetTrigger) return;
 
-        const value = assetNameInput.value.trim();
-        let matchedCode = "";
+        assetTrigger.addEventListener("click", function (event) {
+            event.stopPropagation();
 
-        assetOptions.forEach(function (option) {
-            if (option.value.trim() === value) {
-                matchedCode = option.dataset.code || "";
-            }
+            const isOpen = assetSelectBox.classList.contains("is-open");
+
+            closeSelects(assetSelectBox);
+            assetSelectBox.classList.toggle("is-open", !isOpen);
         });
 
-        assetCodeInput.value = matchedCode;
+        assetOptionButtons.forEach(function (option) {
+            option.addEventListener("click", function (event) {
+                event.stopPropagation();
+
+                toggleAsset(option);
+                validateAssetSelection();
+
+                if (assetSelectBox) {
+                    assetSelectBox.classList.add("is-open");
+                }
+            });
+        });
+
+        if (assetSelectedList) {
+            assetSelectedList.addEventListener("click", function (event) {
+                const removeButton = event.target.closest("[data-remove-asset-key]");
+
+                if (!removeButton) return;
+
+                const key = removeButton.getAttribute("data-remove-asset-key");
+
+                selectedAssets = selectedAssets.filter(function (asset) {
+                    return getAssetKey(asset) !== key;
+                });
+
+                syncSelectedAssets();
+                validateAssetSelection();
+            });
+        }
     }
 
     async function copyReportCode() {
@@ -597,9 +851,17 @@ document.addEventListener("DOMContentLoaded", function () {
         reportCodeDisplay.textContent = reportCodeInput.value.trim();
     }
 
-    if (assetNameInput) {
-        assetNameInput.addEventListener("input", syncAssetCode);
-        assetNameInput.addEventListener("change", syncAssetCode);
+    if (reportNameInput) {
+        reportNameInput.addEventListener("input", function () {
+            reportNameTouched = true;
+        });
+    }
+
+    if (reportTypeSelect) {
+        reportTypeSelect.addEventListener("change", function () {
+            updateAssetRequirement();
+            autoFillReportName();
+        });
     }
 
     if (copyReportCodeBtn) {
@@ -613,7 +875,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    initCustomSelects();
+    initNormalCustomSelects();
+    initAssetSelect();
+    updateAssetRequirement();
+    syncSelectedAssets();
+
+    document.addEventListener("click", function () {
+        closeSelects();
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeSelects();
+        }
+    });
 
     if (form) {
         const fields = form.querySelectorAll("[data-required='true']");
@@ -633,7 +908,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             event.preventDefault();
             updateRealTime();
-            syncAssetCode();
+            updateAssetRequirement();
 
             if (!validateForm()) {
                 showToast(

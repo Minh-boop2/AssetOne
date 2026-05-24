@@ -17,7 +17,7 @@
 
         <span
             class="report-badge
-            {% if 'cấp phát' in value %}report-badge--blue
+            {% if 'cần cấp mới' in value or 'cấp phát' in value %}report-badge--blue
             {% elif 'bàn giao' in value or 'thiết bị' in value %}report-badge--slate
             {% elif 'bảo trì' in value or 'báo hỏng' in value or 'sự cố' in value %}report-badge--orange
             {% elif 'thu hồi' in value %}report-badge--purple
@@ -36,7 +36,7 @@
             class="report-badge
             {% if status_text == 'Đã xem' or status_text == 'Hoàn thành' %}report-badge--success
             {% elif status_text == 'Đang xử lý' %}report-badge--blue
-            {% elif status_text == 'Từ chối' %}report-badge--danger
+            {% elif status_text == 'Từ chối' or status_text == 'Đã hủy' %}report-badge--danger
             {% else %}report-badge--pending
             {% endif %}"
         >
@@ -59,6 +59,41 @@
         >
             <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
             <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+    {% endmacro %}
+
+    {% macro render_check_icon() %}
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="action-menu__svg"
+        >
+            <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+    {% endmacro %}
+
+    {% macro render_x_icon() %}
+        <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="action-menu__svg"
+        >
+            <path d="M18 6 6 18"></path>
+            <path d="M6 6l12 12"></path>
         </svg>
     {% endmacro %}
 
@@ -86,6 +121,9 @@
     {% macro render_action(row) %}
         {% set row_index = row._row_index if row._row_index is defined else row.get('_row_index') %}
         {% set report_name = row.display_report_name if row.display_report_name is defined and row.display_report_name else 'báo cáo này' %}
+        {% set report_type = row.display_report_type if row.display_report_type is defined and row.display_report_type else 'Khác' %}
+        {% set status_text = row.display_report_status if row.display_report_status is defined and row.display_report_status else 'Chờ xử lý' %}
+        {% set can_process = status_text == 'Chờ xử lý' or status_text == 'Đang xử lý' %}
 
         <div class="action-menu-center">
             <div class="action-menu">
@@ -105,6 +143,32 @@
                         {{ render_eye_icon() }}
                         <span>Xem chi tiết báo cáo</span>
                     </a>
+
+                    {% if can_process %}
+                        <div class="action-menu__divider"></div>
+
+                        <button
+                            type="button"
+                            class="action-menu__item approve-report-action"
+                            data-approve-url="{{ url_for('approve_report_log', row_index=row_index) }}"
+                            data-report-name="{{ report_name }}"
+                            data-report-type="{{ report_type }}"
+                        >
+                            {{ render_check_icon() }}
+                            <span>Duyệt báo cáo</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="action-menu__item action-menu__item--danger reject-report-action"
+                            data-reject-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
+                            data-report-name="{{ report_name }}"
+                            data-report-type="{{ report_type }}"
+                        >
+                            {{ render_x_icon() }}
+                            <span>Từ chối báo cáo</span>
+                        </button>
+                    {% endif %}
 
                     <div class="action-menu__divider"></div>
 
@@ -231,7 +295,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    let allowDeleteSubmit = false;
+    let allowSubmitAction = false;
 
     function closeAllActionMenus(exceptDropdown = null) {
         document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
@@ -273,26 +337,110 @@ document.addEventListener("DOMContentLoaded", function () {
         dropdown.style.visibility = "";
     }
 
-    function createAndSubmitDeleteForm(deleteUrl) {
-        if (!deleteUrl) return;
+    function createAndSubmitPostForm(actionUrl, hiddenFields = {}) {
+        if (!actionUrl) return;
 
-        const deleteForm = document.createElement("form");
+        const form = document.createElement("form");
 
-        deleteForm.method = "POST";
-        deleteForm.action = deleteUrl;
-        deleteForm.style.display = "none";
-        deleteForm.setAttribute("data-report-delete-submit-form", "true");
+        form.method = "POST";
+        form.action = actionUrl;
+        form.style.display = "none";
+        form.setAttribute("data-report-action-submit-form", "true");
 
         const nextInput = document.createElement("input");
         nextInput.type = "hidden";
         nextInput.name = "next";
         nextInput.value = window.location.href;
+        form.appendChild(nextInput);
 
-        deleteForm.appendChild(nextInput);
-        document.body.appendChild(deleteForm);
+        Object.keys(hiddenFields).forEach(function (name) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = hiddenFields[name];
+            form.appendChild(input);
+        });
 
-        allowDeleteSubmit = true;
-        deleteForm.submit();
+        document.body.appendChild(form);
+
+        allowSubmitAction = true;
+        form.submit();
+    }
+
+    async function confirmApproveReport(button) {
+        const approveUrl = button.getAttribute("data-approve-url");
+        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+        const reportType = button.getAttribute("data-report-type") || "";
+
+        if (!approveUrl) return;
+
+        closeAllActionMenus();
+
+        let message = "Bạn có chắc muốn duyệt " + reportName + " không?";
+
+        if (reportType === "Báo hỏng") {
+            message += " Sau khi duyệt, tài sản liên quan sẽ chuyển sang trạng thái hỏng.";
+        } else if (reportType === "Cần cấp mới") {
+            message += " Sau khi duyệt, hệ thống sẽ xử lý cấp phát tài sản theo báo cáo.";
+        }
+
+        let confirmed = false;
+
+        if (typeof window.toastConfirm === "function") {
+            confirmed = await window.toastConfirm({
+                type: "warning",
+                title: "Xác nhận duyệt báo cáo",
+                message: message,
+                confirmText: "Duyệt",
+                cancelText: "Hủy",
+                danger: false,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        } else {
+            confirmed = confirm(message);
+        }
+
+        if (!confirmed) return;
+
+        createAndSubmitPostForm(approveUrl, {
+            approval_note: "Duyệt từ danh sách báo cáo"
+        });
+    }
+
+    async function confirmRejectReport(button) {
+        const rejectUrl = button.getAttribute("data-reject-url");
+        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+
+        if (!rejectUrl) return;
+
+        closeAllActionMenus();
+
+        const message = "Bạn có chắc muốn từ chối " + reportName + " không? Báo cáo sẽ được chuyển sang trạng thái đã hủy/từ chối.";
+
+        let confirmed = false;
+
+        if (typeof window.toastConfirm === "function") {
+            confirmed = await window.toastConfirm({
+                type: "error",
+                title: "Xác nhận từ chối báo cáo",
+                message: message,
+                confirmText: "Từ chối",
+                cancelText: "Hủy",
+                danger: true,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            });
+        } else {
+            confirmed = confirm(message);
+        }
+
+        if (!confirmed) return;
+
+        createAndSubmitPostForm(rejectUrl, {
+            cancel_reason: "Từ chối từ danh sách báo cáo",
+            reason: "Từ chối từ danh sách báo cáo"
+        });
     }
 
     async function confirmDeleteReport(button) {
@@ -322,16 +470,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!confirmed) return;
 
-        createAndSubmitDeleteForm(deleteUrl);
+        createAndSubmitPostForm(deleteUrl);
     }
 
     document.addEventListener("click", function (event) {
+        const approveButton = event.target.closest(".approve-report-action");
+        const rejectButton = event.target.closest(".reject-report-action");
         const deleteButton = event.target.closest(".delete-report-action");
         const trigger = event.target.closest(".action-menu__trigger");
         const clickedInsideDropdown = event.target.closest(".action-menu__dropdown");
 
+        if (approveButton) {
+            if (allowSubmitAction) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            confirmApproveReport(approveButton);
+            return;
+        }
+
+        if (rejectButton) {
+            if (allowSubmitAction) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            confirmRejectReport(rejectButton);
+            return;
+        }
+
         if (deleteButton) {
-            if (allowDeleteSubmit) return;
+            if (allowSubmitAction) return;
 
             event.preventDefault();
             event.stopPropagation();
