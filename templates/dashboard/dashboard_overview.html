@@ -1,5 +1,27 @@
+{% set current_user = session.get("user") or {} %} {% set current_role =
+current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
+%}
+
 <section class="dashboard-overview">
   <div class="overview-container">
+    <style>
+      .dashboard-overview .stats-grid.stats-grid--staff {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      @media (max-width: 980px) {
+        .dashboard-overview .stats-grid.stats-grid--staff {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .dashboard-overview .stats-grid.stats-grid--staff {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
     <div class="overview-heading">
       <div>
         <h2>Tổng quan hệ thống</h2>
@@ -7,7 +29,7 @@
       </div>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid {% if is_staff %}stats-grid--staff{% endif %}">
       <div class="stat-card">
         <div class="stat-card-top">
           <span class="stat-icon stat-icon-blue">💻</span>
@@ -22,9 +44,7 @@
           <span class="stat-icon stat-icon-green">✅</span>
           <span class="stat-label">Đang sử dụng</span>
         </div>
-        <div class="stat-value stat-success" id="dashboard-using-assets">
-          0
-        </div>
+        <div class="stat-value stat-success" id="dashboard-using-assets">0</div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-green"
@@ -35,6 +55,7 @@
         <div class="stat-desc">Tài sản đang được cấp phát cho nhân viên</div>
       </div>
 
+      {% if not is_staff %}
       <div class="stat-card">
         <div class="stat-card-top">
           <span class="stat-icon stat-icon-gray">📦</span>
@@ -50,6 +71,7 @@
         </div>
         <div class="stat-desc">Sẵn sàng để cấp phát</div>
       </div>
+      {% endif %}
 
       <div class="stat-card">
         <div class="stat-card-top">
@@ -147,9 +169,7 @@
                 </div>
               </div>
             </div>
-            <a href="/assets" class="task-btn task-btn-primary">
-              Xử lý ngay
-            </a>
+            <a href="/assets" class="task-btn task-btn-primary"> Xử lý ngay </a>
           </div>
         </div>
       </div>
@@ -263,7 +283,9 @@
         .map((item) => {
           const assetName = escapeHtml(item.asset_name || "—");
           const assetCode = escapeHtml(item.asset_code || "—");
-          const statusLabel = escapeHtml(item.status_label || item.status || "—");
+          const statusLabel = escapeHtml(
+            item.status_label || item.status || "—",
+          );
           const statusClass = escapeHtml(item.status_class || "status-free");
           const user = escapeHtml(item.user || "—");
 
@@ -335,20 +357,16 @@
       }
 
       body.innerHTML = items
+        .slice(0, 6)
         .map((item) => {
           const dotClass = getActivityDotClass(item);
           const action = escapeHtml(item.action || "Có hoạt động mới");
           const createdAt = escapeHtml(item.created_at || "Vừa xong");
           const actor = escapeHtml(
-            item.full_name ||
-              item.email ||
-              item.employee_code ||
-              ""
+            item.full_name || item.email || item.employee_code || "",
           );
 
-          const timeText = actor
-            ? `${actor} • ${createdAt}`
-            : createdAt;
+          const timeText = actor ? `${actor} • ${createdAt}` : createdAt;
 
           return `
             <div class="activity-item">
@@ -372,8 +390,7 @@
         {};
 
       const laptopPc =
-        Number(typeCounts.laptop || 0) +
-        Number(typeCounts.pc || 0);
+        Number(typeCounts.laptop || 0) + Number(typeCounts.pc || 0);
 
       const printer = Number(typeCounts.printer || 0);
 
@@ -403,7 +420,7 @@
             headers: {
               Accept: "application/json",
             },
-          }
+          },
         );
 
         const data = await response.json();

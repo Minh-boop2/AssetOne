@@ -1,4 +1,7 @@
 {# templates/report/report_table.html #}
+{% set current_user = session.get("user") or {} %}
+{% set current_role = current_user.get("role") or "" %}
+{% set can_review_reports = current_role in ["ADMIN", "QUAN_LY"] %}
 
 <div class="report-overview-card">
     <div class="report-card-header">
@@ -144,7 +147,7 @@
                         <span>Xem chi tiết báo cáo</span>
                     </a>
 
-                    {% if can_process %}
+                    {% if can_process and can_review_reports %}
                         <div class="action-menu__divider"></div>
 
                         <button

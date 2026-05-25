@@ -2,9 +2,10 @@
    LOGIN / FORGOT PASSWORD PAGE ONLY
 ========================================= */
 
-/* Ẩn menu + avatar chỉ ở trang login/forgot */
+/* Ẩn menu + avatar + chuông thông báo chỉ ở trang login/forgot */
 .header .header-nav,
-.header .user-menu-wrapper {
+.header .user-menu-wrapper,
+.header .notification-wrapper {
   display: none !important;
 }
 

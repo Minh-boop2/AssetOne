@@ -12,7 +12,7 @@
 {% set user_role = current_user.get("role_label") or role_labels.get(current_role, current_role or "Chưa phân quyền") %}
 {% set user_avatar = current_user.get("avatar_url") or default_avatar %}
 
-<header class="header">
+<header class="header" id="appHeader">
   <div class="header-left">
     <div class="brand-wrap">
       <img
@@ -66,12 +66,14 @@
         Báo cáo
       </a>
 
-      <a
-        href="{{ url_for('activity_page') }}"
-        class="nav-link {% if request.endpoint == 'activity_page' %}active{% endif %}"
-      >
-        Hoạt động
-      </a>
+      {% if current_role != "NHAN_VIEN" %}
+        <a
+          href="{{ url_for('activity_page') }}"
+          class="nav-link {% if request.endpoint == 'activity_page' %}active{% endif %}"
+        >
+          Hoạt động
+        </a>
+      {% endif %}
     </nav>
 
     <div class="header-actions">
@@ -132,6 +134,14 @@
 
 <script>
   (function () {
+    const header = document.getElementById("appHeader");
+
+    if (!header || header.dataset.initialized === "1") {
+      return;
+    }
+
+    header.dataset.initialized = "1";
+
     const root = document.documentElement;
     const toggleBtn = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem("theme");
