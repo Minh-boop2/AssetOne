@@ -86,6 +86,8 @@
         <i data-lucide="sun" class="toggle-icon icon-sun"></i>
       </button>
 
+      {% include "notification/notification_popover.html" %}
+
       <div class="user-menu-wrapper" id="userMenuWrapper">
         <button
           class="user-box user-box-trigger"
@@ -162,6 +164,9 @@
     userMenuTrigger?.addEventListener("click", function (event) {
       event.stopPropagation();
       userMenuWrapper?.classList.toggle("open");
+
+      const notificationWrapper = document.getElementById("notificationWrapper");
+      notificationWrapper?.classList.remove("open");
     });
 
     document.addEventListener("click", function (event) {

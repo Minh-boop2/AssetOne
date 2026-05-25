@@ -1,0 +1,672 @@
+{% set notification_user = session.get("user") or {} %} {% set
+notification_user_id = notification_user.get("id") or
+notification_user.get("_id") or notification_user.get("user_id") or "" %} {% set
+notification_socket_url =
+notification_backend_url|default("http://localhost:5001", true) %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/notification/notification_popover.css') }}"
+/>
+
+<div
+  class="notification-wrapper"
+  id="notificationWrapper"
+  data-user-id="{{ notification_user_id }}"
+  data-socket-url="{{ notification_socket_url }}"
+>
+  <button
+    class="notification-trigger"
+    id="notificationTrigger"
+    type="button"
+    aria-label="Thông báo"
+    title="Thông báo"
+  >
+    <i data-lucide="bell"></i>
+    <span class="notification-badge is-hidden" id="notificationBadge">0</span>
+  </button>
+
+  <div class="notification-panel" id="notificationPanel">
+    <div class="notification-panel-header">
+      <div>
+        <h3>Thông báo</h3>
+        <p>
+          <span id="notificationUnreadText">0</span>
+          thông báo mới
+        </p>
+      </div>
+
+      <button
+        class="notification-read-all-btn"
+        id="notificationReadAllBtn"
+        type="button"
+      >
+        Đọc tất cả
+      </button>
+    </div>
+
+    <div class="notification-list" id="notificationList">
+      <div class="notification-empty">Chưa có thông báo nào.</div>
+    </div>
+
+    <div class="notification-panel-footer">
+      <span>Xem tất cả thông báo</span>
+      <i data-lucide="arrow-right"></i>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+  (function () {
+    const notificationWrapper = document.getElementById("notificationWrapper");
+    const notificationTrigger = document.getElementById("notificationTrigger");
+    const notificationBadge = document.getElementById("notificationBadge");
+    const notificationPanel = document.getElementById("notificationPanel");
+    const notificationList = document.getElementById("notificationList");
+    const notificationUnreadText = document.getElementById(
+      "notificationUnreadText",
+    );
+    const notificationReadAllBtn = document.getElementById(
+      "notificationReadAllBtn",
+    );
+
+    if (
+      !notificationWrapper ||
+      notificationWrapper.dataset.initialized === "1"
+    ) {
+      return;
+    }
+
+    notificationWrapper.dataset.initialized = "1";
+
+    const userId = notificationWrapper.dataset.userId || "";
+    const socketUrl =
+      notificationWrapper.dataset.socketUrl || "http://localhost:5001";
+
+    const api = {
+      data: "/notifications/data?limit=20",
+      readAll: "/notifications/read-all",
+      markRead: function (id) {
+        return "/notifications/" + encodeURIComponent(id) + "/read";
+      },
+    };
+
+    const cacheKey = "assetone.notifications." + userId;
+    const cacheTimeKey = cacheKey + ".savedAt";
+    const maxCacheItems = 20;
+    const maxCacheAgeMs = 24 * 60 * 60 * 1000;
+
+    let notifications = [];
+    let socket = null;
+    let currentUnreadCount = 0;
+    let hasCache = false;
+    let isFetching = false;
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getNotificationId(notification) {
+      return String(
+        notification?.id ||
+          notification?._id ||
+          notification?.notification_id ||
+          "",
+      );
+    }
+
+    function formatDateTime(value) {
+      if (!value) {
+        return "";
+      }
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+
+      return date.toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+      });
+    }
+
+    function getNotificationIcon(type) {
+      const value = String(type || "").toLowerCase();
+
+      if (value.includes("approved") || value.includes("approve")) {
+        return "circle-check";
+      }
+
+      if (value.includes("cancel") || value.includes("reject")) {
+        return "circle-x";
+      }
+
+      if (value.includes("asset") || value.includes("assign")) {
+        return "package-check";
+      }
+
+      if (value.includes("report")) {
+        return "file-text";
+      }
+
+      return "bell";
+    }
+
+    function getNotificationMeta(notification) {
+      const data = notification?.data || {};
+
+      return (
+        data.report_code ||
+        data.asset_code ||
+        data.report_title ||
+        data.asset_name ||
+        data.status ||
+        ""
+      );
+    }
+
+    function getSafeUnreadCount(value, fallbackValue) {
+      const number = Number(value);
+
+      if (Number.isFinite(number) && number >= 0) {
+        return number;
+      }
+
+      return fallbackValue;
+    }
+
+    function setUnreadCount(count) {
+      const number = getSafeUnreadCount(count, 0);
+      currentUnreadCount = number;
+
+      if (notificationUnreadText) {
+        notificationUnreadText.textContent = String(number);
+      }
+
+      if (!notificationBadge) {
+        return;
+      }
+
+      if (number > 0) {
+        notificationBadge.textContent = number > 99 ? "99+" : String(number);
+        notificationBadge.classList.remove("is-hidden");
+      } else {
+        notificationBadge.textContent = "0";
+        notificationBadge.classList.add("is-hidden");
+      }
+    }
+
+    function countUnreadFromNotifications(items) {
+      return (items || []).filter(function (notification) {
+        return !notification?.is_read;
+      }).length;
+    }
+
+    function saveCache() {
+      if (!userId) {
+        return;
+      }
+
+      try {
+        const payload = {
+          unread_count: currentUnreadCount,
+          notifications: notifications.slice(0, maxCacheItems),
+        };
+
+        localStorage.setItem(cacheKey, JSON.stringify(payload));
+        localStorage.setItem(cacheTimeKey, String(Date.now()));
+      } catch (error) {
+        console.warn("Save notification cache error:", error);
+      }
+    }
+
+    function readCache() {
+      if (!userId) {
+        return false;
+      }
+
+      try {
+        const savedAt = Number(localStorage.getItem(cacheTimeKey) || 0);
+
+        if (savedAt && Date.now() - savedAt > maxCacheAgeMs) {
+          localStorage.removeItem(cacheKey);
+          localStorage.removeItem(cacheTimeKey);
+          return false;
+        }
+
+        const raw = localStorage.getItem(cacheKey);
+
+        if (!raw) {
+          return false;
+        }
+
+        const payload = JSON.parse(raw);
+        const items = Array.isArray(payload.notifications)
+          ? payload.notifications
+          : [];
+
+        notifications = items.slice(0, maxCacheItems);
+        setUnreadCount(
+          payload.unread_count ?? countUnreadFromNotifications(notifications),
+        );
+
+        hasCache = true;
+        renderNotifications();
+
+        return true;
+      } catch (error) {
+        console.warn("Read notification cache error:", error);
+        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(cacheTimeKey);
+        return false;
+      }
+    }
+
+    function renderNotification(notification) {
+      const id = getNotificationId(notification);
+      const isUnread = !notification?.is_read;
+      const icon = getNotificationIcon(notification?.type);
+      const meta = getNotificationMeta(notification);
+
+      return `
+        <button
+          class="notification-item ${isUnread ? "is-unread" : ""}"
+          type="button"
+          data-id="${escapeHtml(id)}"
+        >
+          <span class="notification-icon">
+            <i data-lucide="${escapeHtml(icon)}"></i>
+          </span>
+
+          <span class="notification-body">
+            <span class="notification-title">
+              ${escapeHtml(notification?.title || "Thông báo")}
+            </span>
+
+            <span class="notification-message">
+              ${escapeHtml(notification?.message || "")}
+            </span>
+
+            <span class="notification-meta">
+              <span>${escapeHtml(meta)}</span>
+              <span>${escapeHtml(formatDateTime(notification?.created_at))}</span>
+            </span>
+          </span>
+
+          <span class="notification-dot"></span>
+        </button>
+      `;
+    }
+
+    function renderNotifications() {
+      if (!notificationList) {
+        return;
+      }
+
+      if (!notifications.length) {
+        notificationList.innerHTML = `
+          <div class="notification-empty">
+            Chưa có thông báo nào.
+          </div>
+        `;
+        return;
+      }
+
+      notificationList.innerHTML = notifications
+        .map(renderNotification)
+        .join("");
+
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        ...options,
+      });
+
+      const json = await response.json().catch(function () {
+        return {
+          success: false,
+          message: "Response không phải JSON",
+        };
+      });
+
+      if (!response.ok) {
+        return {
+          success: false,
+          status: response.status,
+          message: json.message || "Request thất bại",
+        };
+      }
+
+      return json;
+    }
+
+    async function fetchNotificationsBecauseNewData() {
+      if (isFetching || !userId) {
+        return;
+      }
+
+      isFetching = true;
+
+      try {
+        const response = await fetchJson(api.data);
+
+        if (!response.success) {
+          return;
+        }
+
+        notifications = Array.isArray(response.data)
+          ? response.data.slice(0, maxCacheItems)
+          : [];
+
+        setUnreadCount(response.unread_count || 0);
+        renderNotifications();
+        saveCache();
+        hasCache = true;
+      } catch (error) {
+        console.error("Fetch notifications error:", error);
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    async function markNotificationRead(id) {
+      try {
+        const oldNotification = notifications.find(function (notification) {
+          return getNotificationId(notification) === String(id);
+        });
+
+        const wasUnread = oldNotification && !oldNotification.is_read;
+
+        const response = await fetchJson(api.markRead(id), {
+          method: "PATCH",
+        });
+
+        if (!response.success) {
+          return;
+        }
+
+        const updatedNotification = response.data;
+
+        notifications = notifications.map(function (notification) {
+          if (getNotificationId(notification) === String(id)) {
+            return (
+              updatedNotification || {
+                ...notification,
+                is_read: true,
+              }
+            );
+          }
+
+          return notification;
+        });
+
+        renderNotifications();
+
+        if (wasUnread) {
+          setUnreadCount(Math.max(currentUnreadCount - 1, 0));
+        }
+
+        saveCache();
+      } catch (error) {
+        console.error("Mark notification read error:", error);
+      }
+    }
+
+    async function markAllNotificationsRead() {
+      try {
+        const response = await fetchJson(api.readAll, {
+          method: "PATCH",
+        });
+
+        if (!response.success) {
+          return;
+        }
+
+        notifications = notifications.map(function (notification) {
+          return {
+            ...notification,
+            is_read: true,
+          };
+        });
+
+        renderNotifications();
+        setUnreadCount(0);
+        saveCache();
+      } catch (error) {
+        console.error("Mark all notifications read error:", error);
+      }
+    }
+
+    function addNotificationRealtime(notification, unreadCount) {
+      if (!notification) {
+        return;
+      }
+
+      const id = getNotificationId(notification);
+
+      notifications = notifications.filter(function (item) {
+        return getNotificationId(item) !== id;
+      });
+
+      notifications.unshift(notification);
+      notifications = notifications.slice(0, maxCacheItems);
+
+      renderNotifications();
+
+      const fallbackUnreadCount = currentUnreadCount + 1;
+      setUnreadCount(getSafeUnreadCount(unreadCount, fallbackUnreadCount));
+
+      hasCache = true;
+      saveCache();
+    }
+
+    function updateNotificationReadRealtime(payload) {
+      const updatedNotification = payload?.notification;
+      const updatedId = getNotificationId(updatedNotification);
+
+      if (updatedId) {
+        notifications = notifications.map(function (notification) {
+          if (getNotificationId(notification) === updatedId) {
+            return updatedNotification;
+          }
+
+          return notification;
+        });
+
+        renderNotifications();
+      }
+
+      setUnreadCount(
+        getSafeUnreadCount(payload?.unread_count, currentUnreadCount),
+      );
+      saveCache();
+    }
+
+    function updateNotificationsReadAllRealtime(payload) {
+      notifications = notifications.map(function (notification) {
+        return {
+          ...notification,
+          is_read: true,
+        };
+      });
+
+      renderNotifications();
+      setUnreadCount(getSafeUnreadCount(payload?.unread_count, 0));
+      saveCache();
+    }
+
+    function deleteNotificationRealtime(payload) {
+      const deletedId = String(payload?.notification_id || "");
+
+      if (deletedId) {
+        notifications = notifications.filter(function (notification) {
+          return getNotificationId(notification) !== deletedId;
+        });
+
+        renderNotifications();
+      }
+
+      setUnreadCount(
+        getSafeUnreadCount(payload?.unread_count, currentUnreadCount),
+      );
+      saveCache();
+    }
+
+    function connectNotificationSocket() {
+      if (!userId || !window.io) {
+        return;
+      }
+
+      socket = io(socketUrl, {
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: 20,
+        reconnectionDelay: 1000,
+      });
+
+      socket.on("connect", function () {
+        socket.emit("join_notifications", {
+          user_id: userId,
+        });
+      });
+
+      socket.on("notifications:joined", function (payload) {
+        const serverUnreadCount = getSafeUnreadCount(
+          payload?.unread_count,
+          currentUnreadCount,
+        );
+
+        const oldUnreadCount = currentUnreadCount;
+        setUnreadCount(serverUnreadCount);
+
+        /*
+          Không fetch lại khi bấm qua trang khác nếu cache đã có.
+          Chỉ fetch lại khi socket báo unread_count tăng so với cache,
+          tức là có dữ liệu mới bị miss trong lúc chuyển trang / mất kết nối.
+        */
+        if (hasCache && serverUnreadCount > oldUnreadCount) {
+          fetchNotificationsBecauseNewData();
+          return;
+        }
+
+        /*
+          Lần đầu sau khi đăng nhập/chưa có cache thì cần fetch 1 lần
+          để có danh sách ban đầu. Các lần chuyển trang sau sẽ đọc cache.
+        */
+        if (!hasCache) {
+          fetchNotificationsBecauseNewData();
+        }
+      });
+
+      socket.on("notification:new", function (payload) {
+        /*
+          Có dữ liệu mới thật sự thì không cần reload trang.
+          Socket gửi notification mới, frontend tự thêm vào cache + UI.
+        */
+        addNotificationRealtime(payload?.notification, payload?.unread_count);
+      });
+
+      socket.on("notification:read", function (payload) {
+        updateNotificationReadRealtime(payload);
+      });
+
+      socket.on("notifications:read_all", function (payload) {
+        updateNotificationsReadAllRealtime(payload);
+      });
+
+      socket.on("notification:deleted", function (payload) {
+        deleteNotificationRealtime(payload);
+      });
+
+      socket.on("disconnect", function () {
+        console.warn("Notification socket disconnected");
+      });
+
+      socket.on("connect_error", function (error) {
+        console.error("Notification socket connect error:", error);
+      });
+    }
+
+    notificationTrigger?.addEventListener("click", function (event) {
+      event.stopPropagation();
+
+      notificationWrapper.classList.toggle("open");
+
+      const userMenuWrapper = document.getElementById("userMenuWrapper");
+      userMenuWrapper?.classList.remove("open");
+    });
+
+    notificationPanel?.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!notificationWrapper.contains(event.target)) {
+        notificationWrapper.classList.remove("open");
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        notificationWrapper.classList.remove("open");
+      }
+    });
+
+    notificationList?.addEventListener("click", async function (event) {
+      const item = event.target.closest(".notification-item");
+
+      if (!item) {
+        return;
+      }
+
+      const id = item.dataset.id;
+
+      if (!id) {
+        return;
+      }
+
+      await markNotificationRead(id);
+    });
+
+    notificationReadAllBtn?.addEventListener("click", async function (event) {
+      event.stopPropagation();
+      await markAllNotificationsRead();
+    });
+
+    if (!userId) {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          Chưa đăng nhập.
+        </div>
+      `;
+      setUnreadCount(0);
+    } else {
+      readCache();
+      connectNotificationSocket();
+    }
+
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  })();
+</script>

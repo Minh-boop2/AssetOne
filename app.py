@@ -1,5 +1,5 @@
 from flask import Flask, request, session, redirect, url_for
-
+from templates.notification.notification_app import register_notification_routes
 from templates.dashboard.dashboard_app import register_dashboard_routes
 from templates.assets.asset_app import register_assets_routes
 from templates.assign.assign_app import register_assign_routes
@@ -49,6 +49,7 @@ register_report_routes(app)
 register_admin_profile_routes(app)
 register_statistical_routes(app)
 register_activity_routes(app)
+register_notification_routes(app)
 
 if __name__ == "__main__":
     app.run(debug=True)

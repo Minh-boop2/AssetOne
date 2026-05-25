@@ -591,7 +591,7 @@ def _get_options():
 def _get_all_reports_for_options():
     success, payload, _ = api_get_reports({
         "page": 1,
-        "limit": 100000,
+        "limit": 10,
     })
 
     if not success:
