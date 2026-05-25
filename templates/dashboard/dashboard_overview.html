@@ -13,7 +13,7 @@
           <span class="stat-icon stat-icon-blue">💻</span>
           <span class="stat-label">Tổng tài sản</span>
         </div>
-        <div class="stat-value" id="dashboard-total-assets">128</div>
+        <div class="stat-value" id="dashboard-total-assets">0</div>
         <div class="stat-desc">Laptop, PC, máy in, thiết bị mạng...</div>
       </div>
 
@@ -22,12 +22,14 @@
           <span class="stat-icon stat-icon-green">✅</span>
           <span class="stat-label">Đang sử dụng</span>
         </div>
-        <div class="stat-value stat-success" id="dashboard-using-assets">92</div>
+        <div class="stat-value stat-success" id="dashboard-using-assets">
+          0
+        </div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-green"
             id="dashboard-using-progress"
-            style="width: 72%"
+            style="width: 0%"
           ></div>
         </div>
         <div class="stat-desc">Tài sản đang được cấp phát cho nhân viên</div>
@@ -38,12 +40,12 @@
           <span class="stat-icon stat-icon-gray">📦</span>
           <span class="stat-label">Chưa sử dụng</span>
         </div>
-        <div class="stat-value" id="dashboard-available-assets">26</div>
+        <div class="stat-value" id="dashboard-available-assets">0</div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-blue"
             id="dashboard-available-progress"
-            style="width: 20%"
+            style="width: 0%"
           ></div>
         </div>
         <div class="stat-desc">Sẵn sàng để cấp phát</div>
@@ -54,12 +56,14 @@
           <span class="stat-icon stat-icon-red">⚠️</span>
           <span class="stat-label">Đang hỏng / bảo trì</span>
         </div>
-        <div class="stat-value stat-danger" id="dashboard-problem-assets">10</div>
+        <div class="stat-value stat-danger" id="dashboard-problem-assets">
+          0
+        </div>
         <div class="stat-progress">
           <div
             class="stat-progress-bar stat-progress-red"
             id="dashboard-problem-progress"
-            style="width: 8%"
+            style="width: 0%"
           ></div>
         </div>
         <div class="stat-desc">Cần theo dõi và xử lý</div>
@@ -83,39 +87,12 @@
 
           <div id="recent-assets-body">
             <div class="asset-row">
-              <div>Laptop Dell XPS</div>
-              <div>KJX854</div>
+              <div>Đang tải...</div>
+              <div>—</div>
               <div>
-                <span class="status-badge status-using">Đang sử dụng</span>
-              </div>
-              <div>Nguyễn Văn A</div>
-            </div>
-
-            <div class="asset-row">
-              <div>Máy in HP LaserJet</div>
-              <div>BD558</div>
-              <div>
-                <span class="status-badge status-using">Đang sử dụng</span>
-              </div>
-              <div>Nguyễn Văn B</div>
-            </div>
-
-            <div class="asset-row">
-              <div>PC Văn phòng Dell</div>
-              <div>TCS35</div>
-              <div>
-                <span class="status-badge status-free">Chưa sử dụng</span>
+                <span class="status-badge status-free">Đang tải</span>
               </div>
               <div>—</div>
-            </div>
-
-            <div class="asset-row">
-              <div>Router Mikrotik</div>
-              <div>MK220</div>
-              <div>
-                <span class="status-badge status-error">Bảo trì</span>
-              </div>
-              <div>Phòng IT</div>
             </div>
           </div>
         </div>
@@ -124,45 +101,15 @@
       <div class="overview-card">
         <div class="card-header">
           <h3>Hoạt động gần đây</h3>
-          <a href="#" class="card-link">Xem tất cả</a>
+          <a href="/activities" class="card-link">Xem tất cả</a>
         </div>
 
-        <div class="activity-list">
-          <div class="activity-item">
-            <span class="activity-dot activity-success"></span>
-            <div class="activity-content">
-              <div class="activity-title">
-                Laptop Dell XPS đã cấp cho Nguyễn Văn A
-              </div>
-              <div class="activity-time">10 phút trước</div>
-            </div>
-          </div>
-
+        <div class="activity-list" id="recent-activities-body">
           <div class="activity-item">
             <span class="activity-dot activity-blue"></span>
             <div class="activity-content">
-              <div class="activity-title">Thu hồi máy in HP từ Lê Thị B</div>
-              <div class="activity-time">1 giờ trước</div>
-            </div>
-          </div>
-
-          <div class="activity-item">
-            <span class="activity-dot activity-red"></span>
-            <div class="activity-content">
-              <div class="activity-title">
-                Nguyễn Văn C gửi yêu cầu báo hỏng thiết bị
-              </div>
-              <div class="activity-time">2 giờ trước</div>
-            </div>
-          </div>
-
-          <div class="activity-item">
-            <span class="activity-dot activity-blue"></span>
-            <div class="activity-content">
-              <div class="activity-title">
-                Admin cập nhật trạng thái Router Mikrotik
-              </div>
-              <div class="activity-time">3 giờ trước</div>
+              <div class="activity-title">Đang tải hoạt động...</div>
+              <div class="activity-time">Vui lòng chờ</div>
             </div>
           </div>
         </div>
@@ -180,24 +127,29 @@
             <div class="task-left">
               <span class="task-icon task-icon-red">!</span>
               <div>
-                <div class="task-title">1 máy in bị hỏng cần được sửa chữa</div>
+                <div class="task-title">
+                  <span id="dashboard-problem-task-count">0</span>
+                  tài sản hỏng / bảo trì cần được xử lý
+                </div>
                 <div class="task-subtitle">Ưu tiên xử lý trong hôm nay</div>
               </div>
             </div>
-            <button type="button" class="task-btn">Xem chi tiết</button>
+            <a href="/assets" class="task-btn">Xem chi tiết</a>
           </div>
 
           <div class="task-item">
             <div class="task-left">
               <span class="task-icon task-icon-blue">i</span>
               <div>
-                <div class="task-title">2 yêu cầu hỗ trợ chưa xử lý</div>
-                <div class="task-subtitle">Kiểm tra phản hồi từ nhân viên</div>
+                <div class="task-title">Theo dõi hoạt động mới nhất</div>
+                <div class="task-subtitle">
+                  Kiểm tra cấp phát, thu hồi và cập nhật tài sản
+                </div>
               </div>
             </div>
-            <button type="button" class="task-btn task-btn-primary">
+            <a href="/assets" class="task-btn task-btn-primary">
               Xử lý ngay
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -210,19 +162,19 @@
         <div class="mini-stats">
           <div class="mini-stat">
             <span>💻 Laptop / PC</span>
-            <strong>78</strong>
+            <strong id="mini-laptop-pc-count">0</strong>
           </div>
           <div class="mini-stat">
             <span>🖨️ Máy in</span>
-            <strong>16</strong>
+            <strong id="mini-printer-count">0</strong>
           </div>
           <div class="mini-stat">
             <span>🌐 Thiết bị mạng</span>
-            <strong>21</strong>
+            <strong id="mini-network-count">0</strong>
           </div>
           <div class="mini-stat">
             <span>🖥️ Màn hình / phụ kiện</span>
-            <strong>13</strong>
+            <strong id="mini-monitor-accessory-count">0</strong>
           </div>
         </div>
       </div>
@@ -273,14 +225,17 @@
     }
 
     function renderStats(stats) {
-      setText("dashboard-total-assets", stats.total);
-      setText("dashboard-using-assets", stats.using);
-      setText("dashboard-available-assets", stats.available);
-      setText("dashboard-problem-assets", stats.problem);
+      stats = stats || {};
 
-      setProgress("dashboard-using-progress", stats.using_percent);
-      setProgress("dashboard-available-progress", stats.available_percent);
-      setProgress("dashboard-problem-progress", stats.problem_percent);
+      setText("dashboard-total-assets", stats.total || 0);
+      setText("dashboard-using-assets", stats.using || 0);
+      setText("dashboard-available-assets", stats.available || 0);
+      setText("dashboard-problem-assets", stats.problem || 0);
+      setText("dashboard-problem-task-count", stats.problem || 0);
+
+      setProgress("dashboard-using-progress", stats.using_percent || 0);
+      setProgress("dashboard-available-progress", stats.available_percent || 0);
+      setProgress("dashboard-problem-progress", stats.problem_percent || 0);
     }
 
     function renderRecentAssets(items) {
@@ -326,25 +281,172 @@
         .join("");
     }
 
+    function getActivityDotClass(item) {
+      const dotClass = String(item.dot_class || "").trim();
+
+      const dotClassMap = {
+        "activity-dot-success": "activity-success",
+        "activity-dot-info": "activity-blue",
+        "activity-dot-danger": "activity-red",
+        "activity-success": "activity-success",
+        "activity-blue": "activity-blue",
+        "activity-red": "activity-red",
+      };
+
+      if (dotClassMap[dotClass]) {
+        return dotClassMap[dotClass];
+      }
+
+      const method = String(item.method || "").toUpperCase();
+
+      if (method === "POST") {
+        return "activity-success";
+      }
+
+      if (method === "DELETE") {
+        return "activity-red";
+      }
+
+      if (method === "PUT" || method === "PATCH") {
+        return "activity-blue";
+      }
+
+      return "activity-blue";
+    }
+
+    function renderRecentActivities(items) {
+      const body = document.getElementById("recent-activities-body");
+
+      if (!body) {
+        return;
+      }
+
+      if (!items || items.length === 0) {
+        body.innerHTML = `
+          <div class="activity-item">
+            <span class="activity-dot activity-blue"></span>
+            <div class="activity-content">
+              <div class="activity-title">Chưa có hoạt động nào</div>
+              <div class="activity-time">—</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      body.innerHTML = items
+        .map((item) => {
+          const dotClass = getActivityDotClass(item);
+          const action = escapeHtml(item.action || "Có hoạt động mới");
+          const createdAt = escapeHtml(item.created_at || "Vừa xong");
+          const actor = escapeHtml(
+            item.full_name ||
+              item.email ||
+              item.employee_code ||
+              ""
+          );
+
+          const timeText = actor
+            ? `${actor} • ${createdAt}`
+            : createdAt;
+
+          return `
+            <div class="activity-item">
+              <span class="activity-dot ${dotClass}"></span>
+              <div class="activity-content">
+                <div class="activity-title">${action}</div>
+                <div class="activity-time">${timeText}</div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderMiniStats(data) {
+      const typeCounts =
+        data.filter_counts?.type ||
+        data.scope?.filter_counts?.type ||
+        data.scope?.type_counts ||
+        data.type_counts ||
+        {};
+
+      const laptopPc =
+        Number(typeCounts.laptop || 0) +
+        Number(typeCounts.pc || 0);
+
+      const printer = Number(typeCounts.printer || 0);
+
+      const network =
+        Number(typeCounts.network || 0) +
+        Number(typeCounts.router || 0) +
+        Number(typeCounts.switch || 0);
+
+      const monitorAccessory =
+        Number(typeCounts.monitor || 0) +
+        Number(typeCounts.accessory || 0) +
+        Number(typeCounts.keyboard || 0) +
+        Number(typeCounts.mouse || 0);
+
+      setText("mini-laptop-pc-count", laptopPc);
+      setText("mini-printer-count", printer);
+      setText("mini-network-count", network);
+      setText("mini-monitor-accessory-count", monitorAccessory);
+    }
+
     async function loadDashboardOverview() {
       try {
-        const response = await fetch("/api/dashboard/overview?limit=4", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Không thể tải dữ liệu dashboard");
-        }
+        const response = await fetch(
+          "/api/dashboard/overview?limit=4&activity_limit=6",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
 
         const data = await response.json();
 
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || "Không thể tải dữ liệu dashboard");
+        }
+
         renderStats(data.stats || {});
         renderRecentAssets(data.recent_assets || []);
+        renderRecentActivities(data.recent_activities || []);
+        renderMiniStats(data || {});
       } catch (error) {
         console.error(error);
+
+        const assetBody = document.getElementById("recent-assets-body");
+
+        if (assetBody) {
+          assetBody.innerHTML = `
+            <div class="asset-row">
+              <div>Không thể tải dữ liệu</div>
+              <div>—</div>
+              <div>
+                <span class="status-badge status-error">Lỗi</span>
+              </div>
+              <div>—</div>
+            </div>
+          `;
+        }
+
+        const activityBody = document.getElementById("recent-activities-body");
+
+        if (activityBody) {
+          activityBody.innerHTML = `
+            <div class="activity-item">
+              <span class="activity-dot activity-red"></span>
+              <div class="activity-content">
+                <div class="activity-title">Không thể tải hoạt động gần đây</div>
+                <div class="activity-time">Kiểm tra lại API /api/dashboard/overview</div>
+              </div>
+            </div>
+          `;
+        }
       }
     }
 

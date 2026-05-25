@@ -65,6 +65,13 @@
       >
         Báo cáo
       </a>
+
+      <a
+        href="{{ url_for('activity_page') }}"
+        class="nav-link {% if request.endpoint == 'activity_page' %}active{% endif %}"
+      >
+        Hoạt động
+      </a>
     </nav>
 
     <div class="header-actions">

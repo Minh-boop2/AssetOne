@@ -1,0 +1,435 @@
+/* ================= ACTIVITY OVERVIEW / FILTER ================= */
+
+.activity-filter-section {
+    flex-shrink: 0;
+}
+
+.activity-filter-bar {
+    position: relative;
+    z-index: 50;
+
+    margin-bottom: 16px;
+    padding: 12px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.activity-filter-item {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.activity-filter-item--search {
+    flex: 2;
+}
+
+.activity-filter-label {
+    color: var(--text-soft);
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* ================= INPUT / SELECT ================= */
+
+.activity-filter-input,
+.activity-count-select__button {
+    width: 100%;
+    height: 38px;
+    padding: 0 14px;
+
+    background: var(--surface-2);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    outline: none;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+
+    transition: 0.2s ease;
+}
+
+.activity-filter-input {
+    cursor: text;
+}
+
+.activity-filter-input::placeholder {
+    color: var(--text-soft);
+    opacity: 1;
+}
+
+.activity-filter-input:focus,
+.activity-count-select__button:focus,
+.activity-count-select.open .activity-count-select__button,
+.activity-count-select__button:hover {
+    border-color: var(--hsu-blue);
+}
+
+.activity-filter-input:focus,
+.activity-count-select__button:focus {
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+/* ================= COUNT SELECT ================= */
+
+.activity-count-select {
+    position: relative;
+    width: 100%;
+}
+
+.activity-count-select__button {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.activity-count-select__value {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+}
+
+.activity-count-select__label {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--text);
+    text-align: left;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.activity-count-select__count {
+    margin-left: auto;
+    margin-right: 10px;
+
+    color: var(--text-soft);
+
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.activity-count-select__caret {
+    flex-shrink: 0;
+
+    color: var(--text-soft);
+    font-size: 9px;
+    opacity: 0.7;
+}
+
+.activity-count-select__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1001;
+
+    display: none;
+    width: 100%;
+    padding: 6px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+
+    overflow-x: hidden;
+}
+
+.activity-count-select.open .activity-count-select__menu {
+    display: block;
+    animation: activityFilterFadeIn 0.18s ease;
+}
+
+.activity-count-select__menu.is-scrollable {
+    max-height: 198px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.activity-count-select__option {
+    width: 100%;
+    padding: 10px 12px;
+
+    background: transparent;
+    color: var(--text);
+
+    border: 0;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    transition: 0.2s ease;
+}
+
+.activity-count-select__option:hover {
+    background: var(--surface-2);
+    color: var(--hsu-blue);
+}
+
+.activity-count-select__option.is-active {
+    background: var(--select-active-bg);
+    color: var(--select-active-text);
+}
+
+.activity-count-select__option-label {
+    flex: 1;
+    min-width: 0;
+
+    text-align: left;
+    font-weight: 600;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.activity-count-select__option-count {
+    margin-left: auto;
+
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ================= ACTIONS ================= */
+
+.activity-filter-actions {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.activity-action-btn,
+.activity-btn-reset {
+    height: 38px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    font-family: inherit;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-action-btn {
+    padding: 0 18px;
+
+    background: var(--surface-2);
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.activity-action-btn:hover {
+    background: var(--surface);
+    text-decoration: none;
+}
+
+.activity-action-btn--primary {
+    background: var(--hsu-blue);
+    border-color: var(--hsu-blue);
+    color: #ffffff;
+}
+
+.activity-action-btn--primary:hover {
+    background: var(--hsu-blue-hover);
+    border-color: var(--hsu-blue-hover);
+    color: #ffffff;
+
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 94, 255, 0.24);
+}
+
+.activity-action-btn--primary:visited,
+.activity-action-btn--primary:active,
+.activity-action-btn--primary:focus {
+    color: #ffffff;
+}
+
+.activity-btn-reset {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+
+    background: var(--surface-2);
+    color: var(--hsu-red);
+
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.activity-btn-reset:hover {
+    background: var(--danger-soft-bg);
+    border-color: rgba(239, 59, 45, 0.35);
+    text-decoration: none;
+}
+
+.activity-btn-reset:visited,
+.activity-btn-reset:active,
+.activity-btn-reset:focus {
+    color: var(--hsu-red);
+    text-decoration: none;
+}
+
+.activity-btn-reset.is-hidden {
+    display: none;
+}
+
+/* ================= STATS OPTIONAL ================= */
+
+.activity-summary-grid {
+    flex-shrink: 0;
+    margin-bottom: 16px;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.activity-summary-card {
+    min-height: 86px;
+    padding: 16px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+}
+
+.activity-summary-card span {
+    color: var(--text-soft);
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.activity-summary-card strong {
+    color: var(--text);
+
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.activity-summary-card p {
+    margin: 0;
+
+    color: var(--text-soft);
+    font-size: 13px;
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes activityFilterFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1200px) {
+    .activity-filter-bar {
+        flex-wrap: wrap;
+    }
+
+    .activity-filter-item {
+        flex: 1 1 calc(50% - 10px);
+    }
+
+    .activity-filter-item--search,
+    .activity-filter-actions {
+        flex: 1 1 100%;
+    }
+
+    .activity-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .activity-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 14px;
+    }
+
+    .activity-filter-item,
+    .activity-filter-item--search,
+    .activity-filter-actions {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .activity-btn-reset,
+    .activity-action-btn--add {
+        flex: 1;
+    }
+
+    .activity-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}

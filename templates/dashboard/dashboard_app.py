@@ -56,6 +56,7 @@ def dashboard_context():
         "can_view_user": user_can("users", "view"),
         "can_view_assign": user_can("assign", "view"),
         "can_view_report": user_can("reports", "view"),
+        "can_view_activity": user_can("activities", "view") or user_can("dashboard", "view"),
     }
 
 
@@ -80,6 +81,9 @@ def register_dashboard_routes(app):
                 "message": "Bạn chưa đăng nhập",
                 "stats": {},
                 "recent_assets": [],
+                "recent_activities": [],
+                "scope": {},
+                "activity_viewer": {},
             }), 401
 
         if not user_can("dashboard", "view"):
@@ -88,11 +92,18 @@ def register_dashboard_routes(app):
                 "message": "Bạn không có quyền xem dashboard",
                 "stats": {},
                 "recent_assets": [],
+                "recent_activities": [],
+                "scope": {},
+                "activity_viewer": {},
             }), 403
 
         limit = request.args.get("limit", 4, type=int)
+        activity_limit = request.args.get("activity_limit", 6, type=int)
 
-        data = get_dashboard_overview_data(limit=limit)
+        data = get_dashboard_overview_data(
+            limit=limit,
+            activity_limit=activity_limit,
+        )
 
         status_code = data.get("status_code")
 
@@ -104,6 +115,9 @@ def register_dashboard_routes(app):
                 "message": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
                 "stats": {},
                 "recent_assets": [],
+                "recent_activities": [],
+                "scope": {},
+                "activity_viewer": {},
             }), 401
 
         if status_code == 403:
@@ -112,6 +126,9 @@ def register_dashboard_routes(app):
                 "message": data.get("message", "Bạn không có quyền xem dữ liệu dashboard"),
                 "stats": data.get("stats", {}),
                 "recent_assets": data.get("recent_assets", []),
+                "recent_activities": data.get("recent_activities", []),
+                "scope": data.get("scope", {}),
+                "activity_viewer": data.get("activity_viewer", {}),
             }), 403
 
         return jsonify({
@@ -119,5 +136,9 @@ def register_dashboard_routes(app):
             "message": "Lấy dữ liệu dashboard thành công",
             "stats": data.get("stats", {}),
             "recent_assets": data.get("recent_assets", []),
+            "recent_activities": data.get("recent_activities", []),
             "scope": data.get("scope", {}),
+            "activity_viewer": data.get("activity_viewer", {}),
+            "activity_message": data.get("activity_message"),
+            "activity_status_code": data.get("activity_status_code"),
         }), 200

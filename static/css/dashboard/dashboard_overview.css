@@ -5,6 +5,7 @@
 
 .overview-container {
   width: 100%;
+  min-width: 0;
 }
 
 .overview-heading {
@@ -36,6 +37,8 @@
   border-radius: 18px;
   padding: 20px;
   box-shadow: var(--shadow);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .stat-card-top {
@@ -43,18 +46,21 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
+  min-width: 0;
 }
 
 .stat-icon {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  display: flex; 
+  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   line-height: 1;
+  flex-shrink: 0;
 }
+
 .stat-icon-blue {
   background: rgba(31, 79, 163, 0.12);
   color: var(--hsu-blue);
@@ -79,6 +85,10 @@
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-value {
@@ -131,7 +141,7 @@
 
 .overview-grid {
   display: grid;
-  grid-template-columns: 2fr 1.25fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.25fr);
   gap: 22px;
   margin-bottom: 22px;
 }
@@ -146,6 +156,8 @@
   border-radius: 18px;
   padding: 20px;
   box-shadow: var(--shadow);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .overview-card-large {
@@ -158,35 +170,64 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
+  min-width: 0;
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 26px;
   color: var(--text);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-link {
   color: var(--hsu-blue);
   font-weight: 700;
   text-decoration: none;
+  flex-shrink: 0;
 }
+
+/* =========================
+   ASSET TABLE
+========================= */
 
 .asset-table {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .asset-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.2fr 1.5fr;
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(0, 1fr)
+    minmax(110px, 1.1fr)
+    minmax(0, 1.3fr);
   gap: 14px;
   align-items: center;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
+  min-width: 0;
 }
 
 .asset-row:last-child {
   border-bottom: none;
+}
+
+.asset-row > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Tất cả text trong bảng tài sản bị dài sẽ thành ... */
+.asset-row > div:not(:has(.status-badge)) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .asset-row-head {
@@ -200,10 +241,15 @@
   align-items: center;
   justify-content: center;
   min-height: 34px;
+  max-width: 100%;
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-using {
@@ -212,7 +258,7 @@
 }
 
 .status-free {
-  background: rgba(31, 79, 163, 0.10);
+  background: rgba(31, 79, 163, 0.1);
   color: var(--hsu-blue);
 }
 
@@ -221,16 +267,26 @@
   color: var(--hsu-red);
 }
 
+/* =========================
+   ACTIVITY LIST
+========================= */
+
 .activity-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .activity-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .activity-dot {
@@ -255,25 +311,51 @@
 
 .activity-content {
   min-width: 0;
+  max-width: 100%;
+  flex: 1;
+  overflow: hidden;
 }
 
+/* Dòng tiêu đề hoạt động chỉ 1 dòng, dài thì ... */
 .activity-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.5;
   margin-bottom: 4px;
+
+  display: block;
+  width: 100%;
+  max-width: 100%;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Dòng thời gian cũng chỉ 1 dòng */
 .activity-time {
   font-size: 13px;
   color: var(--text-soft);
+
+  display: block;
+  width: 100%;
+  max-width: 100%;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* =========================
+   TASK LIST
+========================= */
 
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 .task-item {
@@ -285,12 +367,21 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface-2);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .task-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.task-left > div {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .task-icon {
@@ -319,11 +410,19 @@
   font-weight: 700;
   color: var(--text);
   margin-bottom: 4px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-subtitle {
   font-size: 13px;
   color: var(--text-soft);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-btn {
@@ -335,6 +434,11 @@
   color: var(--text);
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .task-btn-primary {
@@ -343,10 +447,15 @@
   color: #fff;
 }
 
+/* =========================
+   MINI STATS
+========================= */
+
 .mini-stats {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 .mini-stat {
@@ -359,12 +468,26 @@
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mini-stat span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mini-stat strong {
   color: var(--hsu-blue);
   font-size: 18px;
+  flex-shrink: 0;
 }
+
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media (max-width: 1200px) {
   .stats-grid {
@@ -396,6 +519,10 @@
     align-items: flex-start;
   }
 
+  .task-btn {
+    width: 100%;
+  }
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
@@ -403,6 +530,7 @@
 
   .card-header h3 {
     font-size: 22px;
+    white-space: normal;
   }
 
   .overview-heading h2 {

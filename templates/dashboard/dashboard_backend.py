@@ -7,6 +7,7 @@ from flask import session
 
 
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
+BACKEND_ACTIVITIES_API = "http://127.0.0.1:5001/api/activities"
 
 
 DEFAULT_FILTER_COUNTS = {
@@ -55,6 +56,14 @@ STATUS_BADGE_CLASSES = {
 }
 
 
+ACTIVITY_DOT_CLASSES = {
+    "POST": "activity-dot-success",
+    "PUT": "activity-dot-info",
+    "PATCH": "activity-dot-info",
+    "DELETE": "activity-dot-danger",
+}
+
+
 def get_current_user():
     return session.get("user") or session.get("current_user") or {}
 
@@ -83,10 +92,6 @@ def build_headers():
 
     current_user_id = get_current_user_id()
 
-    # Quan trọng:
-    # Backend /api/assets dùng X-User-Id để phân quyền và lọc dữ liệu.
-    # ADMIN / QUAN_LY: full tài sản.
-    # NHAN_VIEN: chỉ tài sản của chính mình.
     if current_user_id:
         headers["X-User-Id"] = current_user_id
 
@@ -100,13 +105,13 @@ def safe_percent(value, total):
     return min(100, max(0, round((value / total) * 100)))
 
 
-def normalize_limit(limit):
+def normalize_limit(limit, default=4, max_value=20):
     try:
         limit = int(limit)
     except (TypeError, ValueError):
-        limit = 4
+        limit = default
 
-    return max(1, min(limit, 20))
+    return max(1, min(limit, max_value))
 
 
 def empty_dashboard_assets_payload(limit=4, message=None, status_code=None):
@@ -125,13 +130,29 @@ def empty_dashboard_assets_payload(limit=4, message=None, status_code=None):
     }
 
 
+def empty_dashboard_activities_payload(limit=6, message=None, status_code=None):
+    return {
+        "success": False,
+        "message": message,
+        "data": [],
+        "pagination": {
+            "page": 1,
+            "limit": limit,
+            "total": 0,
+            "total_pages": 1,
+        },
+        "viewer": {},
+        "status_code": status_code,
+    }
+
+
 def parse_json_response(response):
     raw = response.read().decode("utf-8")
     return json.loads(raw) if raw else {}
 
 
 def fetch_dashboard_assets_from_backend(limit=4):
-    limit = normalize_limit(limit)
+    limit = normalize_limit(limit, default=4, max_value=20)
 
     params = {
         "page": 1,
@@ -164,7 +185,7 @@ def fetch_dashboard_assets_from_backend(limit=4):
             limit=limit,
             message=payload.get(
                 "message",
-                f"Lấy dữ liệu dashboard thất bại. HTTP {e.code}"
+                f"Lấy dữ liệu tài sản dashboard thất bại. HTTP {e.code}"
             ),
             status_code=e.code,
         )
@@ -172,7 +193,50 @@ def fetch_dashboard_assets_from_backend(limit=4):
     except (URLError, TimeoutError, json.JSONDecodeError):
         return empty_dashboard_assets_payload(
             limit=limit,
-            message="Không thể kết nối đến backend để lấy dữ liệu dashboard.",
+            message="Không thể kết nối đến backend để lấy dữ liệu tài sản dashboard.",
+            status_code=500,
+        )
+
+
+def fetch_dashboard_activities_from_backend(limit=6):
+    limit = normalize_limit(limit, default=6, max_value=20)
+
+    params = {
+        "page": 1,
+        "limit": limit,
+    }
+
+    api_url = f"{BACKEND_ACTIVITIES_API}?{urlencode(params)}"
+
+    req = Request(
+        api_url,
+        method="GET",
+        headers=build_headers(),
+    )
+
+    try:
+        with urlopen(req, timeout=5) as response:
+            return parse_json_response(response)
+
+    except HTTPError as e:
+        try:
+            payload = json.loads(e.read().decode("utf-8"))
+        except Exception:
+            payload = {}
+
+        return empty_dashboard_activities_payload(
+            limit=limit,
+            message=payload.get(
+                "message",
+                f"Lấy dữ liệu hoạt động dashboard thất bại. HTTP {e.code}"
+            ),
+            status_code=e.code,
+        )
+
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return empty_dashboard_activities_payload(
+            limit=limit,
+            message="Không thể kết nối đến backend để lấy dữ liệu hoạt động gần đây.",
             status_code=500,
         )
 
@@ -224,11 +288,44 @@ def build_recent_asset_item(asset):
     }
 
 
-def get_dashboard_overview_data(limit=4):
-    payload = fetch_dashboard_assets_from_backend(limit=limit)
+def build_recent_activity_item(activity):
+    activity = activity or {}
 
-    filter_counts = payload.get("filter_counts") or DEFAULT_FILTER_COUNTS
-    items = payload.get("items") or []
+    method = activity.get("method") or ""
+    method = method.upper()
+
+    dot_class = ACTIVITY_DOT_CLASSES.get(method, "activity-dot-info")
+
+    return {
+        "id": activity.get("id") or "",
+        "user_id": activity.get("user_id") or "",
+        "employee_code": activity.get("employee_code") or "",
+        "full_name": activity.get("full_name") or "",
+        "email": activity.get("email") or "",
+        "role": activity.get("role") or "",
+
+        "action": activity.get("action") or "Có hoạt động mới",
+        "module": activity.get("module") or "",
+        "method": method,
+        "path": activity.get("path") or "",
+        "status_code": activity.get("status_code"),
+
+        "target_id": activity.get("target_id") or "",
+        "target_name": activity.get("target_name") or "",
+
+        "created_at": activity.get("created_at") or "",
+        "dot_class": dot_class,
+    }
+
+
+def get_dashboard_overview_data(limit=4, activity_limit=6):
+    asset_payload = fetch_dashboard_assets_from_backend(limit=limit)
+    activity_payload = fetch_dashboard_activities_from_backend(limit=activity_limit)
+
+    filter_counts = asset_payload.get("filter_counts") or DEFAULT_FILTER_COUNTS
+    items = asset_payload.get("items") or []
+
+    activity_items = activity_payload.get("data") or []
 
     stats = build_dashboard_stats(filter_counts)
 
@@ -237,10 +334,24 @@ def get_dashboard_overview_data(limit=4):
         for item in items
     ]
 
+    recent_activities = [
+        build_recent_activity_item(item)
+        for item in activity_items
+    ]
+
+    status_code = asset_payload.get("status_code")
+
     return {
         "stats": stats,
         "recent_assets": recent_assets,
-        "scope": payload.get("scope", {}),
-        "message": payload.get("message"),
-        "status_code": payload.get("status_code"),
+        "recent_activities": recent_activities,
+
+        "scope": asset_payload.get("scope", {}),
+        "activity_viewer": activity_payload.get("viewer", {}),
+
+        "message": asset_payload.get("message"),
+        "activity_message": activity_payload.get("message"),
+
+        "status_code": status_code,
+        "activity_status_code": activity_payload.get("status_code"),
     }

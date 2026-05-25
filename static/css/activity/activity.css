@@ -1,0 +1,211 @@
+/* ================= ACTIVITY BASE ================= */
+
+:root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --border: #e2e8f0;
+
+    --text: #1e293b;
+    --text-soft: #64748b;
+
+    --hsu-blue: #1f5eff;
+    --hsu-blue-2: #2563eb;
+    --hsu-blue-hover: #1d4ed8;
+    --hsu-red: #ef3b2d;
+    --hsu-green: #10b981;
+    --hsu-warning: #f59e0b;
+    --hsu-purple: #8b5cf6;
+    --hsu-cyan: #06b6d4;
+
+    --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05);
+    --shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.08);
+
+    --font-main: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --activity-header-height: 90px;
+
+    --select-active-bg: rgba(31, 94, 255, 0.12);
+    --select-active-text: #1d4ed8;
+    --danger-soft-bg: rgba(239, 59, 45, 0.1);
+}
+
+:is(
+    html[data-theme="dark"],
+    body[data-theme="dark"],
+    :root[data-theme="dark"],
+    body.dark-mode,
+    body.dark-theme,
+    .dark-mode,
+    .dark-theme
+) {
+    --bg: #0f172a;
+    --surface: #111c34;
+    --surface-2: #16233f;
+    --border: #263553;
+
+    --text: #e8eefc;
+    --text-soft: #aab8d3;
+
+    --hsu-blue: #3b82f6;
+    --hsu-blue-2: #60a5fa;
+    --hsu-blue-hover: #2563eb;
+
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.35);
+
+    --select-active-bg: rgba(59, 130, 246, 0.18);
+    --select-active-text: #bfdbfe;
+    --danger-soft-bg: rgba(239, 59, 45, 0.12);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden !important;
+    background: var(--bg) !important;
+    color: var(--text);
+}
+
+body:has(#activityForm),
+body:has(.activity-page) {
+    background: var(--bg) !important;
+}
+
+/* ================= PAGE WRAPPER ================= */
+
+#activityForm {
+    height: calc(100dvh - var(--activity-header-height));
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+
+    background: var(--bg) !important;
+    color: var(--text);
+    font-family: var(--font-main);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+}
+
+.activity-page {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    padding: 18px 24px;
+
+    background: var(--bg) !important;
+    color: var(--text);
+    font-family: var(--font-main);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+}
+
+/* ================= HEADER ================= */
+
+.activity-page__header {
+    flex-shrink: 0;
+    margin-bottom: 14px;
+}
+
+.activity-page__title {
+    margin: 0 0 6px;
+    color: var(--text) !important;
+
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    line-height: 1.2;
+    letter-spacing: -0.35px;
+}
+
+.activity-page__header p {
+    margin: 0;
+    color: var(--text-soft) !important;
+
+    font-size: 14px !important;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* ================= SCROLLBAR ================= */
+
+#activityForm ::-webkit-scrollbar,
+.activity-page ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+#activityForm ::-webkit-scrollbar-track,
+.activity-page ::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+#activityForm ::-webkit-scrollbar-thumb,
+.activity-page ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+}
+
+#activityForm ::-webkit-scrollbar-thumb:hover,
+.activity-page ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-soft);
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1200px) {
+    :root {
+        --activity-header-height: 86px;
+    }
+
+    .activity-page {
+        padding: 16px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --activity-header-height: 80px;
+    }
+
+    html,
+    body {
+        height: auto;
+        overflow: auto !important;
+    }
+
+    #activityForm,
+    .activity-page {
+        height: auto;
+        min-height: calc(100dvh - var(--activity-header-height));
+        overflow: visible !important;
+    }
+
+    .activity-page {
+        padding: 14px !important;
+    }
+
+    .activity-page__header {
+        margin-bottom: 12px;
+    }
+
+    .activity-page__title {
+        font-size: 24px !important;
+    }
+
+    .activity-page__header p {
+        font-size: 13px !important;
+    }
+}
