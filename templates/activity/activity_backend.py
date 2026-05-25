@@ -492,3 +492,75 @@ def get_activity_page_context(args, current_user):
 
         "current_user": current_user,
     }
+def export_activities_excel(args, current_user):
+    current_user_id = get_current_user_id(current_user)
+
+    headers = {
+        "X-User-Id": str(current_user_id),
+    }
+
+    params = {}
+
+    search_value = (
+        args.get("search")
+        or args.get("keyword")
+        or args.get("q")
+        or ""
+    ).strip()
+
+    selected_type = (
+        args.get("type")
+        or args.get("activity_type")
+        or "Tất cả"
+    ).strip()
+
+    selected_user_name = (
+        args.get("user_name")
+        or args.get("full_name")
+        or "Tất cả"
+    ).strip()
+
+    if search_value:
+        params["search"] = search_value
+
+    if selected_type and selected_type != "Tất cả":
+        params["type"] = selected_type
+
+    if selected_user_name and selected_user_name != "Tất cả":
+        params["user_name"] = selected_user_name
+
+    try:
+        response = requests.get(
+            f"{BACKEND_API_URL}/api/activities/export",
+            headers=headers,
+            params=params,
+            timeout=30,
+        )
+
+        content_type = response.headers.get(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        disposition = response.headers.get("Content-Disposition", "")
+        filename = "Activities.xlsx"
+
+        if "filename=" in disposition:
+            filename = disposition.split("filename=")[-1].strip().strip('"')
+
+        return {
+            "success": response.status_code == 200,
+            "content": response.content,
+            "filename": filename,
+            "content_type": content_type,
+            "status_code": response.status_code,
+        }
+
+    except requests.RequestException as error:
+        return {
+            "success": False,
+            "content": str(error).encode("utf-8"),
+            "filename": "Activities.xlsx",
+            "content_type": "text/plain; charset=utf-8",
+            "status_code": 500,
+        }

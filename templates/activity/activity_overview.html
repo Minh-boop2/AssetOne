@@ -1,298 +1,404 @@
 {# templates/activity/activity_overview.html #}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/activity/activity.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/activity/activity_overview.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/activity/activity_table.css') }}">
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/activity/activity.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/activity/activity_overview.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/activity/activity_table.css') }}"
+/>
 
-{% set activity_logs = activities|default(activity_logs|default(logs|default([], true), true), true) %}
-
-{% set search_value = search_value|default(search_q|default(request.args.get('search', ''), true), true) %}
-
-{% set selected_type_value = selected_type|default(selected_activity_type|default(request.args.get('type', 'Tất cả'), true), true) %}
-{% set selected_user_name_value = selected_user_name|default(request.args.get('user_name', 'Tất cả'), true) %}
-
-{% set activity_type_options = activity_type_options|default(type_options|default([], true), true) %}
-{% set activity_user_options = activity_user_options|default(user_name_options|default([], true), true) %}
-
-{% set type_counts = type_counts|default({}, true) %}
-{% set user_name_counts = user_name_counts|default({}, true) %}
-
-{% set total_activity_count = total_records|default(total_activity_count|default(activity_logs|length, true), true) %}
-
-{% set activity_has_active_filter =
-    has_active_filter|default(false, true)
-    or search_value
-    or selected_type_value != 'Tất cả'
-    or selected_user_name_value != 'Tất cả'
-%}
+{% set activity_logs = activities|default(activity_logs|default(logs|default([],
+true), true), true) %} {% set search_value =
+search_value|default(search_q|default(request.args.get('search', ''), true),
+true) %} {% set selected_type_value =
+selected_type|default(selected_activity_type|default(request.args.get('type',
+'Tất cả'), true), true) %} {% set selected_user_name_value =
+selected_user_name|default(request.args.get('user_name', 'Tất cả'), true) %} {%
+set activity_type_options =
+activity_type_options|default(type_options|default([], true), true) %} {% set
+activity_user_options =
+activity_user_options|default(user_name_options|default([], true), true) %} {%
+set type_counts = type_counts|default({}, true) %} {% set user_name_counts =
+user_name_counts|default({}, true) %} {% set all_activity_count =
+total_records|default(total_activity_count|default(activity_logs|length, true),
+true) %} {% set total_activity_count = all_activity_count %} {% set
+activity_has_active_filter = has_active_filter|default(false, true) or
+search_value or selected_type_value != 'Tất cả' or selected_user_name_value !=
+'Tất cả' %}
 
 <form method="GET" action="{{ url_for('activity_page') }}" id="activityForm">
-    <section class="activity-page">
-        <div class="activity-page__header">
-            <h1 class="activity-page__title">Hoạt động hệ thống</h1>
-            <p>Theo dõi nhật ký thao tác, người thực hiện và trạng thái hoạt động trong hệ thống</p>
+  <section class="activity-page">
+    <div class="activity-page__header">
+      <h1 class="activity-page__title">Hoạt động hệ thống</h1>
+      <p>
+        Theo dõi nhật ký thao tác, người thực hiện và trạng thái hoạt động trong
+        hệ thống
+      </p>
+    </div>
+
+    <div class="activity-filter-section">
+      <div class="activity-filter-bar">
+        <input type="hidden" name="page" value="1" />
+
+        <div class="activity-filter-item activity-filter-item--search">
+          <label class="activity-filter-label" for="activitySearch"
+            >Tìm kiếm</label
+          >
+
+          <input
+            id="activitySearch"
+            class="activity-filter-input"
+            type="text"
+            name="search"
+            placeholder="Tìm theo người thực hiện, nội dung hoặc mã hoạt động..."
+            value="{{ search_value }}"
+            autocomplete="off"
+          />
         </div>
 
-        <div class="activity-filter-section">
-            <div class="activity-filter-bar">
-                <input type="hidden" name="page" value="1">
+        <div class="activity-filter-item">
+          <label class="activity-filter-label">Loại</label>
 
-                <div class="activity-filter-item activity-filter-item--search">
-                    <label class="activity-filter-label" for="activitySearch">Tìm kiếm</label>
-                    <input
-                        id="activitySearch"
-                        class="activity-filter-input"
-                        type="text"
-                        name="search"
-                        placeholder="Tìm theo người thực hiện, nội dung hoặc mã hoạt động..."
-                        value="{{ search_value }}"
-                        autocomplete="off"
-                    >
-                </div>
+          <div class="activity-count-select" data-activity-count-select>
+            <input
+              type="hidden"
+              class="js-activity-filter"
+              name="type"
+              value="{{ selected_type_value }}"
+            />
 
-                <div class="activity-filter-item">
-                    <label class="activity-filter-label">Loại</label>
+            <button type="button" class="activity-count-select__button">
+              <span class="activity-count-select__value">
+                <span class="activity-count-select__label">
+                  {{ selected_type_value if selected_type_value != 'Tất cả' else
+                  'Tất cả loại' }}
+                </span>
 
-                    <div class="activity-count-select" data-activity-count-select>
-                        <input
-                            type="hidden"
-                            class="js-activity-filter"
-                            name="type"
-                            value="{{ selected_type_value }}"
-                        >
+                <span class="activity-count-select__count">
+                  {% if selected_type_value == 'Tất cả' %} {{ all_activity_count
+                  }} {% else %} {{ type_counts.get(selected_type_value, 0) }} {%
+                  endif %}
+                </span>
+              </span>
 
-                        <button type="button" class="activity-count-select__button">
-                            <span class="activity-count-select__value">
-                                <span class="activity-count-select__label">
-                                    {{ selected_type_value if selected_type_value != 'Tất cả' else 'Tất cả loại' }}
-                                </span>
+              <span class="activity-count-select__caret">▼</span>
+            </button>
 
-                                <span class="activity-count-select__count">
-                                    {{ total_activity_count if selected_type_value == 'Tất cả' else type_counts.get(selected_type_value, 0) }}
-                                </span>
-                            </span>
+            <div
+              class="activity-count-select__menu {% if (activity_type_options|length + 1) >= 5 %}is-scrollable{% endif %}"
+            >
+              <button
+                type="button"
+                class="activity-count-select__option {% if selected_type_value == 'Tất cả' %}is-active{% endif %}"
+                data-value="Tất cả"
+                data-label="Tất cả loại"
+                data-count="{{ all_activity_count }}"
+              >
+                <span class="activity-count-select__option-label"
+                  >Tất cả loại</span
+                >
+                <span class="activity-count-select__option-count"
+                  >{{ all_activity_count }}</span
+                >
+              </button>
 
-                            <span class="activity-count-select__caret">▼</span>
-                        </button>
-
-                        <div class="activity-count-select__menu {% if (activity_type_options|length + 1) >= 5 %}is-scrollable{% endif %}">
-                            <button
-                                type="button"
-                                class="activity-count-select__option {% if selected_type_value == 'Tất cả' %}is-active{% endif %}"
-                                data-value="Tất cả"
-                                data-label="Tất cả loại"
-                                data-count="{{ total_activity_count }}"
-                            >
-                                <span class="activity-count-select__option-label">Tất cả loại</span>
-                                <span class="activity-count-select__option-count">{{ total_activity_count }}</span>
-                            </button>
-
-                            {% for item in activity_type_options %}
-                                <button
-                                    type="button"
-                                    class="activity-count-select__option {% if selected_type_value == item %}is-active{% endif %}"
-                                    data-value="{{ item }}"
-                                    data-label="{{ item }}"
-                                    data-count="{{ type_counts.get(item, 0) }}"
-                                >
-                                    <span class="activity-count-select__option-label">{{ item }}</span>
-                                    <span class="activity-count-select__option-count">{{ type_counts.get(item, 0) }}</span>
-                                </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="activity-filter-item">
-                    <label class="activity-filter-label">Tên người dùng</label>
-
-                    <div class="activity-count-select" data-activity-count-select>
-                        <input
-                            type="hidden"
-                            class="js-activity-filter"
-                            name="user_name"
-                            value="{{ selected_user_name_value }}"
-                        >
-
-                        <button type="button" class="activity-count-select__button">
-                            <span class="activity-count-select__value">
-                                <span class="activity-count-select__label">
-                                    {{ selected_user_name_value if selected_user_name_value != 'Tất cả' else 'Tất cả người dùng' }}
-                                </span>
-
-                                <span class="activity-count-select__count">
-                                    {{ total_activity_count if selected_user_name_value == 'Tất cả' else user_name_counts.get(selected_user_name_value, 0) }}
-                                </span>
-                            </span>
-
-                            <span class="activity-count-select__caret">▼</span>
-                        </button>
-
-                        <div class="activity-count-select__menu {% if (activity_user_options|length + 1) >= 5 %}is-scrollable{% endif %}">
-                            <button
-                                type="button"
-                                class="activity-count-select__option {% if selected_user_name_value == 'Tất cả' %}is-active{% endif %}"
-                                data-value="Tất cả"
-                                data-label="Tất cả người dùng"
-                                data-count="{{ total_activity_count }}"
-                            >
-                                <span class="activity-count-select__option-label">Tất cả người dùng</span>
-                                <span class="activity-count-select__option-count">{{ total_activity_count }}</span>
-                            </button>
-
-                            {% for item in activity_user_options %}
-                                <button
-                                    type="button"
-                                    class="activity-count-select__option {% if selected_user_name_value == item %}is-active{% endif %}"
-                                    data-value="{{ item }}"
-                                    data-label="{{ item }}"
-                                    data-count="{{ user_name_counts.get(item, 0) }}"
-                                >
-                                    <span class="activity-count-select__option-label">{{ item }}</span>
-                                    <span class="activity-count-select__option-count">{{ user_name_counts.get(item, 0) }}</span>
-                                </button>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="activity-filter-actions">
-                    <a
-                        href="{{ url_for('activity_page') }}"
-                        class="activity-btn-reset {% if not activity_has_active_filter %}is-hidden{% endif %}"
-                        title="Xóa bộ lọc"
-                        aria-label="Xóa bộ lọc"
-                    >
-                        ×
-                    </a>
-                </div>
+              {% for item in activity_type_options %}
+              <button
+                type="button"
+                class="activity-count-select__option {% if selected_type_value == item %}is-active{% endif %}"
+                data-value="{{ item }}"
+                data-label="{{ item }}"
+                data-count="{{ type_counts.get(item, 0) }}"
+              >
+                <span class="activity-count-select__option-label"
+                  >{{ item }}</span
+                >
+                <span class="activity-count-select__option-count"
+                  >{{ type_counts.get(item, 0) }}</span
+                >
+              </button>
+              {% endfor %}
             </div>
+          </div>
         </div>
 
-        {% include "activity/activity_table.html" %}
-    </section>
+        <div class="activity-filter-item">
+          <label class="activity-filter-label">Tên người dùng</label>
+
+          <div class="activity-count-select" data-activity-count-select>
+            <input
+              type="hidden"
+              class="js-activity-filter"
+              name="user_name"
+              value="{{ selected_user_name_value }}"
+            />
+
+            <button type="button" class="activity-count-select__button">
+              <span class="activity-count-select__value">
+                <span class="activity-count-select__label">
+                  {{ selected_user_name_value if selected_user_name_value !=
+                  'Tất cả' else 'Tất cả người dùng' }}
+                </span>
+
+                <span class="activity-count-select__count">
+                  {% if selected_user_name_value == 'Tất cả' %} {{
+                  all_activity_count }} {% else %} {{
+                  user_name_counts.get(selected_user_name_value, 0) }} {% endif
+                  %}
+                </span>
+              </span>
+
+              <span class="activity-count-select__caret">▼</span>
+            </button>
+
+            <div
+              class="activity-count-select__menu {% if (activity_user_options|length + 1) >= 5 %}is-scrollable{% endif %}"
+            >
+              <button
+                type="button"
+                class="activity-count-select__option {% if selected_user_name_value == 'Tất cả' %}is-active{% endif %}"
+                data-value="Tất cả"
+                data-label="Tất cả người dùng"
+                data-count="{{ all_activity_count }}"
+              >
+                <span class="activity-count-select__option-label"
+                  >Tất cả người dùng</span
+                >
+                <span class="activity-count-select__option-count"
+                  >{{ all_activity_count }}</span
+                >
+              </button>
+
+              {% for item in activity_user_options %}
+              <button
+                type="button"
+                class="activity-count-select__option {% if selected_user_name_value == item %}is-active{% endif %}"
+                data-value="{{ item }}"
+                data-label="{{ item }}"
+                data-count="{{ user_name_counts.get(item, 0) }}"
+              >
+                <span class="activity-count-select__option-label"
+                  >{{ item }}</span
+                >
+                <span class="activity-count-select__option-count"
+                  >{{ user_name_counts.get(item, 0) }}</span
+                >
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="activity-filter-actions">
+          <a
+            href="{{ url_for('activity_page') }}"
+            class="activity-btn-reset {% if not activity_has_active_filter %}is-hidden{% endif %}"
+            title="Xóa bộ lọc"
+            aria-label="Xóa bộ lọc"
+          >
+            ×
+          </a>
+
+          <button
+            type="button"
+            class="activity-action-btn activity-action-btn--primary activity-action-btn--export"
+            id="exportActivityBtn"
+            data-export-url="{{ url_for('activity_export_page') }}"
+          >
+            <svg
+              class="activity-export-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <path d="M7 10l5 5 5-5"></path>
+              <path d="M12 15V3"></path>
+            </svg>
+
+            <span>Xuất hoạt động</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {% include "activity/activity_table.html" %}
+  </section>
 </form>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener("DOMContentLoaded", function () {
     const AUTO_SEARCH_DELAY = 500;
     let autoSearchTimer = null;
 
     const form = document.getElementById("activityForm");
     const activitySearchInput = document.getElementById("activitySearch");
     const pageInput = form ? form.querySelector('input[name="page"]') : null;
+    const exportActivityBtn = document.getElementById("exportActivityBtn");
 
     if (!form) return;
 
     function resetActivityPageToFirst() {
-        if (pageInput) {
-            pageInput.value = "1";
-        }
+      if (pageInput) {
+        pageInput.value = "1";
+      }
     }
 
     function submitActivityFilters() {
-        resetActivityPageToFirst();
+      resetActivityPageToFirst();
 
-        if (typeof form.requestSubmit === "function") {
-            form.requestSubmit();
-        } else {
-            form.submit();
-        }
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else {
+        form.submit();
+      }
     }
 
     function scheduleActivityAutoSearch() {
-        clearTimeout(autoSearchTimer);
+      clearTimeout(autoSearchTimer);
 
-        autoSearchTimer = setTimeout(function () {
-            submitActivityFilters();
-        }, AUTO_SEARCH_DELAY);
+      autoSearchTimer = setTimeout(function () {
+        submitActivityFilters();
+      }, AUTO_SEARCH_DELAY);
     }
 
     function submitActivityFiltersNow() {
-        clearTimeout(autoSearchTimer);
-        submitActivityFilters();
+      clearTimeout(autoSearchTimer);
+      submitActivityFilters();
     }
 
-    document.querySelectorAll("[data-activity-count-select]").forEach(function (selectBox) {
-        const trigger = selectBox.querySelector(".activity-count-select__button");
+    function closeAllActivitySelects() {
+      document
+        .querySelectorAll("[data-activity-count-select]")
+        .forEach(function (selectBox) {
+          selectBox.classList.remove("open");
+        });
+    }
+
+    function exportActivities() {
+      if (!exportActivityBtn) return;
+
+      const exportUrl = exportActivityBtn.getAttribute("data-export-url");
+
+      if (!exportUrl) return;
+
+      const params = new URLSearchParams(new FormData(form));
+
+      params.delete("page");
+
+      const targetUrl = exportUrl + "?" + params.toString();
+
+      window.location.href = targetUrl;
+    }
+
+    document
+      .querySelectorAll("[data-activity-count-select]")
+      .forEach(function (selectBox) {
+        const trigger = selectBox.querySelector(
+          ".activity-count-select__button",
+        );
         const hiddenInput = selectBox.querySelector('input[type="hidden"]');
         const label = selectBox.querySelector(".activity-count-select__label");
         const count = selectBox.querySelector(".activity-count-select__count");
-        const options = selectBox.querySelectorAll(".activity-count-select__option");
+        const options = selectBox.querySelectorAll(
+          ".activity-count-select__option",
+        );
 
         if (!trigger || !hiddenInput) return;
 
         trigger.addEventListener("click", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
+          event.preventDefault();
+          event.stopPropagation();
 
-            document.querySelectorAll("[data-activity-count-select]").forEach(function (otherSelectBox) {
-                if (otherSelectBox !== selectBox) {
-                    otherSelectBox.classList.remove("open");
-                }
+          document
+            .querySelectorAll("[data-activity-count-select]")
+            .forEach(function (otherSelectBox) {
+              if (otherSelectBox !== selectBox) {
+                otherSelectBox.classList.remove("open");
+              }
             });
 
-            selectBox.classList.toggle("open");
+          selectBox.classList.toggle("open");
         });
 
         options.forEach(function (option) {
-            option.addEventListener("click", function (event) {
-                event.preventDefault();
-                event.stopPropagation();
+          option.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
 
-                hiddenInput.value = option.dataset.value || "Tất cả";
+            hiddenInput.value = option.dataset.value || "Tất cả";
 
-                if (label) {
-                    label.textContent = option.dataset.label || "";
-                }
+            if (label) {
+              label.textContent = option.dataset.label || "";
+            }
 
-                if (count) {
-                    count.textContent = option.dataset.count || "";
-                }
+            if (count) {
+              count.textContent = option.dataset.count || "";
+            }
 
-                options.forEach(function (item) {
-                    item.classList.remove("is-active");
-                });
-
-                option.classList.add("is-active");
-                selectBox.classList.remove("open");
-
-                hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+            options.forEach(function (item) {
+              item.classList.remove("is-active");
             });
+
+            option.classList.add("is-active");
+            selectBox.classList.remove("open");
+
+            hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+          });
         });
-    });
+      });
 
     if (activitySearchInput) {
-        activitySearchInput.addEventListener("input", function () {
-            scheduleActivityAutoSearch();
-        });
+      activitySearchInput.addEventListener("input", function () {
+        scheduleActivityAutoSearch();
+      });
 
-        activitySearchInput.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitActivityFiltersNow();
-            }
-        });
+      activitySearchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submitActivityFiltersNow();
+        }
+      });
     }
 
-    document.querySelectorAll(".js-activity-filter").forEach(function (filterInput) {
+    document
+      .querySelectorAll(".js-activity-filter")
+      .forEach(function (filterInput) {
         filterInput.addEventListener("change", function () {
-            scheduleActivityAutoSearch();
+          scheduleActivityAutoSearch();
         });
-    });
+      });
+
+    if (exportActivityBtn) {
+      exportActivityBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        closeAllActivitySelects();
+        exportActivities();
+      });
+    }
 
     document.addEventListener("click", function () {
-        document.querySelectorAll("[data-activity-count-select]").forEach(function (selectBox) {
-            selectBox.classList.remove("open");
-        });
+      closeAllActivitySelects();
     });
 
     document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-            document.querySelectorAll("[data-activity-count-select]").forEach(function (selectBox) {
-                selectBox.classList.remove("open");
-            });
-        }
+      if (event.key === "Escape") {
+        closeAllActivitySelects();
+      }
     });
-});
+  });
 </script>
