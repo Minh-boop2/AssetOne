@@ -570,11 +570,25 @@ def _get_options():
     report_types = data.get("report_types") or data.get("types") or REPORT_DEFAULT_TYPES
     statuses = data.get("statuses") or REPORT_DEFAULT_STATUSES
     reporter_roles = data.get("reporter_roles") or DEFAULT_ROLE_OPTIONS
-    asset_options = data.get("asset_options") or []
+
+    # Quan trọng:
+    # Dropdown "Tài sản đang sở hữu" phải lấy từ API riêng này,
+    # không lấy từ /api/reports/options vì options chung có thể chứa toàn bộ tài sản.
+    asset_success, asset_payload, _ = api_get_my_asset_options()
+
+    if asset_success:
+        raw_asset_options = (
+            asset_payload.get("items")
+            or asset_payload.get("assets")
+            or asset_payload.get("data")
+            or []
+        )
+    else:
+        raw_asset_options = []
 
     asset_options = [
         _normalize_asset(item)
-        for item in asset_options
+        for item in raw_asset_options
         if isinstance(item, dict)
     ]
 
@@ -586,7 +600,6 @@ def _get_options():
         "asset_options": asset_options,
         "allowed_file_extensions": data.get("allowed_file_extensions", []),
     }
-
 
 def _get_all_reports_for_options():
     success, payload, _ = api_get_reports({

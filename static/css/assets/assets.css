@@ -736,3 +736,15 @@ body.dark-mode .filter-select--type .filter-select__menu::-webkit-scrollbar-thum
 body.dark-mode .filter-select--type .filter-select__menu::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.95);
 }
+.action-menu__form {
+  margin: 0;
+}
+
+.action-menu__button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}

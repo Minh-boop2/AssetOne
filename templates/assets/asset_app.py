@@ -1,112 +1,42 @@
-from flask import render_template, request, redirect, url_for, jsonify, flash, session
+from flask import render_template, request, redirect, url_for, jsonify, flash
 
 from .asset_backend import (
     DEFAULT_FILTER_COUNTS,
-    fetch_assets_from_backend,
+    asset_permission_context,
+    create_asset_from_form,
+    delete_asset_from_backend,
     fetch_asset_detail_from_backend,
     fetch_asset_types_from_backend,
-    create_asset_to_backend,
-    update_asset_to_backend,
-    delete_asset_from_backend,
+    fetch_assets_from_backend,
+    handle_api_auth_error,
+    handle_asset_status_action,
+    is_logged_in,
+    is_staff_user,
+    merge_asset_form_data,
+    normalize_asset_for_template,
+    require_asset_permission,
+    user_can,
+    update_asset_from_form,
 )
 
 
-def get_current_user():
-    return session.get("user") or session.get("current_user") or {}
+def wants_json_response():
+    return (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.is_json
+        or "application/json" in request.headers.get("Accept", "")
+    )
 
 
-def is_logged_in():
-    return bool(get_current_user())
+def redirect_back_to_assets():
+    return redirect(request.referrer or url_for("assets_page"))
 
 
-def user_can(module_key, action):
-    user = get_current_user()
+def get_status_action_from_request():
+    json_data = request.get_json(silent=True)
+    data = json_data if isinstance(json_data, dict) else request.form
 
-    if user.get("is_admin") or user.get("role") == "ADMIN":
-        return True
-
-    can = user.get("can") or {}
-
-    return can.get(module_key, {}).get(action) is True
-
-
-def is_staff_user():
-    user = get_current_user()
-    return user.get("role") == "NHAN_VIEN"
-
-
-def require_login():
-    if not is_logged_in():
-        return redirect(url_for("login_page"))
-
-    return None
-
-
-def require_asset_permission(action):
-    login_redirect = require_login()
-
-    if login_redirect:
-        return login_redirect
-
-    if not user_can("assets", action):
-        flash("Bạn không có quyền thực hiện chức năng này.", "danger")
-        return redirect(url_for("dashboard_overview"))
-
-    return None
-
-
-def asset_permission_context():
-    user = get_current_user()
-
-    return {
-        "current_user": user,
-        "can_view_asset": user_can("assets", "view"),
-        "can_create_asset": user_can("assets", "create"),
-        "can_update_asset": user_can("assets", "update"),
-        "can_delete_asset": user_can("assets", "delete"),
-        "is_staff_asset_scope": is_staff_user(),
-    }
-
-
-def normalize_asset_for_template(info):
-    info = dict(info or {})
-
-    info["id"] = str(info.get("id") or info.get("_id") or info.get("asset_code") or "")
-    info["asset"] = info.get("asset") or info.get("asset_name") or ""
-    info["asset_name"] = info.get("asset_name") or info.get("asset") or ""
-
-    info["type"] = info.get("type") or info.get("category") or ""
-    info["category"] = info.get("category") or info.get("type") or ""
-
-    info["user"] = info.get("user") or info.get("receiver") or ""
-    info["receiver"] = info.get("receiver") or info.get("user") or ""
-
-    info["asset_code"] = info.get("asset_code") or ""
-    info["status"] = info.get("status") or "available"
-    info["department"] = info.get("department") or ""
-    info["location"] = info.get("location") or ""
-    info["warranty"] = info.get("warranty") or ""
-
-    info["spec"] = info.get("spec") or info.get("notes") or ""
-    info["notes"] = info.get("notes") or info.get("spec") or ""
-
-    info["user_id"] = info.get("user_id") or ""
-    info["employee_code"] = info.get("employee_code") or ""
-
-    return info
-
-
-def handle_api_auth_error(status_code, default_message=None):
-    if status_code == 401:
-        session.clear()
-        flash("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", "warning")
-        return redirect(url_for("login_page"))
-
-    if status_code == 403:
-        flash(default_message or "Bạn không có quyền thực hiện chức năng này.", "danger")
-        return redirect(url_for("dashboard_overview"))
-
-    return None
+    return (data.get("action") or "").strip()
 
 
 def register_assets_routes(app):
@@ -133,16 +63,19 @@ def register_assets_routes(app):
             status=sel_status,
         )
 
-        status_code = api_result.get("status_code")
         auth_redirect = handle_api_auth_error(
-            status_code,
+            api_result.get("status_code"),
             api_result.get("message", "Bạn không có quyền xem tài sản."),
         )
 
         if auth_redirect:
             return auth_redirect
 
-        assets = api_result.get("items", [])
+        assets = [
+            normalize_asset_for_template(asset)
+            for asset in api_result.get("items", [])
+        ]
+
         pagination = api_result.get("pagination", {})
         filter_counts = api_result.get("filter_counts", DEFAULT_FILTER_COUNTS)
         scope = api_result.get("scope", {})
@@ -182,30 +115,7 @@ def register_assets_routes(app):
 
         if request.method == "POST":
             form_data = request.form.to_dict()
-
-            asset_type = form_data.get("type", "").strip()
-            asset_name = form_data.get("asset_name", "").strip()
-            spec = form_data.get("spec", "").strip()
-
-            payload = {
-                "asset_code": form_data.get("asset_code", "").strip(),
-                "asset_name": asset_name,
-                "asset": asset_name,
-                "type": asset_type,
-                "category": asset_type,
-                "warranty": form_data.get("warranty", "").strip(),
-                "spec": spec,
-                "notes": spec,
-                "status": "available",
-                "user": "",
-                "receiver": "",
-                "user_id": "",
-                "employee_code": "",
-                "department": "",
-                "location": "",
-            }
-
-            success, result = create_asset_to_backend(payload)
+            success, result = create_asset_from_form(form_data)
 
             auth_redirect = handle_api_auth_error(
                 result.get("status_code"),
@@ -256,23 +166,11 @@ def register_assets_routes(app):
 
         if request.method == "POST":
             form_data = request.form.to_dict()
-
-            asset_name = form_data.get("asset_name", "").strip()
-            asset_type = form_data.get("type", "").strip()
-            spec = form_data.get("spec", "").strip()
-
-            payload = {
-                "asset_code": form_data.get("asset_code", "").strip() or info.get("asset_code", ""),
-                "asset_name": asset_name,
-                "asset": asset_name,
-                "type": asset_type,
-                "category": asset_type,
-                "warranty": form_data.get("warranty", "").strip(),
-                "spec": spec,
-                "notes": spec,
-            }
-
-            success, result = update_asset_to_backend(asset_id, payload)
+            success, result = update_asset_from_form(
+                asset_id=asset_id,
+                form_data=form_data,
+                current_asset=info,
+            )
 
             auth_redirect = handle_api_auth_error(
                 result.get("status_code"),
@@ -289,21 +187,10 @@ def register_assets_routes(app):
             error_message = result.get("message", "Cập nhật tài sản thất bại")
             flash(error_message, "danger")
 
-            form_data = normalize_asset_for_template({
-                **info,
-                **form_data,
-                "asset": asset_name,
-                "asset_name": asset_name,
-                "category": asset_type,
-                "type": asset_type,
-                "notes": spec,
-                "spec": spec,
-            })
-
             return render_template(
                 "assets/assets_edit.html",
                 asset_id=asset_id,
-                form_data=form_data,
+                form_data=merge_asset_form_data(info, form_data),
                 asset_types=asset_types,
                 error_message=error_message,
                 **asset_permission_context(),
@@ -344,6 +231,57 @@ def register_assets_routes(app):
             specs=specs,
             **asset_permission_context(),
         )
+
+    @app.route("/assets/status-action/<string:asset_id>", methods=["POST"])
+    def asset_status_action_view(asset_id):
+        is_ajax = wants_json_response()
+
+        if not is_logged_in():
+            result = {
+                "message": "Bạn chưa đăng nhập.",
+            }
+
+            if is_ajax:
+                return jsonify(result), 401
+
+            flash(result["message"], "warning")
+            return redirect(url_for("login_page"))
+
+        if not user_can("assets", "update"):
+            result = {
+                "message": "Bạn không có quyền cập nhật trạng thái tài sản.",
+            }
+
+            if is_ajax:
+                return jsonify(result), 403
+
+            flash(result["message"], "danger")
+            return redirect(url_for("assets_page"))
+
+        action = get_status_action_from_request()
+
+        success, result = handle_asset_status_action(
+            asset_id=asset_id,
+            action=action,
+        )
+
+        auth_redirect = handle_api_auth_error(
+            result.get("status_code"),
+            result.get("message"),
+        )
+
+        if auth_redirect:
+            return auth_redirect
+
+        if is_ajax:
+            return jsonify(result), 200 if success else result.get("status_code", 400)
+
+        if success:
+            flash(result.get("message", "Cập nhật trạng thái tài sản thành công."), "success")
+        else:
+            flash(result.get("message", "Cập nhật trạng thái tài sản thất bại."), "danger")
+
+        return redirect_back_to_assets()
 
     @app.route("/assets/delete/<string:asset_id>", methods=["POST"])
     def asset_delete_view(asset_id):

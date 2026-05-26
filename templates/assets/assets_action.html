@@ -1,4 +1,7 @@
 {% macro render_action(row) %}
+{% set asset_id = row.id or row.asset_code %}
+{% set asset_status = row.status or "" %}
+
 <div class="table-actions">
   <div class="action-menu" data-menu>
     <button
@@ -16,7 +19,7 @@
 
     <div class="action-menu__dropdown">
       <a
-        href="{{ url_for('asset_detail_view', asset_id=row.id) }}"
+        href="{{ url_for('asset_detail_view', asset_id=asset_id) }}"
         class="action-menu__item"
       >
         <span class="action-menu__icon">👁</span>
@@ -24,17 +27,69 @@
       </a>
 
       <a
-        href="{{ url_for('asset_edit', asset_id=row.id or row.asset_code) }}"
+        href="{{ url_for('asset_edit', asset_id=asset_id) }}"
         class="action-menu__item"
       >
         <span class="action-menu__icon">✏️</span>
         <span>Chỉnh sửa</span>
       </a>
 
+      {% if asset_status in ["broken", "Hỏng", "Hong"] %}
+        <form
+          action="{{ url_for('asset_status_action_view', asset_id=asset_id) }}"
+          method="POST"
+          style="margin: 0;"
+        >
+          <input type="hidden" name="action" value="send_maintenance" />
+          <button
+            type="submit"
+            class="action-menu__item"
+            style="width: 100%; border: 0; background: transparent; cursor: pointer;"
+          >
+            <span class="action-menu__icon">🛠</span>
+            <span>Đang bảo trì</span>
+          </button>
+        </form>
+      {% endif %}
+
+      {% if asset_status in ["maintenance", "Bảo trì", "Bao tri"] %}
+        <form
+          action="{{ url_for('asset_status_action_view', asset_id=asset_id) }}"
+          method="POST"
+          style="margin: 0;"
+        >
+          <input type="hidden" name="action" value="maintenance_done" />
+          <button
+            type="submit"
+            class="action-menu__item"
+            style="width: 100%; border: 0; background: transparent; cursor: pointer;"
+          >
+            <span class="action-menu__icon">✅</span>
+            <span>Hoàn thành</span>
+          </button>
+        </form>
+
+        <form
+          action="{{ url_for('asset_status_action_view', asset_id=asset_id) }}"
+          method="POST"
+          style="margin: 0;"
+        >
+          <input type="hidden" name="action" value="maintenance_failed" />
+          <button
+            type="submit"
+            class="action-menu__item"
+            style="width: 100%; border: 0; background: transparent; cursor: pointer;"
+          >
+            <span class="action-menu__icon">❌</span>
+            <span>Không hoàn thành</span>
+          </button>
+        </form>
+      {% endif %}
+
       <button
         type="button"
         class="action-menu__item action-menu__item--danger"
-        data-delete-asset-id="{{ row.id }}"
+        data-delete-asset-id="{{ asset_id }}"
       >
         <span class="action-menu__icon">🗑</span>
         <span>Xóa</span>
