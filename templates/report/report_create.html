@@ -9,6 +9,628 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_create.css') }}">
 
+<style>
+    /* ================= PAGE FIT 100% ================= */
+
+    html,
+    body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    @media (min-width: 1201px) {
+        html,
+        body {
+            overflow-y: hidden !important;
+        }
+    }
+
+    .main-content,
+    .content,
+    .page-content,
+    .app-content,
+    #app,
+    #app-body,
+    main {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .report-create-page {
+        --report-file-surface: var(--surface);
+        --report-file-surface-2: var(--surface-2);
+        --report-file-border: var(--border);
+        --report-file-text: var(--text);
+        --report-file-text-soft: var(--text-soft);
+        --report-file-blue: var(--hsu-blue);
+        --report-file-blue-hover: var(--hsu-blue-hover);
+        --report-file-active-bg: var(--select-active-bg);
+        --report-file-active-text: var(--select-active-text);
+
+        min-height: calc(100vh - 112px) !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+    }
+
+    @media (min-width: 1201px) {
+        .report-create-page {
+            height: calc(100vh - 112px) !important;
+            overflow: hidden !important;
+        }
+    }
+
+    .report-create-wrap {
+        width: 100%;
+        max-width: 1120px !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        overflow: visible !important;
+        transform-origin: top center;
+    }
+
+    .report-create-back {
+        margin-bottom: 3px !important;
+    }
+
+    .report-create-title {
+        margin-bottom: 10px !important;
+        font-size: 29px !important;
+        line-height: 1.08 !important;
+    }
+
+    .report-create-card {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        display: block !important;
+        border-radius: 18px !important;
+        overflow: visible !important;
+    }
+
+    .report-create-form {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .report-create-body {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+        padding: 16px 26px 8px !important;
+    }
+
+    .report-create-grid {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        align-items: start !important;
+        gap: 22px !important;
+    }
+
+    .report-create-column {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .report-section-heading {
+        margin-bottom: 8px !important;
+    }
+
+    .report-section-heading span {
+        font-size: 15px !important;
+    }
+
+    .report-form-group {
+        margin-bottom: 9px !important;
+    }
+
+    .report-form-group label {
+        margin-bottom: 5px !important;
+        font-size: 13px !important;
+        line-height: 1.25 !important;
+    }
+
+    .report-form-group.has-error > label {
+        color: var(--hsu-red, #ff5c70) !important;
+    }
+
+    .report-form-group input,
+    .report-form-group select,
+    .report-form-group textarea,
+    .report-custom-trigger,
+    .report-info-box {
+        min-height: 38px !important;
+    }
+
+    .report-form-group input,
+    .report-form-group select,
+    .report-custom-trigger {
+        height: 38px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    .report-form-group textarea {
+        min-height: 78px !important;
+        max-height: 78px !important;
+        resize: none !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .report-code-box {
+        margin-bottom: 10px !important;
+        padding: 13px !important;
+    }
+
+    .report-code-head {
+        margin-bottom: 7px !important;
+    }
+
+    .report-code-main {
+        min-height: 62px !important;
+        padding: 10px 14px !important;
+        border-radius: 14px !important;
+    }
+
+    .report-info-box {
+        min-height: 54px !important;
+        margin-bottom: 9px !important;
+        padding: 10px 14px !important;
+    }
+
+    .report-info-box span {
+        font-size: 12px !important;
+    }
+
+    .report-info-box strong {
+        font-size: 15px !important;
+    }
+
+    .report-create-footer {
+        position: static !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        min-height: 58px !important;
+        padding: 9px 26px !important;
+        border-radius: 0 0 18px 18px !important;
+    }
+
+    .report-btn-cancel,
+    .report-btn-submit {
+        min-height: 40px !important;
+        padding: 0 22px !important;
+    }
+
+    .report-note-help {
+        display: block;
+        margin-top: 5px !important;
+        line-height: 1.25 !important;
+        font-size: 12px !important;
+        overflow-wrap: anywhere;
+    }
+
+    /* ================= REQUIRED STAR ================= */
+
+    .required-star {
+        display: none;
+        margin-left: 4px;
+        color: var(--hsu-red, #ff5c70);
+        font-weight: 900;
+    }
+
+    .report-form-group.has-error label .required-star {
+        display: inline;
+        color: var(--hsu-red, #ff5c70) !important;
+    }
+
+    /* ================= FILE ATTACHMENT - THEME SYNC ================= */
+
+    .report-form-group--file {
+        position: relative;
+        margin-bottom: 9px !important;
+    }
+
+    .report-file-upload,
+    .report-file-inline {
+        width: 100%;
+    }
+
+    .report-file-native {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .report-file-inline {
+        min-height: 54px;
+        padding: 8px 11px;
+        box-sizing: border-box;
+
+        background: var(--report-file-surface-2);
+        color: var(--report-file-text);
+        border: 1px dashed color-mix(in srgb, var(--report-file-blue) 72%, var(--report-file-border));
+        border-radius: 15px;
+
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        transition:
+            border-color 0.2s ease,
+            background-color 0.2s ease,
+            box-shadow 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .report-file-upload.is-dragging .report-file-inline,
+    .report-file-inline:hover {
+        background: var(--report-file-surface);
+        border-color: var(--report-file-blue);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--report-file-blue) 18%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .report-file-inline__trigger {
+        flex: 0 0 auto;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 13px;
+        border: 1px solid color-mix(in srgb, var(--report-file-blue) 42%, var(--report-file-border));
+
+        background: var(--report-file-active-bg);
+        color: var(--report-file-active-text);
+
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .report-file-inline__trigger:hover {
+        background: var(--report-file-blue);
+        border-color: var(--report-file-blue);
+        color: #ffffff;
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--report-file-blue) 24%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .report-file-inline__icon,
+    .report-file-chip__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: currentColor;
+    }
+
+    .report-file-inline__icon {
+        width: 18px;
+        height: 18px;
+        opacity: 0.95;
+    }
+
+    .report-file-inline__icon svg,
+    .report-file-chip__icon svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.25;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        display: block;
+    }
+
+    .report-file-inline__icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .report-file-inline__colon {
+        flex: 0 0 auto;
+        color: var(--report-file-text);
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+        opacity: 0.95;
+        transform: translateY(-1px);
+    }
+
+    .report-file-inline__preview {
+        flex: 1;
+        min-width: 0;
+        min-height: 38px;
+
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        overflow: hidden;
+    }
+
+    .report-file-inline__empty {
+        max-width: 100%;
+        color: var(--report-file-text-soft);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.2;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .report-file-inline__preview.has-file {
+        align-items: flex-start;
+        max-height: 88px;
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--report-file-blue) 45%, var(--report-file-border)) transparent;
+    }
+
+    .report-file-inline__preview.has-file::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .report-file-inline__preview.has-file::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .report-file-inline__preview.has-file::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--report-file-blue) 45%, var(--report-file-border));
+    }
+
+    .report-file-chip {
+        min-width: 0;
+        max-width: 218px;
+        height: 38px;
+        padding: 4px 7px 4px 5px;
+        box-sizing: border-box;
+
+        background: var(--report-file-surface);
+        color: var(--report-file-text);
+        border: 1px solid var(--report-file-border);
+        border-radius: 12px;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        transition:
+            background-color 0.18s ease,
+            border-color 0.18s ease,
+            transform 0.18s ease;
+    }
+
+    .report-file-chip:hover {
+        background: var(--report-file-surface-2);
+        border-color: color-mix(in srgb, var(--report-file-blue) 44%, var(--report-file-border));
+        transform: translateY(-1px);
+    }
+
+    .report-file-chip__icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+
+        background: color-mix(in srgb, var(--report-file-blue) 16%, var(--report-file-surface-2));
+        color: var(--report-file-blue);
+        border: 1px solid color-mix(in srgb, var(--report-file-blue) 24%, var(--report-file-border));
+
+        overflow: hidden;
+    }
+
+    .report-file-chip__icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .report-file-chip__icon--pdf {
+        background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 16%, var(--report-file-surface-2));
+        color: var(--hsu-red, #ef3b2d);
+        border-color: color-mix(in srgb, var(--hsu-red, #ef3b2d) 26%, var(--report-file-border));
+    }
+
+    .report-file-chip__icon--word {
+        background: color-mix(in srgb, var(--report-file-blue) 16%, var(--report-file-surface-2));
+        color: var(--report-file-blue);
+        border-color: color-mix(in srgb, var(--report-file-blue) 26%, var(--report-file-border));
+    }
+
+    .report-file-chip__icon--excel {
+        background: color-mix(in srgb, var(--success, #16a34a) 16%, var(--report-file-surface-2));
+        color: var(--success, #16a34a);
+        border-color: color-mix(in srgb, var(--success, #16a34a) 26%, var(--report-file-border));
+    }
+
+    .report-file-chip__icon--archive {
+        background: color-mix(in srgb, var(--warning, #f59e0b) 18%, var(--report-file-surface-2));
+        color: var(--warning, #f59e0b);
+        border-color: color-mix(in srgb, var(--warning, #f59e0b) 28%, var(--report-file-border));
+    }
+
+    .report-file-chip__icon--image {
+        background: color-mix(in srgb, var(--info, #0ea5e9) 16%, var(--report-file-surface-2));
+        color: var(--info, #0ea5e9);
+        border-color: color-mix(in srgb, var(--info, #0ea5e9) 26%, var(--report-file-border));
+    }
+
+    .report-file-chip__thumb {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        object-fit: cover;
+        border: 1px solid var(--report-file-border);
+        flex: 0 0 30px;
+        background: var(--report-file-surface-2);
+    }
+
+    .report-file-chip__content {
+        min-width: 0;
+        flex: 1;
+        display: block;
+    }
+
+    .report-file-chip__name,
+    .report-file-chip__meta {
+        display: block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .report-file-chip__name {
+        color: var(--report-file-text);
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    .report-file-chip__meta {
+        margin-top: 2px;
+        color: var(--report-file-text-soft);
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .report-file-chip__remove {
+        width: 21px;
+        height: 21px;
+        border: 0;
+        border-radius: 999px;
+
+        background: color-mix(in srgb, var(--report-file-text) 8%, transparent);
+        color: var(--report-file-text);
+
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        flex: 0 0 21px;
+
+        transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .report-file-chip__remove:hover {
+        background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 22%, transparent);
+        color: var(--report-file-text);
+        transform: translateY(-1px);
+    }
+
+    @supports not (color: color-mix(in srgb, red 50%, blue)) {
+        .report-file-inline,
+        .report-file-chip,
+        .report-file-chip__icon,
+        .report-file-inline__trigger,
+        .report-file-chip__remove {
+            background: var(--report-file-surface-2);
+            color: var(--report-file-text);
+            border-color: var(--report-file-border);
+        }
+
+        .report-file-inline__trigger {
+            background: var(--report-file-active-bg);
+            color: var(--report-file-active-text);
+        }
+
+        .report-file-chip__icon {
+            color: var(--report-file-blue);
+        }
+    }
+
+    @media (max-width: 1200px) {
+        html,
+        body {
+            overflow-y: auto !important;
+        }
+
+        .report-create-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        html,
+        body {
+            overflow-y: auto !important;
+        }
+
+        .report-create-wrap {
+            max-width: 100% !important;
+        }
+
+        .report-file-inline {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .report-file-inline__trigger {
+            flex: 1;
+        }
+
+        .report-file-inline__colon {
+            display: none;
+        }
+
+        .report-file-inline__preview {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        .report-file-chip {
+            max-width: 100%;
+            width: 100%;
+        }
+    }
+</style>
+
 <section class="report-create-page">
     <div class="report-create-wrap">
         <a href="{{ url_for('report_page') }}" class="report-create-back">
@@ -81,7 +703,9 @@
                             </div>
 
                             <div class="report-form-group" data-field-group>
-                                <label for="report_name">Tên báo cáo</label>
+                                <label for="report_name">
+                                    Tên báo cáo <span class="required-star">*</span>
+                                </label>
                                 <input
                                     id="report_name"
                                     name="report_name"
@@ -94,7 +718,9 @@
                             </div>
 
                             <div class="report-form-group" data-field-group>
-                                <label for="report_type">Loại báo cáo</label>
+                                <label for="report_type">
+                                    Loại báo cáo <span class="required-star">*</span>
+                                </label>
 
                                 <select
                                     id="report_type"
@@ -220,7 +846,9 @@
                             </div>
 
                             <div class="report-form-group" data-field-group>
-                                <label for="description">Nội dung / Ghi chú</label>
+                                <label for="description">
+                                    Nội dung / Ghi chú <span class="required-star">*</span>
+                                </label>
                                 <textarea
                                     id="description"
                                     name="description"
@@ -231,14 +859,47 @@
                                 <small class="report-form-error">Vui lòng nhập nội dung báo cáo.</small>
                             </div>
 
-                            <div class="report-form-group">
+                            <div class="report-form-group report-form-group--file">
                                 <label for="files">File đính kèm</label>
-                                <input
-                                    id="files"
-                                    name="files"
-                                    type="file"
-                                    multiple
-                                >
+
+                                <div class="report-file-upload" id="reportFileUpload">
+                                    <input
+                                        id="files"
+                                        name="files"
+                                        type="file"
+                                        multiple
+                                        class="report-file-native"
+                                    >
+
+                                    <div class="report-file-inline">
+                                        <button
+                                            type="button"
+                                            class="report-file-inline__trigger"
+                                            id="reportFileTrigger"
+                                        >
+                                            <span>Chọn tệp</span>
+
+                                            <span class="report-file-inline__icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+
+                                        <span class="report-file-inline__colon">:</span>
+
+                                        <div
+                                            class="report-file-inline__preview"
+                                            id="reportFilePreview"
+                                            aria-live="polite"
+                                        >
+                                            <span class="report-file-inline__empty">
+                                                Chưa có tệp nào được chọn
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <small class="report-note-help">
                                     Có thể tải ảnh, PDF, Word, Excel hoặc file nén nếu cần.
                                 </small>
@@ -263,7 +924,7 @@
 
     <div class="report-create-toast" id="reportCreateToast">
         <strong id="reportCreateToastTitle">Tạo báo cáo không thành công</strong>
-        <span id="reportCreateToastMessage">Vui lòng nhập đầy đủ thông tin bắt buộc.</span>
+        <span id="reportCreateToastMessage">Vui lòng nhập đầy đủ thông tin bắt buộc*.</span>
         <button type="button" id="closeReportToastBtn">×</button>
     </div>
 </section>
@@ -285,9 +946,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const assetTrigger = document.getElementById("assetTrigger");
     const assetSelectedText = document.getElementById("assetSelectedText");
     const assetSelectedList = document.getElementById("assetSelectedList");
-    const assetOptionButtons = document.querySelectorAll(
-        "[data-asset-select] .report-custom-option"
-    );
+    const assetOptionButtons = document.querySelectorAll("[data-asset-select] .report-custom-option");
 
     const assetIdInput = document.getElementById("asset_id");
     const assetCodeInput = document.getElementById("asset_code");
@@ -296,6 +955,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const assetIdsInput = document.getElementById("asset_ids");
     const assetCodesInput = document.getElementById("asset_codes");
     const assetNamesInput = document.getElementById("asset_names");
+
+    const filesInput = document.getElementById("files");
+    const reportFileUpload = document.getElementById("reportFileUpload");
+    const reportFileTrigger = document.getElementById("reportFileTrigger");
+    const reportFilePreview = document.getElementById("reportFilePreview");
 
     const toast = document.getElementById("reportCreateToast");
     const toastTitle = document.getElementById("reportCreateToastTitle");
@@ -306,10 +970,60 @@ document.addEventListener("DOMContentLoaded", function () {
     let toastTimer = null;
     let reportNameTouched = false;
     let selectedAssets = [];
+    let selectedFilesStore = [];
+    let previewObjectUrls = [];
+
+    const fileIconMap = {
+        image: `
+            <svg viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <circle cx="8.5" cy="10" r="1.5"></circle>
+                <path d="m21 15-5-5L5 21"></path>
+            </svg>
+        `,
+        pdf: `
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M7 16h10"></path>
+                <path d="M7 13h10"></path>
+            </svg>
+        `,
+        word: `
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M7 13h10"></path>
+                <path d="M7 17h7"></path>
+            </svg>
+        `,
+        excel: `
+            <svg viewBox="0 0 24 24">
+                <path d="M4 4h16v16H4z"></path>
+                <path d="M4 10h16"></path>
+                <path d="M4 16h16"></path>
+                <path d="M10 4v16"></path>
+                <path d="M16 4v16"></path>
+            </svg>
+        `,
+        archive: `
+            <svg viewBox="0 0 24 24">
+                <path d="M21 8v13H3V8"></path>
+                <path d="M1 3h22v5H1z"></path>
+                <path d="M10 12h4"></path>
+            </svg>
+        `,
+        file: `
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+                <path d="M8 13h8"></path>
+                <path d="M8 17h5"></path>
+            </svg>
+        `
+    };
 
     function getVietnamDateTimeValue() {
-        const now = new Date();
-
         const parts = new Intl.DateTimeFormat("en-CA", {
             timeZone: "Asia/Ho_Chi_Minh",
             year: "numeric",
@@ -318,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", function () {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false
-        }).formatToParts(now);
+        }).formatToParts(new Date());
 
         const map = {};
 
@@ -387,6 +1101,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function setError(field, message) {
         const group = getGroup(field);
+
         if (!group) return;
 
         const error = group.querySelector(".report-form-error");
@@ -399,6 +1114,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function clearError(field) {
         const group = getGroup(field);
+
         if (!group) return;
 
         group.classList.remove("has-error");
@@ -406,6 +1122,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function setAssetError(message) {
         const group = document.getElementById("assetFieldGroup");
+
         if (!group) return;
 
         const error = group.querySelector(".report-form-error");
@@ -418,6 +1135,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function clearAssetError() {
         const group = document.getElementById("assetFieldGroup");
+
         if (!group) return;
 
         group.classList.remove("has-error");
@@ -436,10 +1154,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function isAssetRequiredByType() {
-        if (!reportTypeSelect) return false;
-
-        const type = (reportTypeSelect.value || "").trim();
-
+        const type = (reportTypeSelect?.value || "").trim();
         return type === "Báo hỏng" || type === "Cần cấp mới";
     }
 
@@ -477,10 +1192,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateAssetRequirement() {
         if (!assetSelectBox) return;
 
-        if (isAssetRequiredByType()) {
-            assetSelectBox.classList.add("is-required");
-        } else {
-            assetSelectBox.classList.remove("is-required");
+        assetSelectBox.classList.toggle("is-required", isAssetRequiredByType());
+
+        if (!isAssetRequiredByType()) {
             clearAssetError();
         }
     }
@@ -510,43 +1224,26 @@ document.addEventListener("DOMContentLoaded", function () {
     function syncSelectedAssets() {
         const firstAsset = selectedAssets[0] || {};
 
-        if (assetIdInput) {
-            assetIdInput.value = firstAsset.id || "";
-        }
-
-        if (assetCodeInput) {
-            assetCodeInput.value = firstAsset.code || "";
-        }
-
-        if (assetNameInput) {
-            assetNameInput.value = firstAsset.name || "";
-        }
+        if (assetIdInput) assetIdInput.value = firstAsset.id || "";
+        if (assetCodeInput) assetCodeInput.value = firstAsset.code || "";
+        if (assetNameInput) assetNameInput.value = firstAsset.name || "";
 
         if (assetIdsInput) {
-            assetIdsInput.value = selectedAssets.map(function (item) {
-                return item.id;
-            }).filter(Boolean).join(",");
+            assetIdsInput.value = selectedAssets.map(item => item.id).filter(Boolean).join(",");
         }
 
         if (assetCodesInput) {
-            assetCodesInput.value = selectedAssets.map(function (item) {
-                return item.code;
-            }).filter(Boolean).join(",");
+            assetCodesInput.value = selectedAssets.map(item => item.code).filter(Boolean).join(",");
         }
 
         if (assetNamesInput) {
-            assetNamesInput.value = selectedAssets.map(function (item) {
-                return item.name;
-            }).filter(Boolean).join(",");
+            assetNamesInput.value = selectedAssets.map(item => item.name).filter(Boolean).join(",");
         }
 
         assetOptionButtons.forEach(function (option) {
-            if (option.dataset.clearAssets === "true") {
-                return;
-            }
+            if (option.dataset.clearAssets === "true") return;
 
-            const asset = optionToAsset(option);
-            option.classList.toggle("is-selected", hasAsset(asset));
+            option.classList.toggle("is-selected", hasAsset(optionToAsset(option)));
         });
 
         if (assetSelectedText) {
@@ -619,9 +1316,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!key) return;
 
         if (hasAsset(asset)) {
-            selectedAssets = selectedAssets.filter(function (item) {
-                return getAssetKey(item) !== key;
-            });
+            selectedAssets = selectedAssets.filter(item => getAssetKey(item) !== key);
         } else {
             selectedAssets.push(asset);
         }
@@ -634,15 +1329,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const reportType = (reportTypeSelect.value || "").trim();
 
-        if (!reportType || selectedAssets.length === 0) return;
-        if (reportNameTouched) return;
+        if (!reportType || selectedAssets.length === 0 || reportNameTouched) return;
 
         if (reportType === "Báo hỏng" || reportType === "Cần cấp mới") {
-            if (selectedAssets.length === 1) {
-                reportNameInput.value = reportType + " - " + selectedAssets[0].name;
-            } else {
-                reportNameInput.value = reportType + " - " + selectedAssets.length + " tài sản";
-            }
+            reportNameInput.value = selectedAssets.length === 1
+                ? reportType + " - " + selectedAssets[0].name
+                : reportType + " - " + selectedAssets.length + " tài sản";
 
             validateField(reportNameInput);
         }
@@ -780,9 +1472,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 toggleAsset(option);
                 validateAssetSelection();
 
-                if (assetSelectBox) {
-                    assetSelectBox.classList.add("is-open");
-                }
+                assetSelectBox.classList.add("is-open");
             });
         });
 
@@ -802,6 +1492,255 @@ document.addEventListener("DOMContentLoaded", function () {
                 validateAssetSelection();
             });
         }
+    }
+
+    function formatFileSize(size) {
+        const number = Number(size || 0);
+
+        if (!number) return "Không rõ dung lượng";
+        if (number >= 1024 * 1024) return (number / 1024 / 1024).toFixed(2) + " MB";
+        if (number >= 1024) return (number / 1024).toFixed(2) + " KB";
+
+        return number + " bytes";
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function getFileExtension(fileName) {
+        const parts = String(fileName || "").split(".");
+        return parts.length <= 1 ? "FILE" : parts.pop().toUpperCase();
+    }
+
+    function getFileKey(file) {
+        return [file.name || "", file.size || 0, file.lastModified || 0].join("__");
+    }
+
+    function clearPreviewObjectUrls() {
+        previewObjectUrls.forEach(function (url) {
+            URL.revokeObjectURL(url);
+        });
+
+        previewObjectUrls = [];
+    }
+
+    function getFileIconInfo(file) {
+        const extension = getFileExtension(file.name).toLowerCase();
+        const mime = String(file.type || "").toLowerCase();
+
+        if (mime.startsWith("image/")) {
+            return {
+                type: "image",
+                className: "report-file-chip__icon--image",
+                svg: fileIconMap.image
+            };
+        }
+
+        if (extension === "pdf") {
+            return {
+                type: "pdf",
+                className: "report-file-chip__icon--pdf",
+                svg: fileIconMap.pdf
+            };
+        }
+
+        if (["doc", "docx"].includes(extension)) {
+            return {
+                type: "word",
+                className: "report-file-chip__icon--word",
+                svg: fileIconMap.word
+            };
+        }
+
+        if (["xls", "xlsx", "csv"].includes(extension)) {
+            return {
+                type: "excel",
+                className: "report-file-chip__icon--excel",
+                svg: fileIconMap.excel
+            };
+        }
+
+        if (["zip", "rar", "7z"].includes(extension)) {
+            return {
+                type: "archive",
+                className: "report-file-chip__icon--archive",
+                svg: fileIconMap.archive
+            };
+        }
+
+        return {
+            type: "file",
+            className: "report-file-chip__icon--file",
+            svg: fileIconMap.file
+        };
+    }
+
+    function syncFilesInputFromStore() {
+        if (!filesInput) return;
+
+        const dataTransfer = new DataTransfer();
+
+        selectedFilesStore.forEach(function (file) {
+            dataTransfer.items.add(file);
+        });
+
+        filesInput.files = dataTransfer.files;
+    }
+
+    function addFilesToStore(fileList) {
+        Array.from(fileList || []).forEach(function (file) {
+            const fileKey = getFileKey(file);
+            const exists = selectedFilesStore.some(function (item) {
+                return getFileKey(item) === fileKey;
+            });
+
+            if (!exists) {
+                selectedFilesStore.push(file);
+            }
+        });
+
+        syncFilesInputFromStore();
+        renderSelectedFiles();
+    }
+
+    function removeFileAt(indexToRemove) {
+        selectedFilesStore = selectedFilesStore.filter(function (_, index) {
+            return index !== indexToRemove;
+        });
+
+        syncFilesInputFromStore();
+        renderSelectedFiles();
+    }
+
+    function renderSelectedFiles() {
+        if (!reportFilePreview) return;
+
+        clearPreviewObjectUrls();
+        reportFilePreview.innerHTML = "";
+
+        if (selectedFilesStore.length === 0) {
+            reportFilePreview.classList.remove("has-file");
+            reportFilePreview.innerHTML = `
+                <span class="report-file-inline__empty">
+                    Chưa có tệp nào được chọn
+                </span>
+            `;
+            return;
+        }
+
+        reportFilePreview.classList.add("has-file");
+
+        selectedFilesStore.forEach(function (file, index) {
+            const safeName = escapeHtml(file.name);
+            const safeMeta = escapeHtml(getFileExtension(file.name) + " · " + formatFileSize(file.size));
+            const iconInfo = getFileIconInfo(file);
+            const chip = document.createElement("div");
+
+            chip.className = "report-file-chip";
+
+            let previewHtml = "";
+
+            if (file.type && file.type.startsWith("image/")) {
+                const imageUrl = URL.createObjectURL(file);
+                previewObjectUrls.push(imageUrl);
+
+                previewHtml = `
+                    <img
+                        src="${imageUrl}"
+                        alt="${safeName}"
+                        class="report-file-chip__thumb"
+                    >
+                `;
+            } else {
+                previewHtml = `
+                    <span class="report-file-chip__icon ${iconInfo.className}" aria-hidden="true">
+                        ${iconInfo.svg}
+                    </span>
+                `;
+            }
+
+            chip.innerHTML = `
+                ${previewHtml}
+
+                <span class="report-file-chip__content">
+                    <span class="report-file-chip__name" title="${safeName}">
+                        ${safeName}
+                    </span>
+                    <span class="report-file-chip__meta">${safeMeta}</span>
+                </span>
+
+                <button
+                    type="button"
+                    class="report-file-chip__remove"
+                    data-remove-file-index="${index}"
+                    aria-label="Xóa tệp ${safeName}"
+                >
+                    ×
+                </button>
+            `;
+
+            reportFilePreview.appendChild(chip);
+        });
+    }
+
+    function initFileUpload() {
+        if (!filesInput || !reportFileUpload) return;
+
+        if (reportFileTrigger) {
+            reportFileTrigger.addEventListener("click", function () {
+                filesInput.value = "";
+                filesInput.click();
+            });
+        }
+
+        filesInput.addEventListener("change", function () {
+            addFilesToStore(this.files);
+        });
+
+        ["dragenter", "dragover"].forEach(function (eventName) {
+            reportFileUpload.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                reportFileUpload.classList.add("is-dragging");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(function (eventName) {
+            reportFileUpload.addEventListener(eventName, function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                reportFileUpload.classList.remove("is-dragging");
+            });
+        });
+
+        reportFileUpload.addEventListener("drop", function (event) {
+            const files = event.dataTransfer ? event.dataTransfer.files : null;
+
+            if (!files || files.length === 0) return;
+
+            addFilesToStore(files);
+        });
+
+        if (reportFilePreview) {
+            reportFilePreview.addEventListener("click", function (event) {
+                const removeButton = event.target.closest("[data-remove-file-index]");
+
+                if (!removeButton) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                removeFileAt(Number(removeButton.getAttribute("data-remove-file-index")));
+            });
+        }
+
+        renderSelectedFiles();
     }
 
     async function copyReportCode() {
@@ -825,23 +1764,6 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function () {
             copyReportCodeBtn.classList.remove("copied");
         }, 1200);
-    }
-
-    async function confirmSubmit() {
-        if (typeof window.toastConfirm === "function") {
-            return await window.toastConfirm({
-                type: "warning",
-                title: "Xác nhận thêm báo cáo",
-                message: "Bạn có chắc muốn thêm báo cáo mới này vào hệ thống không?",
-                confirmText: "Thêm mới",
-                cancelText: "Hủy",
-                danger: false,
-                closeOnBackdrop: false,
-                closeOnEsc: true
-            });
-        }
-
-        return confirm("Bạn có chắc muốn thêm báo cáo mới này vào hệ thống không?");
     }
 
     updateRealTime();
@@ -877,6 +1799,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initNormalCustomSelects();
     initAssetSelect();
+    initFileUpload();
     updateAssetRequirement();
     syncSelectedAssets();
 
@@ -889,6 +1812,8 @@ document.addEventListener("DOMContentLoaded", function () {
             closeSelects();
         }
     });
+
+    window.addEventListener("beforeunload", clearPreviewObjectUrls);
 
     if (form) {
         const fields = form.querySelectorAll("[data-required='true']");
@@ -903,28 +1828,25 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        form.addEventListener("submit", async function (event) {
+        form.addEventListener("submit", function (event) {
             if (allowSubmit) return;
 
             event.preventDefault();
             updateRealTime();
             updateAssetRequirement();
+            syncFilesInputFromStore();
 
             if (!validateForm()) {
                 showToast(
                     "Tạo báo cáo không thành công",
-                    "Vui lòng nhập đầy đủ thông tin bắt buộc.",
+                    "Vui lòng nhập đầy đủ thông tin bắt buộc*.",
                     "error"
                 );
                 return;
             }
 
-            const confirmed = await confirmSubmit();
-
-            if (confirmed) {
-                allowSubmit = true;
-                form.submit();
-            }
+            allowSubmit = true;
+            form.submit();
         });
     }
 });

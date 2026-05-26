@@ -1,8 +1,35 @@
 {# templates/report/report_filter.html #}
 
+{% set live_total_count = filter_total_count|default(total_records|default(total_report_count|default(0), true), true) %}
+{% set live_type_counts = filter_type_counts|default(type_counts|default({}), true) %}
+{% set live_department_counts = filter_department_counts|default(department_counts|default({}), true) %}
+{% set live_location_counts = filter_location_counts|default(location_counts|default({}), true) %}
+{% set live_status_counts = filter_status_counts|default(status_counts|default({}), true) %}
+
+<style>
+    .report-overview-card.is-ajax-loading {
+        pointer-events: none;
+    }
+
+    .report-filter-section.is-ajax-loading .filter-input,
+    .report-filter-section.is-ajax-loading .report-count-select__button {
+        transition: border-color 0.08s ease, box-shadow 0.08s ease;
+    }
+</style>
+
+<script type="application/json" id="reportFilterCountsJson">
+{
+    "total": {{ live_total_count|default(0)|tojson }},
+    "type": {{ live_type_counts|default({})|tojson }},
+    "department": {{ live_department_counts|default({})|tojson }},
+    "location": {{ live_location_counts|default({})|tojson }},
+    "status": {{ live_status_counts|default({})|tojson }}
+}
+</script>
+
 <div class="report-filter-section">
     <div class="filter-bar">
-        <input type="hidden" name="page" value="1">
+        <input type="hidden" name="page" value="{{ current_page|default(1) }}">
 
         <div class="filter-item filter-item--search">
             <label class="filter-label" for="reportSearch">Tìm kiếm</label>
@@ -20,7 +47,7 @@
         <div class="filter-item">
             <label class="filter-label">Loại báo cáo</label>
 
-            <div class="report-count-select" data-count-select>
+            <div class="report-count-select" data-count-select data-count-field="type">
                 <input
                     type="hidden"
                     class="js-report-filter"
@@ -35,7 +62,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ total_report_count if selected_type == 'Tất cả' else type_counts.get(selected_type, 0) }}
+                            {{ live_total_count }}
                         </span>
                     </span>
 
@@ -48,10 +75,10 @@
                         class="report-count-select__option {% if selected_type == 'Tất cả' %}is-active{% endif %}"
                         data-value="Tất cả"
                         data-label="Tất cả loại"
-                        data-count="{{ total_report_count }}"
+                        data-count="{{ live_total_count }}"
                     >
                         <span class="report-count-select__option-label">Tất cả loại</span>
-                        <span class="report-count-select__option-count">{{ total_report_count }}</span>
+                        <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
                     {% for item in report_type_options %}
@@ -60,10 +87,10 @@
                             class="report-count-select__option {% if selected_type == item %}is-active{% endif %}"
                             data-value="{{ item }}"
                             data-label="{{ item }}"
-                            data-count="{{ type_counts.get(item, 0) }}"
+                            data-count="{{ live_type_counts.get(item, 0) }}"
                         >
                             <span class="report-count-select__option-label">{{ item }}</span>
-                            <span class="report-count-select__option-count">{{ type_counts.get(item, 0) }}</span>
+                            <span class="report-count-select__option-count">{{ live_type_counts.get(item, 0) }}</span>
                         </button>
                     {% endfor %}
                 </div>
@@ -73,7 +100,7 @@
         <div class="filter-item">
             <label class="filter-label">Phòng ban</label>
 
-            <div class="report-count-select" data-count-select>
+            <div class="report-count-select" data-count-select data-count-field="department">
                 <input
                     type="hidden"
                     class="js-report-filter"
@@ -88,7 +115,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ total_report_count if selected_dept == 'Tất cả' else department_counts.get(selected_dept, 0) }}
+                            {{ live_total_count }}
                         </span>
                     </span>
 
@@ -101,10 +128,10 @@
                         class="report-count-select__option {% if selected_dept == 'Tất cả' %}is-active{% endif %}"
                         data-value="Tất cả"
                         data-label="Tất cả phòng"
-                        data-count="{{ total_report_count }}"
+                        data-count="{{ live_total_count }}"
                     >
                         <span class="report-count-select__option-label">Tất cả phòng</span>
-                        <span class="report-count-select__option-count">{{ total_report_count }}</span>
+                        <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
                     {% for dept in department_options %}
@@ -113,10 +140,10 @@
                             class="report-count-select__option {% if selected_dept == dept %}is-active{% endif %}"
                             data-value="{{ dept }}"
                             data-label="{{ dept }}"
-                            data-count="{{ department_counts.get(dept, 0) }}"
+                            data-count="{{ live_department_counts.get(dept, 0) }}"
                         >
                             <span class="report-count-select__option-label">{{ dept }}</span>
-                            <span class="report-count-select__option-count">{{ department_counts.get(dept, 0) }}</span>
+                            <span class="report-count-select__option-count">{{ live_department_counts.get(dept, 0) }}</span>
                         </button>
                     {% endfor %}
                 </div>
@@ -126,7 +153,7 @@
         <div class="filter-item">
             <label class="filter-label">Vị trí</label>
 
-            <div class="report-count-select" data-count-select>
+            <div class="report-count-select" data-count-select data-count-field="location">
                 <input
                     type="hidden"
                     class="js-report-filter"
@@ -141,7 +168,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ total_report_count if selected_location == 'Tất cả' else location_counts.get(selected_location, 0) }}
+                            {{ live_total_count }}
                         </span>
                     </span>
 
@@ -154,10 +181,10 @@
                         class="report-count-select__option {% if selected_location == 'Tất cả' %}is-active{% endif %}"
                         data-value="Tất cả"
                         data-label="Tất cả vị trí"
-                        data-count="{{ total_report_count }}"
+                        data-count="{{ live_total_count }}"
                     >
                         <span class="report-count-select__option-label">Tất cả vị trí</span>
-                        <span class="report-count-select__option-count">{{ total_report_count }}</span>
+                        <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
                     {% for location in location_options %}
@@ -166,10 +193,10 @@
                             class="report-count-select__option {% if selected_location == location %}is-active{% endif %}"
                             data-value="{{ location }}"
                             data-label="{{ location }}"
-                            data-count="{{ location_counts.get(location, 0) }}"
+                            data-count="{{ live_location_counts.get(location, 0) }}"
                         >
                             <span class="report-count-select__option-label">{{ location }}</span>
-                            <span class="report-count-select__option-count">{{ location_counts.get(location, 0) }}</span>
+                            <span class="report-count-select__option-count">{{ live_location_counts.get(location, 0) }}</span>
                         </button>
                     {% endfor %}
                 </div>
@@ -179,7 +206,7 @@
         <div class="filter-item">
             <label class="filter-label">Trạng thái</label>
 
-            <div class="report-count-select" data-count-select>
+            <div class="report-count-select" data-count-select data-count-field="status">
                 <input
                     type="hidden"
                     class="js-report-filter"
@@ -194,7 +221,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ total_report_count if selected_status == 'Tất cả' else status_counts.get(selected_status, 0) }}
+                            {{ live_total_count }}
                         </span>
                     </span>
 
@@ -207,10 +234,10 @@
                         class="report-count-select__option {% if selected_status == 'Tất cả' %}is-active{% endif %}"
                         data-value="Tất cả"
                         data-label="Tất cả trạng thái"
-                        data-count="{{ total_report_count }}"
+                        data-count="{{ live_total_count }}"
                     >
                         <span class="report-count-select__option-label">Tất cả trạng thái</span>
-                        <span class="report-count-select__option-count">{{ total_report_count }}</span>
+                        <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
                     {% for item in report_status_options %}
@@ -219,10 +246,10 @@
                             class="report-count-select__option {% if selected_status == item %}is-active{% endif %}"
                             data-value="{{ item }}"
                             data-label="{{ item }}"
-                            data-count="{{ status_counts.get(item, 0) }}"
+                            data-count="{{ live_status_counts.get(item, 0) }}"
                         >
                             <span class="report-count-select__option-label">{{ item }}</span>
-                            <span class="report-count-select__option-count">{{ status_counts.get(item, 0) }}</span>
+                            <span class="report-count-select__option-count">{{ live_status_counts.get(item, 0) }}</span>
                         </button>
                     {% endfor %}
                 </div>
@@ -250,150 +277,543 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const AUTO_SEARCH_DELAY = 500;
-    let autoSearchTimer = null;
+(function () {
+    if (window.__reportFilterAjaxReady) return;
+    window.__reportFilterAjaxReady = true;
 
-    const filterSection = document.querySelector(".report-filter-section");
-    const reportSearchInput = document.getElementById("reportSearch");
+    document.addEventListener("DOMContentLoaded", initReportFilter);
 
-    function getReportFilterForm() {
-        if (!filterSection) return null;
+    let activeRequestController = null;
+    let activeCountController = null;
 
-        return filterSection.closest("form");
-    }
+    function initReportFilter() {
+        const SEARCH_DELAY = 0;
+        let searchTimer = null;
 
-    function resetReportPageToFirst() {
+        const filterSection = document.querySelector(".report-filter-section");
+        const reportSearchInput = document.getElementById("reportSearch");
+
         if (!filterSection) return;
 
-        const pageInput = filterSection.querySelector('input[name="page"]');
+        applyCountsFromJsonElement(document.getElementById("reportFilterCountsJson"));
+        updateResetButtonState();
 
-        if (pageInput) {
-            pageInput.value = "1";
+        function getFilterForm() {
+            return filterSection.closest("form");
         }
-    }
 
-    function submitReportFilters() {
-        if (!filterSection) return;
+        function setPage(value) {
+            const pageInput = filterSection.querySelector('input[name="page"]');
 
-        resetReportPageToFirst();
+            if (pageInput) {
+                pageInput.value = String(value || 1);
+            }
+        }
 
-        const filterForm = getReportFilterForm();
-
-        if (filterForm) {
-            if (typeof filterForm.requestSubmit === "function") {
-                filterForm.requestSubmit();
-            } else {
-                filterForm.submit();
+        function buildCleanUrl(resetPage = true) {
+            if (resetPage) {
+                setPage(1);
             }
 
-            return;
-        }
+            const form = getFilterForm();
+            const params = new URLSearchParams();
 
-        const params = new URLSearchParams();
+            if (form) {
+                const formData = new FormData(form);
 
-        filterSection.querySelectorAll("input[name]").forEach(function (input) {
-            params.set(input.name, input.value || "");
-        });
-
-        const targetUrl = window.location.pathname + "?" + params.toString();
-
-        window.location.href = targetUrl;
-    }
-
-    function scheduleReportAutoSearch() {
-        clearTimeout(autoSearchTimer);
-
-        autoSearchTimer = setTimeout(function () {
-            submitReportFilters();
-        }, AUTO_SEARCH_DELAY);
-    }
-
-    function submitReportFiltersNow() {
-        clearTimeout(autoSearchTimer);
-        submitReportFilters();
-    }
-
-    document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-        const trigger = selectBox.querySelector(".report-count-select__button");
-        const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-        const label = selectBox.querySelector(".report-count-select__label");
-        const count = selectBox.querySelector(".report-count-select__count");
-        const options = selectBox.querySelectorAll(".report-count-select__option");
-
-        if (!trigger || !hiddenInput) return;
-
-        trigger.addEventListener("click", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
-                if (otherSelectBox !== selectBox) {
-                    otherSelectBox.classList.remove("open");
-                }
-            });
-
-            selectBox.classList.toggle("open");
-        });
-
-        options.forEach(function (option) {
-            option.addEventListener("click", function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                hiddenInput.value = option.dataset.value || "Tất cả";
-
-                if (label) {
-                    label.textContent = option.dataset.label || "";
-                }
-
-                if (count) {
-                    count.textContent = option.dataset.count || "";
-                }
-
-                options.forEach(function (item) {
-                    item.classList.remove("is-active");
+                formData.forEach(function (value, key) {
+                    if (key === "_ajax" || key === "_ts") return;
+                    params.set(key, value || "");
                 });
 
-                option.classList.add("is-active");
-                selectBox.classList.remove("open");
-
-                hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
-            });
-        });
-    });
-
-    if (reportSearchInput) {
-        reportSearchInput.addEventListener("input", function () {
-            scheduleReportAutoSearch();
-        });
-
-        reportSearchInput.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitReportFiltersNow();
+                const action = form.getAttribute("action") || window.location.pathname;
+                return action + "?" + params.toString();
             }
-        });
-    }
 
-    document.querySelectorAll(".js-report-filter").forEach(function (filterInput) {
-        filterInput.addEventListener("change", function () {
-            scheduleReportAutoSearch();
-        });
-    });
+            filterSection.querySelectorAll("input[name]").forEach(function (input) {
+                if (input.name === "_ajax" || input.name === "_ts") return;
+                params.set(input.name, input.value || "");
+            });
 
-    document.addEventListener("click", function () {
-        document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-            selectBox.classList.remove("open");
-        });
-    });
+            return window.location.pathname + "?" + params.toString();
+        }
 
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
+        function submitNow() {
+            clearTimeout(searchTimer);
+            fetchAndReplaceReport(buildCleanUrl(true), true);
+        }
+
+        function submitSearchFast() {
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(function () {
+                fetchAndReplaceReport(buildCleanUrl(true), true);
+            }, SEARCH_DELAY);
+        }
+
+        function closeAllSelects() {
             document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
                 selectBox.classList.remove("open");
             });
         }
-    });
-});
+
+        function syncLabelsFromSelectedOptions() {
+            document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
+                const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+                const label = selectBox.querySelector(".report-count-select__label");
+                const count = selectBox.querySelector(".report-count-select__count");
+                const options = selectBox.querySelectorAll(".report-count-select__option");
+                const selectedValue = hiddenInput && hiddenInput.value ? hiddenInput.value : "Tất cả";
+
+                options.forEach(function (option) {
+                    const isActive = (option.dataset.value || "Tất cả") === selectedValue;
+
+                    option.classList.toggle("is-active", isActive);
+
+                    if (isActive) {
+                        if (label) {
+                            label.textContent =
+                                option.dataset.label ||
+                                option.querySelector(".report-count-select__option-label")?.textContent ||
+                                "";
+                        }
+                    }
+                });
+
+                if (count) {
+                    const total = getCurrentTotalCount();
+                    count.textContent = total;
+                }
+            });
+        }
+
+        function resetAllFilters() {
+            if (reportSearchInput) {
+                reportSearchInput.value = "";
+            }
+
+            filterSection.querySelectorAll(".js-report-filter").forEach(function (input) {
+                input.value = "Tất cả";
+            });
+
+            setPage(1);
+            closeAllSelects();
+            syncLabelsFromSelectedOptions();
+            updateResetButtonState();
+
+            fetchAndReplaceReport(buildCleanUrl(true), true);
+        }
+
+        document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
+            const trigger = selectBox.querySelector(".report-count-select__button");
+            const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+            const label = selectBox.querySelector(".report-count-select__label");
+            const count = selectBox.querySelector(".report-count-select__count");
+            const options = selectBox.querySelectorAll(".report-count-select__option");
+
+            if (!trigger || !hiddenInput) return;
+
+            trigger.addEventListener("click", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
+                    if (otherSelectBox !== selectBox) {
+                        otherSelectBox.classList.remove("open");
+                    }
+                });
+
+                selectBox.classList.toggle("open");
+            });
+
+            options.forEach(function (option) {
+                option.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    hiddenInput.value = option.dataset.value || "Tất cả";
+
+                    if (label) {
+                        label.textContent = option.dataset.label || "";
+                    }
+
+                    if (count) {
+                        count.textContent = getCurrentTotalCount();
+                    }
+
+                    options.forEach(function (item) {
+                        item.classList.remove("is-active");
+                    });
+
+                    option.classList.add("is-active");
+                    selectBox.classList.remove("open");
+
+                    updateResetButtonState();
+                    submitNow();
+                });
+            });
+        });
+
+        if (reportSearchInput) {
+            reportSearchInput.addEventListener("input", function () {
+                updateResetButtonState();
+                submitSearchFast();
+            });
+
+            reportSearchInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitNow();
+                }
+
+                if (event.key === "Escape") {
+                    reportSearchInput.value = "";
+                    updateResetButtonState();
+                    submitNow();
+                }
+            });
+        }
+
+        document.querySelectorAll(".js-report-filter").forEach(function (filterInput) {
+            filterInput.addEventListener("change", function () {
+                updateResetButtonState();
+                submitNow();
+            });
+        });
+
+        const resetButton = filterSection.querySelector(".btn-reset");
+
+        if (resetButton) {
+            resetButton.addEventListener("click", function (event) {
+                event.preventDefault();
+                resetAllFilters();
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            const resetEmptyLink = event.target.closest(".report-empty-state a");
+
+            if (resetEmptyLink) {
+                event.preventDefault();
+                resetAllFilters();
+                return;
+            }
+
+            const pageLink = event.target.closest(".pagination-buttons a.page-btn");
+
+            if (pageLink) {
+                if (
+                    pageLink.classList.contains("disabled") ||
+                    pageLink.getAttribute("aria-disabled") === "true"
+                ) {
+                    event.preventDefault();
+                    return;
+                }
+
+                event.preventDefault();
+                closeAllSelects();
+                fetchAndReplaceReport(pageLink.href, true);
+                return;
+            }
+
+            if (!event.target.closest("[data-count-select]")) {
+                closeAllSelects();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeAllSelects();
+            }
+        });
+
+        window.addEventListener("popstate", function () {
+            fetchAndReplaceReport(window.location.href, false);
+        });
+
+        function hasActiveFilter() {
+            const hasSearch = reportSearchInput && reportSearchInput.value.trim();
+
+            const hasDropdownFilter = Array.from(
+                filterSection.querySelectorAll(".js-report-filter")
+            ).some(function (input) {
+                return input.value && input.value !== "Tất cả";
+            });
+
+            return Boolean(hasSearch || hasDropdownFilter);
+        }
+
+        function updateResetButtonState() {
+            const resetButton = filterSection.querySelector(".btn-reset");
+
+            if (!resetButton) return;
+
+            resetButton.classList.toggle("is-hidden", !hasActiveFilter());
+        }
+
+        window.reportFilterRefresh = submitNow;
+        window.reportFilterReset = resetAllFilters;
+        window.reportFilterApplyCounts = applyCounts;
+    }
+
+    async function fetchAndReplaceReport(cleanUrl, updateHistory) {
+        if (activeRequestController) {
+            activeRequestController.abort();
+        }
+
+        if (activeCountController) {
+            activeCountController.abort();
+        }
+
+        activeRequestController = new AbortController();
+
+        try {
+            setGlobalLoading(true);
+
+            const response = await fetch(toAjaxUrl(cleanUrl, "report_list"), {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                },
+                signal: activeRequestController.signal
+            });
+
+            if (!response.ok) {
+                throw new Error("Không thể tải danh sách báo cáo.");
+            }
+
+            const payload = await response.json();
+
+            if (payload.table_html) {
+                replaceTableHtml(payload.table_html);
+            }
+
+            if (typeof payload.total_records !== "undefined") {
+                setCurrentTotalCount(payload.total_records);
+                updateVisibleFilterButtonCounts(payload.total_records);
+            }
+
+            if (payload.counts) {
+                if (typeof payload.total_records !== "undefined") {
+                    payload.counts.total = payload.total_records;
+                }
+
+                applyCounts(payload.counts);
+                syncCurrentJson(payload.counts);
+            }
+
+            if (updateHistory) {
+                window.history.replaceState({}, "", cleanUrl);
+            }
+
+            fetchCountsOnly(cleanUrl);
+        } catch (error) {
+            if (error.name === "AbortError") return;
+
+            window.location.href = cleanUrl;
+        } finally {
+            setGlobalLoading(false);
+        }
+    }
+
+    async function fetchCountsOnly(cleanUrl) {
+        if (activeCountController) {
+            activeCountController.abort();
+        }
+
+        activeCountController = new AbortController();
+
+        try {
+            const response = await fetch(toAjaxUrl(cleanUrl, "report_counts"), {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                },
+                signal: activeCountController.signal
+            });
+
+            if (!response.ok) return;
+
+            const payload = await response.json();
+
+            if (payload.counts) {
+                if (typeof payload.total_records !== "undefined") {
+                    payload.counts.total = payload.total_records;
+                }
+
+                applyCounts(payload.counts);
+                syncCurrentJson(payload.counts);
+            }
+        } catch (error) {
+            if (error.name === "AbortError") return;
+        }
+    }
+
+    function toAjaxUrl(url, ajaxType) {
+        const ajaxUrl = new URL(url, window.location.origin);
+
+        ajaxUrl.searchParams.set("_ajax", ajaxType || "report_list");
+        ajaxUrl.searchParams.set("_ts", Date.now().toString());
+
+        return ajaxUrl.toString();
+    }
+
+    function setGlobalLoading(isLoading) {
+        const filterSection = document.querySelector(".report-filter-section");
+        const tableCard = document.querySelector(".report-overview-card");
+
+        if (filterSection) {
+            filterSection.dataset.loading = isLoading ? "true" : "false";
+        }
+
+        if (tableCard) {
+            tableCard.setAttribute("aria-busy", isLoading ? "true" : "false");
+        }
+    }
+
+    function replaceTableHtml(tableHtml) {
+        const currentCard = document.querySelector(".report-overview-card");
+
+        if (!currentCard) return;
+
+        const template = document.createElement("template");
+        template.innerHTML = tableHtml.trim();
+
+        const nextCard = template.content.querySelector(".report-overview-card");
+
+        if (nextCard) {
+            currentCard.replaceWith(nextCard);
+        }
+    }
+
+    function syncCurrentJson(counts) {
+        const jsonElement = document.getElementById("reportFilterCountsJson");
+
+        if (!jsonElement) return;
+
+        jsonElement.textContent = JSON.stringify(counts || {});
+    }
+
+    function applyCountsFromJsonElement(jsonElement) {
+        if (!jsonElement) return;
+
+        try {
+            const counts = JSON.parse(jsonElement.textContent || "{}");
+            applyCounts(counts);
+        } catch (error) {
+            return;
+        }
+    }
+
+    function normalizeCount(value) {
+        const number = Number(value);
+
+        if (Number.isNaN(number)) {
+            return 0;
+        }
+
+        return number;
+    }
+
+    function getCurrentCounts() {
+        const jsonElement = document.getElementById("reportFilterCountsJson");
+
+        if (!jsonElement) return {};
+
+        try {
+            return JSON.parse(jsonElement.textContent || "{}");
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function getCurrentTotalCount() {
+        const counts = getCurrentCounts();
+
+        return normalizeCount(counts.total);
+    }
+
+    function setCurrentTotalCount(total) {
+        const counts = getCurrentCounts();
+
+        counts.total = normalizeCount(total);
+        syncCurrentJson(counts);
+    }
+
+    function updateVisibleFilterButtonCounts(total) {
+        const safeTotal = normalizeCount(total);
+
+        document.querySelectorAll("[data-count-select][data-count-field]").forEach(function (selectBox) {
+            const buttonCount = selectBox.querySelector(".report-count-select__count");
+
+            if (buttonCount) {
+                buttonCount.textContent = safeTotal;
+            }
+
+            const allOption = selectBox.querySelector('.report-count-select__option[data-value="Tất cả"]');
+            const allOptionCount = allOption ? allOption.querySelector(".report-count-select__option-count") : null;
+
+            if (allOption) {
+                allOption.dataset.count = String(safeTotal);
+            }
+
+            if (allOptionCount) {
+                allOptionCount.textContent = safeTotal;
+            }
+        });
+    }
+
+    function applyCounts(counts) {
+        const safeCounts = counts || {};
+        const total = normalizeCount(safeCounts.total);
+
+        updateVisibleFilterButtonCounts(total);
+
+        document.querySelectorAll("[data-count-select][data-count-field]").forEach(function (selectBox) {
+            const field = selectBox.dataset.countField;
+            const fieldCounts = safeCounts[field] || {};
+            const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+            const buttonLabel = selectBox.querySelector(".report-count-select__label");
+            const options = selectBox.querySelectorAll(".report-count-select__option");
+            const selectedValue = hiddenInput && hiddenInput.value ? hiddenInput.value : "Tất cả";
+
+            options.forEach(function (option) {
+                const value = option.dataset.value || "Tất cả";
+                const optionCount = option.querySelector(".report-count-select__option-count");
+                const nextCount = value === "Tất cả"
+                    ? total
+                    : normalizeCount(fieldCounts[value]);
+
+                option.dataset.count = String(nextCount);
+
+                if (optionCount) {
+                    optionCount.textContent = nextCount;
+                }
+
+                option.classList.toggle("is-active", value === selectedValue);
+            });
+
+            if (buttonLabel) {
+                const activeOption = Array.from(options).find(function (option) {
+                    return (option.dataset.value || "Tất cả") === selectedValue;
+                });
+
+                if (activeOption) {
+                    buttonLabel.textContent =
+                        activeOption.dataset.label ||
+                        activeOption.querySelector(".report-count-select__option-label")?.textContent ||
+                        "";
+                }
+            }
+
+            const buttonCount = selectBox.querySelector(".report-count-select__count");
+
+            if (buttonCount) {
+                buttonCount.textContent = total;
+            }
+        });
+    }
+})();
 </script>

@@ -4,6 +4,95 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_detail.css') }}">
 
 <style>
+    /* ================= SHOW FULL CONTENT - NO INNER SCROLL ================= */
+
+    html,
+    body {
+        min-height: 100%;
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .main-content,
+    .content,
+    .page-content,
+    .app-content {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .report-detail-page {
+        --report-detail-surface: var(--surface, #111f38);
+        --report-detail-surface-2: var(--surface-2, #172746);
+        --report-detail-bg-soft: var(--surface-2, #172746);
+        --report-detail-border: var(--border, rgba(91, 128, 196, 0.36));
+        --report-detail-text: var(--text, #ffffff);
+        --report-detail-text-soft: var(--text-soft, #a8bbd8);
+        --report-detail-blue: var(--hsu-blue, #3b82f6);
+        --report-detail-blue-hover: var(--hsu-blue-hover, #2563eb);
+        --report-detail-red: var(--hsu-red, #ef3b2d);
+        --report-detail-green: #16a34a;
+
+        height: auto !important;
+        max-height: none !important;
+        min-height: calc(100vh - 112px) !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .report-detail-wrap {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .report-detail-topbar,
+    .report-detail-header {
+        position: relative !important;
+        top: auto !important;
+        bottom: auto !important;
+        z-index: 10 !important;
+    }
+
+    .report-detail-main-card {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .report-detail-hero {
+        position: relative !important;
+        top: auto !important;
+        bottom: auto !important;
+        z-index: 8 !important;
+        border-radius: 18px 18px 0 0;
+    }
+
+    .report-detail-scroll {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+
+    .report-detail-footer {
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: 9 !important;
+    }
+
+    /* ================= REPORT ACTION / FILE STYLE ================= */
+
     .report-detail-action-row {
         display: flex;
         align-items: center;
@@ -24,9 +113,16 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
+        font-family: inherit;
         font-weight: 700;
         border-radius: 12px;
-        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease,
+            opacity 0.15s ease,
+            background-color 0.15s ease,
+            border-color 0.15s ease,
+            color 0.15s ease;
     }
 
     .report-detail-approve-btn,
@@ -34,20 +130,27 @@
     .report-detail-download-all-btn {
         min-height: 42px;
         padding: 0 16px;
-        color: #fff;
+        color: #ffffff !important;
         box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
     }
 
+    .report-detail-download-all-btn,
+    .report-detail-download-all-btn span,
+    .report-detail-download-all-btn svg {
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
     .report-detail-approve-btn {
-        background: #16a34a;
+        background: var(--report-detail-green);
     }
 
     .report-detail-reject-btn {
-        background: #dc2626;
+        background: var(--report-detail-red);
     }
 
     .report-detail-download-all-btn {
-        background: #2563eb;
+        background: var(--report-detail-blue);
     }
 
     .report-detail-approve-btn:hover,
@@ -58,11 +161,17 @@
         transform: translateY(-1px);
     }
 
+    .report-detail-download-all-btn:hover {
+        background: var(--report-detail-blue-hover);
+    }
+
     .report-detail-action-disabled {
         opacity: 0.58;
         cursor: not-allowed;
         transform: none !important;
     }
+
+    /* ================= FILE ATTACHMENT - SYSTEM THEME SYNC ================= */
 
     .report-file-list {
         display: grid;
@@ -71,25 +180,46 @@
     }
 
     .report-file-card {
-        border: 1px solid rgba(148, 163, 184, 0.35);
+        border: 1px solid var(--report-detail-border);
         border-radius: 16px;
         padding: 14px;
-        background: #fff;
+
+        background: var(--report-detail-surface);
+        color: var(--report-detail-text);
+
         display: grid;
         grid-template-columns: 42px 1fr auto;
         gap: 12px;
         align-items: center;
+
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        transition:
+            transform 0.16s ease,
+            background-color 0.16s ease,
+            border-color 0.16s ease,
+            box-shadow 0.16s ease;
+    }
+
+    .report-file-card:hover {
+        background: var(--report-detail-surface-2);
+        border-color: color-mix(in srgb, var(--report-detail-blue) 55%, var(--report-detail-border));
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+        transform: translateY(-1px);
     }
 
     .report-file-icon {
         width: 42px;
         height: 42px;
         border-radius: 14px;
-        background: #eff6ff;
-        color: #2563eb;
+
+        background: color-mix(in srgb, var(--report-detail-blue) 14%, var(--report-detail-surface-2));
+        color: var(--report-detail-blue);
+
         display: flex;
         align-items: center;
         justify-content: center;
+
+        border: 1px solid color-mix(in srgb, var(--report-detail-blue) 22%, var(--report-detail-border));
     }
 
     .report-file-icon svg,
@@ -107,8 +237,10 @@
 
     .report-file-info strong {
         display: block;
-        color: #0f172a;
+        color: var(--report-detail-text);
         font-size: 14px;
+        font-weight: 800;
+
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -116,8 +248,9 @@
 
     .report-file-info span {
         display: block;
-        color: #64748b;
+        color: var(--report-detail-text-soft);
         font-size: 12px;
+        font-weight: 600;
         margin-top: 4px;
     }
 
@@ -128,25 +261,73 @@
     }
 
     .report-file-preview-btn {
-        background: #f1f5f9;
-        color: #0f172a;
+        background: color-mix(in srgb, var(--report-detail-surface-2) 82%, var(--report-detail-text) 8%);
+        color: var(--report-detail-text);
         padding: 9px 11px;
+        border: 1px solid var(--report-detail-border);
+    }
+
+    .report-file-preview-btn:hover {
+        background: var(--report-detail-surface-2);
+        border-color: color-mix(in srgb, var(--report-detail-blue) 36%, var(--report-detail-border));
     }
 
     .report-file-download-btn {
-        background: #e0f2fe;
-        color: #0369a1;
+        background: color-mix(in srgb, var(--report-detail-blue) 16%, var(--report-detail-surface-2));
+        color: var(--report-detail-blue);
         padding: 9px 11px;
+        border: 1px solid color-mix(in srgb, var(--report-detail-blue) 28%, var(--report-detail-border));
+    }
+
+    .report-file-download-btn:hover {
+        background: color-mix(in srgb, var(--report-detail-blue) 24%, var(--report-detail-surface-2));
+        color: var(--report-detail-blue-hover);
+        border-color: color-mix(in srgb, var(--report-detail-blue) 46%, var(--report-detail-border));
     }
 
     .report-detail-file-empty {
         margin-top: 12px;
         padding: 16px;
         border-radius: 16px;
-        background: #f8fafc;
-        color: #64748b;
+
+        background: var(--report-detail-surface);
+        color: var(--report-detail-text-soft);
+        border: 1px solid var(--report-detail-border);
+
         font-weight: 600;
     }
+
+    /* Fallback cho trình duyệt chưa hỗ trợ color-mix */
+    @supports not (color: color-mix(in srgb, red 50%, blue)) {
+        .report-file-card {
+            background: var(--report-detail-surface);
+        }
+
+        .report-file-card:hover {
+            background: var(--report-detail-surface-2);
+            border-color: var(--report-detail-blue);
+        }
+
+        .report-file-icon {
+            background: var(--report-detail-surface-2);
+            color: var(--report-detail-blue);
+            border-color: var(--report-detail-border);
+        }
+
+        .report-file-preview-btn {
+            background: var(--report-detail-surface-2);
+            color: var(--report-detail-text);
+            border-color: var(--report-detail-border);
+        }
+
+        .report-file-download-btn {
+            background: var(--report-detail-surface-2);
+            color: var(--report-detail-blue);
+            border-color: var(--report-detail-border);
+        }
+    }
+
+    /* ================= FILE PREVIEW MODAL - SYSTEM THEME SYNC ================= */
 
     .report-file-preview-modal {
         position: fixed;
@@ -157,6 +338,7 @@
         justify-content: center;
         padding: 24px;
         background: rgba(15, 23, 42, 0.66);
+        backdrop-filter: blur(4px);
     }
 
     .report-file-preview-modal.is-show {
@@ -166,9 +348,14 @@
     .report-file-preview-dialog {
         width: min(960px, 100%);
         max-height: min(760px, 92vh);
-        background: #fff;
+
+        background: var(--report-detail-surface);
+        color: var(--report-detail-text);
+        border: 1px solid var(--report-detail-border);
+
         border-radius: 22px;
         box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -176,7 +363,10 @@
 
     .report-file-preview-head {
         padding: 16px 18px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--report-detail-border);
+
+        background: var(--report-detail-surface-2);
+
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -186,13 +376,13 @@
     .report-file-preview-head h3 {
         margin: 0;
         font-size: 16px;
-        color: #0f172a;
+        color: var(--report-detail-text);
         word-break: break-word;
     }
 
     .report-file-preview-head p {
         margin: 4px 0 0;
-        color: #64748b;
+        color: var(--report-detail-text-soft);
         font-size: 13px;
     }
 
@@ -200,18 +390,28 @@
         width: 38px;
         height: 38px;
         border-radius: 999px;
-        border: 0;
-        background: #f1f5f9;
-        color: #0f172a;
+        border: 1px solid var(--report-detail-border);
+
+        background: var(--report-detail-surface);
+        color: var(--report-detail-text);
+
         cursor: pointer;
         font-size: 22px;
         line-height: 1;
+        transition: 0.15s ease;
+    }
+
+    .report-file-preview-close:hover {
+        background: var(--report-detail-surface-2);
     }
 
     .report-file-preview-body {
         padding: 18px;
         overflow: auto;
-        background: #f8fafc;
+
+        background: var(--report-detail-bg-soft);
+        color: var(--report-detail-text);
+
         min-height: 260px;
     }
 
@@ -221,7 +421,8 @@
         max-height: 620px;
         margin: 0 auto;
         border-radius: 16px;
-        background: #fff;
+        background: var(--report-detail-surface);
+        border: 1px solid var(--report-detail-border);
     }
 
     .report-file-preview-body iframe {
@@ -229,7 +430,7 @@
         height: 620px;
         border: 0;
         border-radius: 16px;
-        background: #fff;
+        background: var(--report-detail-surface);
     }
 
     .report-file-preview-empty {
@@ -238,19 +439,22 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+
         text-align: center;
-        color: #475569;
+        color: var(--report-detail-text-soft);
         gap: 8px;
     }
 
     .report-file-preview-empty strong {
-        color: #0f172a;
+        color: var(--report-detail-text);
         font-size: 18px;
     }
 
     .report-file-preview-foot {
         padding: 14px 18px;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid var(--report-detail-border);
+        background: var(--report-detail-surface-2);
+
         display: flex;
         align-items: center;
         justify-content: flex-end;
@@ -261,13 +465,26 @@
         min-height: 40px;
         padding: 0 14px;
         border-radius: 12px;
-        background: #2563eb;
+
+        background: var(--report-detail-blue);
         color: #fff;
+
         text-decoration: none;
+
         display: inline-flex;
         align-items: center;
         gap: 8px;
+
+        font-family: inherit;
         font-weight: 700;
+        transition: 0.15s ease;
+    }
+
+    .report-file-preview-download:hover {
+        background: var(--report-detail-blue-hover);
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-1px);
     }
 
     @media (max-width: 720px) {
@@ -373,38 +590,6 @@
                 <div>
                     <h1>Chi tiết báo cáo</h1>
                     <p>Theo dõi đầy đủ thông tin, nội dung và trạng thái của báo cáo tài sản.</p>
-                </div>
-
-                <div class="report-detail-header-actions">
-                    <div class="report-detail-action-row">
-                        {% if can_process %}
-                            <button
-                                type="button"
-                                class="report-detail-approve-btn js-approve-report"
-                                data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
-                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                                data-report-type="{{ report_type }}"
-                            >
-                                {{ check_icon() }}
-                                <span>Duyệt</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                class="report-detail-reject-btn js-reject-report"
-                                data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
-                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                            >
-                                {{ x_icon() }}
-                                <span>Từ chối</span>
-                            </button>
-                        {% else %}
-                            <button type="button" class="report-detail-approve-btn report-detail-action-disabled" disabled>
-                                {{ check_icon() }}
-                                <span>Đã xử lý</span>
-                            </button>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
 
@@ -598,42 +783,6 @@
                                             <p>{{ show_value(report.display_asset_code, 'Không có mã tài sản') }}</p>
                                         {% endif %}
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="report-detail-section">
-                                <div class="report-detail-section-title report-detail-section-title--soft">
-                                    <span>Thao tác xử lý</span>
-                                </div>
-
-                                <div class="report-detail-action-row">
-                                    {% if can_process %}
-                                        <button
-                                            type="button"
-                                            class="report-detail-approve-btn js-approve-report"
-                                            data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
-                                            data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                                            data-report-type="{{ report_type }}"
-                                        >
-                                            {{ check_icon() }}
-                                            <span>Duyệt</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="report-detail-reject-btn js-reject-report"
-                                            data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
-                                            data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                                        >
-                                            {{ x_icon() }}
-                                            <span>Từ chối</span>
-                                        </button>
-                                    {% else %}
-                                        <button type="button" class="report-detail-approve-btn report-detail-action-disabled" disabled>
-                                            {{ check_icon() }}
-                                            <span>Báo cáo đã xử lý</span>
-                                        </button>
-                                    {% endif %}
                                 </div>
                             </div>
                         </div>
