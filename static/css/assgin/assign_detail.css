@@ -245,15 +245,24 @@ body.assign-confirm-open {
 }
 
 .assign-info-code {
+  width: 100%;
   max-height: 110px;
-  padding: 14px;
+  min-height: 86px;
+  margin: 0;
+  padding: 14px 16px;
   border-radius: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
+  color: var(--text);
   font-family: Consolas, Monaco, "Courier New", monospace;
   font-size: 13px !important;
   font-weight: 700 !important;
-  white-space: pre-wrap;
+  line-height: 1.55 !important;
+  text-align: left;
+  white-space: pre-line;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  tab-size: 2;
   overflow: auto;
 }
 
@@ -675,6 +684,7 @@ body.dark-mode .assign-user-id,
 
   .assign-info-code {
     max-height: 88px;
+    min-height: 76px;
   }
 }
 

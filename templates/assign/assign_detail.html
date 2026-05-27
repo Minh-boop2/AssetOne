@@ -69,9 +69,7 @@
 
           <div class="assign-info-item assign-info-item--full">
             <span>Cấu hình / ghi chú</span>
-            <strong class="assign-info-code">
-              {{ specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.') }}
-            </strong>
+            <strong class="assign-info-code">{{ (specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.')) | trim }}</strong>
           </div>
         </div>
       </div>

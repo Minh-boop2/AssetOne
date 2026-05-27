@@ -26,7 +26,6 @@
   overflow: hidden;
   color: var(--mc-text);
   font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-
   background:
     radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
     linear-gradient(180deg, #f8fafc 0%, var(--mc-bg) 100%);
@@ -63,7 +62,6 @@ body.dark-theme .manage-create-page,
 
   --mc-shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
   --mc-shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.25);
-
   background:
     radial-gradient(circle at top left, rgba(96, 165, 250, 0.13), transparent 34%),
     linear-gradient(180deg, #08111f 0%, var(--mc-bg) 100%);
@@ -132,7 +130,7 @@ body.dark-theme .manage-create-page,
   background: var(--mc-surface);
   border: 1px solid var(--mc-border);
   border-radius: 22px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--mc-shadow);
   display: flex;
   flex-direction: column;
@@ -153,7 +151,7 @@ body.dark-theme .manage-create-page,
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 30px;
   padding: 20px 36px 12px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .create-column {
@@ -293,6 +291,7 @@ body.dark-theme .verify-badge,
 }
 
 .form-group {
+  position: relative;
   margin-bottom: 10px;
 }
 
@@ -306,8 +305,13 @@ body.dark-theme .verify-badge,
   margin-bottom: 6px;
 }
 
-.form-group input,
-.form-group select {
+.required-star {
+  color: var(--mc-danger);
+  font-weight: 900;
+  margin-left: 3px;
+}
+
+.form-group input {
   width: 100%;
   height: 39px;
   background: var(--mc-surface-card);
@@ -325,21 +329,160 @@ body.dark-theme .verify-badge,
   color: var(--mc-text-muted);
 }
 
-.form-group select {
-  appearance: auto;
-  cursor: pointer;
-}
-
-.form-group select option {
-  background: var(--mc-surface);
-  color: var(--mc-text-strong);
-  font-weight: 650;
-}
-
 .form-group input:focus,
-.form-group select:focus {
-  border-color: var(--mc-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+.create-select__button:focus,
+.create-select.is-open .create-select__button {
+  border-color: var(--hsu-blue, var(--mc-primary));
+  background: var(--surface, var(--mc-surface));
+  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+.create-select {
+  position: relative;
+  width: 100%;
+  z-index: 20;
+}
+
+.create-select.is-open {
+  z-index: 80;
+}
+
+.create-select__button {
+  width: 100%;
+  height: 39px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, var(--mc-border));
+  background: var(--surface-2, var(--mc-surface-card));
+  color: var(--text, var(--mc-text-strong));
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.create-select__text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.create-select:not(.has-value) .create-select__text {
+  color: var(--text, var(--mc-text-strong));
+}
+
+.create-select__button i {
+  flex-shrink: 0;
+  color: var(--text-soft, var(--mc-text-soft));
+  font-size: 9px;
+  opacity: 0.5;
+  transition: 0.2s ease;
+}
+
+.create-select.is-open .create-select__button i {
+  color: var(--hsu-blue, var(--mc-primary));
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.create-select__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  display: none;
+  padding: 6px;
+  border: 1px solid var(--border, var(--mc-border));
+  border-radius: 14px;
+  background: var(--surface, var(--mc-surface));
+  box-shadow: var(--shadow-soft, var(--mc-shadow-soft));
+  max-height: 235px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1001;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, var(--mc-border)) transparent;
+}
+
+.create-select.is-open .create-select__menu {
+  display: block;
+  animation: createSelectIn 0.2s ease;
+}
+
+.create-select__menu--scroll {
+  max-height: 198px;
+  overscroll-behavior: contain;
+}
+
+.create-select__option {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text, var(--mc-text));
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.create-select__option:hover,
+.create-select__option.is-selected {
+  background: var(--surface-2, var(--mc-surface-soft));
+  color: var(--hsu-blue, var(--mc-primary));
+}
+
+.create-select__option.is-placeholder {
+  color: var(--text-soft, var(--mc-text-soft));
+  font-weight: 600;
+}
+
+.create-select__option.is-placeholder:hover {
+  background: transparent;
+  color: var(--text-soft, var(--mc-text-soft));
+}
+
+.create-select__menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-select__menu::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.create-select__menu::-webkit-scrollbar-thumb {
+  background: var(--border, var(--mc-border));
+  border-radius: 999px;
+}
+
+.create-select__menu::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft, var(--mc-text-soft));
+}
+
+@keyframes createSelectIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .password-field {
@@ -380,6 +523,7 @@ body.dark-theme .verify-badge,
 }
 
 .form-group.is-invalid label,
+.form-group.is-invalid .required-star,
 .form-group.is-invalid .field-error {
   color: var(--mc-danger);
 }
@@ -389,7 +533,7 @@ body.dark-theme .verify-badge,
 }
 
 .form-group.is-invalid input,
-.form-group.is-invalid select {
+.form-group.is-invalid .create-select__button {
   border-color: rgba(239, 68, 68, 0.8);
   background: rgba(239, 68, 68, 0.06);
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
@@ -508,7 +652,7 @@ body.dark-theme .verify-badge,
   }
 
   .form-group input,
-  .form-group select {
+  .create-select__button {
     height: 38px;
   }
 
@@ -558,7 +702,7 @@ body.dark-theme .verify-badge,
   }
 
   .form-group input,
-  .form-group select {
+  .create-select__button {
     height: 37px;
   }
 

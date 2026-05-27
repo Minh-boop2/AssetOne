@@ -1,23 +1,16 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage.css') }}"
-/>
-
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=3"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=27">
 
 <section class="manage-edit-page">
   <div class="manage-edit-wrap">
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
 
     <div class="edit-topbar">
-      <a href="{{ url_for('user_detail', id=action_id) }}" class="edit-back-link">
-        <i class="fas fa-arrow-left"></i>
+      <a href="{{ url_for('manage') }}" class="edit-back-link">
+        <span class="edit-back-icon">&laquo;</span>
         <span>Hủy và quay lại</span>
       </a>
     </div>
@@ -30,29 +23,33 @@
         action="{{ url_for('user_edit', id=action_id) }}"
         class="edit-form"
         id="editUserForm"
+        novalidate
       >
         <div class="edit-card-header">
-          <div class="edit-header-inner">
-            <div class="edit-code-box">
-              <span class="edit-code-label">Mã nhân viên</span>
-              <span class="edit-code-value">{{ user.id }}</span>
-            </div>
+          <div class="edit-code-box">
+            <span class="edit-code-label">Mã nhân viên</span>
+            <strong>{{ user.id }}</strong>
+          </div>
 
-            <div class="edit-name-box">
-              <label class="edit-label" for="edit-name">Họ và tên nhân viên</label>
-              <input
-                id="edit-name"
-                type="text"
-                name="name"
-                value="{{ user.name }}"
-                required
-                class="edit-input name-input"
-              />
-            </div>
+          <div class="edit-name-box edit-field">
+            <label class="edit-label" for="edit-name">
+              Họ và tên nhân viên <span class="required-star">*</span>
+            </label>
+
+            <input
+              id="edit-name"
+              type="text"
+              name="name"
+              value="{{ user.name }}"
+              required
+              class="edit-input edit-name-input"
+            >
+
+            <small class="edit-field-error">Vui lòng nhập họ và tên nhân viên.</small>
           </div>
         </div>
 
-        <div class="edit-card-body" id="editCardBody">
+        <div class="edit-card-body">
           <div class="edit-grid">
             <div class="edit-column">
               <h4 class="edit-section-title">
@@ -60,229 +57,320 @@
                 <span>Thông tin cá nhân & liên hệ</span>
               </h4>
 
-              <div class="edit-field-list">
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-email">Email công vụ</label>
-                  <input
-                    id="edit-email"
-                    type="email"
-                    name="email"
-                    value="{{ user.email }}"
-                    required
-                    class="edit-input"
-                  />
-                </div>
+              <div class="edit-field">
+                <label class="edit-label" for="edit-email">
+                  Email công vụ <span class="required-star">*</span>
+                </label>
 
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-phone">Số điện thoại</label>
-                  <input
-                    id="edit-phone"
-                    type="text"
-                    name="phone"
-                    value="{{ user.phone if user.phone else '' }}"
-                    class="edit-input"
-                  />
-                </div>
+                <input
+                  id="edit-email"
+                  type="email"
+                  name="email"
+                  value="{{ user.email }}"
+                  required
+                  class="edit-input"
+                >
 
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-status">Trạng thái tài khoản</label>
+                <small class="edit-field-error">Vui lòng nhập email hợp lệ.</small>
+              </div>
 
-                  <select id="edit-status" name="status" class="edit-native-select">
+              <div class="edit-field">
+                <label class="edit-label" for="edit-phone">Số điện thoại</label>
+
+                <input
+                  id="edit-phone"
+                  type="text"
+                  name="phone"
+                  value="{{ user.phone if user.phone else '' }}"
+                  class="edit-input"
+                >
+              </div>
+
+              <div class="edit-field">
+                <label class="edit-label" for="edit-status">Trạng thái tài khoản</label>
+
+                <select id="edit-status" name="status" class="edit-native-select">
+                  {% for status in user_status %}
+                    {% set status_value = status.value if status.value is defined else status %}
+                    {% set status_label = status.label if status.label is defined else status %}
+                    <option
+                      value="{{ status_value }}"
+                      {% if user.status_code == status_value or user.status == status_label or user.status == status_value %}selected{% endif %}
+                    >
+                      {{ status_label }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="edit-custom-select" data-custom-select data-target="edit-status">
+                  <button type="button" class="edit-custom-select__trigger">
+                    <span></span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+
+                  <div class="edit-custom-select__menu">
                     {% for status in user_status %}
                       {% set status_value = status.value if status.value is defined else status %}
                       {% set status_label = status.label if status.label is defined else status %}
-                      <option
-                        value="{{ status_value }}"
-                        {% if user.status_code == status_value or user.status == status_label or user.status == status_value %}selected{% endif %}
-                      >
+                      <button type="button" class="edit-custom-select__option" data-value="{{ status_value }}">
                         {{ status_label }}
-                      </option>
+                      </button>
                     {% endfor %}
-                  </select>
-
-                  <div class="edit-custom-select" data-custom-select data-target="edit-status">
-                    <button type="button" class="edit-custom-select__trigger">
-                      <span></span>
-                      <i class="fas fa-chevron-down"></i>
-                    </button>
-
-                    <div class="edit-custom-select__menu">
-                      {% for status in user_status %}
-                        {% set status_value = status.value if status.value is defined else status %}
-                        {% set status_label = status.label if status.label is defined else status %}
-                        <button
-                          type="button"
-                          class="edit-custom-select__option"
-                          data-value="{{ status_value }}"
-                        >
-                          {{ status_label }}
-                        </button>
-                      {% endfor %}
-                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-password">Mật khẩu mới</label>
-                  <input
-                    id="edit-password"
-                    type="password"
-                    name="password"
-                    placeholder="Để trống nếu không đổi mật khẩu"
-                    class="edit-input"
-                  />
-                </div>
+              <div class="edit-field">
+                <label class="edit-label" for="edit-password">Mật khẩu mới</label>
+
+                <input
+                  id="edit-password"
+                  type="password"
+                  name="password"
+                  placeholder="Để trống nếu không đổi mật khẩu"
+                  class="edit-input"
+                >
               </div>
             </div>
 
             <div class="edit-column">
-              <h4 class="edit-section-title soft">
+              <h4 class="edit-section-title">
                 <i class="fas fa-briefcase"></i>
                 <span>Vị trí & công tác</span>
               </h4>
 
-              <div class="edit-field-list">
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-department">Phòng ban / Đơn vị</label>
+              <div class="edit-field">
+                <label class="edit-label" for="edit-department">Phòng ban / Đơn vị</label>
 
-                  <select id="edit-department" name="department" class="edit-native-select">
+                <select id="edit-department" name="department" class="edit-native-select">
+                  {% for d in departments %}
+                    <option value="{{ d }}" {% if user.dept == d %}selected{% endif %}>
+                      {{ d }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="edit-custom-select" data-custom-select data-target="edit-department">
+                  <button type="button" class="edit-custom-select__trigger">
+                    <span></span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+
+                  <div class="edit-custom-select__menu">
                     {% for d in departments %}
-                      <option value="{{ d }}" {% if user.dept == d %}selected{% endif %}>
+                      <button type="button" class="edit-custom-select__option" data-value="{{ d }}">
                         {{ d }}
-                      </option>
+                      </button>
                     {% endfor %}
-                  </select>
-
-                  <div class="edit-custom-select" data-custom-select data-target="edit-department">
-                    <button type="button" class="edit-custom-select__trigger">
-                      <span></span>
-                      <i class="fas fa-chevron-down"></i>
-                    </button>
-
-                    <div class="edit-custom-select__menu">
-                      {% for d in departments %}
-                        <button
-                          type="button"
-                          class="edit-custom-select__option"
-                          data-value="{{ d }}"
-                        >
-                          {{ d }}
-                        </button>
-                      {% endfor %}
-                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-role">Vai trò hệ thống</label>
+              <div class="edit-field">
+                <label class="edit-label" for="edit-role">Vai trò hệ thống</label>
 
-                  <select id="edit-role" name="role" class="edit-native-select">
+                <select id="edit-role" name="role" class="edit-native-select">
+                  {% for r in roles %}
+                    {% set role_value = r.value if r.value is defined else r %}
+                    {% set role_label = r.label if r.label is defined else r %}
+                    <option
+                      value="{{ role_value }}"
+                      {% if user.role_code == role_value or user.role == role_label or user.role == role_value %}selected{% endif %}
+                    >
+                      {{ role_label }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="edit-custom-select" data-custom-select data-target="edit-role">
+                  <button type="button" class="edit-custom-select__trigger">
+                    <span></span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+
+                  <div class="edit-custom-select__menu">
                     {% for r in roles %}
                       {% set role_value = r.value if r.value is defined else r %}
                       {% set role_label = r.label if r.label is defined else r %}
-                      <option
-                        value="{{ role_value }}"
-                        {% if user.role_code == role_value or user.role == role_label or user.role == role_value %}selected{% endif %}
-                      >
+                      <button type="button" class="edit-custom-select__option" data-value="{{ role_value }}">
                         {{ role_label }}
-                      </option>
-                    {% endfor %}
-                  </select>
-
-                  <div class="edit-custom-select role-custom-select" data-custom-select data-target="edit-role">
-                    <button type="button" class="edit-custom-select__trigger">
-                      <span></span>
-                      <i class="fas fa-chevron-down"></i>
-                    </button>
-
-                    <div class="edit-custom-select__menu">
-                      {% for r in roles %}
-                        {% set role_value = r.value if r.value is defined else r %}
-                        {% set role_label = r.label if r.label is defined else r %}
-                        <button
-                          type="button"
-                          class="edit-custom-select__option"
-                          data-value="{{ role_value }}"
-                        >
-                          {{ role_label }}
-                        </button>
-                      {% endfor %}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-floor">Vị trí tầng</label>
-
-                  <select id="edit-floor" name="floor" class="edit-native-select">
-                    <option value="">Chưa sắp xếp</option>
-                    {% for f in floors %}
-                      <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
-                        {{ f }}
-                      </option>
-                    {% endfor %}
-                  </select>
-
-                  <div class="edit-custom-select" data-custom-select data-target="edit-floor">
-                    <button type="button" class="edit-custom-select__trigger">
-                      <span></span>
-                      <i class="fas fa-chevron-down"></i>
-                    </button>
-
-                    <div class="edit-custom-select__menu">
-                      <button type="button" class="edit-custom-select__option" data-value="">
-                        Chưa sắp xếp
                       </button>
-
-                      {% for f in floors %}
-                        <button
-                          type="button"
-                          class="edit-custom-select__option"
-                          data-value="{{ f }}"
-                        >
-                          {{ f }}
-                        </button>
-                      {% endfor %}
-                    </div>
+                    {% endfor %}
                   </div>
                 </div>
+              </div>
 
-                <div class="edit-field">
-                  <label class="edit-label" for="edit-join-date">Ngày tham gia</label>
-                  <input
-                    id="edit-join-date"
-                    type="text"
-                    value="{{ user.join_date or user.created_at or 'Chưa có dữ liệu' }}"
-                    readonly
-                    disabled
-                    class="edit-input readonly-input"
-                  />
+              <div class="edit-field">
+                <label class="edit-label" for="edit-floor">Vị trí tầng</label>
+
+                <select id="edit-floor" name="floor" class="edit-native-select">
+                  <option value="">Chưa sắp xếp</option>
+                  {% for f in floors %}
+                    <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
+                      {{ f }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <div class="edit-custom-select" data-custom-select data-target="edit-floor">
+                  <button type="button" class="edit-custom-select__trigger">
+                    <span></span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+
+                  <div class="edit-custom-select__menu">
+                    <button type="button" class="edit-custom-select__option" data-value="">
+                      Chưa sắp xếp
+                    </button>
+
+                    {% for f in floors %}
+                      <button type="button" class="edit-custom-select__option" data-value="{{ f }}">
+                        {{ f }}
+                      </button>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="edit-field">
+                <label class="edit-label">Ngày tham gia</label>
+
+                <div class="edit-readonly-box">
+                  {{ user.joined_at if user.joined_at else 'Chưa có dữ liệu' }}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="edit-actions">
-            <a href="{{ url_for('user_detail', id=action_id) }}" class="edit-btn edit-btn-cancel">
-              Hủy bỏ
-            </a>
-
-            <button type="submit" class="edit-btn edit-btn-submit">
-              <i class="fas fa-save"></i>
-              Lưu thay đổi
-            </button>
-          </div>
+        <div class="edit-card-footer">
+          <a href="{{ url_for('manage') }}" class="edit-btn edit-btn-cancel">Hủy bỏ</a>
+          <button type="submit" class="edit-btn edit-btn-save">Lưu thay đổi</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="edit-confirm-overlay" id="saveConfirmOverlay" aria-hidden="true">
+    <div class="edit-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+      <button type="button" class="edit-confirm-close" id="closeSaveConfirmBtn" aria-label="Đóng">
+        &times;
+      </button>
+
+      <div class="edit-confirm-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 9v4"></path>
+          <path d="M12 17h.01"></path>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+        </svg>
+      </div>
+
+      <h2 id="saveConfirmTitle">Xác nhận lưu thay đổi</h2>
+      <p>Bạn có chắc muốn lưu các thay đổi cho hồ sơ nhân sự này không?</p>
+
+      <div class="edit-confirm-actions">
+        <button type="button" class="edit-confirm-btn edit-confirm-btn-cancel" id="cancelSaveBtn">
+          Hủy
+        </button>
+
+        <button type="button" class="edit-confirm-btn edit-confirm-btn-save" id="confirmSaveBtn">
+          Lưu
+        </button>
+      </div>
     </div>
   </div>
 </section>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const editUserForm = document.getElementById("editUserForm");
-  const editCardBody = document.getElementById("editCardBody");
-  let allowSubmit = false;
+  const form = document.getElementById("editUserForm");
+  const confirmOverlay = document.getElementById("saveConfirmOverlay");
+  const confirmSaveBtn = document.getElementById("confirmSaveBtn");
+  const cancelSaveBtn = document.getElementById("cancelSaveBtn");
+  const closeSaveConfirmBtn = document.getElementById("closeSaveConfirmBtn");
+  const redirectUrl = "{{ url_for('manage') }}";
+
+  let isSubmitting = false;
+
+  function openConfirm() {
+    if (!confirmOverlay) return;
+    confirmOverlay.classList.add("is-open");
+    confirmOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeConfirm() {
+    if (!confirmOverlay) return;
+    confirmOverlay.classList.remove("is-open");
+    confirmOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function setFieldError(field, message) {
+    const group = field.closest(".edit-field");
+    if (!group) return;
+
+    const error = group.querySelector(".edit-field-error");
+    group.classList.add("has-error");
+
+    if (error) {
+      error.textContent = message || "Vui lòng nhập thông tin.";
+    }
+  }
+
+  function clearFieldError(field) {
+    const group = field.closest(".edit-field");
+    if (!group) return;
+    group.classList.remove("has-error");
+  }
+
+  function validateField(field) {
+    const value = (field.value || "").trim();
+    const type = field.getAttribute("type");
+
+    if (field.hasAttribute("required") && !value) {
+      setFieldError(field, "Vui lòng nhập thông tin bắt buộc.");
+      return false;
+    }
+
+    if (type === "email" && value) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailPattern.test(value)) {
+        setFieldError(field, "Vui lòng nhập email hợp lệ.");
+        return false;
+      }
+    }
+
+    clearFieldError(field);
+    return true;
+  }
+
+  function validateForm() {
+    if (!form) return false;
+
+    const fields = form.querySelectorAll("input[required], select[required]");
+    let valid = true;
+    let firstInvalid = null;
+
+    fields.forEach(function (field) {
+      if (!validateField(field)) {
+        valid = false;
+
+        if (!firstInvalid) {
+          firstInvalid = field;
+        }
+      }
+    });
+
+    if (firstInvalid) {
+      firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      setTimeout(function () {
+        firstInvalid.focus();
+      }, 180);
+    }
+
+    return valid;
+  }
 
   function closeCustomSelects(exceptBox = null) {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
@@ -293,41 +381,39 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function syncCustomSelect(box) {
-    const select = document.getElementById(box.dataset.target);
+    const nativeSelect = document.getElementById(box.dataset.target);
     const triggerText = box.querySelector(".edit-custom-select__trigger span");
     const options = box.querySelectorAll(".edit-custom-select__option");
 
-    if (!select || !triggerText) return;
+    if (!nativeSelect || !triggerText) return;
 
     let selectedText = "";
 
     options.forEach(function (option) {
-      const isSelected = option.dataset.value === select.value;
-      option.classList.toggle("is-selected", isSelected);
+      const selected = option.dataset.value === nativeSelect.value;
+      option.classList.toggle("is-selected", selected);
 
-      if (isSelected) {
+      if (selected) {
         selectedText = option.textContent.trim();
       }
     });
 
-    if (!selectedText && select.options.length) {
-      selectedText = select.options[select.selectedIndex].textContent.trim();
-    }
-
-    triggerText.textContent = selectedText;
+    const selectedOption = nativeSelect.options[nativeSelect.selectedIndex];
+    triggerText.textContent = selectedText || (selectedOption ? selectedOption.textContent.trim() : "Chọn");
   }
 
   function initCustomSelects() {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
-      const select = document.getElementById(box.dataset.target);
+      const nativeSelect = document.getElementById(box.dataset.target);
       const trigger = box.querySelector(".edit-custom-select__trigger");
       const options = box.querySelectorAll(".edit-custom-select__option");
 
-      if (!select || !trigger) return;
+      if (!nativeSelect || !trigger) return;
 
       syncCustomSelect(box);
 
       trigger.addEventListener("click", function (event) {
+        event.preventDefault();
         event.stopPropagation();
 
         const isOpen = box.classList.contains("is-open");
@@ -338,76 +424,126 @@ document.addEventListener("DOMContentLoaded", function () {
 
       options.forEach(function (option) {
         option.addEventListener("click", function (event) {
+          event.preventDefault();
           event.stopPropagation();
 
-          select.value = option.dataset.value || "";
-          select.dispatchEvent(new Event("change", { bubbles: true }));
+          nativeSelect.value = option.dataset.value || "";
+          nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
 
           syncCustomSelect(box);
           box.classList.remove("is-open");
         });
       });
 
-      select.addEventListener("change", function () {
+      nativeSelect.addEventListener("change", function () {
         syncCustomSelect(box);
       });
     });
+  }
 
-    document.addEventListener("click", function () {
-      closeCustomSelects();
-    });
+  async function submitAndRedirect() {
+    if (!form || isSubmitting) return;
 
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        closeCustomSelects();
-      }
-    });
+    isSubmitting = true;
+    closeConfirm();
 
-    if (editCardBody) {
-      editCardBody.addEventListener("scroll", function () {
-        closeCustomSelects();
+    confirmSaveBtn.disabled = true;
+    confirmSaveBtn.textContent = "Đang lưu...";
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "application/json, text/html"
+        }
       });
-    }
 
-    window.addEventListener("resize", function () {
-      closeCustomSelects();
-    });
+      if (response.ok || response.redirected) {
+        sessionStorage.setItem(
+          "manage_toast",
+          JSON.stringify({
+            type: "success",
+            message: "Cập nhật nhân sự thành công"
+          })
+        );
+
+        window.location.replace(redirectUrl);
+        return;
+      }
+
+      throw new Error("Save failed");
+    } catch (error) {
+      isSubmitting = false;
+      confirmSaveBtn.disabled = false;
+      confirmSaveBtn.textContent = "Lưu";
+
+      if (window.sonner) {
+        window.sonner.error("Lưu thay đổi không thành công", "Vui lòng thử lại.");
+      } else {
+        alert("Lưu thay đổi không thành công. Vui lòng thử lại.");
+      }
+    }
   }
 
   initCustomSelects();
 
-  if (!editUserForm) return;
-
-  editUserForm.addEventListener("submit", async function (event) {
-    if (allowSubmit) return;
-
-    event.preventDefault();
-
-    if (!editUserForm.checkValidity()) {
-      editUserForm.reportValidity();
-      return;
-    }
-
-    let confirmed = false;
-
-    if (typeof window.toastConfirm === "function") {
-      confirmed = await window.toastConfirm({
-        type: "warning",
-        title: "Xác nhận lưu thay đổi",
-        message: "Bạn có chắc muốn lưu các thay đổi cho hồ sơ nhân sự này không?",
-        confirmText: "Lưu",
-        cancelText: "Hủy",
-        danger: false,
-        closeOnBackdrop: false,
-        closeOnEsc: true
+  if (form) {
+    form.querySelectorAll("input[required], select[required]").forEach(function (field) {
+      field.addEventListener("input", function () {
+        validateField(field);
       });
-    } else {
-      confirmed = confirm("Bạn có chắc muốn lưu các thay đổi cho hồ sơ nhân sự này không?");
-    }
 
-    if (confirmed) {
-      allowSubmit = true;
-      editUserForm.submit();
+      field.addEventListener("change", function () {
+        validateField(field);
+      });
+
+      field.addEventListener("blur", function () {
+        validateField(field);
+      });
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!validateForm()) return;
+
+      openConfirm();
+    });
+  }
+
+  if (confirmSaveBtn) {
+    confirmSaveBtn.addEventListener("click", submitAndRedirect);
+  }
+
+  if (cancelSaveBtn) {
+    cancelSaveBtn.addEventListener("click", closeConfirm);
+  }
+
+  if (closeSaveConfirmBtn) {
+    closeSaveConfirmBtn.addEventListener("click", closeConfirm);
+  }
+
+  if (confirmOverlay) {
+    confirmOverlay.addEventListener("click", function (event) {
+      if (event.target === confirmOverlay) {
+        closeConfirm();
+      }
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest("[data-custom-select]")) {
+      closeCustomSelects();
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeConfirm();
+      closeCustomSelects();
     }
   });
 });

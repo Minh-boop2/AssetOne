@@ -1,4 +1,3 @@
-
 {% extends 'main.html' %}
 
 {% block content %}
@@ -33,6 +32,27 @@
 
 {% set selected_cat_value = selected_cat or 'Tất cả' %}
 {% set selected_cat_label = type_labels.get(selected_cat_value|lower, selected_cat_value) if selected_cat_value != 'Tất cả' else 'Tất cả loại' %}
+
+{% macro action_icon(type) %}
+  {% if type == 'eye' %}
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  {% elif type == 'give' %}
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M19 8v6"></path>
+      <path d="M16 11h6"></path>
+    </svg>
+  {% else %}
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+      <path d="M9 14 4 9l5-5"></path>
+      <path d="M4 9h10a6 6 0 0 1 0 12h-3"></path>
+    </svg>
+  {% endif %}
+{% endmacro %}
 
 <section class="assign-page">
   <div class="assets-page__header">
@@ -79,11 +99,11 @@
           </button>
 
           {% for cat in categories %}
-          {% set cat_label = type_labels.get(cat|lower, cat) %}
-          <button type="button" class="filter-select__option" data-value="{{ cat }}">
-            <span class="filter-select__option-label">{{ cat_label }}</span>
-            <span class="filter-select__option-count">{{ counts.get('categories', {}).get(cat, 0) }}</span>
-          </button>
+            {% set cat_label = type_labels.get(cat|lower, cat) %}
+            <button type="button" class="filter-select__option" data-value="{{ cat }}">
+              <span class="filter-select__option-label">{{ cat_label }}</span>
+              <span class="filter-select__option-count">{{ counts.get('categories', {}).get(cat, 0) }}</span>
+            </button>
           {% endfor %}
         </div>
       </div>
@@ -113,10 +133,10 @@
           </button>
 
           {% for dept in departments %}
-          <button type="button" class="filter-select__option" data-value="{{ dept }}">
-            <span class="filter-select__option-label">{{ dept }}</span>
-            <span class="filter-select__option-count">{{ counts.get('departments', {}).get(dept, 0) }}</span>
-          </button>
+            <button type="button" class="filter-select__option" data-value="{{ dept }}">
+              <span class="filter-select__option-label">{{ dept }}</span>
+              <span class="filter-select__option-count">{{ counts.get('departments', {}).get(dept, 0) }}</span>
+            </button>
           {% endfor %}
         </div>
       </div>
@@ -146,10 +166,10 @@
           </button>
 
           {% for st in status_options %}
-          <button type="button" class="filter-select__option" data-value="{{ st }}">
-            <span class="filter-select__option-label">{{ st }}</span>
-            <span class="filter-select__option-count">{{ counts.get('status', {}).get(st, 0) }}</span>
-          </button>
+            <button type="button" class="filter-select__option" data-value="{{ st }}">
+              <span class="filter-select__option-label">{{ st }}</span>
+              <span class="filter-select__option-count">{{ counts.get('status', {}).get(st, 0) }}</span>
+            </button>
           {% endfor %}
         </div>
       </div>
@@ -171,6 +191,7 @@
   <div class="table-container" id="assignTableContainer">
     <div class="table-header-wrapper">
       <h2 class="table-list-title">Danh sách cấp phát tài sản</h2>
+
       <div class="table-info-count">
         Hiển thị <strong id="assignShownCount">{{ assigns|length }}</strong> trên
         <strong id="assignTotalCount">{{ total_items }}</strong> bản ghi
@@ -194,90 +215,93 @@
 
         <tbody id="assignTableBody">
           {% for row in assigns %}
-          <tr>
-            <td class="asset-code">{{ row.asset_code or '---' }}</td>
-            <td class="font-bold">{{ row.asset or row.asset_name or '---' }}</td>
+            <tr>
+              <td class="asset-code">{{ row.asset_code or '---' }}</td>
+              <td class="font-bold">{{ row.asset or row.asset_name or '---' }}</td>
 
-            {% set row_type = row.type or row.category or '' %}
-            <td class="text-soft">
-              {{ type_labels.get(row_type|lower, row_type) if row_type else '---' }}
-            </td>
+              {% set row_type = row.type or row.category or '' %}
+              <td class="text-soft">
+                {{ type_labels.get(row_type|lower, row_type) if row_type else '---' }}
+              </td>
 
-            <td>
-              <div class="status-container">
-                <span
-                  class="badge {% if row.status == 'Đang sử dụng' %}status-hoanthanh{% elif row.status == 'Chưa dùng' %}status-reject{% else %}status-dangxuly{% endif %}"
-                >
-                  {{ row.status or '---' }}
-                </span>
-              </div>
-            </td>
+              <td>
+                <div class="status-container">
+                  <span class="badge {% if row.status == 'Đang sử dụng' %}status-hoanthanh{% elif row.status == 'Chưa dùng' %}status-reject{% else %}status-dangxuly{% endif %}">
+                    {{ row.status or '---' }}
+                  </span>
+                </div>
+              </td>
 
-            <td class="font-bold">{{ row.receiver or row.user or '---' }}</td>
-            <td>{{ row.department or '---' }}</td>
-            <td>{{ row.location or '---' }}</td>
+              <td class="font-bold">{{ row.receiver or row.user or '---' }}</td>
+              <td>{{ row.department or '---' }}</td>
+              <td>{{ row.location or '---' }}</td>
 
-            <td>
-              <div class="action-menu-center">
-                <div class="action-menu">
-                  <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
-                    <div class="action-menu__dots">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                  </button>
-
-                  <div class="action-menu__dropdown">
-                    <a href="{{ url_for('assign_detail', id=row.id) }}" class="action-menu__item">
-                      <i class="fas fa-eye"></i>
-                      <span>Xem chi tiết</span>
-                    </a>
-
-                    {% if row.status == 'Chưa dùng' %}
-                    <a href="{{ url_for('assign_give', id=row.id) }}" class="action-menu__item">
-                      <i class="fas fa-user-plus"></i>
-                      <span>Cấp phát</span>
-                    </a>
-                    {% endif %}
-
-                    {% if row.status == 'Đang sử dụng' %}
-                    <form
-                      action="{{ url_for('assign_unassign', id=row.id) }}"
-                      method="POST"
-                      class="action-menu__form js-unassign-form"
-                      data-asset-code="{{ row.asset_code or '---' }}"
-                      data-asset-name="{{ row.asset or row.asset_name or '---' }}"
-                      data-receiver="{{ row.receiver or row.user or '---' }}"
+              <td>
+                <div class="action-menu-center">
+                  <div class="action-menu">
+                    <button
+                      type="button"
+                      class="action-menu__trigger"
+                      aria-label="Mở menu thao tác"
+                      aria-expanded="false"
                     >
-                      <button type="submit" class="action-menu__item action-menu__item--warning">
-                        <i class="fas fa-rotate-left"></i>
-                        <span>Thu hồi</span>
-                      </button>
-                    </form>
-                    {% endif %}
+                      <span class="action-menu__dots" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </span>
+                    </button>
+
+                    <div class="action-menu__dropdown" role="menu">
+                      <a href="{{ row.detail_url or '' }}" class="action-menu__item action-menu__item--view js-menu-link" role="menuitem" data-asset-code="{{ row.asset_code or '' }}">
+                        {{ action_icon('eye') }}
+                        <span>Xem chi tiết</span>
+                      </a>
+
+                      {% if row.can_assign %}
+                        <a href="{{ row.give_url or '' }}" class="action-menu__item action-menu__item--assign js-menu-link" role="menuitem" data-asset-code="{{ row.asset_code or '' }}">
+                          {{ action_icon('give') }}
+                          <span>Cấp phát</span>
+                        </a>
+                      {% endif %}
+
+                      {% if row.can_unassign %}
+                        <form
+                          action="{{ row.unassign_url }}"
+                          method="POST"
+                          class="action-menu__form js-unassign-form"
+                          data-asset-code="{{ row.asset_code or '' }}"
+                          data-asset-name="{{ row.asset or row.asset_name or '' }}"
+                          data-receiver="{{ row.receiver or row.user or '' }}"
+                        >
+                          <button type="submit" class="action-menu__item action-menu__item--warning" role="menuitem">
+                            {{ action_icon('return') }}
+                            <span>Thu hồi</span>
+                          </button>
+                        </form>
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
-          </tr>
+              </td>
+            </tr>
           {% else %}
-          <tr>
-            <td colspan="8" class="empty-table-cell">
-              Không tìm thấy dữ liệu phù hợp.
-            </td>
-          </tr>
+            <tr>
+              <td colspan="8" class="empty-table-cell">
+                Không tìm thấy dữ liệu phù hợp.
+              </td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
-    <div class="pagination">
+    <div class="table-footer">
       <div class="pagination-info" id="assignPaginationInfo">
         Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
       </div>
 
-      <div class="pagination-controls" id="assignPaginationControls">
+      <div class="pagination-buttons" id="assignPaginationControls">
         <a
           href="{{ url_for('assign_page', page=current_page-1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
           class="page-btn page-btn--nav js-assign-page-link {% if current_page <= 1 %}disabled{% endif %}"
@@ -289,33 +313,33 @@
         {% if total_pages <= 3 %}
           {% for p in range(1, total_pages + 1) %}
             {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
+              <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
+              <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% elif current_page <= 2 %}
-          {% for p in range(1, 4) %}
+          {% for p in [1, 2, 3] %}
             {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
+              <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
+              <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% elif current_page >= total_pages - 1 %}
-          {% for p in range(total_pages - 2, total_pages + 1) %}
+          {% for p in [total_pages - 2, total_pages - 1, total_pages] %}
             {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
+              <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
+              <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% else %}
-          {% for p in range(current_page - 1, current_page + 2) %}
+          {% for p in [current_page - 1, current_page, current_page + 1] %}
             {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
+              <span class="page-btn active">{{ p }}</span>
             {% else %}
-            <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
+              <a href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}" class="page-btn js-assign-page-link" data-page="{{ p }}">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% endif %}
@@ -346,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("assignSearchInput");
 
   let activeRequest = null;
+  let searchTimer = null;
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -356,11 +381,38 @@ document.addEventListener("DOMContentLoaded", function () {
       .replaceAll("'", "&#039;");
   }
 
+  function actionIcon(type) {
+    if (type === "eye") {
+      return `
+        <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      `;
+    }
+
+    if (type === "give") {
+      return `
+        <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M19 8v6"></path>
+          <path d="M16 11h6"></path>
+        </svg>
+      `;
+    }
+
+    return `
+      <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+        <path d="M9 14 4 9l5-5"></path>
+        <path d="M4 9h10a6 6 0 0 1 0 12h-3"></path>
+      </svg>
+    `;
+  }
+
   function closeFilterMenus(exceptMenu = null) {
     document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
-      if (menu !== exceptMenu) {
-        menu.classList.remove("show");
-      }
+      if (menu !== exceptMenu) menu.classList.remove("show");
     });
   }
 
@@ -368,12 +420,17 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
       if (dropdown !== exceptDropdown) {
         dropdown.classList.remove("show");
+        dropdown.style.left = "";
+        dropdown.style.top = "";
+      }
+    });
 
-        const menu = dropdown.closest(".action-menu");
+    document.querySelectorAll(".action-menu__trigger[aria-expanded='true']").forEach(function (button) {
+      const menu = button.closest(".action-menu");
+      const dropdown = menu ? menu.querySelector(".action-menu__dropdown") : null;
 
-        if (menu) {
-          menu.classList.remove("action-menu--drop-up");
-        }
+      if (dropdown !== exceptDropdown) {
+        button.setAttribute("aria-expanded", "false");
       }
     });
   }
@@ -383,20 +440,44 @@ document.addEventListener("DOMContentLoaded", function () {
     closeAllActionMenus();
   }
 
+  function positionActionMenu(trigger, dropdown) {
+    const rect = trigger.getBoundingClientRect();
+    const gap = 8;
+    const pad = 12;
+    const width = dropdown.offsetWidth || 190;
+    const height = dropdown.offsetHeight || 120;
+
+    let left = rect.right - width;
+    let top = rect.bottom + gap;
+
+    if (left < pad) left = pad;
+    if (left + width > window.innerWidth - pad) left = window.innerWidth - width - pad;
+    if (top + height > window.innerHeight - pad) top = rect.top - height - gap;
+    if (top < pad) top = pad;
+
+    dropdown.style.left = left + "px";
+    dropdown.style.top = top + "px";
+  }
+
   function getFormParams(page = 1) {
     const params = new URLSearchParams(new FormData(filterForm));
-
     params.set("page", page);
     params.set("per_page", params.get("per_page") || "10");
-
     return params;
   }
 
   function getCleanUrl(params) {
     const cleanParams = new URLSearchParams(params);
     cleanParams.delete("ajax");
-
     return `${filterForm.action}?${cleanParams.toString()}`;
+  }
+
+  function getFallbackDetailUrl(assetCode) {
+    const code = String(assetCode || "").trim();
+
+    if (!code) return "";
+
+    return "/assign/detail/" + encodeURIComponent(code);
   }
 
   function isFilterActive() {
@@ -411,9 +492,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateClearButton() {
-    if (!clearFilter) return;
-
-    clearFilter.hidden = !isFilterActive();
+    if (clearFilter) clearFilter.hidden = !isFilterActive();
   }
 
   function setSelectDisplay(selectBox, option) {
@@ -422,13 +501,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const optionLabel = option.querySelector(".filter-select__option-label");
     const optionCount = option.querySelector(".filter-select__option-count");
 
-    if (labelEl && optionLabel) {
-      labelEl.textContent = optionLabel.textContent.trim();
-    }
-
-    if (countEl && optionCount) {
-      countEl.textContent = optionCount.textContent.trim();
-    }
+    if (labelEl && optionLabel) labelEl.textContent = optionLabel.textContent.trim();
+    if (countEl && optionCount) countEl.textContent = optionCount.textContent.trim();
   }
 
   function resetSelect(selectId, labelText) {
@@ -438,45 +512,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const input = selectBox.querySelector('input[type="hidden"]');
     const labelEl = selectBox.querySelector(".filter-select__label");
     const countEl = selectBox.querySelector(".filter-select__count");
-    const allOptionCount = selectBox.querySelector('.filter-select__option[data-value="Tất cả"] .filter-select__option-count');
+    const allCount = selectBox.querySelector('.filter-select__option[data-value="Tất cả"] .filter-select__option-count');
 
-    if (input) {
-      input.value = "Tất cả";
-    }
-
-    if (labelEl) {
-      labelEl.textContent = labelText;
-    }
-
-    if (countEl && allOptionCount) {
-      countEl.textContent = allOptionCount.textContent.trim();
-    }
-  }
-
-  function updateActionMenuDirection(menu, dropdown) {
-    const trigger = menu.querySelector(".action-menu__trigger");
-    const scrollContainer = menu.closest(".table-scroll");
-
-    if (!trigger || !dropdown || !scrollContainer) return;
-
-    menu.classList.remove("action-menu--drop-up");
-
-    dropdown.style.visibility = "hidden";
-    dropdown.classList.add("show");
-
-    const triggerRect = trigger.getBoundingClientRect();
-    const dropdownHeight = dropdown.offsetHeight;
-    const containerRect = scrollContainer.getBoundingClientRect();
-
-    const gap = 8;
-    const spaceBelow = containerRect.bottom - triggerRect.bottom - gap;
-    const spaceAbove = triggerRect.top - containerRect.top - gap;
-
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-      menu.classList.add("action-menu--drop-up");
-    }
-
-    dropdown.style.visibility = "";
+    if (input) input.value = "Tất cả";
+    if (labelEl) labelEl.textContent = labelText;
+    if (countEl && allCount) countEl.textContent = allCount.textContent.trim();
   }
 
   async function showUnassignConfirm(form) {
@@ -515,15 +555,17 @@ document.addEventListener("DOMContentLoaded", function () {
           </td>
         </tr>
       `;
-
       return;
     }
 
     tableBody.innerHTML = items.map(function (row) {
+      const detailUrl = row.detail_url || "";
+      const giveUrl = row.give_url || "";
+
       const assignLink = row.can_assign
         ? `
-          <a href="${escapeHtml(row.give_url)}" class="action-menu__item">
-            <i class="fas fa-user-plus"></i>
+          <a href="${escapeHtml(giveUrl)}" class="action-menu__item action-menu__item--assign js-menu-link" role="menuitem" data-asset-code="${escapeHtml(row.asset_code)}">
+            ${actionIcon("give")}
             <span>Cấp phát</span>
           </a>
         `
@@ -539,8 +581,8 @@ document.addEventListener("DOMContentLoaded", function () {
             data-asset-name="${escapeHtml(row.asset_name)}"
             data-receiver="${escapeHtml(row.receiver)}"
           >
-            <button type="submit" class="action-menu__item action-menu__item--warning">
-              <i class="fas fa-rotate-left"></i>
+            <button type="submit" class="action-menu__item action-menu__item--warning" role="menuitem">
+              ${actionIcon("return")}
               <span>Thu hồi</span>
             </button>
           </form>
@@ -565,17 +607,15 @@ document.addEventListener("DOMContentLoaded", function () {
           <td>
             <div class="action-menu-center">
               <div class="action-menu">
-                <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
-                  <div class="action-menu__dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
+                <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác" aria-expanded="false">
+                  <span class="action-menu__dots" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </span>
                 </button>
 
-                <div class="action-menu__dropdown">
-                  <a href="${escapeHtml(row.detail_url)}" class="action-menu__item">
-                    <i class="fas fa-eye"></i>
+                <div class="action-menu__dropdown" role="menu">
+                  <a href="${escapeHtml(detailUrl)}" class="action-menu__item action-menu__item--view js-menu-link" role="menuitem" data-asset-code="${escapeHtml(row.asset_code)}">
+                    ${actionIcon("eye")}
                     <span>Xem chi tiết</span>
                   </a>
                   ${assignLink}
@@ -590,21 +630,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getPaginationPages(current, total) {
-    const pages = [];
-
-    if (total <= 3) {
-      for (let page = 1; page <= total; page++) pages.push(page);
-      return pages;
-    }
-
-    if (current <= 2) {
-      return [1, 2, 3];
-    }
-
-    if (current >= total - 1) {
-      return [total - 2, total - 1, total];
-    }
-
+    if (total <= 3) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 2) return [1, 2, 3];
+    if (current >= total - 1) return [total - 2, total - 1, total];
     return [current - 1, current, current + 1];
   }
 
@@ -615,34 +643,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     paginationInfo.innerHTML = `Trang <strong>${current}</strong> / ${total}`;
 
-    const prevClass = current <= 1 ? "disabled" : "";
-    const nextClass = current >= total ? "disabled" : "";
-
     let html = `
       <a href="${escapeHtml(getCleanUrl(getFormParams(current - 1)))}"
-        class="page-btn page-btn--nav js-assign-page-link ${prevClass}"
+        class="page-btn page-btn--nav js-assign-page-link ${current <= 1 ? "disabled" : ""}"
         data-page="${current - 1}">
         « Trước
       </a>
     `;
 
     pages.forEach(function (page) {
-      if (page === current) {
-        html += `<span class="page-btn active">${page}</span>`;
-      } else {
-        html += `
+      html += page === current
+        ? `<span class="page-btn active">${page}</span>`
+        : `
           <a href="${escapeHtml(getCleanUrl(getFormParams(page)))}"
             class="page-btn js-assign-page-link"
             data-page="${page}">
             ${page}
           </a>
         `;
-      }
     });
 
     html += `
       <a href="${escapeHtml(getCleanUrl(getFormParams(current + 1)))}"
-        class="page-btn page-btn--nav js-assign-page-link ${nextClass}"
+        class="page-btn page-btn--nav js-assign-page-link ${current >= total ? "disabled" : ""}"
         data-page="${current + 1}">
         Sau »
       </a>
@@ -652,15 +675,40 @@ document.addEventListener("DOMContentLoaded", function () {
     bindPaginationLinks();
   }
 
+  function bindMenuLinks() {
+    document.querySelectorAll(".action-menu__dropdown a[href]").forEach(function (link) {
+      link.onclick = function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const rawHref = (link.getAttribute("href") || "").trim();
+        const assetCode = link.dataset.assetCode || "";
+        let targetUrl = rawHref;
+
+        if (!targetUrl || targetUrl === "#") {
+          targetUrl = link.classList.contains("action-menu__item--view")
+            ? getFallbackDetailUrl(assetCode)
+            : "";
+        }
+
+        if (!targetUrl) {
+          console.warn("Không tìm thấy đường dẫn hợp lệ cho thao tác này.");
+          return;
+        }
+
+        window.location.assign(targetUrl);
+      };
+    });
+  }
+
   function bindActionMenus() {
     document.querySelectorAll(".action-menu__trigger").forEach(function (button) {
       button.onclick = function (event) {
+        event.preventDefault();
         event.stopPropagation();
 
         const menu = button.closest(".action-menu");
-        if (!menu) return;
-
-        const dropdown = menu.querySelector(".action-menu__dropdown");
+        const dropdown = menu ? menu.querySelector(".action-menu__dropdown") : null;
         if (!dropdown) return;
 
         const isOpen = dropdown.classList.contains("show");
@@ -670,12 +718,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isOpen) {
           dropdown.classList.remove("show");
-          menu.classList.remove("action-menu--drop-up");
+          button.setAttribute("aria-expanded", "false");
         } else {
-          updateActionMenuDirection(menu, dropdown);
+          dropdown.classList.add("show");
+          button.setAttribute("aria-expanded", "true");
+          positionActionMenu(button, dropdown);
         }
       };
     });
+
+    bindMenuLinks();
 
     document.querySelectorAll(".js-unassign-form").forEach(function (form) {
       form.onsubmit = async function (event) {
@@ -686,7 +738,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const submitButton = form.querySelector('button[type="submit"]');
         const confirmed = await showUnassignConfirm(form);
-
         if (!confirmed) return;
 
         if (submitButton) {
@@ -704,10 +755,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".js-assign-page-link").forEach(function (link) {
       link.onclick = function (event) {
         event.preventDefault();
-
-        if (link.classList.contains("disabled")) return;
-
-        loadAssignData(Number(link.dataset.page || 1), true);
+        if (!link.classList.contains("disabled")) {
+          loadAssignData(Number(link.dataset.page || 1), true);
+        }
       };
     });
   }
@@ -717,21 +767,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     closeAllMenus();
 
-    if (activeRequest) {
-      activeRequest.abort();
-    }
-
+    if (activeRequest) activeRequest.abort();
     activeRequest = new AbortController();
 
-    if (pageInput) {
-      pageInput.value = page;
-    }
+    if (pageInput) pageInput.value = page;
 
     const params = getFormParams(page);
     const cleanUrl = getCleanUrl(params);
 
     params.set("ajax", "1");
-
     tableContainer.classList.add("is-loading");
 
     try {
@@ -758,17 +802,21 @@ document.addEventListener("DOMContentLoaded", function () {
       updateClearButton();
       bindActionMenus();
 
-      if (pushState) {
-        window.history.pushState({}, "", cleanUrl);
-      }
+      if (pushState) window.history.pushState({}, "", cleanUrl);
     } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error(error);
-      }
+      if (error.name !== "AbortError") console.error(error);
     } finally {
       tableContainer.classList.remove("is-loading");
       activeRequest = null;
     }
+  }
+
+  function loadAssignDataDebounced() {
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(function () {
+      loadAssignData(1, true);
+    }, 300);
   }
 
   document.querySelectorAll(".filter-select").forEach(function (select) {
@@ -795,7 +843,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         input.value = option.dataset.value;
         setSelectDisplay(select, option);
-
         loadAssignData(1, true);
       });
     });
@@ -809,9 +856,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      loadAssignDataDebounced();
+    });
+
     searchInput.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
         event.preventDefault();
+        clearTimeout(searchTimer);
         loadAssignData(1, true);
       }
     });
@@ -821,9 +873,7 @@ document.addEventListener("DOMContentLoaded", function () {
     clearFilter.addEventListener("click", function (event) {
       event.preventDefault();
 
-      if (searchInput) {
-        searchInput.value = "";
-      }
+      if (searchInput) searchInput.value = "";
 
       resetSelect("select-category", "Tất cả loại");
       resetSelect("select-department", "Tất cả phòng");
@@ -838,18 +888,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   window.addEventListener("resize", closeAllMenus);
+  window.addEventListener("scroll", closeAllActionMenus, true);
 
   window.addEventListener("popstate", function () {
     window.location.reload();
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") {
-      closeAllMenus();
-    }
+    if (event.key === "Escape") closeAllMenus();
   });
 
-  document.addEventListener("click", closeAllMenus);
+  document.addEventListener("click", function (event) {
+    if (event.target.closest(".action-menu__dropdown a[href]")) {
+      return;
+    }
+
+    closeAllMenus();
+  });
 
   bindActionMenus();
   bindPaginationLinks();

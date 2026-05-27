@@ -1,15 +1,37 @@
-{# templates/manage/manage_table.html #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=44">
 
 <div class="m-overview-card">
   <div class="m-card-header">
     <h3>Danh sách nhân sự hệ thống</h3>
 
     {% if employees %}
-    <div class="pagination-info">
-      Hiển thị <b>{{ employees|length }}</b> trên <b>{{ total_records }}</b> kết quả
-    </div>
+      <div class="pagination-info">
+        Hiển thị <b>{{ employees|length }}</b> trên <b>{{ total_records }}</b> kết quả
+      </div>
     {% endif %}
   </div>
+
+  {% macro svg_icon(type) %}
+    {% if type == 'eye' %}
+      <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    {% elif type == 'pen' %}
+      <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"></path>
+      </svg>
+    {% else %}
+      <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+        <path d="M3 6h18"></path>
+        <path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"></path>
+        <path d="M19 6l-1 14c-.1 1.1-1 2-2.1 2H8.1C7 22 6.1 21.1 6 20L5 6"></path>
+        <path d="M10 11v6"></path>
+        <path d="M14 11v6"></path>
+      </svg>
+    {% endif %}
+  {% endmacro %}
 
   {% macro render_id(row) %}
     <span class="m-emp-id">{{ row.id }}</span>
@@ -24,12 +46,9 @@
         src="{{ avatar_url }}"
         alt="{{ row.name if row.name else 'Avatar' }}"
         class="m-emp-avatar-img"
-        onerror="this.onerror=null; this.src='{{ default_avatar }}';"
-      />
-
-      <div class="m-emp-name">
-        {{ row.name if row.name else 'Chưa có tên' }}
-      </div>
+        onerror="this.onerror=null;this.src='{{ default_avatar }}';"
+      >
+      <span class="m-emp-name">{{ row.name if row.name else 'Chưa có tên' }}</span>
     </div>
   {% endmacro %}
 
@@ -43,9 +62,7 @@
     {% set role_text = row.role if row.role is defined and row.role else 'Nhân viên' %}
     {% set r = row.role_code | upper if row.role_code is defined and row.role_code else role_text | upper %}
 
-    <span
-      class="m-role-badge {% if r == 'ADMIN' %}m-role-admin{% elif r == 'QUAN_LY' or r == 'MANAGER' %}m-role-manager{% else %}m-role-staff{% endif %}"
-    >
+    <span class="m-role-badge {% if r == 'ADMIN' %}m-role-admin{% elif r == 'QUAN_LY' or r == 'MANAGER' %}m-role-manager{% else %}m-role-staff{% endif %}">
       {{ role_text }}
     </span>
   {% endmacro %}
@@ -55,69 +72,34 @@
     {% set s = row.status_code if row.status_code is defined else status_text %}
 
     <div class="m-status-cell">
-      <span
-        class="status-dot {% if s == 'HOAT_DONG' or status_text == 'Hoạt động' or status_text == 'Đang hoạt động' %}dot-active{% else %}dot-inactive{% endif %}"
-      ></span>
+      <span class="status-dot {% if s == 'HOAT_DONG' or status_text == 'Hoạt động' or status_text == 'Đang hoạt động' %}dot-active{% else %}dot-inactive{% endif %}"></span>
       {{ status_text }}
     </div>
   {% endmacro %}
 
-  {% macro render_eye_icon() %}
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      class="action-menu__svg"
-    >
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-  {% endmacro %}
-
-  {% macro render_trash_icon() %}
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      class="action-menu__svg"
-    >
-      <path d="M3 6h18"></path>
-      <path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"></path>
-      <path d="M19 6l-1 14c-.1 1.1-1 2-2.1 2H8.1C7 22 6.1 21.1 6 20L5 6"></path>
-      <path d="M10 11v6"></path>
-      <path d="M14 11v6"></path>
-    </svg>
-  {% endmacro %}
-
   {% macro render_emp_action(row) %}
     {% set action_id = row.db_id if row.db_id is defined and row.db_id else row.id %}
+    {% set row_name = row.name if row.name is defined and row.name else 'nhân sự này' %}
 
     <div class="action-menu-center">
       <div class="action-menu">
-        <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
-          <div class="action-menu__dots">
+        <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác" aria-expanded="false">
+          <span class="action-menu__dots" aria-hidden="true">
             <span></span>
             <span></span>
             <span></span>
-          </div>
+          </span>
         </button>
 
-        <div class="action-menu__dropdown">
-          <a href="{{ url_for('user_detail', id=action_id) }}" class="action-menu__item">
-            {{ render_eye_icon() }}
+        <div class="action-menu__dropdown" role="menu">
+          <a href="{{ url_for('user_detail', id=action_id) }}" class="action-menu__item action-menu__item--view" role="menuitem">
+            {{ svg_icon('eye') }}
             <span>Xem chi tiết</span>
+          </a>
+
+          <a href="{{ url_for('user_edit', id=action_id) }}" class="action-menu__item action-menu__item--edit" role="menuitem">
+            {{ svg_icon('pen') }}
+            <span>Chỉnh sửa</span>
           </a>
 
           <div class="action-menu__divider"></div>
@@ -126,9 +108,11 @@
             type="button"
             class="action-menu__item action-menu__item--danger delete-user-action"
             data-delete-url="{{ url_for('user_delete', id=action_id) }}"
-            data-user-name="{{ row.name if row.name is defined and row.name else 'nhân sự này' }}"
+            data-user-name="{{ row_name }}"
+            data-user-code="{{ row.id }}"
+            role="menuitem"
           >
-            {{ render_trash_icon() }}
+            {{ svg_icon('trash') }}
             <span>Xóa nhân sự</span>
           </button>
         </div>
@@ -148,215 +132,198 @@
   ] %}
 
   {% if employees %}
-  <div class="m-table-scroll-container">
-    {% set data = employees %}
-    {% include 'components/table.html' %}
-  </div>
-
-  <div class="m-card-footer">
-    <div class="pagination-buttons">
-      <a
-        href="{{ url_for('manage', page=current_page-1, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-        class="page-btn {{ 'disabled' if current_page <= 1 else '' }}"
-      >
-        « Trước
-      </a>
-
-      {% if total_pages <= 3 %}
-        {% for p in range(1, total_pages + 1) %}
-          {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
-          {% else %}
-            <a
-              href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% elif current_page <= 2 %}
-        {% for p in range(1, 4) %}
-          {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
-          {% else %}
-            <a
-              href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% elif current_page >= total_pages - 1 %}
-        {% for p in range(total_pages - 2, total_pages + 1) %}
-          {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
-          {% else %}
-            <a
-              href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        {% for p in range(current_page - 1, current_page + 2) %}
-          {% if p == current_page %}
-            <span class="page-btn active">{{ p }}</span>
-          {% else %}
-            <a
-              href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-              class="page-btn"
-            >
-              {{ p }}
-            </a>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-
-      <a
-        href="{{ url_for('manage', page=current_page+1, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
-        class="page-btn {{ 'disabled' if current_page >= total_pages else '' }}"
-      >
-        Sau »
-      </a>
+    <div class="m-table-scroll-container">
+      {% set data = employees %}
+      {% include 'components/table.html' %}
     </div>
-  </div>
+
+    <div class="m-card-footer">
+      {% set safe_total_pages = total_pages if total_pages and total_pages > 0 else 1 %}
+      {% set raw_current_page = current_page if current_page and current_page > 0 else 1 %}
+      {% set safe_current_page = raw_current_page if raw_current_page <= safe_total_pages else safe_total_pages %}
+      {% set prev_page = safe_current_page - 1 if safe_current_page > 1 else 1 %}
+      {% set next_page = safe_current_page + 1 if safe_current_page < safe_total_pages else safe_total_pages %}
+
+      <div class="m-page-info">
+        Trang <b>{{ safe_current_page }}</b> / {{ safe_total_pages }}
+      </div>
+
+      <div class="pagination-buttons">
+        <a
+          href="{{ url_for('manage', page=prev_page, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+          class="page-btn {{ 'disabled' if safe_current_page <= 1 else '' }}"
+        >
+          « Trước
+        </a>
+
+        {% if safe_total_pages <= 3 %}
+          {% set start_page = 1 %}
+          {% set end_page = safe_total_pages %}
+        {% elif safe_current_page <= 2 %}
+          {% set start_page = 1 %}
+          {% set end_page = 3 %}
+        {% elif safe_current_page >= safe_total_pages - 1 %}
+          {% set start_page = safe_total_pages - 2 %}
+          {% set end_page = safe_total_pages %}
+        {% else %}
+          {% set start_page = safe_current_page - 1 %}
+          {% set end_page = safe_current_page + 1 %}
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+          {% if p == safe_current_page %}
+            <span class="page-btn active">{{ p }}</span>
+          {% else %}
+            <a
+              href="{{ url_for('manage', page=p, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+              class="page-btn"
+            >
+              {{ p }}
+            </a>
+          {% endif %}
+        {% endfor %}
+
+        <a
+          href="{{ url_for('manage', page=next_page, search=search_q, department=selected_dept, role=selected_role, floor=selected_floor, status=selected_status) }}"
+          class="page-btn {{ 'disabled' if safe_current_page >= safe_total_pages else '' }}"
+        >
+          Sau »
+        </a>
+      </div>
+    </div>
   {% else %}
-  <div class="m-empty-state">
-    <i class="fas fa-search"></i>
-    <p>Không tìm thấy nhân viên nào khớp với tiêu chí lọc.</p>
-    <a href="{{ url_for('manage') }}">Xóa tất cả bộ lọc</a>
-  </div>
+    <div class="m-empty-state">
+      <i class="fas fa-search"></i>
+      <p>Không tìm thấy nhân viên nào khớp với tiêu chí lọc.</p>
+      <a href="{{ url_for('manage') }}">Xóa tất cả bộ lọc</a>
+    </div>
   {% endif %}
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  function closeAllActionMenus(exceptDropdown = null) {
-    document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
-      if (dropdown !== exceptDropdown) {
-        dropdown.classList.remove("show");
+  document.addEventListener("DOMContentLoaded", function () {
+    const openedClass = "show";
 
-        const menu = dropdown.closest(".action-menu");
-
-        if (menu) {
-          menu.classList.remove("action-menu--drop-up");
+    function closeActionMenus(exceptDropdown) {
+      document.querySelectorAll(".action-menu__dropdown." + openedClass).forEach(function (dropdown) {
+        if (dropdown !== exceptDropdown) {
+          dropdown.classList.remove(openedClass);
+          dropdown.style.left = "";
+          dropdown.style.top = "";
         }
+      });
+
+      document.querySelectorAll(".action-menu__trigger[aria-expanded='true']").forEach(function (button) {
+        if (!exceptDropdown || !button.closest(".action-menu")?.contains(exceptDropdown)) {
+          button.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    function positionActionMenu(trigger, dropdown) {
+      const rect = trigger.getBoundingClientRect();
+      const gap = 8;
+      const padding = 12;
+      const width = dropdown.offsetWidth || 190;
+      const height = dropdown.offsetHeight || 150;
+
+      let left = rect.right - width;
+      let top = rect.bottom + gap;
+
+      if (left < padding) left = padding;
+      if (left + width > window.innerWidth - padding) left = window.innerWidth - width - padding;
+      if (top + height > window.innerHeight - padding) top = rect.top - height - gap;
+      if (top < padding) top = padding;
+
+      dropdown.style.left = left + "px";
+      dropdown.style.top = top + "px";
+    }
+
+    async function confirmDeleteUser(button) {
+      const deleteUrl = button.dataset.deleteUrl;
+      const userName = button.dataset.userName || "nhân sự này";
+      const userCode = button.dataset.userCode || "";
+
+      if (!deleteUrl) return;
+
+      closeActionMenus();
+
+      const message =
+        "Bạn có chắc muốn xóa " +
+        userName +
+        (userCode ? " (" + userCode + ")" : "") +
+        " không? Hành động này không thể hoàn tác.";
+
+      let confirmed = false;
+
+      if (typeof window.toastConfirm === "function") {
+        confirmed = await window.toastConfirm({
+          type: "error",
+          title: "Xác nhận xóa nhân sự",
+          message: message,
+          confirmText: "Xóa",
+          cancelText: "Hủy",
+          danger: true,
+          closeOnBackdrop: false,
+          closeOnEsc: true
+        });
+      } else {
+        confirmed = confirm(message);
+      }
+
+      if (confirmed) {
+        window.location.href = deleteUrl;
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      const trigger = event.target.closest(".action-menu__trigger");
+      const deleteButton = event.target.closest(".delete-user-action");
+
+      if (trigger) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const dropdown = trigger.closest(".action-menu")?.querySelector(".action-menu__dropdown");
+        if (!dropdown) return;
+
+        const isOpen = dropdown.classList.contains(openedClass);
+
+        closeActionMenus(dropdown);
+
+        if (isOpen) {
+          dropdown.classList.remove(openedClass);
+          trigger.setAttribute("aria-expanded", "false");
+        } else {
+          dropdown.classList.add(openedClass);
+          trigger.setAttribute("aria-expanded", "true");
+          positionActionMenu(trigger, dropdown);
+        }
+
+        return;
+      }
+
+      if (deleteButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        confirmDeleteUser(deleteButton);
+        return;
+      }
+
+      if (!event.target.closest(".action-menu__dropdown")) {
+        closeActionMenus();
       }
     });
-  }
 
-  function updateDropdownDirection(menu, dropdown) {
-    const trigger = menu.querySelector(".action-menu__trigger");
-    const scrollContainer = menu.closest(".m-table-scroll-container");
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeActionMenus();
+    });
 
-    if (!trigger || !scrollContainer || !dropdown) return;
+    document.querySelectorAll(".m-table-scroll-container").forEach(function (container) {
+      container.addEventListener("scroll", closeActionMenus);
+    });
 
-    menu.classList.remove("action-menu--drop-up");
-
-    dropdown.style.visibility = "hidden";
-    dropdown.classList.add("show");
-
-    const triggerRect = trigger.getBoundingClientRect();
-    const dropdownHeight = dropdown.offsetHeight;
-    const containerRect = scrollContainer.getBoundingClientRect();
-
-    const gap = 8;
-    const spaceBelow = containerRect.bottom - triggerRect.bottom - gap;
-    const spaceAbove = triggerRect.top - containerRect.top - gap;
-
-    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-      menu.classList.add("action-menu--drop-up");
-    }
-
-    dropdown.style.visibility = "";
-  }
-
-  async function confirmDeleteUser(button) {
-    const deleteUrl = button.getAttribute("data-delete-url");
-    const userName = button.getAttribute("data-user-name") || "nhân sự này";
-
-    if (!deleteUrl) return;
-
-    closeAllActionMenus();
-
-    let confirmed = false;
-
-    if (typeof window.toastConfirm === "function") {
-      confirmed = await window.toastConfirm({
-        type: "error",
-        title: "Xác nhận xóa nhân sự",
-        message: "Bạn có chắc muốn xóa " + userName + " không? Hành động này không thể hoàn tác.",
-        confirmText: "Xóa",
-        cancelText: "Hủy",
-        danger: true,
-        closeOnBackdrop: false,
-        closeOnEsc: true
-      });
-    } else {
-      confirmed = confirm("Bạn có chắc muốn xóa " + userName + " không?");
-    }
-
-    if (confirmed) {
-      window.location.href = deleteUrl;
-    }
-  }
-
-  document.addEventListener("click", function (e) {
-    const deleteButton = e.target.closest(".delete-user-action");
-    const trigger = e.target.closest(".action-menu__trigger");
-    const clickedInsideDropdown = e.target.closest(".action-menu__dropdown");
-
-    if (deleteButton) {
-      e.preventDefault();
-      e.stopPropagation();
-      confirmDeleteUser(deleteButton);
-      return;
-    }
-
-    if (clickedInsideDropdown) {
-      return;
-    }
-
-    if (trigger) {
-      e.stopPropagation();
-
-      const menu = trigger.closest(".action-menu");
-      if (!menu) return;
-
-      const dropdown = menu.querySelector(".action-menu__dropdown");
-      if (!dropdown) return;
-
-      const isOpen = dropdown.classList.contains("show");
-
-      closeAllActionMenus(dropdown);
-
-      if (isOpen) {
-        dropdown.classList.remove("show");
-        menu.classList.remove("action-menu--drop-up");
-      } else {
-        updateDropdownDirection(menu, dropdown);
-      }
-
-      return;
-    }
-
-    closeAllActionMenus();
+    window.addEventListener("resize", closeActionMenus);
+    window.addEventListener("scroll", closeActionMenus, true);
   });
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") {
-      closeAllActionMenus();
-    }
-  });
-
-  document.querySelectorAll(".m-table-scroll-container").forEach(function (container) {
-    container.addEventListener("scroll", closeAllActionMenus);
-  });
-
-  window.addEventListener("resize", closeAllActionMenus);
-});
 </script>

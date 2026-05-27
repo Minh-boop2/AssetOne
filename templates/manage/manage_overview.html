@@ -1,477 +1,507 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}?v=43">
+
+{% macro stat_icon(type) %}
+  {% if type == 'users' %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+  {% elif type == 'shield' %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    </svg>
+  {% elif type == 'briefcase' %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="7" width="20" height="14" rx="2"></rect>
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path>
+      <path d="M2 13h20"></path>
+    </svg>
+  {% else %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  {% endif %}
+{% endmacro %}
+
+{% set has_filter = (search_q and search_q|trim) or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
 
 <section class="manage-page-container">
-    <div class="assets-page__header">
-        <h1>Quản lý nhân sự</h1>
-        <p>Quản lý thông tin, vai trò và trạng thái hoạt động của nhân viên hệ thống</p>
+  <div class="assets-page__header">
+    <h1 class="manage-page-title">Quản lý nhân sự</h1>
+    <p class="manage-page-desc">
+      Quản lý thông tin, vai trò và trạng thái hoạt động của nhân viên hệ thống
+    </p>
+  </div>
+
+  <div class="manage-stats-grid">
+    <div class="manage-stat-card">
+      <div class="m-stat-top">
+        <span class="m-stat-icon m-stat-icon-purple">{{ stat_icon('users') }}</span>
+        <span class="m-stat-label">Tổng nhân sự</span>
+      </div>
+      <div class="m-stat-value">{{ stats.total }}</div>
     </div>
 
-    <div class="manage-stats-grid">
-        <div class="manage-stat-card">
-            <div class="m-stat-top">
-                <span class="m-stat-icon m-stat-icon-blue">👥</span>
-                <span class="m-stat-label">Tổng nhân sự</span>
-            </div>
-            <div class="m-stat-value">{{ stats.total }}</div>
-        </div>
-
-        <div class="manage-stat-card">
-            <div class="m-stat-top">
-                <span class="m-stat-icon m-stat-icon-green">🛡️</span>
-                <span class="m-stat-label">Quản trị viên</span>
-            </div>
-            <div class="m-stat-value v-admin">{{ stats.admin_count }}</div>
-        </div>
-
-        <div class="manage-stat-card">
-            <div class="m-stat-top">
-                <span class="m-stat-icon m-stat-icon-blue">💼</span>
-                <span class="m-stat-label">Quản lý</span>
-            </div>
-            <div class="m-stat-value">{{ stats.manager_count }}</div>
-        </div>
-
-        <div class="manage-stat-card">
-            <div class="m-stat-top">
-                <span class="m-stat-icon m-stat-icon-red">👤</span>
-                <span class="m-stat-label">Nhân viên</span>
-            </div>
-            <div class="m-stat-value v-staff">{{ stats.staff_count }}</div>
-        </div>
+    <div class="manage-stat-card">
+      <div class="m-stat-top">
+        <span class="m-stat-icon m-stat-icon-green">{{ stat_icon('shield') }}</span>
+        <span class="m-stat-label">Quản trị viên</span>
+      </div>
+      <div class="m-stat-value v-admin">{{ stats.admin_count }}</div>
     </div>
 
-    {% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
-    {% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
-    {% set has_filter = search_q or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
+    <div class="manage-stat-card">
+      <div class="m-stat-top">
+        <span class="m-stat-icon m-stat-icon-blue">{{ stat_icon('briefcase') }}</span>
+        <span class="m-stat-label">Quản lý</span>
+      </div>
+      <div class="m-stat-value">{{ stats.manager_count }}</div>
+    </div>
 
-    <div class="m-filter-section" id="manageFilterSection">
-        <form action="{{ url_for('manage') }}" method="GET" id="filterForm">
-            <div class="m-filter-group" style="flex: 1.2;">
-                <label class="m-filter-label">TÌM KIẾM</label>
-                <input
-                    type="text"
-                    name="search"
-                    id="searchInput"
-                    placeholder="Tên, ID hoặc email..."
-                    value="{{ search_q or '' }}"
-                    class="m-filter-input"
-                    autocomplete="off"
-                    enterkeyhint="search"
-                >
-            </div>
+    <div class="manage-stat-card">
+      <div class="m-stat-top">
+        <span class="m-stat-icon m-stat-icon-red">{{ stat_icon('user') }}</span>
+        <span class="m-stat-label">Nhân viên</span>
+      </div>
+      <div class="m-stat-value v-staff">{{ stats.staff_count }}</div>
+    </div>
+  </div>
 
-            <div class="m-filter-group">
-                <label class="m-filter-label">PHÒNG BAN</label>
-                <div class="filter-select" id="select-dept">
-                    <input type="hidden" name="department" value="{{ selected_dept or 'Tất cả' }}">
+  {% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
+  {% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
 
-                    <button type="button" class="filter-select__button">
-                        <span class="filter-select__label">
-                            {{ selected_dept if selected_dept and selected_dept != 'Tất cả' else 'Tất cả phòng' }}
-                        </span>
-                        <span class="filter-count">
-                            {{ stats.total if not selected_dept or selected_dept == 'Tất cả' else dept_counts.get(selected_dept, 0) }}
-                        </span>
-                        <i class="fas fa-chevron-down filter-arrow"></i>
-                    </button>
+  <div class="m-filter-section">
+    <form action="{{ url_for('manage') }}" method="GET" id="filterForm" class="m-filter-form">
+      <div class="m-filter-group m-filter-group-search">
+        <label class="m-filter-label">Tìm kiếm</label>
+        <input
+          type="text"
+          name="search"
+          value="{{ search_q or '' }}"
+          placeholder="Tên, ID hoặc email..."
+          class="m-filter-input"
+          autocomplete="off"
+        >
+      </div>
 
-                    <div class="filter-select__menu">
-                        <button type="button" class="filter-select__option" data-value="Tất cả">
-                            <span class="opt-label">Tất cả phòng</span>
-                            <span class="opt-count">{{ stats.total }}</span>
-                        </button>
+      <div class="m-filter-group">
+        <label class="m-filter-label">Phòng ban</label>
+        <div class="filter-select">
+          <input type="hidden" name="department" value="{{ selected_dept or 'Tất cả' }}">
 
-                        {% for dept in departments %}
-                        <button type="button" class="filter-select__option" data-value="{{ dept }}">
-                            <span class="opt-label">{{ dept }}</span>
-                            <span class="opt-count">{{ dept_counts.get(dept, 0) }}</span>
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+          <button type="button" class="filter-select__button">
+            <span class="filter-select__label">
+              {{ selected_dept if selected_dept and selected_dept != 'Tất cả' else 'Tất cả phòng' }}
+            </span>
+            <span class="filter-count">
+              {{ stats.total if not selected_dept or selected_dept == 'Tất cả' else dept_counts.get(selected_dept, 0) }}
+            </span>
+          </button>
 
-            <div class="m-filter-group">
-                <label class="m-filter-label">CHỨC VỤ</label>
-                <div class="filter-select" id="select-role">
-                    <input type="hidden" name="role" value="{{ selected_role or 'Tất cả' }}">
-
-                    <button type="button" class="filter-select__button">
-                        <span class="filter-select__label">{{ role_filter_label }}</span>
-                        <span class="filter-count">
-                            {{ stats.total if not selected_role or selected_role == 'Tất cả' else role_counts.get(selected_role, 0) }}
-                        </span>
-                        <i class="fas fa-chevron-down filter-arrow"></i>
-                    </button>
-
-                    <div class="filter-select__menu">
-                        <button type="button" class="filter-select__option" data-value="Tất cả">
-                            <span class="opt-label">Tất cả chức vụ</span>
-                            <span class="opt-count">{{ stats.total }}</span>
-                        </button>
-
-                        {% for r in roles %}
-                            {% set r_value = r.value if r.value is defined else r %}
-                            {% set r_label = r.label if r.label is defined else r %}
-                            <button type="button" class="filter-select__option" data-value="{{ r_value }}">
-                                <span class="opt-label">{{ r_label }}</span>
-                                <span class="opt-count">{{ role_counts.get(r_value, 0) }}</span>
-                            </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="m-filter-group">
-                <label class="m-filter-label">VỊ TRÍ</label>
-                <div class="filter-select" id="select-floor">
-                    <input type="hidden" name="floor" value="{{ selected_floor or 'Tất cả' }}">
-
-                    <button type="button" class="filter-select__button">
-                        <span class="filter-select__label">
-                            {{ selected_floor if selected_floor and selected_floor != 'Tất cả' else 'Tất cả tầng' }}
-                        </span>
-                        <span class="filter-count">
-                            {{ stats.total if not selected_floor or selected_floor == 'Tất cả' else floor_counts.get(selected_floor, 0) }}
-                        </span>
-                        <i class="fas fa-chevron-down filter-arrow"></i>
-                    </button>
-
-                    <div class="filter-select__menu filter-select__menu--scroll-5">
-                        <button type="button" class="filter-select__option" data-value="Tất cả">
-                            <span class="opt-label">Tất cả tầng</span>
-                            <span class="opt-count">{{ stats.total }}</span>
-                        </button>
-
-                        {% for f in floors %}
-                        <button type="button" class="filter-select__option" data-value="{{ f }}">
-                            <span class="opt-label">{{ f }}</span>
-                            <span class="opt-count">{{ floor_counts.get(f, 0) }}</span>
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="m-filter-group">
-                <label class="m-filter-label">TRẠNG THÁI</label>
-                <div class="filter-select" id="select-status">
-                    <input type="hidden" name="status" value="{{ selected_status or 'Tất cả' }}">
-
-                    <button type="button" class="filter-select__button">
-                        <span class="filter-select__label">{{ status_filter_label }}</span>
-                        <span class="filter-count">
-                            {{ stats.total if not selected_status or selected_status == 'Tất cả' else status_counts.get(selected_status, 0) }}
-                        </span>
-                        <i class="fas fa-chevron-down filter-arrow"></i>
-                    </button>
-
-                    <div class="filter-select__menu">
-                        <button type="button" class="filter-select__option" data-value="Tất cả">
-                            <span class="opt-label">Tất cả trạng thái</span>
-                            <span class="opt-count">{{ stats.total }}</span>
-                        </button>
-
-                        {% for s in user_status %}
-                            {% set s_value = s.value if s.value is defined else s %}
-                            {% set s_label = s.label if s.label is defined else s %}
-                            <button type="button" class="filter-select__option" data-value="{{ s_value }}">
-                                <span class="opt-label">{{ s_label }}</span>
-                                <span class="opt-count">{{ status_counts.get(s_value, 0) }}</span>
-                            </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <button
-                type="button"
-                id="clearFiltersBtn"
-                class="m-filter-input m-filter-clear"
-                title="Xóa bộ lọc"
-                {% if not has_filter %}hidden{% endif %}
-            >
-                ✕
+          <div class="filter-select__menu">
+            <button type="button" class="filter-select__option" data-value="Tất cả">
+              <span class="opt-label">Tất cả phòng</span>
+              <span class="opt-count">{{ stats.total }}</span>
             </button>
-        </form>
 
-        <a href="{{ url_for('manage_create') }}" class="m-btn-add">
-            <i class="fas fa-plus"></i>
-            + Thêm mới
-        </a>
-    </div>
+            {% for dept in departments %}
+              <button type="button" class="filter-select__option" data-value="{{ dept }}">
+                <span class="opt-label">{{ dept }}</span>
+                <span class="opt-count">{{ dept_counts.get(dept, 0) }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
 
-    <div id="manageTableZone">
-        {% include 'manage/manage_table.html' %}
-    </div>
+      <div class="m-filter-group">
+        <label class="m-filter-label">Chức vụ</label>
+        <div class="filter-select">
+          <input type="hidden" name="role" value="{{ selected_role or 'Tất cả' }}">
+
+          <button type="button" class="filter-select__button">
+            <span class="filter-select__label">{{ role_filter_label }}</span>
+            <span class="filter-count">
+              {{ stats.total if not selected_role or selected_role == 'Tất cả' else role_counts.get(selected_role, 0) }}
+            </span>
+          </button>
+
+          <div class="filter-select__menu">
+            <button type="button" class="filter-select__option" data-value="Tất cả">
+              <span class="opt-label">Tất cả chức vụ</span>
+              <span class="opt-count">{{ stats.total }}</span>
+            </button>
+
+            {% for r in roles %}
+              {% set r_value = r.value if r.value is defined else r %}
+              {% set r_label = r.label if r.label is defined else r %}
+              <button type="button" class="filter-select__option" data-value="{{ r_value }}">
+                <span class="opt-label">{{ r_label }}</span>
+                <span class="opt-count">{{ role_counts.get(r_value, 0) }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="m-filter-group">
+        <label class="m-filter-label">Vị trí</label>
+        <div class="filter-select">
+          <input type="hidden" name="floor" value="{{ selected_floor or 'Tất cả' }}">
+
+          <button type="button" class="filter-select__button">
+            <span class="filter-select__label">
+              {{ selected_floor if selected_floor and selected_floor != 'Tất cả' else 'Tất cả tầng' }}
+            </span>
+            <span class="filter-count">
+              {{ stats.total if not selected_floor or selected_floor == 'Tất cả' else floor_counts.get(selected_floor, 0) }}
+            </span>
+          </button>
+
+          <div class="filter-select__menu">
+            <button type="button" class="filter-select__option" data-value="Tất cả">
+              <span class="opt-label">Tất cả tầng</span>
+              <span class="opt-count">{{ stats.total }}</span>
+            </button>
+
+            {% for f in floors %}
+              <button type="button" class="filter-select__option" data-value="{{ f }}">
+                <span class="opt-label">{{ f }}</span>
+                <span class="opt-count">{{ floor_counts.get(f, 0) }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="m-filter-group">
+        <label class="m-filter-label">Trạng thái</label>
+        <div class="filter-select">
+          <input type="hidden" name="status" value="{{ selected_status or 'Tất cả' }}">
+
+          <button type="button" class="filter-select__button">
+            <span class="filter-select__label">{{ status_filter_label }}</span>
+            <span class="filter-count">
+              {{ stats.total if not selected_status or selected_status == 'Tất cả' else status_counts.get(selected_status, 0) }}
+            </span>
+          </button>
+
+          <div class="filter-select__menu">
+            <button type="button" class="filter-select__option" data-value="Tất cả">
+              <span class="opt-label">Tất cả trạng thái</span>
+              <span class="opt-count">{{ stats.total }}</span>
+            </button>
+
+            {% for s in user_status %}
+              {% set s_value = s.value if s.value is defined else s %}
+              {% set s_label = s.label if s.label is defined else s %}
+              <button type="button" class="filter-select__option" data-value="{{ s_value }}">
+                <span class="opt-label">{{ s_label }}</span>
+                <span class="opt-count">{{ status_counts.get(s_value, 0) }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <a
+        href="{{ url_for('manage') }}"
+        class="m-filter-clear-btn {{ '' if has_filter else 'is-hidden' }}"
+        title="Xóa bộ lọc"
+        aria-label="Xóa bộ lọc"
+      >
+        ×
+      </a>
+    </form>
+
+    <a href="{{ url_for('manage_create') }}" class="m-btn-add">
+      <span>+</span>
+      Thêm mới
+    </a>
+  </div>
+
+  {% include 'manage/manage_table.html' %}
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('filterForm');
-    const searchInput = document.getElementById('searchInput');
-    const tableZone = document.getElementById('manageTableZone');
-    const filterSection = document.getElementById('manageFilterSection');
-    const clearBtn = document.getElementById('clearFiltersBtn');
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("filterForm");
+    const searchInput = form ? form.querySelector('input[name="search"]') : null;
+    const clearBtn = document.querySelector(".m-filter-clear-btn");
+    const openedClass = "show";
 
-    let searchTimer = null;
-    let activeRequest = null;
-    let requestId = 0;
+    let debounceTimer = null;
+    let activeController = null;
 
-    function closeAllDropdowns() {
-        document.querySelectorAll('.filter-select__menu').forEach(function (menu) {
-            menu.classList.remove('show');
-        });
+    function getToastColor(type) {
+      if (type === "danger" || type === "error" || type === "delete") return "danger";
+      if (type === "warning") return "warning";
+      return "success";
     }
 
-    function hasActiveFilters() {
-        if (!form) return false;
+    function showManageToast(message, type) {
+      const toastType = getToastColor(type || "success");
+      const duration = 2800;
 
-        const data = new FormData(form);
+      document.querySelectorAll(".manage-toast").forEach(function (toast) {
+        toast.remove();
+      });
 
-        for (const [key, value] of data.entries()) {
-            const cleanValue = String(value || '').trim();
+      const toast = document.createElement("div");
+      toast.className = "manage-toast manage-toast-" + toastType;
+      toast.style.setProperty("--toast-duration", duration + "ms");
 
-            if (key === 'search' && cleanValue) {
-                return true;
-            }
+      const icon = document.createElement("div");
+      icon.className = "manage-toast-icon";
 
-            if (key !== 'search' && cleanValue && cleanValue !== 'Tất cả') {
-                return true;
-            }
-        }
+      const content = document.createElement("div");
+      content.className = "manage-toast-content";
 
-        return false;
+      const title = document.createElement("div");
+      title.className = "manage-toast-title";
+      title.textContent = message || "Thao tác thành công";
+
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "manage-toast-close";
+      closeBtn.setAttribute("aria-label", "Đóng thông báo");
+      closeBtn.textContent = "×";
+
+      const progress = document.createElement("div");
+      progress.className = "manage-toast-progress";
+
+      content.appendChild(title);
+      toast.appendChild(icon);
+      toast.appendChild(content);
+      toast.appendChild(closeBtn);
+      toast.appendChild(progress);
+      document.body.appendChild(toast);
+
+      const closeToast = function () {
+        if (toast.classList.contains("is-leaving")) return;
+
+        toast.classList.add("is-leaving");
+
+        setTimeout(function () {
+          toast.remove();
+        }, 180);
+      };
+
+      closeBtn.addEventListener("click", closeToast);
+      setTimeout(closeToast, duration);
+    }
+
+    function showStoredManageToast() {
+      const rawToast = sessionStorage.getItem("manage_toast");
+      if (!rawToast) return;
+
+      sessionStorage.removeItem("manage_toast");
+
+      let toastData = {
+        type: "success",
+        message: "Thao tác thành công"
+      };
+
+      try {
+        toastData = JSON.parse(rawToast);
+      } catch (error) {
+        toastData.message = rawToast;
+      }
+
+      showManageToast(toastData.message, toastData.type);
+    }
+
+    function closeFilterMenus(exceptMenu) {
+      document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
+        if (menu !== exceptMenu) menu.classList.remove(openedClass);
+      });
+    }
+
+    function hasActiveFilter() {
+      if (!form) return false;
+
+      const params = new URLSearchParams(new FormData(form));
+
+      for (const [key, value] of params.entries()) {
+        const cleanValue = String(value || "").trim();
+
+        if (key === "search" && cleanValue) return true;
+        if (key !== "search" && cleanValue && cleanValue !== "Tất cả") return true;
+      }
+
+      return false;
     }
 
     function updateClearButton() {
-        if (!clearBtn) return;
-        clearBtn.hidden = !hasActiveFilters();
+      if (!clearBtn) return;
+      clearBtn.classList.toggle("is-hidden", !hasActiveFilter());
     }
 
-    function updateFilterDisplay(option) {
-        const select = option.closest('.filter-select');
-        if (!select) return;
+    function buildManageUrl(page) {
+      const params = new URLSearchParams(new FormData(form));
 
-        const hiddenInput = select.querySelector('input[type="hidden"]');
-        const label = select.querySelector('.filter-select__label');
-        const count = select.querySelector('.filter-count');
-        const optionLabel = option.querySelector('.opt-label');
-        const optionCount = option.querySelector('.opt-count');
-        const menu = select.querySelector('.filter-select__menu');
+      if (page) {
+        params.set("page", page);
+      } else {
+        params.delete("page");
+      }
 
-        if (hiddenInput) {
-            hiddenInput.value = option.dataset.value || 'Tất cả';
-        }
+      Array.from(params.entries()).forEach(function ([key, value]) {
+        if (!value || value === "Tất cả") params.delete(key);
+      });
 
-        if (label && optionLabel) {
-            label.textContent = optionLabel.textContent.trim();
-        }
-
-        if (count && optionCount) {
-            count.textContent = optionCount.textContent.trim();
-        }
-
-        if (menu) {
-            menu.classList.remove('show');
-        }
-
-        updateClearButton();
+      const query = params.toString();
+      return form.action + (query ? "?" + query : "");
     }
 
-    function buildUrlFromForm() {
-        const params = new URLSearchParams();
-        const data = new FormData(form);
+    async function loadManageTable(url, pushState) {
+      if (!form) return;
 
-        for (const [key, value] of data.entries()) {
-            const cleanValue = String(value || '').trim();
+      if (activeController) activeController.abort();
+      activeController = new AbortController();
 
-            if (!cleanValue || cleanValue === 'Tất cả') {
-                continue;
-            }
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "X-Requested-With": "fetch" },
+          signal: activeController.signal
+        });
 
-            params.set(key, cleanValue);
+        if (!response.ok) return;
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const nextCard = doc.querySelector(".m-overview-card");
+        const currentCard = document.querySelector(".m-overview-card");
+
+        if (nextCard && currentCard) {
+          currentCard.replaceWith(nextCard);
         }
 
-        const query = params.toString();
-        return query ? `${form.action}?${query}` : form.action;
-    }
-
-    function setLoading(isLoading) {
-        tableZone?.classList.toggle('is-updating', isLoading);
-        filterSection?.classList.toggle('is-filtering', isLoading);
-    }
-
-    async function loadManageTable(url, updateHistory = true) {
-        if (!tableZone) return;
-
-        const currentRequestId = ++requestId;
-
-        if (activeRequest) {
-            activeRequest.abort();
+        if (pushState) {
+          window.history.replaceState({}, "", url);
         }
-
-        activeRequest = new AbortController();
-        setLoading(true);
-
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                signal: activeRequest.signal
-            });
-
-            if (!response.ok) {
-                throw new Error('Không thể tải dữ liệu nhân sự.');
-            }
-
-            const data = await response.json();
-
-            if (currentRequestId !== requestId) {
-                return;
-            }
-
-            tableZone.innerHTML = data.table_html || '';
-
-            if (updateHistory) {
-                window.history.replaceState({}, '', url);
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error(error);
-            }
-        } finally {
-            if (currentRequestId === requestId) {
-                setLoading(false);
-                activeRequest = null;
-            }
-        }
+      } catch (error) {
+        if (error.name !== "AbortError") console.error(error);
+      }
     }
 
-    function submitFilter() {
-        if (!form) return;
-
-        closeAllDropdowns();
-        updateClearButton();
-        loadManageTable(buildUrlFromForm(), true);
+    function submitFilterNow() {
+      updateClearButton();
+      loadManageTable(buildManageUrl(), true);
     }
 
     function submitFilterDebounced() {
-        clearTimeout(searchTimer);
-
-        searchTimer = setTimeout(function () {
-            submitFilter();
-        }, 420);
+      updateClearButton();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(submitFilterNow, 260);
     }
 
-    function resetFilters() {
+    document.querySelectorAll(".filter-select").forEach(function (select) {
+      const button = select.querySelector(".filter-select__button");
+      const menu = select.querySelector(".filter-select__menu");
+      const input = select.querySelector('input[type="hidden"]');
+      const label = select.querySelector(".filter-select__label");
+      const count = select.querySelector(".filter-count");
+
+      if (!button || !menu || !input || !label) return;
+
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = menu.classList.contains(openedClass);
+        closeFilterMenus(menu);
+        menu.classList.toggle(openedClass, !isOpen);
+      });
+
+      select.querySelectorAll(".filter-select__option").forEach(function (option) {
+        option.addEventListener("click", function () {
+          const optionLabel = option.querySelector(".opt-label");
+          const optionCount = option.querySelector(".opt-count");
+
+          input.value = option.dataset.value || "Tất cả";
+          label.textContent = optionLabel ? optionLabel.textContent.trim() : input.value;
+
+          if (count && optionCount) {
+            count.textContent = optionCount.textContent.trim();
+          }
+
+          closeFilterMenus();
+          submitFilterNow();
+        });
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", submitFilterDebounced);
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+
         if (!form) return;
 
         if (searchInput) {
-            searchInput.value = '';
+          searchInput.value = "";
         }
 
-        document.querySelectorAll('.filter-select').forEach(function (select) {
-            const firstOption = select.querySelector('.filter-select__option[data-value="Tất cả"]');
-            if (firstOption) {
-                updateFilterDisplay(firstOption);
-            }
+        form.querySelectorAll('input[type="hidden"]').forEach(function (input) {
+          input.value = "Tất cả";
         });
 
-        closeAllDropdowns();
+        document.querySelectorAll(".filter-select").forEach(function (select) {
+          const hidden = select.querySelector('input[type="hidden"]');
+          const label = select.querySelector(".filter-select__label");
+          const count = select.querySelector(".filter-count");
+          const firstOption = select.querySelector(".filter-select__option");
+
+          if (!hidden || !label || !firstOption) return;
+
+          const optionLabel = firstOption.querySelector(".opt-label");
+          const optionCount = firstOption.querySelector(".opt-count");
+
+          hidden.value = "Tất cả";
+          label.textContent = optionLabel ? optionLabel.textContent.trim() : "Tất cả";
+
+          if (count && optionCount) {
+            count.textContent = optionCount.textContent.trim();
+          }
+        });
+
+        closeFilterMenus();
         updateClearButton();
         loadManageTable(form.action, true);
+      });
     }
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            updateClearButton();
-            submitFilterDebounced();
-        });
-    }
+    document.addEventListener("click", function (event) {
+      const pageBtn = event.target.closest(".m-overview-card .page-btn:not(.disabled)");
 
-    document.querySelectorAll('.filter-select').forEach(function (select) {
-        const btn = select.querySelector('.filter-select__button');
-        const menu = select.querySelector('.filter-select__menu');
+      if (pageBtn && pageBtn.tagName === "A") {
+        event.preventDefault();
+        loadManageTable(pageBtn.href, true);
+        return;
+      }
 
-        if (!btn || !menu) return;
-
-        btn.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            document.querySelectorAll('.filter-select__menu').forEach(function (item) {
-                if (item !== menu) {
-                    item.classList.remove('show');
-                }
-            });
-
-            menu.classList.toggle('show');
-        });
-
-        select.querySelectorAll('.filter-select__option').forEach(function (option) {
-            option.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                updateFilterDisplay(option);
-                submitFilter();
-            });
-        });
+      if (!event.target.closest(".filter-select")) {
+        closeFilterMenus();
+      }
     });
 
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            resetFilters();
-        });
-    }
-
-    if (tableZone) {
-        tableZone.addEventListener('click', function (event) {
-            const link = event.target.closest('a');
-
-            if (!link) return;
-
-            const url = new URL(link.href, window.location.origin);
-
-            if (url.origin === window.location.origin && url.pathname === new URL(form.action, window.location.origin).pathname) {
-                event.preventDefault();
-                closeAllDropdowns();
-                loadManageTable(url.toString(), true);
-            }
-        });
-    }
-
-    document.addEventListener('click', function () {
-        closeAllDropdowns();
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key !== 'Enter') return;
-
-        const target = event.target;
-
-        if (
-            target.closest('.m-filter-section') ||
-            target === document.body ||
-            target === document.documentElement
-        ) {
-            event.preventDefault();
-
-            clearTimeout(searchTimer);
-            submitFilter();
-        }
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeFilterMenus();
     });
 
     updateClearButton();
-});
+    showStoredManageToast();
+  });
 </script>
 {% endblock %}

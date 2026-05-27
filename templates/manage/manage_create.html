@@ -7,7 +7,7 @@
 />
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_create.css') }}?v=5"
+  href="{{ url_for('static', filename='css/manage/manage_create.css') }}?v=9"
 />
 
 <section class="manage-create-page">
@@ -46,7 +46,6 @@
                   <i class="fas fa-check-circle"></i>
                   Đã xác thực
                 </span>
-
                 <span class="unique-label">ID UNIQUE</span>
               </div>
 
@@ -93,7 +92,10 @@
             </div>
 
             <div class="form-group" data-field="name">
-              <label>Họ và tên nhân viên</label>
+              <label>
+                Họ và tên nhân viên
+                <span class="required-star">*</span>
+              </label>
               <input
                 type="text"
                 name="name"
@@ -104,7 +106,10 @@
             </div>
 
             <div class="form-group" data-field="email">
-              <label>Email công vụ</label>
+              <label>
+                Email công vụ
+                <span class="required-star">*</span>
+              </label>
               <input
                 type="email"
                 name="email"
@@ -115,7 +120,10 @@
             </div>
 
             <div class="form-group" data-field="phone">
-              <label>Số điện thoại liên lạc</label>
+              <label>
+                Số điện thoại liên lạc
+                <span class="required-star">*</span>
+              </label>
               <input
                 type="tel"
                 name="phone"
@@ -126,7 +134,10 @@
             </div>
 
             <div class="form-group" data-field="password">
-              <label>Mật khẩu đăng nhập</label>
+              <label>
+                Mật khẩu đăng nhập
+                <span class="required-star">*</span>
+              </label>
 
               <div class="password-field">
                 <input
@@ -160,41 +171,118 @@
             </div>
 
             <div class="form-group" data-field="department">
-              <label>Phòng ban / Đơn vị</label>
-              <select name="department" required>
-                <option value="" disabled selected>-- Chọn phòng ban --</option>
-                {% for dept in departments %}
-                <option value="{{ dept }}">{{ dept }}</option>
-                {% endfor %}
-              </select>
+              <label>
+                Phòng ban / Đơn vị
+                <span class="required-star">*</span>
+              </label>
+
+              <div class="create-select" data-placeholder="-- Chọn phòng ban --">
+                <input type="hidden" name="department" required />
+
+                <button type="button" class="create-select__button">
+                  <span class="create-select__text">-- Chọn phòng ban --</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+
+                <div class="create-select__menu">
+                  <button
+                    type="button"
+                    class="create-select__option is-placeholder"
+                    data-value=""
+                  >
+                    -- Chọn phòng ban --
+                  </button>
+
+                  {% for dept in departments %}
+                  <button
+                    type="button"
+                    class="create-select__option"
+                    data-value="{{ dept }}"
+                  >
+                    {{ dept }}
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+
               <small class="field-error">Vui lòng chọn phòng ban.</small>
             </div>
 
             <div class="form-group" data-field="role">
-              <label>Vai trò hệ thống</label>
-              <select name="role" required>
-                <option value="" disabled selected>-- Chọn vai trò --</option>
+              <label>
+                Vai trò hệ thống
+                <span class="required-star">*</span>
+              </label>
 
-                {% for r in roles %}
-                  {% set role_value = r.value if r.value is defined else r %}
-                  {% set role_label = r.label if r.label is defined else r %}
-                  <option value="{{ role_value }}">{{ role_label }}</option>
-                {% endfor %}
-              </select>
+              <div class="create-select" data-placeholder="-- Chọn vai trò --">
+                <input type="hidden" name="role" required />
+
+                <button type="button" class="create-select__button">
+                  <span class="create-select__text">-- Chọn vai trò --</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+
+                <div class="create-select__menu">
+                  <button
+                    type="button"
+                    class="create-select__option is-placeholder"
+                    data-value=""
+                  >
+                    -- Chọn vai trò --
+                  </button>
+
+                  {% for r in roles %}
+                    {% set role_value = r.value if r.value is defined else r %}
+                    {% set role_label = r.label if r.label is defined else r %}
+                    <button
+                      type="button"
+                      class="create-select__option"
+                      data-value="{{ role_value }}"
+                    >
+                      {{ role_label }}
+                    </button>
+                  {% endfor %}
+                </div>
+              </div>
+
               <small class="field-error">Vui lòng chọn vai trò.</small>
             </div>
 
             <div class="form-group" data-field="floor">
-              <label>Vị trí tầng</label>
-              <select name="floor" required>
-                <option value="" disabled selected>
-                  -- Chọn tầng làm việc --
-                </option>
+              <label>
+                Vị trí tầng
+                <span class="required-star">*</span>
+              </label>
 
-                {% for f in floors %}
-                <option value="{{ f }}">{{ f }}</option>
-                {% endfor %}
-              </select>
+              <div class="create-select" data-placeholder="-- Chọn tầng làm việc --">
+                <input type="hidden" name="floor" required />
+
+                <button type="button" class="create-select__button">
+                  <span class="create-select__text">-- Chọn tầng làm việc --</span>
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+
+                <div class="create-select__menu create-select__menu--scroll">
+                  <button
+                    type="button"
+                    class="create-select__option is-placeholder"
+                    data-value=""
+                  >
+                    -- Chọn tầng làm việc --
+                  </button>
+
+                  {% for f in floors %}
+                  <button
+                    type="button"
+                    class="create-select__option"
+                    data-value="{{ f }}"
+                  >
+                    {{ f }}
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+
               <small class="field-error">Vui lòng chọn tầng làm việc.</small>
             </div>
 
@@ -307,6 +395,77 @@
     alert(description ? title + "\n" + description : title);
   }
 
+  function closeCreateSelects(exceptSelect) {
+    document.querySelectorAll(".create-select").forEach(function (select) {
+      if (select !== exceptSelect) {
+        select.classList.remove("is-open");
+      }
+    });
+  }
+
+  function initCreateSelects() {
+    document.querySelectorAll(".create-select").forEach(function (select) {
+      const input = select.querySelector('input[type="hidden"]');
+      const button = select.querySelector(".create-select__button");
+      const text = select.querySelector(".create-select__text");
+      const options = select.querySelectorAll(".create-select__option");
+
+      if (!input || !button || !text) return;
+
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen = select.classList.contains("is-open");
+
+        closeCreateSelects(select);
+        select.classList.toggle("is-open", !isOpen);
+      });
+
+      options.forEach(function (option) {
+        option.addEventListener("click", function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const value = option.dataset.value || "";
+          const label = option.textContent.trim();
+
+          input.value = value;
+          text.textContent = label;
+
+          options.forEach(function (item) {
+            item.classList.remove("is-selected");
+          });
+
+          if (value) {
+            option.classList.add("is-selected");
+            select.classList.add("has-value");
+          } else {
+            select.classList.remove("has-value");
+          }
+
+          const group = select.closest(".form-group");
+
+          if (group) {
+            group.classList.remove("is-invalid");
+          }
+
+          select.classList.remove("is-open");
+        });
+      });
+    });
+
+    document.addEventListener("click", function () {
+      closeCreateSelects(null);
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeCreateSelects(null);
+      }
+    });
+  }
+
   function validateCreateForm(form) {
     let isValid = true;
 
@@ -334,6 +493,7 @@
 
   window.addEventListener("DOMContentLoaded", function () {
     formatVietnamDate();
+    initCreateSelects();
 
     const form = document.getElementById("createEmployeeForm");
 
@@ -363,7 +523,10 @@
           "Vui lòng nhập đầy đủ các thông tin bắt buộc."
         );
 
-        const firstInvalid = form.querySelector(".form-group.is-invalid input, .form-group.is-invalid select");
+        const firstInvalid = form.querySelector(
+          ".form-group.is-invalid input:not([type='hidden']), .form-group.is-invalid select, .form-group.is-invalid .create-select__button"
+        );
+
         if (firstInvalid) firstInvalid.focus();
 
         return;
