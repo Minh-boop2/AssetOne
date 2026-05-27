@@ -1,601 +1,369 @@
-html:has(body .assign-give-page),
-body:has(.assign-give-page) {
-  height: 100%;
-  overflow: hidden !important;
-}
+/* =========================================================
+   TABLE CARD
+   Giữ form của bạn, chỉ chỉnh bảng giống manage.
+========================================================= */
 
-.assign-give-page {
-  height: calc(100dvh - var(--assign-header-height, 90px));
+.assets-table-section,
+.table-container {
+  flex: 1 1 auto;
+  width: 100%;
   min-height: 0;
-  padding: clamp(14px, 1.4vw, 24px) clamp(18px, 1.8vw, 28px);
-  color: var(--text);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: clamp(14px, 1vw, 18px);
+  box-shadow: var(--shadow);
+
+  position: relative;
+  overflow: hidden !important;
+
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  padding: 0;
 }
 
-.assign-give-page,
-.assign-give-page * {
-  box-sizing: border-box;
-}
+/* =========================================================
+   TABLE HEADER CARD
+   Dòng "Danh sách tài sản" không cuộn.
+========================================================= */
 
-.assign-give-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: clamp(14px, 1.4vw, 22px);
-}
+.section-heading,
+.table-header-wrapper {
+  flex: 0 0 auto;
 
-.assign-give-header h1 {
   margin: 0;
-  color: var(--text);
-  font-size: clamp(24px, 2vw, 30px);
-  font-weight: 900;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-}
+  padding: clamp(12px, 1vw, 16px) clamp(14px, 1.2vw, 20px);
 
-.assign-give-back {
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text);
-  text-decoration: none;
-  display: inline-flex;
+  border-bottom: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 800;
-  white-space: nowrap;
-  transition: 0.2s ease;
+  gap: 14px;
 }
 
-.assign-give-back:hover {
-  border-color: var(--hsu-blue);
-  color: var(--hsu-blue);
-  transform: translateY(-1px);
-}
+.section-heading__title,
+.table-list-title {
+  margin: 0;
 
-.assign-give-flashes {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.assign-give-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 13px 15px;
-  border-radius: 14px;
-  font-size: 14px;
+  font-size: clamp(15px, 1vw, 17px) !important;
   font-weight: 700;
-  line-height: 1.5;
+  color: var(--text) !important;
+  line-height: 1.3;
 }
 
-.assign-give-alert i {
-  margin-top: 2px;
+.section-heading__meta,
+.table-info-count,
+.pagination-info {
+  position: static;
+
+  font-size: clamp(12px, 0.85vw, 13px) !important;
+  color: var(--text-soft) !important;
+  white-space: nowrap;
 }
 
-.assign-give-alert--warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+.section-heading__meta strong,
+.table-info-count strong,
+.pagination-info strong,
+.pagination-info b {
+  color: var(--text) !important;
 }
 
-.assign-give-alert--danger {
-  background: rgba(239, 59, 45, 0.12);
-  color: var(--hsu-red);
-  border: 1px solid rgba(239, 59, 45, 0.25);
-}
+/* =========================================================
+   TABLE SCROLL
+   Chỉ khu vực dữ liệu bên dưới header bảng được cuộn.
+========================================================= */
 
-.assign-give-alert--success {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-
-.assign-give-alert--info {
-  background: rgba(31, 79, 163, 0.12);
-  color: var(--hsu-blue);
-  border: 1px solid rgba(31, 79, 163, 0.25);
-}
-
-.assign-give-grid {
+.table-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
-  gap: clamp(16px, 1.5vw, 22px);
-  overflow: hidden;
-}
+  max-height: none !important;
 
-.assign-give-card {
-  min-width: 0;
-  min-height: 0;
-  padding: clamp(18px, 1.45vw, 22px);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 
-.assign-give-card__header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.assign-give-card__header h2 {
-  margin: 0;
-  color: var(--text);
-  font-size: clamp(20px, 1.4vw, 22px);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
-
-.assign-give-status {
-  min-height: 34px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.assign-give-status--using {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-.assign-give-status--free {
-  background: rgba(31, 79, 163, 0.12);
-  color: var(--hsu-blue);
-}
-
-.asset-summary {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(12px, 0.95vw, 14px);
-  overflow: hidden;
-}
-
-.asset-summary__item {
-  min-width: 0;
-  padding: clamp(13px, 1vw, 16px);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface-2);
-}
-
-.asset-summary__item--full {
-  grid-column: 1 / -1;
-}
-
-.asset-summary__item span {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.asset-summary__item strong {
-  display: block;
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 850;
-  line-height: 1.5;
-  word-break: break-word;
-}
-
-.assign-give-form {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.assign-give-label {
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.assign-user-search {
   position: relative;
-  width: 100%;
-}
+  background: var(--surface) !important;
 
-.assign-user-search.is-disabled {
-  opacity: 0.65;
-  pointer-events: none;
-}
-
-.assign-user-search__control {
-  width: 100%;
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-2);
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: 0.2s ease;
-}
-
-.assign-user-search__control:focus-within {
-  border-color: var(--hsu-blue);
-  background: var(--surface);
-  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
-}
-
-.assign-user-search.is-searching .assign-user-search__control::after {
-  content: "";
-  flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(148, 163, 184, 0.35);
-  border-top-color: var(--hsu-blue);
-  border-radius: 999px;
-  animation: assignSpin 0.75s linear infinite;
-}
-
-.assign-user-search__control i {
-  color: var(--text-soft);
-  font-size: 13px;
-}
-
-.assign-user-search__input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.assign-user-search__input::placeholder {
-  color: var(--text-soft);
-  font-weight: 600;
-}
-
-.assign-user-search__results {
-  max-height: 292px;
-  margin-top: 8px;
-  padding: 6px;
-  overflow-y: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.22);
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: var(--border) var(--surface);
 }
 
-.assign-user-search__option {
-  width: 100%;
-  min-height: 56px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  text-align: left;
-  font-family: inherit;
-  transition: 0.18s ease;
-}
-
-.assign-user-search__option:hover {
-  background: var(--surface-2);
-  color: var(--hsu-blue);
-}
-
-.assign-user-search__main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.assign-user-search__main strong {
-  min-width: 0;
-  color: inherit;
-  font-size: 14px;
-  font-weight: 850;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.assign-user-search__main small {
-  min-width: 0;
-  color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.assign-user-search__meta {
-  flex-shrink: 0;
-  max-width: 150px;
-  color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: right;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.assign-user-search__empty {
-  padding: 13px 12px;
-  color: var(--text-soft);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.assign-user-search__results::-webkit-scrollbar {
+.table-scroll::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
-.assign-user-search__results::-webkit-scrollbar-track {
-  background: transparent;
+.table-scroll::-webkit-scrollbar-track {
+  background: var(--surface);
 }
 
-.assign-user-search__results::-webkit-scrollbar-thumb {
+.table-scroll::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 999px;
+  border-radius: 10px;
 }
 
-.assign-user-search__results::-webkit-scrollbar-thumb:hover {
+.table-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-soft);
 }
 
-.selected-user-box {
-  min-height: 150px;
-  padding: 16px;
-  border: 1px dashed var(--border);
-  border-radius: 16px;
-  background: var(--surface-2);
-}
+/* =========================================================
+   TABLE STYLE
+   Quan trọng:
+   - table cao 100%
+   - thead đứng yên
+   - tbody là phần cuộn dọc
+========================================================= */
 
-.selected-user-box__empty {
-  color: var(--text-soft);
-  font-size: 14px;
-  line-height: 1.6;
-}
+.table-container .custom-table,
+.table-container .custom-table.assign-table,
+.assets-table-section .custom-table,
+.assets-table-section .custom-table.assign-table,
+.table-scroll .custom-table,
+.table-scroll .custom-table.assign-table {
+  width: 100% !important;
+  min-width: 980px;
+  height: 100%;
 
-.selected-user-profile {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+
+  background: var(--surface) !important;
+
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 16px;
+  flex-direction: column;
+  table-layout: fixed;
 }
 
-.selected-user-avatar {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background: var(--hsu-blue);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: 900;
+/* Header mã tài sản / tên tài sản giữ nguyên */
+.table-container .custom-table thead,
+.table-container .custom-table.assign-table thead,
+.assets-table-section .custom-table thead,
+.assets-table-section .custom-table.assign-table thead,
+.table-scroll .custom-table thead,
+.table-scroll .custom-table.assign-table thead {
+  flex: 0 0 auto;
+
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+
+  background: var(--surface-2) !important;
 }
 
-.selected-user-info {
-  min-width: 0;
+/* Chỉ tbody cuộn */
+.table-container .custom-table tbody,
+.table-container .custom-table.assign-table tbody,
+.assets-table-section .custom-table tbody,
+.assets-table-section .custom-table.assign-table tbody,
+.table-scroll .custom-table tbody,
+.table-scroll .custom-table.assign-table tbody {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: block;
+  width: 100%;
+
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+
+  background: var(--surface) !important;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--surface);
 }
 
-.selected-user-info h3 {
-  margin: 0 0 4px;
-  color: var(--text);
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1.25;
+.table-container .custom-table tbody::-webkit-scrollbar,
+.assets-table-section .custom-table tbody::-webkit-scrollbar,
+.table-scroll .custom-table tbody::-webkit-scrollbar {
+  width: 8px;
 }
 
-.selected-user-info p {
-  margin: 0;
-  color: var(--text-soft);
-  font-size: 13px;
+.table-container .custom-table tbody::-webkit-scrollbar-track,
+.assets-table-section .custom-table tbody::-webkit-scrollbar-track,
+.table-scroll .custom-table tbody::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+.table-container .custom-table tbody::-webkit-scrollbar-thumb,
+.assets-table-section .custom-table tbody::-webkit-scrollbar-thumb,
+.table-scroll .custom-table tbody::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.table-container .custom-table tbody::-webkit-scrollbar-thumb:hover,
+.assets-table-section .custom-table tbody::-webkit-scrollbar-thumb:hover,
+.table-scroll .custom-table tbody::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft);
+}
+
+/* Tr và header dùng table-layout để cột thẳng hàng */
+.table-container .custom-table thead tr,
+.table-container .custom-table tbody tr,
+.assets-table-section .custom-table thead tr,
+.assets-table-section .custom-table tbody tr,
+.table-scroll .custom-table thead tr,
+.table-scroll .custom-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Header table */
+.table-container .custom-table thead th,
+.table-container .custom-table th,
+.table-container .custom-table.assign-table thead th,
+.assets-table-section .custom-table thead th,
+.assets-table-section .custom-table th,
+.assets-table-section .custom-table.assign-table thead th,
+.table-scroll .custom-table thead th,
+.table-scroll .custom-table th,
+.table-scroll .custom-table.assign-table thead th {
+  background: var(--surface-2) !important;
+  color: var(--text-soft) !important;
+
+  padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+
+  text-align: left;
+  font-size: clamp(12px, 0.85vw, 14px) !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+/* Body table */
+.table-container .custom-table tbody tr,
+.table-container .custom-table.assign-table tbody tr,
+.assets-table-section .custom-table tbody tr,
+.assets-table-section .custom-table.assign-table tbody tr,
+.table-scroll .custom-table tbody tr,
+.table-scroll .custom-table.assign-table tbody tr {
+  background: var(--surface) !important;
+}
+
+.table-container .custom-table tbody td,
+.table-container .custom-table td,
+.table-container .custom-table.assign-table tbody td,
+.assets-table-section .custom-table tbody td,
+.assets-table-section .custom-table td,
+.assets-table-section .custom-table.assign-table tbody td,
+.table-scroll .custom-table tbody td,
+.table-scroll .custom-table td,
+.table-scroll .custom-table.assign-table tbody td {
+  padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+
+  background: var(--surface) !important;
+  color: var(--text) !important;
+
+  font-size: clamp(12.5px, 0.9vw, 14px) !important;
+  vertical-align: middle;
   line-height: 1.4;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.selected-user-details {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+.table-container .custom-table tbody tr:hover td,
+.table-container .custom-table.assign-table tbody tr:hover td,
+.assets-table-section .custom-table tbody tr:hover td,
+.assets-table-section .custom-table.assign-table tbody tr:hover td,
+.table-scroll .custom-table tbody tr:hover td,
+.table-scroll .custom-table.assign-table tbody tr:hover td {
+  background: var(--surface-2) !important;
 }
 
-.selected-user-details div {
+/* =========================================================
+   COLUMN WIDTHS
+   Giúp header và dữ liệu thẳng cột.
+========================================================= */
+
+.table-container .custom-table th:nth-child(1),
+.table-container .custom-table td:nth-child(1),
+.table-scroll .custom-table th:nth-child(1),
+.table-scroll .custom-table td:nth-child(1) {
+  width: 10%;
+}
+
+.table-container .custom-table th:nth-child(2),
+.table-container .custom-table td:nth-child(2),
+.table-scroll .custom-table th:nth-child(2),
+.table-scroll .custom-table td:nth-child(2) {
+  width: 18%;
+}
+
+.table-container .custom-table th:nth-child(3),
+.table-container .custom-table td:nth-child(3),
+.table-scroll .custom-table th:nth-child(3),
+.table-scroll .custom-table td:nth-child(3) {
+  width: 12%;
+}
+
+.table-container .custom-table th:nth-child(4),
+.table-container .custom-table td:nth-child(4),
+.table-scroll .custom-table th:nth-child(4),
+.table-scroll .custom-table td:nth-child(4) {
+  width: 11%;
+}
+
+.table-container .custom-table th:nth-child(5),
+.table-container .custom-table td:nth-child(5),
+.table-scroll .custom-table th:nth-child(5),
+.table-scroll .custom-table td:nth-child(5) {
+  width: 13%;
+}
+
+.table-container .custom-table th:nth-child(6),
+.table-container .custom-table td:nth-child(6),
+.table-scroll .custom-table th:nth-child(6),
+.table-scroll .custom-table td:nth-child(6) {
+  width: 12%;
+}
+
+.table-container .custom-table th:nth-child(7),
+.table-container .custom-table td:nth-child(7),
+.table-scroll .custom-table th:nth-child(7),
+.table-scroll .custom-table td:nth-child(7) {
+  width: 8%;
+}
+
+.table-container .custom-table th:nth-child(8),
+.table-container .custom-table td:nth-child(8),
+.table-scroll .custom-table th:nth-child(8),
+.table-scroll .custom-table td:nth-child(8) {
+  width: 11%;
+}
+
+.table-container .custom-table th:nth-child(9),
+.table-container .custom-table td:nth-child(9),
+.table-scroll .custom-table th:nth-child(9),
+.table-scroll .custom-table td:nth-child(9) {
+  width: 5%;
+  text-align: center;
+}
+
+/* =========================================================
+   PAGINATION FOOTER
+   Pagination không cuộn theo dữ liệu.
+========================================================= */
+
+.pagination-container,
+.pagination {
+  flex: 0 0 auto;
+
+  padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
+  border-top: 1px solid var(--border) !important;
+  border-radius: 0 0 18px 18px;
+
+  background: var(--surface) !important;
+
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-
-.selected-user-details span {
-  color: var(--text-soft);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.selected-user-details strong {
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 850;
-  text-align: right;
-}
-
-.assign-give-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.assign-give-btn {
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  text-decoration: none;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: 0.2s ease;
-}
-
-.assign-give-btn:hover {
-  transform: translateY(-1px);
-}
-
-.assign-give-btn--secondary {
-  background: var(--surface);
-  color: var(--text);
-}
-
-.assign-give-btn--secondary:hover {
-  border-color: var(--hsu-blue);
-  color: var(--hsu-blue);
-}
-
-.assign-give-btn--primary {
-  background: var(--hsu-blue);
-  border-color: var(--hsu-blue);
-  color: #fff;
-}
-
-.assign-give-btn--primary:hover {
-  filter: brightness(0.94);
-}
-
-.assign-give-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: #fff;
-  border-radius: 999px;
-  animation: assignSpin 0.75s linear infinite;
-}
-
-@keyframes assignSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (max-width: 1100px) {
-  html:has(body .assign-give-page),
-  body:has(.assign-give-page) {
-    height: auto;
-    overflow: auto !important;
-  }
-
-  .assign-give-page {
-    height: auto;
-    min-height: calc(100dvh - var(--assign-header-height, 90px));
-    overflow: visible;
-  }
-
-  .assign-give-grid {
-    grid-template-columns: 1fr;
-    overflow: visible;
-  }
-}
-
-@media (max-width: 768px) {
-  .assign-give-page {
-    padding: 18px;
-  }
-
-  .assign-give-header,
-  .assign-give-card__header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .assign-give-header h1 {
-    font-size: 24px;
-  }
-
-  .assign-give-card {
-    padding: 18px;
-    border-radius: 16px;
-  }
-
-  .asset-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .assign-give-actions {
-    flex-direction: column;
-  }
-
-  .assign-give-btn {
-    width: 100%;
-  }
-
-  .selected-user-details div {
-    flex-direction: column;
-  }
-
-  .selected-user-details strong {
-    text-align: left;
-  }
+  gap: 14px;
 }

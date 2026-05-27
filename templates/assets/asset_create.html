@@ -1,26 +1,17 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets.css') }}"
-/>
-
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets_create.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets_create.css') }}" />
 
 <div class="assets-create-page">
   <div class="asset-create-card">
     <div class="asset-create-header">
       <div>
         <span class="asset-create-badge">NEW</span>
-
         <h2 class="asset-create-title">Thêm thiết bị mới</h2>
-
         <p class="asset-create-subtitle">
-          Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.
+          Nhập thông tin tài sản, người sử dụng, phòng ban và vị trí.
         </p>
       </div>
     </div>
@@ -31,143 +22,210 @@
       </div>
     {% endif %}
 
-    <form
-      id="assetCreateForm"
-      method="POST"
-      class="asset-create-form"
-      novalidate
-    >
-      <div class="asset-create-grid">
-        <div class="asset-form-group" data-field-group="asset_code">
-          <label for="asset_code">
-            Mã tài sản <span class="required-star">*</span>
-          </label>
-
-          <input
-            id="asset_code"
-            type="text"
-            name="asset_code"
-            placeholder="VD: LAP-009"
-            value="{{ form_data.get('asset_code', '') if form_data else '' }}"
-            required
-            aria-required="true"
-            aria-describedby="asset_code_error"
-          />
-
-          <div class="asset-field-error" id="asset_code_error">
-            Vui lòng nhập mã tài sản.
+    <form id="assetCreateForm" method="POST" class="asset-create-form" novalidate>
+      <main class="asset-create-main">
+        <section class="asset-create-section">
+          <div class="asset-create-section__head">
+            <h3>Thông tin thiết bị</h3>
+            <p>Các trường có dấu * là bắt buộc.</p>
           </div>
-        </div>
 
-        <div class="asset-form-group" data-field-group="asset_name">
-          <label for="asset_name">
-            Tên tài sản <span class="required-star">*</span>
-          </label>
+          <div class="asset-create-grid">
+            <div class="asset-form-group" data-field-group="asset_code">
+              <label for="asset_code">
+                Mã tài sản <span class="required-star">*</span>
+              </label>
 
-          <input
-            id="asset_name"
-            type="text"
-            name="asset_name"
-            placeholder="VD: MacBook Air M2"
-            value="{{ form_data.get('asset_name', '') if form_data else '' }}"
-            required
-            aria-required="true"
-            aria-describedby="asset_name_error"
-          />
+              <input
+                id="asset_code"
+                type="text"
+                name="asset_code"
+                placeholder="VD: LAP-009"
+                value="{{ form_data.get('asset_code', '') if form_data else '' }}"
+                required
+                aria-required="true"
+                aria-describedby="asset_code_error"
+              />
 
-          <div class="asset-field-error" id="asset_name_error">
-            Vui lòng nhập tên tài sản.
-          </div>
-        </div>
-      </div>
-
-      <div class="asset-form-group" data-field-group="type">
-        <label for="type">
-          Loại thiết bị <span class="required-star">*</span>
-        </label>
-
-        <input
-          id="type"
-          type="text"
-          name="type"
-          placeholder="VD: laptop, monitor, camera, router..."
-          value="{{ form_data.get('type', '') if form_data else '' }}"
-          autocomplete="off"
-          required
-          aria-required="true"
-          aria-describedby="type_error"
-        />
-
-        <div class="asset-field-error" id="type_error">
-          Vui lòng nhập loại thiết bị.
-        </div>
-
-        <div class="asset-form-help">
-          Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.
-        </div>
-
-        {% if asset_types %}
-          <div class="asset-type-suggestions">
-            <div class="asset-type-suggestions__title">
-              Loại thiết bị hiện có
-            </div>
-
-            <div
-              class="asset-type-suggestions__list"
-              id="assetTypeSuggestionsList"
-            >
-              {% for item in asset_types %}
-                <button
-                  type="button"
-                  class="asset-type-chip"
-                  data-type="{{ item.value }}"
-                  data-search="{{ item.value }}"
-                >
-                  <span>{{ item.value }}</span>
-                  <small>{{ item.count }}</small>
-                </button>
-              {% endfor %}
-
-              <div class="asset-type-empty" id="assetTypeEmpty">
-                Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
+              <div class="asset-field-error" id="asset_code_error">
+                Vui lòng nhập mã tài sản.
               </div>
             </div>
+
+            <div class="asset-form-group" data-field-group="asset_name">
+              <label for="asset_name">
+                Tên tài sản <span class="required-star">*</span>
+              </label>
+
+              <input
+                id="asset_name"
+                type="text"
+                name="asset_name"
+                placeholder="VD: MacBook Air M2"
+                value="{{ form_data.get('asset_name', '') if form_data else '' }}"
+                required
+                aria-required="true"
+                aria-describedby="asset_name_error"
+              />
+
+              <div class="asset-field-error" id="asset_name_error">
+                Vui lòng nhập tên tài sản.
+              </div>
+            </div>
+
+            <div class="asset-form-group" data-field-group="type">
+              <label for="type">
+                Loại thiết bị <span class="required-star">*</span>
+              </label>
+
+              <input
+                id="type"
+                type="text"
+                name="type"
+                placeholder="VD: laptop, phone..."
+                value="{{ form_data.get('type', '') if form_data else '' }}"
+                autocomplete="off"
+                required
+                aria-required="true"
+                aria-describedby="type_error"
+              />
+
+              <div class="asset-field-error" id="type_error">
+                Vui lòng nhập loại thiết bị.
+              </div>
+            </div>
+
+            <div class="asset-form-group">
+              <label for="status">Trạng thái</label>
+
+              {% set current_status = form_data.get('status', 'available') if form_data else 'available' %}
+              <select id="status" name="status">
+                <option value="available" {% if current_status == 'available' %}selected{% endif %}>Chưa sử dụng</option>
+                <option value="using" {% if current_status == 'using' %}selected{% endif %}>Đang sử dụng</option>
+                <option value="maintenance" {% if current_status == 'maintenance' %}selected{% endif %}>Bảo trì</option>
+                <option value="broken" {% if current_status == 'broken' %}selected{% endif %}>Hỏng</option>
+                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+              </select>
+            </div>
+
+            <div class="asset-form-group">
+              <label for="receiver">Người sử dụng</label>
+
+              <input
+                id="receiver"
+                type="text"
+                name="receiver"
+                placeholder="VD: Nguyễn Văn A"
+                value="{{ form_data.get('receiver', '') if form_data else '' }}"
+              />
+            </div>
+
+            <div class="asset-form-group">
+              <label for="employee_code">Mã nhân viên</label>
+
+              <input
+                id="employee_code"
+                type="text"
+                name="employee_code"
+                placeholder="VD: HSU-2026"
+                value="{{ form_data.get('employee_code', '') if form_data else '' }}"
+              />
+            </div>
+
+            <div class="asset-form-group">
+              <label for="department">Phòng ban</label>
+
+              <input
+                id="department"
+                type="text"
+                name="department"
+                placeholder="VD: Phòng IT"
+                value="{{ form_data.get('department', '') if form_data else '' }}"
+              />
+            </div>
+
+            <div class="asset-form-group">
+              <label for="location">Vị trí</label>
+
+              <input
+                id="location"
+                type="text"
+                name="location"
+                placeholder="VD: Tầng 1"
+                value="{{ form_data.get('location', '') if form_data else '' }}"
+              />
+            </div>
+
+            <div class="asset-form-group">
+              <label for="warranty">Bảo hành đến</label>
+
+              <input
+                id="warranty"
+                type="text"
+                name="warranty"
+                placeholder="VD: 12/2026"
+                value="{{ form_data.get('warranty', '') if form_data else '' }}"
+              />
+            </div>
+
+            <div class="asset-form-group asset-form-group--note">
+              <label for="spec">Cấu hình / Ghi chú</label>
+
+              <textarea
+                id="spec"
+                name="spec"
+                rows="2"
+                placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
+              >{{ form_data.get('spec', '') if form_data else '' }}</textarea>
+            </div>
           </div>
-        {% endif %}
-      </div>
+        </section>
+      </main>
 
-      <div class="asset-form-group">
-        <label for="warranty">Bảo hành đến</label>
+      <aside class="asset-create-side">
+        <section class="asset-create-section asset-create-section--side">
+          <div class="asset-create-section__head">
+            <h3>Loại thiết bị hiện có</h3>
+            <p>Bấm vào chip để chọn nhanh.</p>
+          </div>
 
-        <input
-          id="warranty"
-          type="text"
-          name="warranty"
-          placeholder="VD: 12/2026"
-          value="{{ form_data.get('warranty', '') if form_data else '' }}"
-        />
-      </div>
+          {% if asset_types %}
+            <div class="asset-type-suggestions">
+              <div class="asset-type-suggestions__list" id="assetTypeSuggestionsList">
+                {% for item in asset_types %}
+                  <button
+                    type="button"
+                    class="asset-type-chip"
+                    data-type="{{ item.value }}"
+                    data-search="{{ item.value }}"
+                  >
+                    <span>{{ item.value }}</span>
+                    <small>{{ item.count }}</small>
+                  </button>
+                {% endfor %}
 
-      <div class="asset-form-group">
-        <label for="spec">Cấu hình / Ghi chú</label>
+                <div class="asset-type-empty" id="assetTypeEmpty">
+                  Không tìm thấy loại phù hợp.
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="asset-type-empty show">
+              Chưa có loại thiết bị nào.
+            </div>
+          {% endif %}
+        </section>
 
-        <textarea
-          id="spec"
-          name="spec"
-          rows="4"
-          placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
-        >{{ form_data.get('spec', '') if form_data else '' }}</textarea>
-      </div>
+        <div class="asset-create-actions">
+          <button type="submit" class="asset-btn-submit">
+            Lưu thiết bị
+          </button>
 
-      <div class="asset-create-actions">
-        <button type="submit" class="asset-btn-submit">
-          Lưu thiết bị vào hệ thống
-        </button>
-
-        <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel">
-          Hủy và quay lại
-        </a>
-      </div>
+          <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel">
+            Hủy
+          </a>
+        </div>
+      </aside>
     </form>
   </div>
 </div>
@@ -176,30 +234,15 @@
   const assetCreateForm = document.getElementById("assetCreateForm");
   const typeInput = document.getElementById("type");
   const assetTypeEmpty = document.getElementById("assetTypeEmpty");
-  const assetTypeChips = Array.from(
-    document.querySelectorAll(".asset-type-chip")
-  );
+  const assetTypeChips = Array.from(document.querySelectorAll(".asset-type-chip"));
 
   const requiredFields = [
-    {
-      id: "asset_code",
-      name: "mã tài sản",
-      message: "Vui lòng nhập mã tài sản.",
-    },
-    {
-      id: "asset_name",
-      name: "tên tài sản",
-      message: "Vui lòng nhập tên tài sản.",
-    },
-    {
-      id: "type",
-      name: "loại thiết bị",
-      message: "Vui lòng nhập loại thiết bị.",
-    },
+    { id: "asset_code", message: "Vui lòng nhập mã tài sản." },
+    { id: "asset_name", message: "Vui lòng nhập tên tài sản." },
+    { id: "type", message: "Vui lòng nhập loại thiết bị." },
   ];
 
   let typeFilterTimer = null;
-  const typeFilterDelay = 500;
 
   function normalizeText(value) {
     return String(value || "")
@@ -216,11 +259,7 @@
     }
 
     if (window.sonner) {
-      window.sonner({
-        type: type,
-        title: title,
-        description: description,
-      });
+      window.sonner({ type, title, description });
       return;
     }
 
@@ -255,9 +294,7 @@
 
     if (!input) return true;
 
-    const value = input.value.trim();
-
-    if (!value) {
+    if (!input.value.trim()) {
       setFieldError(input, field.message);
       return false;
     }
@@ -295,12 +332,10 @@
 
     assetTypeChips.forEach((chip) => {
       const chipValue = normalizeText(chip.dataset.type);
-
-      if (normalizedValue && chipValue === normalizedValue) {
-        chip.classList.add("is-active");
-      } else {
-        chip.classList.remove("is-active");
-      }
+      chip.classList.toggle(
+        "is-active",
+        Boolean(normalizedValue && chipValue === normalizedValue)
+      );
     });
   }
 
@@ -354,10 +389,7 @@
 
     typeInput.addEventListener("input", function () {
       clearTimeout(typeFilterTimer);
-
-      typeFilterTimer = setTimeout(() => {
-        filterAssetTypeChips();
-      }, typeFilterDelay);
+      typeFilterTimer = setTimeout(filterAssetTypeChips, 250);
     });
 
     typeInput.addEventListener("keydown", function (event) {
@@ -377,7 +409,6 @@
       typeInput.value = button.dataset.type || "";
       typeInput.focus();
       clearFieldError(typeInput);
-
       clearTimeout(typeFilterTimer);
       filterAssetTypeChips();
       setActiveChipByValue(typeInput.value);
@@ -386,15 +417,13 @@
 
   if (assetCreateForm) {
     assetCreateForm.addEventListener("submit", function (event) {
-      const isValid = validateAssetForm();
-
-      if (!isValid) {
+      if (!validateAssetForm()) {
         event.preventDefault();
 
         showAssetToast(
           "error",
           "Thêm thiết bị không thành công",
-          "Vui lòng nhập đầy đủ các thông tin*."
+          "Vui lòng nhập đầy đủ các thông tin bắt buộc."
         );
 
         return;

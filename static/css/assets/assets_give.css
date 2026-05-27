@@ -1,0 +1,1288 @@
+/* static/css/assets/assets_give.css */
+
+/* =========================================================
+   ASSETS PAGE
+   Dựa theo màu + bảng mẫu manage_table.css
+   Không đổi form/filter HTML đang có.
+   Không tự khai báo màu root để giữ light/dark mode hệ thống.
+========================================================= */
+
+/* =========================================================
+   LOCK OUTER SCROLL
+========================================================= */
+
+html:has(.assets-page),
+body:has(.assets-page) {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+}
+
+body:has(.assets-page) {
+  margin: 0;
+  padding: 0;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  overscroll-behavior: none;
+}
+
+body:has(.assets-page) main,
+body:has(.assets-page) .main,
+body:has(.assets-page) .main-content,
+body:has(.assets-page) .content,
+body:has(.assets-page) .page-content,
+body:has(.assets-page) .app-content,
+body:has(.assets-page) .layout-content,
+body:has(.assets-page) #app,
+body:has(.assets-page) #app-body {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   PAGE LAYOUT
+========================================================= */
+
+.assets-page {
+  --asset-page-offset: 88px;
+
+  width: 100%;
+  height: calc(100dvh - var(--asset-page-offset));
+  max-height: calc(100dvh - var(--asset-page-offset));
+  min-height: 0;
+
+  padding: 24px;
+  overflow: hidden !important;
+
+  background: var(--bg) !important;
+  color: var(--text) !important;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.assets-page,
+.assets-page * {
+  box-sizing: border-box;
+}
+
+/* Nếu trang assets không nằm dưới topbar/navbar, đổi 88px thành 0px. */
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.assets-page__header {
+  flex: 0 0 auto;
+
+  margin: 0;
+  padding: 24px 26px;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+
+  position: relative;
+  overflow: hidden !important;
+}
+
+.assets-page__title {
+  margin: 0 0 8px;
+
+  color: var(--text) !important;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.assets-page__header p {
+  margin: 0;
+
+  color: var(--text-soft) !important;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   FILTER BAR
+   Giữ form/filter của bạn, chỉ chỉnh màu giống manage.
+========================================================= */
+
+.filter-bar {
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1fr)
+    minmax(190px, 0.65fr)
+    minmax(190px, 0.65fr)
+    minmax(190px, 0.65fr)
+    auto;
+  gap: 12px;
+  align-items: end;
+
+  padding: 16px;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+
+  position: relative;
+  overflow: visible;
+}
+
+.filter-item {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-item--search {
+  min-width: 0;
+}
+
+.filter-label {
+  display: block;
+  margin: 0;
+
+  color: var(--text-soft) !important;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-input,
+.filter-control,
+.filter-native-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+
+  border-radius: 10px;
+  border: 1px solid var(--border) !important;
+
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.filter-input::placeholder,
+.filter-control::placeholder {
+  color: var(--text-soft) !important;
+}
+
+.filter-input:focus,
+.filter-control:focus,
+.filter-native-select:focus {
+  border-color: var(--hsu-blue) !important;
+  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+.filter-native-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+/* =========================================================
+   FILTER SELECT
+========================================================= */
+
+.filter-select {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.filter-select__button {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px 0 14px;
+
+  border-radius: 10px;
+  border: 1px solid var(--border) !important;
+
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.filter-select__button:hover {
+  border-color: var(--hsu-blue) !important;
+}
+
+.filter-select__button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31, 94, 255, 0.12);
+}
+
+.filter-select__value {
+  min-width: 0;
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.filter-select__label {
+  min-width: 0;
+  flex: 1;
+
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-select__count {
+  width: 32px;
+  min-width: 32px;
+  flex-shrink: 0;
+
+  text-align: right;
+  font-size: 14px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-select__caret,
+.caret {
+  width: 12px;
+  min-width: 12px;
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-soft) !important;
+  font-size: 11px;
+}
+
+.filter-select__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding: 6px;
+
+  border: 1px solid var(--border) !important;
+  border-radius: 12px;
+
+  background: var(--surface) !important;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+
+  z-index: 120;
+  display: none;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--surface);
+}
+
+.filter-select.open .filter-select__menu,
+.filter-select:hover .filter-select__menu,
+.filter-select:focus-within .filter-select__menu,
+.filter-select__menu.show {
+  display: block;
+}
+
+.filter-select__menu::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.filter-select__menu::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+.filter-select__menu::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.filter-select__menu::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft);
+}
+
+.filter-select__option {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: var(--text) !important;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.filter-select__option:hover {
+  background: var(--surface-2) !important;
+}
+
+.filter-select__option.is-active {
+  background: rgba(31, 94, 255, 0.12);
+  color: var(--hsu-blue) !important;
+  font-weight: 600;
+}
+
+.filter-select__option-label {
+  min-width: 0;
+  flex: 1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-select__option-count {
+  width: 32px;
+  min-width: 32px;
+  flex-shrink: 0;
+
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid var(--border) !important;
+  border-radius: 10px;
+
+  background: var(--surface) !important;
+  color: var(--hsu-red) !important;
+
+  text-decoration: none;
+
+  transition: 0.2s ease;
+}
+
+.btn-reset:hover {
+  background: rgba(239, 59, 45, 0.08) !important;
+  border-color: rgba(239, 59, 45, 0.28) !important;
+}
+
+.action-btn,
+.filter-bar > button.filter-control,
+.asset-add-btn {
+  height: 42px;
+  padding: 0 20px;
+
+  border-radius: 10px;
+  border: 1px solid var(--hsu-blue) !important;
+
+  background: var(--hsu-blue) !important;
+  color: #ffffff !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action-btn:hover,
+.filter-bar > button.filter-control:hover,
+.asset-add-btn:hover {
+  filter: brightness(0.95);
+}
+
+/* =========================================================
+   TABLE CARD
+   Giữ class của bạn: .table-container / .assets-table-section.
+   Style giống .m-overview-card của manage.
+========================================================= */
+
+.assets-table-section,
+.table-container {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: clamp(14px, 1vw, 18px);
+  box-shadow: var(--shadow);
+
+  position: relative;
+  overflow: hidden !important;
+
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* =========================================================
+   TABLE CARD HEADER
+   Giữ .section-heading của bạn.
+   Style giống .m-card-header.
+========================================================= */
+
+.section-heading,
+.table-header-wrapper {
+  flex-shrink: 0;
+
+  margin: 0;
+  padding: clamp(12px, 1vw, 16px) clamp(14px, 1.2vw, 20px);
+
+  border-bottom: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.section-heading__title,
+.table-list-title {
+  margin: 0;
+
+  font-size: clamp(15px, 1vw, 17px) !important;
+  font-weight: 700;
+  color: var(--text) !important;
+  line-height: 1.3;
+}
+
+.section-heading__meta,
+.table-info-count,
+.pagination-info {
+  position: static;
+
+  font-size: clamp(12px, 0.85vw, 13px) !important;
+  color: var(--text-soft) !important;
+  white-space: nowrap;
+}
+
+.section-heading__meta strong,
+.table-info-count strong,
+.pagination-info strong,
+.pagination-info b {
+  color: var(--text) !important;
+}
+
+/* =========================================================
+   TABLE SCROLL AREA
+   Chỉ khu vực này được cuộn.
+   Header th sticky giữ yên.
+========================================================= */
+
+.table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none !important;
+
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+
+  position: relative;
+  background: var(--surface) !important;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--surface);
+}
+
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft);
+}
+
+/* =========================================================
+   TABLE STYLE
+   Style giống manage_table.css nhưng dùng class hiện tại.
+========================================================= */
+
+.table-container .custom-table,
+.table-container .custom-table.assign-table,
+.assets-table-section .custom-table,
+.assets-table-section .custom-table.assign-table,
+.table-scroll .custom-table,
+.table-scroll .custom-table.assign-table {
+  width: 100% !important;
+  min-width: 980px;
+
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+
+  background: var(--surface) !important;
+}
+
+.table-container .custom-table thead,
+.table-container .custom-table.assign-table thead,
+.assets-table-section .custom-table thead,
+.assets-table-section .custom-table.assign-table thead,
+.table-scroll .custom-table thead,
+.table-scroll .custom-table.assign-table thead {
+  background: var(--surface-2) !important;
+}
+
+.table-container .custom-table thead th,
+.table-container .custom-table th,
+.table-container .custom-table.assign-table thead th,
+.assets-table-section .custom-table thead th,
+.assets-table-section .custom-table th,
+.assets-table-section .custom-table.assign-table thead th,
+.table-scroll .custom-table thead th,
+.table-scroll .custom-table th,
+.table-scroll .custom-table.assign-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  background: var(--surface-2) !important;
+  color: var(--text-soft) !important;
+
+  padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+
+  text-align: left;
+  font-size: clamp(12px, 0.85vw, 14px) !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+.table-container .custom-table tbody,
+.table-container .custom-table.assign-table tbody,
+.assets-table-section .custom-table tbody,
+.assets-table-section .custom-table.assign-table tbody,
+.table-scroll .custom-table tbody,
+.table-scroll .custom-table.assign-table tbody {
+  background: var(--surface) !important;
+}
+
+.table-container .custom-table tbody tr,
+.table-container .custom-table.assign-table tbody tr,
+.assets-table-section .custom-table tbody tr,
+.assets-table-section .custom-table.assign-table tbody tr,
+.table-scroll .custom-table tbody tr,
+.table-scroll .custom-table.assign-table tbody tr {
+  background: var(--surface) !important;
+}
+
+.table-container .custom-table tbody td,
+.table-container .custom-table td,
+.table-container .custom-table.assign-table tbody td,
+.assets-table-section .custom-table tbody td,
+.assets-table-section .custom-table td,
+.assets-table-section .custom-table.assign-table tbody td,
+.table-scroll .custom-table tbody td,
+.table-scroll .custom-table td,
+.table-scroll .custom-table.assign-table tbody td {
+  padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+
+  background: var(--surface) !important;
+  color: var(--text) !important;
+
+  font-size: clamp(12.5px, 0.9vw, 14px) !important;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+.table-container .custom-table tbody tr:hover,
+.table-container .custom-table.assign-table tbody tr:hover,
+.assets-table-section .custom-table tbody tr:hover,
+.assets-table-section .custom-table.assign-table tbody tr:hover,
+.table-scroll .custom-table tbody tr:hover,
+.table-scroll .custom-table.assign-table tbody tr:hover {
+  background: var(--surface-2) !important;
+}
+
+.table-container .custom-table tbody tr:hover td,
+.table-container .custom-table.assign-table tbody tr:hover td,
+.assets-table-section .custom-table tbody tr:hover td,
+.assets-table-section .custom-table.assign-table tbody tr:hover td,
+.table-scroll .custom-table tbody tr:hover td,
+.table-scroll .custom-table.assign-table tbody tr:hover td {
+  background: var(--surface-2) !important;
+}
+
+/* =========================================================
+   FIX INLINE STYLE TRONG MACRO COMPONENT TABLE
+========================================================= */
+
+.table-container .custom-table td,
+.table-container .custom-table td div,
+.table-container .custom-table td span,
+.table-container .custom-table td a,
+.assets-table-section .custom-table td,
+.assets-table-section .custom-table td div,
+.assets-table-section .custom-table td span,
+.assets-table-section .custom-table td a,
+.table-scroll .custom-table td,
+.table-scroll .custom-table td div,
+.table-scroll .custom-table td span,
+.table-scroll .custom-table td a {
+  color: var(--text) !important;
+}
+
+.table-container .custom-table td span[style*="var(--text-soft)"],
+.table-container .custom-table td div[style*="var(--text-soft)"],
+.assets-table-section .custom-table td span[style*="var(--text-soft)"],
+.assets-table-section .custom-table td div[style*="var(--text-soft)"],
+.table-scroll .custom-table td span[style*="var(--text-soft)"],
+.table-scroll .custom-table td div[style*="var(--text-soft)"] {
+  color: var(--text-soft) !important;
+}
+
+/* =========================================================
+   CELL HELPERS
+========================================================= */
+
+.asset-user,
+.asset-date {
+  color: var(--text) !important;
+  font-size: clamp(12px, 0.85vw, 13px);
+  white-space: nowrap;
+}
+
+.asset-empty {
+  color: var(--text-soft) !important;
+  font-size: clamp(12px, 0.85vw, 13px);
+  white-space: nowrap;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge,
+.asset-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  font-size: clamp(11px, 0.78vw, 12px);
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.badge-type,
+.badge-laptop,
+.badge-pc,
+.badge-printer,
+.badge-monitor,
+.badge-phone,
+.badge-projector,
+.badge-scanner,
+.badge-network,
+.badge-ups,
+.badge-camera,
+.badge-speaker,
+.badge-microphone,
+.badge-keyboard,
+.badge-mouse,
+.badge-tablet,
+.badge-server,
+.badge-router,
+.badge-switch,
+.badge-webcam,
+.badge-storage,
+.badge-accessory,
+.badge-other {
+  background: rgba(100, 116, 139, 0.12) !important;
+  color: var(--text) !important;
+  border: none !important;
+}
+
+.badge-using,
+.asset-status-badge--using {
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: var(--hsu-green) !important;
+}
+
+.badge-available,
+.asset-status-badge--available {
+  background: rgba(31, 94, 255, 0.12) !important;
+  color: var(--hsu-blue) !important;
+}
+
+.badge-maintenance,
+.asset-status-badge--maintenance {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #f59e0b !important;
+}
+
+.badge-broken,
+.asset-status-badge--broken {
+  background: rgba(239, 59, 45, 0.12) !important;
+  color: var(--hsu-red) !important;
+}
+
+.badge-pending,
+.asset-status-badge--pending {
+  background: rgba(100, 116, 139, 0.12) !important;
+  color: var(--text-soft) !important;
+}
+
+/* =========================================================
+   ACTION MENU
+========================================================= */
+
+.action-menu-center {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.action-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.action-menu__trigger {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent !important;
+  color: var(--text-soft) !important;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.action-menu__trigger:hover {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+}
+
+.action-menu__dots {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.action-menu__dots span {
+  display: block;
+  width: 3px;
+  height: 3px;
+  background: currentColor !important;
+  border-radius: 999px;
+}
+
+.action-menu__dropdown {
+  display: none;
+
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+
+  min-width: 180px;
+  width: 180px;
+  margin-top: 0;
+  padding: 8px;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+
+  z-index: 1000;
+}
+
+.action-menu__dropdown.show {
+  display: block;
+  animation: fadeInMenu 0.18s ease;
+}
+
+.action-menu--drop-up .action-menu__dropdown {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.action-menu__item {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--text) !important;
+
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.action-menu__item:hover {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+}
+
+.action-menu__item--danger {
+  color: var(--hsu-red) !important;
+}
+
+.action-menu__item--danger:hover {
+  background: rgba(239, 59, 45, 0.08) !important;
+}
+
+.action-menu__svg {
+  flex-shrink: 0;
+}
+
+.action-menu__divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.assets-empty-state,
+.table-empty {
+  flex: 1 1 auto;
+
+  padding: clamp(32px, 4vw, 60px);
+  text-align: center;
+  color: var(--text-soft) !important;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.assets-empty-state i,
+.table-empty i {
+  font-size: clamp(30px, 3vw, 40px);
+  opacity: 0.2;
+  margin-bottom: 16px;
+}
+
+.assets-empty-state p,
+.table-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.assets-empty-state a,
+.table-empty a {
+  color: var(--hsu-blue) !important;
+  font-size: 14px;
+  text-decoration: none;
+  margin-top: 8px;
+  display: inline-block;
+}
+
+/* =========================================================
+   PAGINATION FOOTER
+   Style giống m-card-footer + page-btn của manage.
+========================================================= */
+
+.pagination-container,
+.pagination {
+  flex-shrink: 0;
+
+  padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
+  border-top: 1px solid var(--border) !important;
+  border-radius: 0 0 18px 18px;
+
+  background: var(--surface) !important;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.pagination-list,
+.pagination-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination-list li {
+  display: flex;
+}
+
+.pagination-list a,
+.pagination-list span,
+.page-btn {
+  min-width: clamp(32px, 2.2vw, 36px);
+  height: clamp(32px, 2.2vw, 36px);
+  padding: 0 11px;
+
+  border-radius: 10px;
+  border: 1px solid var(--border) !important;
+
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  text-decoration: none;
+
+  font-size: clamp(12px, 0.85vw, 13px);
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+}
+
+.pagination-list a:hover:not(.disabled):not(.active),
+.page-btn:hover:not(.disabled):not(.active) {
+  border-color: var(--hsu-blue) !important;
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+}
+
+.pagination-list a.active,
+.page-btn.active {
+  background: var(--hsu-blue) !important;
+  color: #ffffff !important;
+  border-color: var(--hsu-blue) !important;
+}
+
+.pagination-list a.disabled,
+.page-btn.disabled,
+.pagination-dots {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes fadeInMenu {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (min-width: 1600px) {
+  .assets-page {
+    padding: 28px 36px 36px;
+  }
+
+  .table-container .custom-table,
+  .table-container .custom-table.assign-table,
+  .assets-table-section .custom-table,
+  .assets-table-section .custom-table.assign-table,
+  .table-scroll .custom-table,
+  .table-scroll .custom-table.assign-table {
+    min-width: 1100px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .table-container .custom-table,
+  .table-container .custom-table.assign-table,
+  .assets-table-section .custom-table,
+  .assets-table-section .custom-table.assign-table,
+  .table-scroll .custom-table,
+  .table-scroll .custom-table.assign-table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .action-btn--add {
+    flex: 1;
+  }
+
+  .table-container .custom-table,
+  .table-container .custom-table.assign-table,
+  .assets-table-section .custom-table,
+  .assets-table-section .custom-table.assign-table,
+  .table-scroll .custom-table,
+  .table-scroll .custom-table.assign-table {
+    min-width: 940px;
+  }
+}
+
+@media (max-width: 900px) {
+  .assets-page {
+    padding: 16px;
+  }
+
+  .assets-page__header,
+  .filter-bar,
+  .assets-table-section,
+  .table-container {
+    border-radius: 16px;
+  }
+
+  .section-heading,
+  .table-header-wrapper {
+    align-items: flex-start;
+  }
+
+  .table-container .custom-table,
+  .table-container .custom-table.assign-table,
+  .assets-table-section .custom-table,
+  .assets-table-section .custom-table.assign-table,
+  .table-scroll .custom-table,
+  .table-scroll .custom-table.assign-table {
+    min-width: 880px;
+  }
+}
+
+@media (max-width: 768px) {
+  .assets-page {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .assets-page__header {
+    padding: 16px;
+  }
+
+  .assets-page__title {
+    font-size: 24px;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .filter-item,
+  .filter-item--search,
+  .filter-select,
+  .filter-native-select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .action-btn--add {
+    flex: 1;
+  }
+
+  .section-heading,
+  .table-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .section-heading__meta,
+  .table-info-count,
+  .pagination-info {
+    white-space: normal;
+  }
+
+  .pagination-container,
+  .pagination {
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+    overflow-x: auto;
+  }
+
+  .pagination-list,
+  .pagination-buttons {
+    min-width: max-content;
+  }
+
+  .table-container .custom-table th,
+  .table-container .custom-table td,
+  .assets-table-section .custom-table th,
+  .assets-table-section .custom-table td,
+  .table-scroll .custom-table th,
+  .table-scroll .custom-table td {
+    padding: 11px 14px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .assets-page {
+    padding: 10px;
+  }
+
+  .assets-page__header,
+  .filter-bar,
+  .assets-table-section,
+  .table-container {
+    border-radius: 14px;
+  }
+
+  .table-container .custom-table,
+  .table-container .custom-table.assign-table,
+  .assets-table-section .custom-table,
+  .assets-table-section .custom-table.assign-table,
+  .table-scroll .custom-table,
+  .table-scroll .custom-table.assign-table {
+    min-width: 820px;
+  }
+
+  .section-heading,
+  .table-header-wrapper {
+    padding: 12px 14px;
+  }
+
+  .pagination-container,
+  .pagination {
+    padding: 10px 14px !important;
+  }
+}

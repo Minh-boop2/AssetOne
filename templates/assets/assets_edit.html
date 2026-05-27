@@ -1,187 +1,1061 @@
-{% extends 'main.html' %} {% block content %}
+{% extends 'main.html' %}
+
+{% block content %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/assets/assets.css') }}"
 />
 
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets_create.css') }}"
-/>
+{% set item = form_data if form_data else {} %}
+{% set asset_pk = asset_id if asset_id else item.get('id') or item.get('asset_code') %}
+{% set asset_code = item.get('asset_code') or item.get('id') or '' %}
+{% set asset_name = item.get('asset_name') or item.get('asset') or '' %}
+{% set asset_type = item.get('type') or item.get('category') or '' %}
+{% set asset_status = item.get('status') or 'available' %}
+{% set asset_department = item.get('department') or '' %}
+{% set asset_location = item.get('location') or '' %}
+{% set asset_warranty = item.get('warranty') or '' %}
+{% set asset_receiver = item.get('receiver') or item.get('user') or '' %}
+{% set asset_employee_code = item.get('employee_code') or item.get('user_id') or '' %}
+{% set asset_spec = item.get('spec') or item.get('notes') or '' %}
 
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets_edit.css') }}"
-/>
+{% set status_options = [
+  {"value": "using", "label": "Đang sử dụng"},
+  {"value": "available", "label": "Chưa sử dụng"},
+  {"value": "maintenance", "label": "Bảo trì"},
+  {"value": "broken", "label": "Hỏng"},
+  {"value": "pending", "label": "Chờ duyệt"}
+] %}
 
-{% set item = form_data if form_data else {} %} {% set asset_pk = asset_id if
-asset_id else item.get('id') or item.get('asset_code') %} {% set asset_code =
-item.get('asset_code', '') %} {% set asset_name = item.get('asset_name') or
-item.get('asset') or '' %} {% set asset_type = item.get('type') or
-item.get('category') or '' %} {% set asset_spec = item.get('spec') or
-item.get('notes') or '' %}
+<style>
+  html:has(.asset-edit-page),
+  body:has(.asset-edit-page) {
+    height: 100%;
+    overflow: hidden !important;
+  }
 
-<div class="assets-create-page assets-edit-page">
-  <div class="asset-create-card">
-    <div class="asset-create-header">
-      <div>
-        <span class="asset-create-badge asset-edit-badge">EDIT</span>
+  .asset-edit-page {
+    --ae-header-height: var(--manage-header-height, 90px);
+    --ae-gap: clamp(12px, 1vw, 18px);
+    --ae-radius: clamp(16px, 1.1vw, 22px);
+    --ae-padding: clamp(14px, 1.4vw, 24px);
+    --ae-card-padding: clamp(16px, 1.2vw, 22px);
 
-        <h2 class="asset-create-title">Chỉnh sửa thiết bị</h2>
+    height: calc(100dvh - var(--ae-header-height));
+    min-height: 0;
+    padding: var(--ae-padding);
+    background:
+      radial-gradient(circle at top left, rgba(31, 94, 255, 0.08), transparent 32%),
+      var(--bg, #0f172a);
+    color: var(--text, #f1f5f9);
+    font-family: var(--font-main, Inter, "Segoe UI", Roboto, Arial, sans-serif);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border, #334155) transparent;
+  }
 
-        <p class="asset-create-subtitle">
-          Cập nhật thông tin cơ bản của thiết bị trong hệ thống.
-        </p>
-      </div>
+  .asset-edit-page::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .asset-edit-page::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .asset-edit-page::-webkit-scrollbar-thumb {
+    background: var(--border, #334155);
+    border-radius: 999px;
+  }
+
+  .ae-container {
+    width: 100%;
+    max-width: 1380px;
+    min-height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ae-gap);
+  }
+
+  .ae-topbar {
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ae-back-link {
+    color: var(--text-soft, #94a3b8);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 850;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s ease;
+  }
+
+  .ae-back-link:hover {
+    color: var(--hsu-blue, #3b82f6);
+    transform: translateX(-3px);
+  }
+
+  .ae-hero {
+    padding: clamp(18px, 1.5vw, 26px);
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--ae-radius);
+    background: linear-gradient(
+      135deg,
+      rgba(31, 94, 255, 0.1),
+      var(--surface, #111c34) 36%,
+      var(--surface, #111c34)
+    );
+    box-shadow: var(--shadow, 0 10px 30px rgba(0, 0, 0, 0.25));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .ae-badge {
+    width: fit-content;
+    margin-bottom: 10px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 94, 255, 0.3);
+    background: rgba(31, 94, 255, 0.14);
+    color: var(--hsu-blue, #3b82f6);
+    font-size: 12px;
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+
+  .ae-title {
+    margin: 0 0 8px;
+    color: var(--text, #f1f5f9);
+    font-size: clamp(26px, 2.3vw, 36px);
+    font-weight: 950;
+    line-height: 1.12;
+    letter-spacing: -0.7px;
+  }
+
+  .ae-subtitle {
+    margin: 0;
+    color: var(--text-soft, #94a3b8);
+    font-size: clamp(13px, 0.9vw, 15px);
+    font-weight: 750;
+    line-height: 1.45;
+  }
+
+  .ae-hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ae-btn {
+    min-height: 40px;
+    padding: 0 17px;
+    border-radius: 13px;
+    border: 1px solid var(--border, #334155);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s ease;
+  }
+
+  .ae-btn-secondary {
+    background: var(--surface-2, #16233f);
+    color: var(--text, #f1f5f9);
+  }
+
+  .ae-btn-secondary:hover {
+    border-color: var(--hsu-blue, #3b82f6);
+    color: var(--hsu-blue, #3b82f6);
+    transform: translateY(-1px);
+  }
+
+  .ae-alert {
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(239, 59, 45, 0.35);
+    background: rgba(239, 59, 45, 0.12);
+    color: var(--hsu-red, #ef3b2d);
+    font-size: 13px;
+    font-weight: 850;
+  }
+
+  .ae-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ae-gap);
+  }
+
+  .ae-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+    gap: var(--ae-gap);
+    align-items: start;
+  }
+
+  .ae-main-column,
+  .ae-side-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ae-gap);
+  }
+
+  .ae-card {
+    min-width: 0;
+    padding: var(--ae-card-padding);
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--ae-radius);
+    background: var(--surface, #111c34);
+    box-shadow: var(--shadow, 0 10px 30px rgba(0, 0, 0, 0.25));
+  }
+
+  .ae-card-header {
+    margin-bottom: 16px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid var(--border, #334155);
+  }
+
+  .ae-card-title {
+    margin: 0;
+    color: var(--text, #f1f5f9);
+    font-size: clamp(17px, 1.15vw, 20px);
+    font-weight: 950;
+    line-height: 1.25;
+  }
+
+  .ae-card-subtitle {
+    margin: 4px 0 0;
+    color: var(--text-soft, #94a3b8);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .ae-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .ae-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ae-field.full {
+    grid-column: 1 / -1;
+  }
+
+  .ae-label {
+    color: var(--text, #f1f5f9);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  .ae-required {
+    color: var(--hsu-red, #ef3b2d);
+    font-weight: 950;
+  }
+
+  .ae-input,
+  .ae-select,
+  .ae-textarea {
+    width: 100%;
+    border: 1px solid var(--border, #334155);
+    border-radius: 14px;
+    background: var(--surface-2, #16233f);
+    color: var(--text, #f1f5f9);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.45;
+    outline: none;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .ae-input,
+  .ae-select {
+    min-height: 46px;
+    padding: 0 15px;
+  }
+
+  .ae-textarea {
+    min-height: 118px;
+    padding: 14px 15px;
+    resize: vertical;
+  }
+
+  .ae-input::placeholder,
+  .ae-textarea::placeholder {
+    color: var(--text-soft, #94a3b8);
+    opacity: 0.72;
+    font-weight: 650;
+  }
+
+  .ae-input:hover,
+  .ae-select:hover,
+  .ae-textarea:hover {
+    border-color: rgba(31, 94, 255, 0.38);
+  }
+
+  .ae-input:focus,
+  .ae-select:focus,
+  .ae-textarea:focus {
+    border-color: var(--hsu-blue, #3b82f6);
+    background: var(--surface, #111c34);
+    box-shadow: 0 0 0 4px rgba(31, 94, 255, 0.14);
+  }
+
+  .ae-input[readonly] {
+    cursor: not-allowed;
+    color: var(--text-soft, #94a3b8);
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(100, 116, 139, 0.08) 8px,
+        rgba(100, 116, 139, 0.08) 16px
+      ),
+      var(--surface-2, #16233f);
+  }
+
+  .ae-help {
+    color: var(--text-soft, #94a3b8);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .ae-field-error {
+    display: none;
+    color: var(--hsu-red, #ef3b2d);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  .ae-field.has-error .ae-input,
+  .ae-field.has-error .ae-select,
+  .ae-field.has-error .ae-textarea {
+    border-color: var(--hsu-red, #ef3b2d);
+    background: rgba(239, 59, 45, 0.08);
+    box-shadow: 0 0 0 4px rgba(239, 59, 45, 0.12);
+  }
+
+  .ae-field.has-error .ae-field-error {
+    display: block;
+  }
+
+  .ae-type-suggestions {
+    margin-top: 4px;
+    padding: 14px;
+    border: 1px solid var(--border, #334155);
+    border-radius: 16px;
+    background: var(--surface-2, #16233f);
+  }
+
+  .ae-type-title {
+    margin-bottom: 10px;
+    color: var(--text-soft, #94a3b8);
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .ae-type-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .asset-type-chip {
+    min-height: 34px;
+    padding: 7px 11px;
+    border: 1px solid var(--border, #334155);
+    border-radius: 999px;
+    background: var(--surface, #111c34);
+    color: var(--text, #f1f5f9);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.18s ease;
+  }
+
+  .asset-type-chip:hover {
+    transform: translateY(-1px);
+    border-color: var(--hsu-blue, #3b82f6);
+    color: var(--hsu-blue, #3b82f6);
+  }
+
+  .asset-type-chip.is-active {
+    background: var(--hsu-blue, #3b82f6);
+    border-color: var(--hsu-blue, #3b82f6);
+    color: #ffffff;
+  }
+
+  .asset-type-chip small {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(31, 94, 255, 0.12);
+    color: var(--hsu-blue, #3b82f6);
+    font-size: 11px;
+    font-weight: 950;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .asset-type-chip.is-active small {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+  }
+
+  .ae-type-empty {
+    display: none;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px dashed var(--border, #334155);
+    border-radius: 14px;
+    background: var(--surface, #111c34);
+    color: var(--text-soft, #94a3b8);
+    font-size: 13px;
+    font-weight: 750;
+  }
+
+  .ae-type-empty.show {
+    display: block;
+  }
+
+  .ae-preview-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ae-preview-device {
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: var(--surface-2, #16233f);
+  }
+
+  .ae-preview-code {
+    width: fit-content;
+    margin-bottom: 10px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 94, 255, 0.3);
+    background: rgba(31, 94, 255, 0.14);
+    color: var(--hsu-blue, #3b82f6);
+    font-size: 12px;
+    font-weight: 950;
+  }
+
+  .ae-preview-name {
+    margin: 0 0 8px;
+    color: var(--text, #f1f5f9);
+    font-size: 20px;
+    font-weight: 950;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .ae-preview-meta {
+    margin: 0;
+    color: var(--text-soft, #94a3b8);
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .ae-status-badge {
+    width: fit-content;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 950;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .ae-status-badge.using {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--hsu-green, #10b981);
+  }
+
+  .ae-status-badge.available {
+    background: rgba(31, 94, 255, 0.12);
+    color: var(--hsu-blue, #3b82f6);
+  }
+
+  .ae-status-badge.maintenance {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--hsu-warning, #f59e0b);
+  }
+
+  .ae-status-badge.broken {
+    background: rgba(239, 59, 45, 0.12);
+    color: var(--hsu-red, #ef3b2d);
+  }
+
+  .ae-status-badge.pending {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text-soft, #94a3b8);
+  }
+
+  .ae-summary-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ae-summary-row {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    display: grid;
+    grid-template-columns: minmax(100px, 0.75fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .ae-summary-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .ae-summary-label {
+    color: var(--text-soft, #94a3b8);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  .ae-summary-value {
+    color: var(--text, #f1f5f9);
+    font-size: 13px;
+    font-weight: 850;
+    line-height: 1.4;
+    word-break: break-word;
+    text-align: right;
+  }
+
+  .ae-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: 2px;
+    padding: 14px;
+    border: 1px solid var(--border, #334155);
+    border-radius: var(--ae-radius);
+    background: color-mix(in srgb, var(--surface, #111c34) 94%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow, 0 10px 30px rgba(0, 0, 0, 0.25));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ae-submit,
+  .ae-cancel {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 13px;
+    border: 1px solid var(--border, #334155);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 950;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s ease;
+  }
+
+  .ae-submit {
+    background: var(--hsu-blue, #3b82f6);
+    border-color: var(--hsu-blue, #3b82f6);
+    color: #ffffff;
+    box-shadow: 0 12px 22px rgba(31, 94, 255, 0.22);
+  }
+
+  .ae-submit:hover {
+    filter: brightness(0.96);
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(31, 94, 255, 0.28);
+  }
+
+  .ae-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .ae-cancel {
+    background: var(--surface-2, #16233f);
+    color: var(--text, #f1f5f9);
+  }
+
+  .ae-cancel:hover {
+    border-color: var(--hsu-blue, #3b82f6);
+    color: var(--hsu-blue, #3b82f6);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 1100px) {
+    .ae-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .ae-hero-actions {
+      justify-content: flex-start;
+    }
+
+    .ae-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .ae-side-column {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .asset-edit-page {
+      padding: 14px;
+    }
+
+    .ae-grid,
+    .ae-side-column {
+      grid-template-columns: 1fr;
+    }
+
+    .ae-actions {
+      position: static;
+      justify-content: stretch;
+    }
+
+    .ae-submit,
+    .ae-cancel,
+    .ae-btn {
+      width: 100%;
+    }
+
+    .ae-hero-actions {
+      width: 100%;
+    }
+
+    .ae-summary-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+
+    .ae-summary-value {
+      text-align: left;
+    }
+  }
+</style>
+
+<div class="asset-edit-page">
+  <div class="ae-container">
+    <div class="ae-topbar">
+      <a href="{{ url_for('asset_detail_view', asset_id=asset_pk) }}" class="ae-back-link">
+        ← Quay lại chi tiết tài sản
+      </a>
     </div>
 
+    <section class="ae-hero">
+      <div>
+        <div class="ae-badge">EDIT</div>
+
+        <h1 class="ae-title">Chỉnh sửa thiết bị</h1>
+
+        <p class="ae-subtitle">
+          Cập nhật thông tin tài sản. Bấm Lưu thay đổi để lưu lại dữ liệu chỉnh sửa.
+        </p>
+      </div>
+
+      <div class="ae-hero-actions">
+        <a href="{{ url_for('assets_page') }}" class="ae-btn ae-btn-secondary">
+          Danh sách
+        </a>
+
+        <a href="{{ url_for('asset_detail_view', asset_id=asset_pk) }}" class="ae-btn ae-btn-secondary">
+          Xem chi tiết
+        </a>
+      </div>
+    </section>
+
     {% if error_message %}
-    <div class="asset-alert asset-alert--error">{{ error_message }}</div>
+      <div class="ae-alert">{{ error_message }}</div>
     {% endif %}
 
     <form
       id="assetEditForm"
       action="{{ url_for('asset_edit', asset_id=asset_pk) }}"
       method="POST"
-      class="asset-create-form"
+      class="ae-form"
       novalidate
     >
-      <div class="asset-create-grid">
-        <div class="asset-form-group" data-field-group="asset_code">
-          <label for="asset_code"> Mã tài sản </label>
-
-          <input
-            id="asset_code"
-            type="text"
-            name="asset_code"
-            placeholder="VD: LAP-009"
-            value="{{ asset_code }}"
-            readonly
-            required
-            aria-required="true"
-            aria-describedby="asset_code_error"
-          />
-
-          <div class="asset-field-error" id="asset_code_error">
-            Vui lòng nhập mã tài sản.
-          </div>
-
-          <div class="asset-form-help">
-            Mã tài sản được giữ cố định để tránh lệch dữ liệu hệ thống.
-          </div>
-        </div>
-
-        <div class="asset-form-group" data-field-group="asset_name">
-          <label for="asset_name">
-            Tên tài sản <span class="required-star">*</span>
-          </label>
-
-          <input
-            id="asset_name"
-            type="text"
-            name="asset_name"
-            placeholder="VD: MacBook Air M2"
-            value="{{ asset_name }}"
-            required
-            aria-required="true"
-            aria-describedby="asset_name_error"
-          />
-
-          <div class="asset-field-error" id="asset_name_error">
-            Vui lòng nhập tên tài sản.
-          </div>
-        </div>
-      </div>
-
-      <div class="asset-form-group" data-field-group="type">
-        <label for="type">
-          Loại thiết bị <span class="required-star">*</span>
-        </label>
-
-        <input
-          id="type"
-          type="text"
-          name="type"
-          placeholder="VD: laptop, monitor, camera, router..."
-          value="{{ asset_type }}"
-          autocomplete="off"
-          required
-          aria-required="true"
-          aria-describedby="type_error"
-        />
-
-        <div class="asset-field-error" id="type_error">
-          Vui lòng nhập loại thiết bị.
-        </div>
-
-        <div class="asset-form-help">
-          Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.
-        </div>
-
-        {% if asset_types %}
-        <div class="asset-type-suggestions">
-          <div class="asset-type-suggestions__title">Loại thiết bị hiện có</div>
-
-          <div
-            class="asset-type-suggestions__list"
-            id="assetTypeSuggestionsList"
-          >
-            {% for item_type in asset_types %}
-            <button
-              type="button"
-              class="asset-type-chip"
-              data-type="{{ item_type.value }}"
-              data-search="{{ item_type.value }}"
-            >
-              <span>{{ item_type.value }}</span>
-              <small>{{ item_type.count }}</small>
-            </button>
-            {% endfor %}
-
-            <div class="asset-type-empty" id="assetTypeEmpty">
-              Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
+      <div class="ae-layout">
+        <main class="ae-main-column">
+          <section class="ae-card">
+            <div class="ae-card-header">
+              <h2 class="ae-card-title">Thông tin cơ bản</h2>
+              <p class="ae-card-subtitle">
+                Các trường có dấu * là bắt buộc.
+              </p>
             </div>
-          </div>
-        </div>
-        {% endif %}
+
+            <div class="ae-grid">
+              <div class="ae-field" data-field-group="asset_code">
+                <label for="asset_code" class="ae-label">Mã tài sản</label>
+
+                <input
+                  id="asset_code"
+                  class="ae-input"
+                  type="text"
+                  name="asset_code"
+                  placeholder="VD: LAP-009"
+                  value="{{ asset_code }}"
+                  readonly
+                  required
+                  aria-required="true"
+                  aria-describedby="asset_code_error"
+                />
+
+                <div class="ae-field-error" id="asset_code_error">
+                  Vui lòng nhập mã tài sản.
+                </div>
+
+                <div class="ae-help">
+                  Mã tài sản được giữ cố định để đồng bộ dữ liệu hệ thống.
+                </div>
+              </div>
+
+              <div class="ae-field" data-field-group="asset_name">
+                <label for="asset_name" class="ae-label">
+                  Tên tài sản <span class="ae-required">*</span>
+                </label>
+
+                <input
+                  id="asset_name"
+                  class="ae-input"
+                  type="text"
+                  name="asset_name"
+                  placeholder="VD: MacBook Air M2"
+                  value="{{ asset_name }}"
+                  required
+                  aria-required="true"
+                  aria-describedby="asset_name_error"
+                />
+
+                <div class="ae-field-error" id="asset_name_error">
+                  Vui lòng nhập tên tài sản.
+                </div>
+              </div>
+
+              <div class="ae-field" data-field-group="type">
+                <label for="type" class="ae-label">
+                  Loại thiết bị <span class="ae-required">*</span>
+                </label>
+
+                <input
+                  id="type"
+                  class="ae-input"
+                  type="text"
+                  name="type"
+                  placeholder="VD: laptop, monitor, camera, router..."
+                  value="{{ asset_type }}"
+                  autocomplete="off"
+                  required
+                  aria-required="true"
+                  aria-describedby="type_error"
+                />
+
+                <div class="ae-field-error" id="type_error">
+                  Vui lòng nhập loại thiết bị.
+                </div>
+
+                <div class="ae-help">
+                  Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.
+                </div>
+              </div>
+
+              <div class="ae-field">
+                <label for="status" class="ae-label">Trạng thái</label>
+
+                <select id="status" name="status" class="ae-select">
+                  {% for status in status_options %}
+                    <option
+                      value="{{ status.value }}"
+                      {% if asset_status == status.value or asset_status == status.label %}selected{% endif %}
+                    >
+                      {{ status.label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="ae-field">
+                <label for="department" class="ae-label">Phòng ban</label>
+
+                <input
+                  id="department"
+                  class="ae-input"
+                  type="text"
+                  name="department"
+                  placeholder="VD: Phòng IT"
+                  value="{{ asset_department }}"
+                />
+              </div>
+
+              <div class="ae-field">
+                <label for="location" class="ae-label">Vị trí</label>
+
+                <input
+                  id="location"
+                  class="ae-input"
+                  type="text"
+                  name="location"
+                  placeholder="VD: Tầng 1"
+                  value="{{ asset_location }}"
+                />
+              </div>
+
+              <div class="ae-field">
+                <label for="warranty" class="ae-label">Bảo hành đến</label>
+
+                <input
+                  id="warranty"
+                  class="ae-input"
+                  type="text"
+                  name="warranty"
+                  placeholder="VD: 12/2027"
+                  value="{{ asset_warranty }}"
+                />
+              </div>
+
+              <div class="ae-field">
+                <label for="receiver" class="ae-label">Người sử dụng</label>
+
+                <input
+                  id="receiver"
+                  class="ae-input"
+                  type="text"
+                  name="receiver"
+                  placeholder="VD: Nguyễn Văn A"
+                  value="{{ asset_receiver }}"
+                />
+              </div>
+
+              <div class="ae-field">
+                <label for="employee_code" class="ae-label">Mã nhân viên / người dùng</label>
+
+                <input
+                  id="employee_code"
+                  class="ae-input"
+                  type="text"
+                  name="employee_code"
+                  placeholder="VD: HSU-2026..."
+                  value="{{ asset_employee_code }}"
+                />
+              </div>
+
+              <div class="ae-field full">
+                <label for="spec" class="ae-label">Cấu hình / Ghi chú</label>
+
+                <textarea
+                  id="spec"
+                  class="ae-textarea"
+                  name="spec"
+                  rows="4"
+                  placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
+                >{{ asset_spec }}</textarea>
+              </div>
+            </div>
+          </section>
+
+          {% if asset_types %}
+            <section class="ae-card">
+              <div class="ae-card-header">
+                <h2 class="ae-card-title">Loại thiết bị hiện có</h2>
+                <p class="ae-card-subtitle">
+                  Bấm vào chip để chọn nhanh loại thiết bị.
+                </p>
+              </div>
+
+              <div class="ae-type-suggestions">
+                <div class="ae-type-title">Gợi ý loại thiết bị</div>
+
+                <div class="ae-type-list" id="assetTypeSuggestionsList">
+                  {% for item_type in asset_types %}
+                    <button
+                      type="button"
+                      class="asset-type-chip"
+                      data-type="{{ item_type.value }}"
+                      data-search="{{ item_type.value }}"
+                    >
+                      <span>{{ item_type.value }}</span>
+                      <small>{{ item_type.count }}</small>
+                    </button>
+                  {% endfor %}
+
+                  <div class="ae-type-empty" id="assetTypeEmpty">
+                    Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
+                  </div>
+                </div>
+              </div>
+            </section>
+          {% endif %}
+        </main>
+
+        <aside class="ae-side-column">
+          <section class="ae-card ae-preview-card">
+            <div class="ae-card-header">
+              <h2 class="ae-card-title">Xem trước</h2>
+              <p class="ae-card-subtitle">
+                Dữ liệu sẽ hiển thị sau khi lưu.
+              </p>
+            </div>
+
+            <div class="ae-preview-device">
+              <div class="ae-preview-code" id="previewCode">
+                {{ asset_code or '—' }}
+              </div>
+
+              <h3 class="ae-preview-name" id="previewName">
+                {{ asset_name or 'Tên tài sản' }}
+              </h3>
+
+              <p class="ae-preview-meta">
+                <span id="previewType">{{ asset_type or 'Loại thiết bị' }}</span>
+                ·
+                <span id="previewDepartment">{{ asset_department or 'Phòng ban' }}</span>
+                ·
+                <span id="previewLocation">{{ asset_location or 'Vị trí' }}</span>
+              </p>
+            </div>
+
+            <div class="ae-status-badge {{ asset_status }}" id="previewStatus">
+              {% for status in status_options %}
+                {% if asset_status == status.value or asset_status == status.label %}
+                  {{ status.label }}
+                {% endif %}
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="ae-card">
+            <div class="ae-card-header">
+              <h2 class="ae-card-title">Thông tin sử dụng</h2>
+              <p class="ae-card-subtitle">
+                Người sử dụng và vị trí sử dụng.
+              </p>
+            </div>
+
+            <div class="ae-summary-list">
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Người sử dụng</div>
+                <div class="ae-summary-value" id="previewReceiver">
+                  {{ asset_receiver or '—' }}
+                </div>
+              </div>
+
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Mã nhân viên</div>
+                <div class="ae-summary-value" id="previewEmployeeCode">
+                  {{ asset_employee_code or '—' }}
+                </div>
+              </div>
+
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Bảo hành</div>
+                <div class="ae-summary-value" id="previewWarranty">
+                  {{ asset_warranty or '—' }}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="ae-card">
+            <div class="ae-card-header">
+              <h2 class="ae-card-title">Lưu ý</h2>
+              <p class="ae-card-subtitle">
+                Có thể bấm lưu ngay cả khi không chỉnh sửa gì.
+              </p>
+            </div>
+
+            <div class="ae-summary-list">
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Mã tài sản</div>
+                <div class="ae-summary-value">Giữ cố định</div>
+              </div>
+
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Tên / loại</div>
+                <div class="ae-summary-value">Bắt buộc nhập</div>
+              </div>
+
+              <div class="ae-summary-row">
+                <div class="ae-summary-label">Ghi chú</div>
+                <div class="ae-summary-value">Có thể để trống</div>
+              </div>
+            </div>
+          </section>
+        </aside>
       </div>
 
-      <div class="asset-form-group">
-        <label for="warranty">Bảo hành đến</label>
-
-        <input
-          id="warranty"
-          type="text"
-          name="warranty"
-          placeholder="VD: 12/2026"
-          value="{{ item.get('warranty', '') }}"
-        />
-      </div>
-
-      <div class="asset-form-group">
-        <label for="spec">Cấu hình / Ghi chú</label>
-
-        <textarea
-          id="spec"
-          name="spec"
-          rows="4"
-          placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
-        >
-{{ asset_spec }}</textarea
-        >
-      </div>
-
-      <div class="asset-create-actions">
-        <button type="submit" class="asset-btn-submit">
-          Cập nhật thiết bị
-        </button>
-
+      <div class="ae-actions">
         <a
           href="{{ url_for('asset_detail_view', asset_id=asset_pk) }}"
-          class="asset-btn-cancel"
+          class="ae-cancel"
         >
           Hủy và quay lại
         </a>
+
+        <button type="submit" class="ae-submit" id="saveAssetButton">
+          Lưu thay đổi
+        </button>
       </div>
     </form>
   </div>
@@ -189,6 +1063,7 @@ item.get('notes') or '' %}
 
 <script>
   const assetEditForm = document.getElementById("assetEditForm");
+  const saveAssetButton = document.getElementById("saveAssetButton");
   const typeInput = document.getElementById("type");
   const assetTypeEmpty = document.getElementById("assetTypeEmpty");
   const assetTypeChips = Array.from(
@@ -198,23 +1073,28 @@ item.get('notes') or '' %}
   const requiredFields = [
     {
       id: "asset_code",
-      name: "mã tài sản",
       message: "Vui lòng nhập mã tài sản.",
     },
     {
       id: "asset_name",
-      name: "tên tài sản",
       message: "Vui lòng nhập tên tài sản.",
     },
     {
       id: "type",
-      name: "loại thiết bị",
       message: "Vui lòng nhập loại thiết bị.",
     },
   ];
 
+  const statusLabelMap = {
+    using: "Đang sử dụng",
+    available: "Chưa sử dụng",
+    maintenance: "Bảo trì",
+    broken: "Hỏng",
+    pending: "Chờ duyệt",
+  };
+
   let typeFilterTimer = null;
-  const typeFilterDelay = 500;
+  const typeFilterDelay = 250;
 
   function normalizeText(value) {
     return String(value || "")
@@ -243,12 +1123,12 @@ item.get('notes') or '' %}
   }
 
   function getFieldGroup(input) {
-    return input.closest(".asset-form-group");
+    return input.closest(".ae-field");
   }
 
   function setFieldError(input, message) {
     const group = getFieldGroup(input);
-    const errorBox = group?.querySelector(".asset-field-error");
+    const errorBox = group?.querySelector(".ae-field-error");
 
     group?.classList.add("has-error");
     input.setAttribute("aria-invalid", "true");
@@ -305,6 +1185,40 @@ item.get('notes') or '' %}
     return isValid;
   }
 
+  function setText(id, value, fallback = "—") {
+    const element = document.getElementById(id);
+
+    if (!element) return;
+
+    const cleanValue = String(value || "").trim();
+    element.textContent = cleanValue || fallback;
+  }
+
+  function updatePreview() {
+    const assetName = document.getElementById("asset_name")?.value;
+    const assetType = document.getElementById("type")?.value;
+    const department = document.getElementById("department")?.value;
+    const location = document.getElementById("location")?.value;
+    const warranty = document.getElementById("warranty")?.value;
+    const receiver = document.getElementById("receiver")?.value;
+    const employeeCode = document.getElementById("employee_code")?.value;
+    const status = document.getElementById("status")?.value || "available";
+    const statusPreview = document.getElementById("previewStatus");
+
+    setText("previewName", assetName, "Tên tài sản");
+    setText("previewType", assetType, "Loại thiết bị");
+    setText("previewDepartment", department, "Phòng ban");
+    setText("previewLocation", location, "Vị trí");
+    setText("previewWarranty", warranty, "—");
+    setText("previewReceiver", receiver, "—");
+    setText("previewEmployeeCode", employeeCode, "—");
+
+    if (statusPreview) {
+      statusPreview.className = "ae-status-badge " + status;
+      statusPreview.textContent = statusLabelMap[status] || status || "—";
+    }
+  }
+
   function setActiveChipByValue(value) {
     const normalizedValue = normalizeText(value);
 
@@ -327,9 +1241,7 @@ item.get('notes') or '' %}
 
     assetTypeChips.forEach((chip) => {
       const typeValue = normalizeText(chip.dataset.type);
-      const searchValue = normalizeText(
-        chip.dataset.search || chip.textContent,
-      );
+      const searchValue = normalizeText(chip.dataset.search || chip.textContent);
 
       const isMatch =
         !keyword ||
@@ -359,11 +1271,30 @@ item.get('notes') or '' %}
       if (this.value.trim()) {
         clearFieldError(this);
       }
+
+      updatePreview();
     });
 
     input.addEventListener("blur", function () {
       validateRequiredField(field);
     });
+  });
+
+  [
+    "status",
+    "department",
+    "location",
+    "warranty",
+    "receiver",
+    "employee_code",
+    "spec",
+  ].forEach((id) => {
+    const input = document.getElementById(id);
+
+    if (!input) return;
+
+    input.addEventListener("input", updatePreview);
+    input.addEventListener("change", updatePreview);
   });
 
   if (typeInput) {
@@ -375,6 +1306,8 @@ item.get('notes') or '' %}
       typeFilterTimer = setTimeout(() => {
         filterAssetTypeChips();
       }, typeFilterDelay);
+
+      updatePreview();
     });
 
     typeInput.addEventListener("keydown", function (event) {
@@ -383,6 +1316,7 @@ item.get('notes') or '' %}
         clearFieldError(this);
         clearTimeout(typeFilterTimer);
         filterAssetTypeChips();
+        updatePreview();
       }
     });
   }
@@ -398,6 +1332,7 @@ item.get('notes') or '' %}
       clearTimeout(typeFilterTimer);
       filterAssetTypeChips();
       setActiveChipByValue(typeInput.value);
+      updatePreview();
     });
   });
 
@@ -410,20 +1345,27 @@ item.get('notes') or '' %}
 
         showAssetToast(
           "error",
-          "Cập nhật thiết bị không thành công",
-          "Vui lòng nhập đầy đủ các thông tin*.",
+          "Lưu thay đổi không thành công",
+          "Vui lòng nhập đầy đủ các thông tin bắt buộc.",
         );
 
         return;
       }
 
+      if (saveAssetButton) {
+        saveAssetButton.disabled = true;
+        saveAssetButton.textContent = "Đang lưu...";
+      }
+
       if (window.sonner) {
         window.sonner.loading(
-          "Đang cập nhật thiết bị",
+          "Đang lưu thay đổi",
           "Hệ thống đang xử lý thông tin...",
         );
       }
     });
   }
+
+  updatePreview();
 </script>
 {% endblock %}

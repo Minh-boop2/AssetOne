@@ -148,13 +148,16 @@
   {
     "key": "action",
     "label": "Thao tác",
-    "render": render_action
+    "render": render_action,
+    "align": "center"
   }
 ] %}
 
 {% set data = assets if assets else [] %}
 
-{% include 'components/table.html' %}
+<div class="table-scroll">
+  {% include 'components/table.html' %}
+</div>
 
 {% if total_pages and total_pages > 1 %}
   <div class="pagination-container">
@@ -172,19 +175,34 @@
         </a>
       </li>
 
-      {% for p in range(1, total_pages + 1) %}
-        {% if p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
-          <li>
-            <a
-              href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
-              class="{{ 'active' if p == current_page }}"
-            >
-              {{ p }}
-            </a>
-          </li>
-        {% elif p == current_page - 2 or p == current_page + 2 %}
-          <li class="pagination-dots">...</li>
-        {% endif %}
+      {% set start_page = current_page - 1 %}
+      {% set end_page = current_page + 1 %}
+
+      {% if current_page <= 1 %}
+        {% set start_page = 1 %}
+        {% set end_page = 3 %}
+      {% elif current_page >= total_pages %}
+        {% set start_page = total_pages - 2 %}
+        {% set end_page = total_pages %}
+      {% endif %}
+
+      {% if start_page < 1 %}
+        {% set start_page = 1 %}
+      {% endif %}
+
+      {% if end_page > total_pages %}
+        {% set end_page = total_pages %}
+      {% endif %}
+
+      {% for p in range(start_page, end_page + 1) %}
+        <li>
+          <a
+            href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
+            class="{{ 'active' if p == current_page }}"
+          >
+            {{ p }}
+          </a>
+        </li>
       {% endfor %}
 
       <li>
@@ -198,3 +216,149 @@
     </ul>
   </div>
 {% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function closeAllActionMenus(exceptDropdown = null) {
+    document.querySelectorAll(".action-menu__dropdown").forEach(function (dropdown) {
+      if (dropdown !== exceptDropdown) {
+        dropdown.classList.remove("show");
+
+        const menu = dropdown.closest(".action-menu");
+        if (menu) {
+          menu.classList.remove("action-menu--drop-up");
+        }
+      }
+    });
+  }
+
+  function updateDropdownDirection(menu, dropdown) {
+    const trigger = menu.querySelector(".action-menu__trigger");
+    const scrollContainer = menu.closest(".table-scroll");
+
+    if (!trigger || !scrollContainer || !dropdown) return;
+
+    menu.classList.remove("action-menu--drop-up");
+
+    dropdown.style.visibility = "hidden";
+    dropdown.classList.add("show");
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const dropdownHeight = dropdown.offsetHeight;
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    const gap = 8;
+    const spaceBelow = containerRect.bottom - triggerRect.bottom - gap;
+    const spaceAbove = triggerRect.top - containerRect.top - gap;
+
+    if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+      menu.classList.add("action-menu--drop-up");
+    }
+
+    dropdown.style.visibility = "";
+  }
+
+  async function confirmDeleteAsset(button) {
+    const deleteUrl = button.getAttribute("data-delete-url");
+    const assetName = button.getAttribute("data-asset-name") || "tài sản này";
+
+    if (!deleteUrl) return;
+
+    closeAllActionMenus();
+
+    let confirmed = false;
+
+    if (typeof window.toastConfirm === "function") {
+      confirmed = await window.toastConfirm({
+        type: "error",
+        title: "Xác nhận xóa tài sản",
+        message: "Bạn có chắc muốn xóa " + assetName + " không? Hành động này không thể hoàn tác.",
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+        danger: true,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    } else {
+      confirmed = confirm("Bạn có chắc muốn xóa " + assetName + " không?");
+    }
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(deleteUrl, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      });
+
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        window.location.href = deleteUrl;
+      }
+    } catch (error) {
+      window.location.href = deleteUrl;
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    const deleteButton = e.target.closest(".delete-asset-action");
+    const trigger = e.target.closest(".action-menu__trigger");
+    const clickedInsideDropdown = e.target.closest(".action-menu__dropdown");
+
+    if (deleteButton) {
+      e.preventDefault();
+      e.stopPropagation();
+      confirmDeleteAsset(deleteButton);
+      return;
+    }
+
+    if (clickedInsideDropdown) {
+      return;
+    }
+
+    if (trigger) {
+      e.stopPropagation();
+
+      const menu = trigger.closest(".action-menu");
+      if (!menu) return;
+
+      const dropdown = menu.querySelector(".action-menu__dropdown");
+      if (!dropdown) return;
+
+      const isOpen = dropdown.classList.contains("show");
+
+      closeAllActionMenus(dropdown);
+
+      if (isOpen) {
+        dropdown.classList.remove("show");
+        menu.classList.remove("action-menu--drop-up");
+      } else {
+        updateDropdownDirection(menu, dropdown);
+      }
+
+      return;
+    }
+
+    closeAllActionMenus();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeAllActionMenus();
+    }
+  });
+
+  document.querySelectorAll(".table-scroll").forEach(function (container) {
+    container.addEventListener("scroll", function () {
+      closeAllActionMenus();
+    });
+  });
+
+  window.addEventListener("resize", function () {
+    closeAllActionMenus();
+  });
+});
+</script>
