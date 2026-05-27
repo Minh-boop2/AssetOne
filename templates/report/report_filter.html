@@ -1,5 +1,27 @@
 {# templates/report/report_filter.html #}
 
+{% set fixed_department_options = [
+    'Phòng Hành Chính',
+    'Phòng IT',
+    'Phòng Kế Toán',
+    'Phòng Kĩ Thuật',
+    'Phòng Nhân Sự',
+    'Phòng Thiết Kế'
+] %}
+
+{% set fixed_location_options = [
+    'Tầng 1',
+    'Tầng 2',
+    'Tầng 3',
+    'Tầng 4',
+    'Tầng 5',
+    'Tầng 6',
+    'Tầng 7',
+    'Tầng 8',
+    'Tầng 9',
+    'Tầng 10'
+] %}
+
 {% set live_total_count = filter_total_count|default(total_records|default(total_report_count|default(0), true), true) %}
 {% set live_type_counts = filter_type_counts|default(type_counts|default({}), true) %}
 {% set live_department_counts = filter_department_counts|default(department_counts|default({}), true) %}
@@ -62,7 +84,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ live_total_count }}
+                            {{ live_total_count if selected_type == 'Tất cả' else live_type_counts.get(selected_type, 0) }}
                         </span>
                     </span>
 
@@ -115,14 +137,14 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ live_total_count }}
+                            {{ live_total_count if selected_dept == 'Tất cả' else live_department_counts.get(selected_dept, 0) }}
                         </span>
                     </span>
 
                     <span class="report-count-select__caret">▼</span>
                 </button>
 
-                <div class="report-count-select__menu {% if (department_options|length + 1) >= 5 %}is-scrollable{% endif %}">
+                <div class="report-count-select__menu is-scrollable">
                     <button
                         type="button"
                         class="report-count-select__option {% if selected_dept == 'Tất cả' %}is-active{% endif %}"
@@ -134,7 +156,7 @@
                         <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
-                    {% for dept in department_options %}
+                    {% for dept in fixed_department_options %}
                         <button
                             type="button"
                             class="report-count-select__option {% if selected_dept == dept %}is-active{% endif %}"
@@ -168,14 +190,14 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ live_total_count }}
+                            {{ live_total_count if selected_location == 'Tất cả' else live_location_counts.get(selected_location, 0) }}
                         </span>
                     </span>
 
                     <span class="report-count-select__caret">▼</span>
                 </button>
 
-                <div class="report-count-select__menu {% if (location_options|length + 1) >= 5 %}is-scrollable{% endif %}">
+                <div class="report-count-select__menu is-scrollable">
                     <button
                         type="button"
                         class="report-count-select__option {% if selected_location == 'Tất cả' %}is-active{% endif %}"
@@ -187,7 +209,7 @@
                         <span class="report-count-select__option-count">{{ live_total_count }}</span>
                     </button>
 
-                    {% for location in location_options %}
+                    {% for location in fixed_location_options %}
                         <button
                             type="button"
                             class="report-count-select__option {% if selected_location == location %}is-active{% endif %}"
@@ -221,7 +243,7 @@
                         </span>
 
                         <span class="report-count-select__count">
-                            {{ live_total_count }}
+                            {{ live_total_count if selected_status == 'Tất cả' else live_status_counts.get(selected_status, 0) }}
                         </span>
                     </span>
 
@@ -281,245 +303,141 @@
     if (window.__reportFilterAjaxReady) return;
     window.__reportFilterAjaxReady = true;
 
-    document.addEventListener("DOMContentLoaded", initReportFilter);
+    const ALL_VALUE = "Tất cả";
+    const SEARCH_DELAY = 120;
+
+    const FIXED_DEPARTMENTS = [
+        "Phòng Hành Chính",
+        "Phòng IT",
+        "Phòng Kế Toán",
+        "Phòng Kĩ Thuật",
+        "Phòng Nhân Sự",
+        "Phòng Thiết Kế"
+    ];
+
+    const FIXED_LOCATIONS = [
+        "Tầng 1",
+        "Tầng 2",
+        "Tầng 3",
+        "Tầng 4",
+        "Tầng 5",
+        "Tầng 6",
+        "Tầng 7",
+        "Tầng 8",
+        "Tầng 9",
+        "Tầng 10"
+    ];
+
+    const FILTER_CONFIG = {
+        type: {
+            name: "type",
+            allLabel: "Tất cả loại",
+            mode: "dynamic"
+        },
+        department: {
+            name: "department",
+            allLabel: "Tất cả phòng",
+            mode: "fixed",
+            options: FIXED_DEPARTMENTS
+        },
+        location: {
+            name: "location",
+            allLabel: "Tất cả vị trí",
+            mode: "fixed",
+            options: FIXED_LOCATIONS
+        },
+        status: {
+            name: "status",
+            allLabel: "Tất cả trạng thái",
+            mode: "dynamic"
+        }
+    };
 
     let activeRequestController = null;
     let activeCountController = null;
+    let searchTimer = null;
+
+    let baseCountsCache = null;
+    let resetCountsCache = null;
+    let resetTableHtmlCache = "";
+    let currentSearchBaseKey = null;
+
+    document.addEventListener("DOMContentLoaded", initReportFilter);
 
     function initReportFilter() {
-        const SEARCH_DELAY = 0;
-        let searchTimer = null;
-
         const filterSection = document.querySelector(".report-filter-section");
         const reportSearchInput = document.getElementById("reportSearch");
 
         if (!filterSection) return;
 
-        applyCountsFromJsonElement(document.getElementById("reportFilterCountsJson"));
+        baseCountsCache = getCurrentCounts();
+
+        applyCounts(baseCountsCache);
         updateResetButtonState();
 
-        function getFilterForm() {
-            return filterSection.closest("form");
-        }
-
-        function setPage(value) {
-            const pageInput = filterSection.querySelector('input[name="page"]');
-
-            if (pageInput) {
-                pageInput.value = String(value || 1);
-            }
-        }
-
-        function buildCleanUrl(resetPage = true) {
-            if (resetPage) {
-                setPage(1);
-            }
-
-            const form = getFilterForm();
-            const params = new URLSearchParams();
-
-            if (form) {
-                const formData = new FormData(form);
-
-                formData.forEach(function (value, key) {
-                    if (key === "_ajax" || key === "_ts") return;
-                    params.set(key, value || "");
-                });
-
-                const action = form.getAttribute("action") || window.location.pathname;
-                return action + "?" + params.toString();
-            }
-
-            filterSection.querySelectorAll("input[name]").forEach(function (input) {
-                if (input.name === "_ajax" || input.name === "_ts") return;
-                params.set(input.name, input.value || "");
-            });
-
-            return window.location.pathname + "?" + params.toString();
-        }
-
-        function submitNow() {
-            clearTimeout(searchTimer);
-            fetchAndReplaceReport(buildCleanUrl(true), true);
-        }
-
-        function submitSearchFast() {
-            clearTimeout(searchTimer);
-
-            searchTimer = setTimeout(function () {
-                fetchAndReplaceReport(buildCleanUrl(true), true);
-            }, SEARCH_DELAY);
-        }
-
-        function closeAllSelects() {
-            document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-                selectBox.classList.remove("open");
-            });
-        }
-
-        function syncLabelsFromSelectedOptions() {
-            document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-                const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-                const label = selectBox.querySelector(".report-count-select__label");
-                const count = selectBox.querySelector(".report-count-select__count");
-                const options = selectBox.querySelectorAll(".report-count-select__option");
-                const selectedValue = hiddenInput && hiddenInput.value ? hiddenInput.value : "Tất cả";
-
-                options.forEach(function (option) {
-                    const isActive = (option.dataset.value || "Tất cả") === selectedValue;
-
-                    option.classList.toggle("is-active", isActive);
-
-                    if (isActive) {
-                        if (label) {
-                            label.textContent =
-                                option.dataset.label ||
-                                option.querySelector(".report-count-select__option-label")?.textContent ||
-                                "";
-                        }
-                    }
-                });
-
-                if (count) {
-                    const total = getCurrentTotalCount();
-                    count.textContent = total;
-                }
-            });
-        }
-
-        function resetAllFilters() {
-            if (reportSearchInput) {
-                reportSearchInput.value = "";
-            }
-
-            filterSection.querySelectorAll(".js-report-filter").forEach(function (input) {
-                input.value = "Tất cả";
-            });
-
-            setPage(1);
-            closeAllSelects();
-            syncLabelsFromSelectedOptions();
-            updateResetButtonState();
-
-            fetchAndReplaceReport(buildCleanUrl(true), true);
-        }
-
-        document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-            const trigger = selectBox.querySelector(".report-count-select__button");
-            const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-            const label = selectBox.querySelector(".report-count-select__label");
-            const count = selectBox.querySelector(".report-count-select__count");
-            const options = selectBox.querySelectorAll(".report-count-select__option");
-
-            if (!trigger || !hiddenInput) return;
-
-            trigger.addEventListener("click", function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
-                    if (otherSelectBox !== selectBox) {
-                        otherSelectBox.classList.remove("open");
-                    }
-                });
-
-                selectBox.classList.toggle("open");
-            });
-
-            options.forEach(function (option) {
-                option.addEventListener("click", function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    hiddenInput.value = option.dataset.value || "Tất cả";
-
-                    if (label) {
-                        label.textContent = option.dataset.label || "";
-                    }
-
-                    if (count) {
-                        count.textContent = getCurrentTotalCount();
-                    }
-
-                    options.forEach(function (item) {
-                        item.classList.remove("is-active");
-                    });
-
-                    option.classList.add("is-active");
-                    selectBox.classList.remove("open");
-
-                    updateResetButtonState();
-                    submitNow();
-                });
-            });
+        refreshBaseCountsFromAllPages({
+            searchValue: getSearchValue(),
+            saveAsCurrentBase: true
         });
+
+        preloadResetSnapshot();
+
+        document.querySelectorAll("[data-count-select]").forEach(initCountSelect);
 
         if (reportSearchInput) {
             reportSearchInput.addEventListener("input", function () {
+                clearTimeout(searchTimer);
                 updateResetButtonState();
-                submitSearchFast();
+
+                searchTimer = setTimeout(function () {
+                    fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
+                        refreshBaseCountsFromAllPages({
+                            searchValue: getSearchValue(),
+                            saveAsCurrentBase: true
+                        });
+                    });
+                }, SEARCH_DELAY);
             });
 
             reportSearchInput.addEventListener("keydown", function (event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
-                    submitNow();
+                    clearTimeout(searchTimer);
+
+                    fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
+                        refreshBaseCountsFromAllPages({
+                            searchValue: getSearchValue(),
+                            saveAsCurrentBase: true
+                        });
+                    });
                 }
 
                 if (event.key === "Escape") {
+                    event.preventDefault();
+                    clearTimeout(searchTimer);
+
                     reportSearchInput.value = "";
-                    updateResetButtonState();
-                    submitNow();
+
+                    fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
+                        refreshBaseCountsFromAllPages({
+                            searchValue: "",
+                            saveAsCurrentBase: true
+                        });
+                    });
                 }
             });
         }
-
-        document.querySelectorAll(".js-report-filter").forEach(function (filterInput) {
-            filterInput.addEventListener("change", function () {
-                updateResetButtonState();
-                submitNow();
-            });
-        });
 
         const resetButton = filterSection.querySelector(".btn-reset");
 
         if (resetButton) {
             resetButton.addEventListener("click", function (event) {
                 event.preventDefault();
-                resetAllFilters();
+                resetAllFiltersInstantly();
             });
         }
 
-        document.addEventListener("click", function (event) {
-            const resetEmptyLink = event.target.closest(".report-empty-state a");
-
-            if (resetEmptyLink) {
-                event.preventDefault();
-                resetAllFilters();
-                return;
-            }
-
-            const pageLink = event.target.closest(".pagination-buttons a.page-btn");
-
-            if (pageLink) {
-                if (
-                    pageLink.classList.contains("disabled") ||
-                    pageLink.getAttribute("aria-disabled") === "true"
-                ) {
-                    event.preventDefault();
-                    return;
-                }
-
-                event.preventDefault();
-                closeAllSelects();
-                fetchAndReplaceReport(pageLink.href, true);
-                return;
-            }
-
-            if (!event.target.closest("[data-count-select]")) {
-                closeAllSelects();
-            }
-        });
+        document.addEventListener("click", handleDocumentClick);
 
         document.addEventListener("keydown", function (event) {
             if (event.key === "Escape") {
@@ -531,38 +449,229 @@
             fetchAndReplaceReport(window.location.href, false);
         });
 
-        function hasActiveFilter() {
-            const hasSearch = reportSearchInput && reportSearchInput.value.trim();
+        window.reportFilterRefresh = function () {
+            fetchAndReplaceReport(buildCleanUrl(false), true);
+        };
 
-            const hasDropdownFilter = Array.from(
-                filterSection.querySelectorAll(".js-report-filter")
-            ).some(function (input) {
-                return input.value && input.value !== "Tất cả";
+        window.reportFilterReset = resetAllFiltersInstantly;
+        window.reportFilterApplyCounts = applyCounts;
+    }
+
+    function initCountSelect(selectBox) {
+        const trigger = selectBox.querySelector(".report-count-select__button");
+        const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+
+        if (!trigger || !hiddenInput) return;
+
+        trigger.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
+                if (otherSelectBox !== selectBox) {
+                    otherSelectBox.classList.remove("open");
+                }
             });
 
-            return Boolean(hasSearch || hasDropdownFilter);
+            selectBox.classList.toggle("open");
+        });
+
+        rebindDynamicSelectOptions(selectBox);
+    }
+
+    function rebindDynamicSelectOptions(selectBox) {
+        const options = selectBox.querySelectorAll(".report-count-select__option");
+
+        options.forEach(function (option) {
+            if (option.dataset.bound === "true") return;
+
+            option.dataset.bound = "true";
+
+            option.addEventListener("click", function (event) {
+                const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!hiddenInput) return;
+
+                hiddenInput.value = option.dataset.value || ALL_VALUE;
+
+                selectBox.classList.remove("open");
+                applyCounts(baseCountsCache || getCurrentCounts());
+                updateResetButtonState();
+
+                fetchAndReplaceReport(buildCleanUrl(true), true);
+            });
+        });
+    }
+
+    function handleDocumentClick(event) {
+        const resetEmptyLink = event.target.closest(".report-empty-state a");
+
+        if (resetEmptyLink) {
+            event.preventDefault();
+            resetAllFiltersInstantly();
+            return;
         }
 
-        function updateResetButtonState() {
-            const resetButton = filterSection.querySelector(".btn-reset");
+        const pageLink = event.target.closest(".pagination-buttons a.page-btn");
 
-            if (!resetButton) return;
+        if (pageLink) {
+            if (
+                pageLink.classList.contains("disabled") ||
+                pageLink.getAttribute("aria-disabled") === "true"
+            ) {
+                event.preventDefault();
+                return;
+            }
 
-            resetButton.classList.toggle("is-hidden", !hasActiveFilter());
+            event.preventDefault();
+            closeAllSelects();
+            fetchAndReplaceReport(pageLink.href, true);
+            return;
         }
 
-        window.reportFilterRefresh = submitNow;
-        window.reportFilterReset = resetAllFilters;
-        window.reportFilterApplyCounts = applyCounts;
+        if (!event.target.closest("[data-count-select]")) {
+            closeAllSelects();
+        }
+    }
+
+    function getFilterSection() {
+        return document.querySelector(".report-filter-section");
+    }
+
+    function getFilterForm() {
+        const section = getFilterSection();
+        return section ? section.closest("form") : null;
+    }
+
+    function getSearchValue() {
+        const input = document.getElementById("reportSearch");
+        return input ? input.value.trim() : "";
+    }
+
+    function setPage(value) {
+        const section = getFilterSection();
+        const pageInput = section ? section.querySelector('input[name="page"]') : null;
+
+        if (pageInput) {
+            pageInput.value = String(value || 1);
+        }
+    }
+
+    function buildCleanUrl(resetPage) {
+        if (resetPage) {
+            setPage(1);
+        }
+
+        const form = getFilterForm();
+        const params = new URLSearchParams();
+
+        if (form) {
+            const formData = new FormData(form);
+
+            formData.forEach(function (value, key) {
+                if (key === "_ajax" || key === "_ts") return;
+
+                if (key === "page") {
+                    if (value && String(value) !== "1") {
+                        params.set(key, value);
+                    }
+
+                    return;
+                }
+
+                if (!value || value === ALL_VALUE) return;
+
+                params.set(key, value);
+            });
+
+            const action = form.getAttribute("action") || window.location.pathname;
+            const query = params.toString();
+
+            return action + (query ? "?" + query : "");
+        }
+
+        return window.location.pathname;
+    }
+
+    function buildBaseCountUrl(page, searchValue) {
+        const form = getFilterForm();
+        const action = form ? (form.getAttribute("action") || window.location.pathname) : window.location.pathname;
+        const params = new URLSearchParams();
+
+        if (searchValue) {
+            params.set("search", searchValue);
+        }
+
+        if (page && Number(page) !== 1) {
+            params.set("page", String(page));
+        }
+
+        const query = params.toString();
+
+        return action + (query ? "?" + query : "");
+    }
+
+    function buildResetUrl() {
+        const form = getFilterForm();
+
+        if (form) {
+            return form.getAttribute("action") || window.location.pathname;
+        }
+
+        return window.location.pathname;
+    }
+
+    function resetAllFiltersInstantly() {
+        const section = getFilterSection();
+        const searchInput = document.getElementById("reportSearch");
+
+        if (!section) return;
+
+        clearTimeout(searchTimer);
+
+        if (searchInput) {
+            searchInput.value = "";
+        }
+
+        section.querySelectorAll(".js-report-filter").forEach(function (input) {
+            input.value = ALL_VALUE;
+        });
+
+        setPage(1);
+        closeAllSelects();
+        updateResetButtonState();
+
+        if (resetCountsCache) {
+            baseCountsCache = resetCountsCache;
+            applyCounts(resetCountsCache);
+        } else if (baseCountsCache) {
+            applyCounts(baseCountsCache);
+        }
+
+        if (resetTableHtmlCache) {
+            replaceTableHtml(resetTableHtmlCache);
+        }
+
+        const resetUrl = buildResetUrl();
+
+        window.history.replaceState({}, "", resetUrl);
+
+        fetchAndReplaceReport(resetUrl, false).then(function () {
+            refreshBaseCountsFromAllPages({
+                searchValue: "",
+                saveAsCurrentBase: true
+            });
+        });
+
+        preloadResetSnapshot();
     }
 
     async function fetchAndReplaceReport(cleanUrl, updateHistory) {
         if (activeRequestController) {
             activeRequestController.abort();
-        }
-
-        if (activeCountController) {
-            activeCountController.abort();
         }
 
         activeRequestController = new AbortController();
@@ -583,72 +692,153 @@
                 throw new Error("Không thể tải danh sách báo cáo.");
             }
 
-            const payload = await response.json();
+            const contentType = response.headers.get("content-type") || "";
+            let payload = null;
 
-            if (payload.table_html) {
+            if (contentType.includes("application/json")) {
+                payload = await response.json();
+            }
+
+            if (payload && payload.table_html) {
                 replaceTableHtml(payload.table_html);
+            } else {
+                const html = payload ? "" : await response.text();
+                replacePageTableFromHtml(html);
             }
 
-            if (typeof payload.total_records !== "undefined") {
-                setCurrentTotalCount(payload.total_records);
-                updateVisibleFilterButtonCounts(payload.total_records);
-            }
-
-            if (payload.counts) {
-                if (typeof payload.total_records !== "undefined") {
-                    payload.counts.total = payload.total_records;
-                }
-
-                applyCounts(payload.counts);
-                syncCurrentJson(payload.counts);
-            }
+            syncAllSelects();
 
             if (updateHistory) {
                 window.history.replaceState({}, "", cleanUrl);
             }
-
-            fetchCountsOnly(cleanUrl);
         } catch (error) {
             if (error.name === "AbortError") return;
-
             window.location.href = cleanUrl;
         } finally {
             setGlobalLoading(false);
         }
     }
 
-    async function fetchCountsOnly(cleanUrl) {
+    async function preloadResetSnapshot() {
+        try {
+            const result = await getCountsAndFirstTableHtml({
+                searchValue: ""
+            });
+
+            resetCountsCache = result.counts;
+            resetTableHtmlCache = result.firstTableHtml || resetTableHtmlCache;
+        } catch (error) {
+            return;
+        }
+    }
+
+    async function refreshBaseCountsFromAllPages(options) {
+        const safeOptions = options || {};
+        const searchValue = safeOptions.searchValue || "";
+        const cacheKey = searchValue;
+
         if (activeCountController) {
             activeCountController.abort();
         }
 
         activeCountController = new AbortController();
+        currentSearchBaseKey = cacheKey;
 
         try {
-            const response = await fetch(toAjaxUrl(cleanUrl, "report_counts"), {
-                method: "GET",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Accept": "application/json"
-                },
+            const result = await getCountsAndFirstTableHtml({
+                searchValue: searchValue,
                 signal: activeCountController.signal
             });
 
-            if (!response.ok) return;
+            if (currentSearchBaseKey !== cacheKey) return;
 
-            const payload = await response.json();
+            baseCountsCache = result.counts;
 
-            if (payload.counts) {
-                if (typeof payload.total_records !== "undefined") {
-                    payload.counts.total = payload.total_records;
+            if (searchValue === "") {
+                resetCountsCache = result.counts;
+
+                if (result.firstTableHtml) {
+                    resetTableHtmlCache = result.firstTableHtml;
                 }
+            }
 
-                applyCounts(payload.counts);
-                syncCurrentJson(payload.counts);
+            if (safeOptions.saveAsCurrentBase !== false) {
+                applyCounts(result.counts);
+                syncCurrentJson(result.counts);
             }
         } catch (error) {
             if (error.name === "AbortError") return;
+            applyCounts(baseCountsCache || getCurrentCounts());
         }
+    }
+
+    async function getCountsAndFirstTableHtml(options) {
+        const safeOptions = options || {};
+        const searchValue = safeOptions.searchValue || "";
+        const signal = safeOptions.signal;
+
+        const firstHtml = await fetchHtml(buildBaseCountUrl(1, searchValue), signal);
+        const firstDoc = parseHtml(firstHtml);
+        const totalPages = Math.max(1, getTotalPagesFromDocument(firstDoc));
+        const allRows = [];
+
+        collectRowsFromDocument(firstDoc).forEach(function (row) {
+            allRows.push(row);
+        });
+
+        const firstCard = firstDoc.querySelector(".report-overview-card");
+        const firstTableHtml = firstCard ? firstCard.outerHTML : "";
+
+        const requests = [];
+
+        for (let page = 2; page <= totalPages; page++) {
+            requests.push(
+                fetchHtml(buildBaseCountUrl(page, searchValue), signal)
+                    .then(parseHtml)
+                    .then(collectRowsFromDocument)
+                    .catch(function () {
+                        return [];
+                    })
+            );
+        }
+
+        const pageRows = await Promise.all(requests);
+
+        pageRows.forEach(function (rows) {
+            rows.forEach(function (row) {
+                allRows.push(row);
+            });
+        });
+
+        const counts = buildCountsFromRows(deduplicateRows(allRows));
+
+        return {
+            counts: counts,
+            firstTableHtml: firstTableHtml
+        };
+    }
+
+    async function fetchHtml(url, signal) {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            signal: signal
+        });
+
+        if (!response.ok) {
+            throw new Error("Không thể tải dữ liệu.");
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+            const payload = await response.json();
+            return payload.table_html || "";
+        }
+
+        return await response.text();
     }
 
     function toAjaxUrl(url, ajaxType) {
@@ -660,25 +850,30 @@
         return ajaxUrl.toString();
     }
 
-    function setGlobalLoading(isLoading) {
-        const filterSection = document.querySelector(".report-filter-section");
-        const tableCard = document.querySelector(".report-overview-card");
+    function parseHtml(html) {
+        const parser = new DOMParser();
+        return parser.parseFromString(html || "", "text/html");
+    }
 
-        if (filterSection) {
-            filterSection.dataset.loading = isLoading ? "true" : "false";
-        }
+    function replacePageTableFromHtml(html) {
+        if (!html) return;
 
-        if (tableCard) {
-            tableCard.setAttribute("aria-busy", isLoading ? "true" : "false");
+        const doc = parseHtml(html);
+        const nextCard = doc.querySelector(".report-overview-card");
+        const currentCard = document.querySelector(".report-overview-card");
+
+        if (nextCard && currentCard) {
+            currentCard.replaceWith(nextCard);
         }
     }
 
     function replaceTableHtml(tableHtml) {
         const currentCard = document.querySelector(".report-overview-card");
 
-        if (!currentCard) return;
+        if (!currentCard || !tableHtml) return;
 
         const template = document.createElement("template");
+
         template.innerHTML = tableHtml.trim();
 
         const nextCard = template.content.querySelector(".report-overview-card");
@@ -688,23 +883,368 @@
         }
     }
 
+    function collectRowsFromDocument(doc) {
+        const table =
+            doc.querySelector(".report-table-scroll-container table") ||
+            doc.querySelector(".report-overview-card table");
+
+        if (!table) return [];
+
+        const headers = Array.from(table.querySelectorAll("thead th")).map(function (cell) {
+            return normalizeText(cell.textContent);
+        });
+
+        const indexMap = {
+            code: findHeaderIndex(headers, ["ma bao cao"]),
+            name: findHeaderIndex(headers, ["ten bao cao"]),
+            type: findHeaderIndex(headers, ["loai"]),
+            status: findHeaderIndex(headers, ["trang thai"]),
+            reporter: findHeaderIndex(headers, ["nguoi bao cao"]),
+            department: findHeaderIndex(headers, ["phong ban"]),
+            location: findHeaderIndex(headers, ["vi tri"])
+        };
+
+        return Array.from(table.querySelectorAll("tbody tr")).map(function (tr) {
+            const cells = Array.from(tr.querySelectorAll("td"));
+
+            return {
+                code: getCellText(cells, indexMap.code),
+                name: getCellText(cells, indexMap.name),
+                type: getCellText(cells, indexMap.type),
+                status: getCellText(cells, indexMap.status),
+                reporter: getCellText(cells, indexMap.reporter),
+                department: getCellText(cells, indexMap.department),
+                location: getCellText(cells, indexMap.location)
+            };
+        }).filter(function (row) {
+            return row.code || row.name || row.type || row.status || row.department || row.location;
+        });
+    }
+
+    function getCellText(cells, index) {
+        if (index < 0 || !cells[index]) return "";
+        return normalizeSpaces(cells[index].textContent || "");
+    }
+
+    function findHeaderIndex(headers, keys) {
+        for (let i = 0; i < headers.length; i++) {
+            for (let j = 0; j < keys.length; j++) {
+                if (headers[i].includes(keys[j])) {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    function getTotalPagesFromDocument(doc) {
+        const text = doc.body ? doc.body.textContent || "" : "";
+        const match = text.match(/Trang\s+\d+\s*\/\s*(\d+)/i);
+
+        if (match && match[1]) {
+            return Number(match[1]) || 1;
+        }
+
+        const pageNumbers = Array.from(doc.querySelectorAll(".pagination-buttons .page-btn"))
+            .map(function (item) {
+                return Number((item.textContent || "").trim());
+            })
+            .filter(function (number) {
+                return !Number.isNaN(number);
+            });
+
+        if (pageNumbers.length) {
+            return Math.max.apply(null, pageNumbers);
+        }
+
+        return 1;
+    }
+
+    function deduplicateRows(rows) {
+        const seen = new Set();
+        const result = [];
+
+        rows.forEach(function (row) {
+            const key = [
+                row.code,
+                row.name,
+                row.type,
+                row.status,
+                row.reporter,
+                row.department,
+                row.location
+            ].join("|");
+
+            if (seen.has(key)) return;
+
+            seen.add(key);
+            result.push(row);
+        });
+
+        return result;
+    }
+
+    function buildCountsFromRows(rows) {
+        const counts = {
+            total: rows.length,
+            type: {},
+            department: {},
+            location: {},
+            status: {}
+        };
+
+        FIXED_DEPARTMENTS.forEach(function (department) {
+            counts.department[department] = 0;
+        });
+
+        FIXED_LOCATIONS.forEach(function (location) {
+            counts.location[location] = 0;
+        });
+
+        rows.forEach(function (row) {
+            increment(counts.type, normalizeReportType(row.type));
+
+            const department = normalizeDepartment(row.department);
+            const location = normalizeLocation(row.location);
+
+            if (department) {
+                increment(counts.department, department);
+            }
+
+            if (location) {
+                increment(counts.location, location);
+            }
+
+            increment(counts.status, normalizeStatus(row.status));
+        });
+
+        return counts;
+    }
+
+    function normalizeDepartment(value) {
+        const text = normalizeText(value || "");
+
+        if (!text) return "";
+
+        if (text.includes("hanh chinh")) {
+            return "Phòng Hành Chính";
+        }
+
+        if (text.includes("it") || text.includes("cong nghe thong tin") || text.includes("cntt")) {
+            return "Phòng IT";
+        }
+
+        if (text.includes("ke toan")) {
+            return "Phòng Kế Toán";
+        }
+
+        if (text.includes("ki thuat") || text.includes("ky thuat")) {
+            return "Phòng Kĩ Thuật";
+        }
+
+        if (text.includes("nhan su")) {
+            return "Phòng Nhân Sự";
+        }
+
+        if (text.includes("thiet ke")) {
+            return "Phòng Thiết Kế";
+        }
+
+        return "";
+    }
+
+    function normalizeLocation(value) {
+        const text = normalizeText(value || "");
+
+        if (!text) return "";
+
+        /*
+            Fix lỗi đếm tầng:
+            - "Tầng 10" không bị nhận nhầm thành "Tầng 1".
+            - Hỗ trợ dạng: Tầng 1, tang 1, tang1, floor 1, floor1.
+        */
+        const match = text.match(/(?:^|[^a-z0-9])(?:tang|floor)\s*0?(10|[1-9])(?=$|[^0-9])/);
+
+        if (!match || !match[1]) {
+            return "";
+        }
+
+        const floorNumber = Number(match[1]);
+
+        if (floorNumber >= 1 && floorNumber <= 10) {
+            return "Tầng " + floorNumber;
+        }
+
+        return "";
+    }
+
+    function normalizeReportType(typeText) {
+        const rawType = normalizeSpaces(typeText || "");
+        const normalizedType = normalizeText(rawType);
+
+        if (!rawType) {
+            return "Khác";
+        }
+
+        if (normalizedType.includes("bao hong")) {
+            return "Báo hỏng";
+        }
+
+        if (normalizedType.includes("can cap moi")) {
+            return "Cần cấp mới";
+        }
+
+        if (normalizedType.includes("ban giao")) {
+            return "Bàn giao";
+        }
+
+        if (normalizedType.includes("bao tri")) {
+            return "Bảo trì";
+        }
+
+        if (normalizedType.includes("thu hoi")) {
+            return "Thu hồi";
+        }
+
+        if (normalizedType.includes("kiem ke")) {
+            return "Kiểm kê";
+        }
+
+        if (normalizedType.includes("cap nhat")) {
+            return "Cập nhật";
+        }
+
+        if (normalizedType.includes("khac")) {
+            return "Khác";
+        }
+
+        return rawType;
+    }
+
+    function normalizeStatus(statusText) {
+        const rawStatus = normalizeSpaces(statusText || "");
+        const normalized = normalizeText(rawStatus);
+
+        if (normalized.includes("hoan thanh") || normalized.includes("da xem")) {
+            return "Hoàn thành";
+        }
+
+        if (normalized.includes("dang xu ly")) {
+            return "Đang xử lý";
+        }
+
+        if (normalized.includes("tu choi") || normalized.includes("da huy")) {
+            return "Đã hủy";
+        }
+
+        if (normalized.includes("cho xu ly")) {
+            return "Chờ xử lý";
+        }
+
+        return rawStatus || "Chờ xử lý";
+    }
+
+    function increment(object, key) {
+        const safeKey = key || "Chưa xác định";
+        object[safeKey] = (object[safeKey] || 0) + 1;
+    }
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/đ/g, "d")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function normalizeSpaces(value) {
+        return String(value || "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function setGlobalLoading(isLoading) {
+        const filterSection = document.querySelector(".report-filter-section");
+        const tableCard = document.querySelector(".report-overview-card");
+
+        if (filterSection) {
+            filterSection.classList.toggle("is-ajax-loading", isLoading);
+            filterSection.dataset.loading = isLoading ? "true" : "false";
+        }
+
+        if (tableCard) {
+            tableCard.classList.toggle("is-ajax-loading", isLoading);
+            tableCard.setAttribute("aria-busy", isLoading ? "true" : "false");
+        }
+    }
+
+    function closeAllSelects() {
+        document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
+            selectBox.classList.remove("open");
+        });
+    }
+
+    function updateResetButtonState() {
+        const section = getFilterSection();
+        const resetButton = section ? section.querySelector(".btn-reset") : null;
+
+        if (!resetButton) return;
+
+        resetButton.classList.toggle("is-hidden", !hasActiveFilter());
+    }
+
+    function hasActiveFilter() {
+        const section = getFilterSection();
+        const searchInput = document.getElementById("reportSearch");
+
+        if (!section) return false;
+
+        const hasSearch = searchInput && searchInput.value.trim();
+
+        const hasDropdownFilter = Array.from(
+            section.querySelectorAll(".js-report-filter")
+        ).some(function (input) {
+            return input.value && input.value !== ALL_VALUE;
+        });
+
+        return Boolean(hasSearch || hasDropdownFilter);
+    }
+
     function syncCurrentJson(counts) {
         const jsonElement = document.getElementById("reportFilterCountsJson");
 
         if (!jsonElement) return;
 
-        jsonElement.textContent = JSON.stringify(counts || {});
+        jsonElement.textContent = JSON.stringify(normalizeCounts(counts));
     }
 
-    function applyCountsFromJsonElement(jsonElement) {
-        if (!jsonElement) return;
+    function getCurrentCounts() {
+        const jsonElement = document.getElementById("reportFilterCountsJson");
+
+        if (!jsonElement) {
+            return normalizeCounts({});
+        }
 
         try {
-            const counts = JSON.parse(jsonElement.textContent || "{}");
-            applyCounts(counts);
+            return normalizeCounts(JSON.parse(jsonElement.textContent || "{}"));
         } catch (error) {
-            return;
+            return normalizeCounts({});
         }
+    }
+
+    function normalizeCounts(counts) {
+        const safeCounts = counts || {};
+
+        return {
+            total: normalizeCount(safeCounts.total),
+            type: safeCounts.type || {},
+            department: safeCounts.department || {},
+            location: safeCounts.location || {},
+            status: safeCounts.status || {}
+        };
     }
 
     function normalizeCount(value) {
@@ -717,103 +1257,156 @@
         return number;
     }
 
-    function getCurrentCounts() {
-        const jsonElement = document.getElementById("reportFilterCountsJson");
+    function getCountFor(field, value) {
+        const counts = baseCountsCache || getCurrentCounts();
 
-        if (!jsonElement) return {};
-
-        try {
-            return JSON.parse(jsonElement.textContent || "{}");
-        } catch (error) {
-            return {};
+        if (!value || value === ALL_VALUE) {
+            return normalizeCount(counts.total);
         }
-    }
 
-    function getCurrentTotalCount() {
-        const counts = getCurrentCounts();
+        const fieldCounts = counts[field] || {};
 
-        return normalizeCount(counts.total);
-    }
-
-    function setCurrentTotalCount(total) {
-        const counts = getCurrentCounts();
-
-        counts.total = normalizeCount(total);
-        syncCurrentJson(counts);
-    }
-
-    function updateVisibleFilterButtonCounts(total) {
-        const safeTotal = normalizeCount(total);
-
-        document.querySelectorAll("[data-count-select][data-count-field]").forEach(function (selectBox) {
-            const buttonCount = selectBox.querySelector(".report-count-select__count");
-
-            if (buttonCount) {
-                buttonCount.textContent = safeTotal;
-            }
-
-            const allOption = selectBox.querySelector('.report-count-select__option[data-value="Tất cả"]');
-            const allOptionCount = allOption ? allOption.querySelector(".report-count-select__option-count") : null;
-
-            if (allOption) {
-                allOption.dataset.count = String(safeTotal);
-            }
-
-            if (allOptionCount) {
-                allOptionCount.textContent = safeTotal;
-            }
-        });
+        return normalizeCount(fieldCounts[value]);
     }
 
     function applyCounts(counts) {
-        const safeCounts = counts || {};
-        const total = normalizeCount(safeCounts.total);
+        const normalizedCounts = normalizeCounts(counts);
 
-        updateVisibleFilterButtonCounts(total);
+        syncCurrentJson(normalizedCounts);
+        rebuildAllSelectOptions(normalizedCounts);
+        syncAllSelects();
+    }
 
-        document.querySelectorAll("[data-count-select][data-count-field]").forEach(function (selectBox) {
-            const field = selectBox.dataset.countField;
-            const fieldCounts = safeCounts[field] || {};
-            const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-            const buttonLabel = selectBox.querySelector(".report-count-select__label");
-            const options = selectBox.querySelectorAll(".report-count-select__option");
-            const selectedValue = hiddenInput && hiddenInput.value ? hiddenInput.value : "Tất cả";
+    function rebuildAllSelectOptions(counts) {
+        Object.keys(FILTER_CONFIG).forEach(function (field) {
+            rebuildSelectOptions(field, counts);
+        });
+    }
 
-            options.forEach(function (option) {
-                const value = option.dataset.value || "Tất cả";
-                const optionCount = option.querySelector(".report-count-select__option-count");
-                const nextCount = value === "Tất cả"
-                    ? total
-                    : normalizeCount(fieldCounts[value]);
+    function rebuildSelectOptions(field, counts) {
+        const selectBox = document.querySelector('[data-count-select][data-count-field="' + field + '"]');
 
-                option.dataset.count = String(nextCount);
+        if (!selectBox) return;
 
-                if (optionCount) {
-                    optionCount.textContent = nextCount;
-                }
+        const config = FILTER_CONFIG[field];
+        const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+        const menu = selectBox.querySelector(".report-count-select__menu");
+        const selectedValue = hiddenInput ? hiddenInput.value || ALL_VALUE : ALL_VALUE;
+        const fieldCounts = counts[field] || {};
+        let items = [];
 
-                option.classList.toggle("is-active", value === selectedValue);
-            });
-
-            if (buttonLabel) {
-                const activeOption = Array.from(options).find(function (option) {
-                    return (option.dataset.value || "Tất cả") === selectedValue;
+        if (config.mode === "fixed") {
+            items = config.options || [];
+        } else {
+            items = Object.keys(fieldCounts)
+                .filter(function (item) {
+                    return item && item !== ALL_VALUE;
+                })
+                .sort(function (a, b) {
+                    return a.localeCompare(b, "vi");
                 });
 
-                if (activeOption) {
-                    buttonLabel.textContent =
-                        activeOption.dataset.label ||
-                        activeOption.querySelector(".report-count-select__option-label")?.textContent ||
-                        "";
-                }
+            if (selectedValue !== ALL_VALUE && !items.includes(selectedValue)) {
+                items.push(selectedValue);
             }
+        }
 
-            const buttonCount = selectBox.querySelector(".report-count-select__count");
+        if (!menu) return;
 
-            if (buttonCount) {
-                buttonCount.textContent = total;
+        menu.innerHTML = "";
+
+        menu.appendChild(createOptionElement({
+            value: ALL_VALUE,
+            label: config.allLabel,
+            count: counts.total,
+            active: selectedValue === ALL_VALUE
+        }));
+
+        items.forEach(function (item) {
+            menu.appendChild(createOptionElement({
+                value: item,
+                label: item,
+                count: normalizeCount(fieldCounts[item]),
+                active: selectedValue === item
+            }));
+        });
+
+        menu.classList.toggle("is-scrollable", items.length + 1 >= 5);
+
+        rebindDynamicSelectOptions(selectBox);
+    }
+
+    function createOptionElement(optionData) {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "report-count-select__option" + (optionData.active ? " is-active" : "");
+        button.dataset.value = optionData.value;
+        button.dataset.label = optionData.label;
+        button.dataset.count = String(optionData.count);
+        button.dataset.bound = "false";
+
+        const label = document.createElement("span");
+        label.className = "report-count-select__option-label";
+        label.textContent = optionData.label;
+
+        const count = document.createElement("span");
+        count.className = "report-count-select__option-count";
+        count.textContent = optionData.count;
+
+        button.appendChild(label);
+        button.appendChild(count);
+
+        return button;
+    }
+
+    function syncAllSelects() {
+        document.querySelectorAll("[data-count-select]").forEach(syncOneSelect);
+    }
+
+    function syncOneSelect(selectBox) {
+        const field = selectBox.dataset.countField;
+        const hiddenInput = selectBox.querySelector('input[type="hidden"]');
+        const buttonLabel = selectBox.querySelector(".report-count-select__label");
+        const buttonCount = selectBox.querySelector(".report-count-select__count");
+        const options = Array.from(selectBox.querySelectorAll(".report-count-select__option"));
+
+        if (!field || !hiddenInput) return;
+
+        const selectedValue = hiddenInput.value || ALL_VALUE;
+
+        options.forEach(function (option) {
+            const value = option.dataset.value || ALL_VALUE;
+            const optionCount = option.querySelector(".report-count-select__option-count");
+            const nextCount = getCountFor(field, value);
+
+            option.dataset.count = String(nextCount);
+            option.classList.toggle("is-active", value === selectedValue);
+
+            if (optionCount) {
+                optionCount.textContent = nextCount;
             }
         });
+
+        const activeOption = options.find(function (option) {
+            return (option.dataset.value || ALL_VALUE) === selectedValue;
+        });
+
+        if (buttonLabel) {
+            if (activeOption) {
+                const optionLabel = activeOption.querySelector(".report-count-select__option-label");
+
+                buttonLabel.textContent =
+                    activeOption.dataset.label ||
+                    (optionLabel ? optionLabel.textContent.trim() : "");
+            } else {
+                buttonLabel.textContent = selectedValue;
+            }
+        }
+
+        if (buttonCount) {
+            buttonCount.textContent = getCountFor(field, selectedValue);
+        }
     }
 })();
 </script>

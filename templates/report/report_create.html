@@ -10,20 +10,12 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_create.css') }}">
 
 <style>
-    /* ================= PAGE FIT 100% ================= */
+    /* ================= RESPONSIVE PAGE FIT ================= */
 
     html,
     body {
-        height: auto !important;
-        min-height: 100% !important;
+        min-height: 100%;
         overflow-x: hidden !important;
-    }
-
-    @media (min-width: 1201px) {
-        html,
-        body {
-            overflow-y: hidden !important;
-        }
     }
 
     .main-content,
@@ -33,9 +25,8 @@
     #app,
     #app-body,
     main {
-        height: auto !important;
-        max-height: none !important;
         min-height: 0 !important;
+        max-height: none !important;
         overflow: visible !important;
     }
 
@@ -46,104 +37,97 @@
         --report-file-text: var(--text);
         --report-file-text-soft: var(--text-soft);
         --report-file-blue: var(--hsu-blue);
-        --report-file-blue-hover: var(--hsu-blue-hover);
         --report-file-active-bg: var(--select-active-bg);
         --report-file-active-text: var(--select-active-text);
 
-        min-height: calc(100vh - 112px) !important;
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-    }
+        --create-scale: 1;
+        --page-pad-y: clamp(4px, 0.8vh, 12px);
+        --wrap-width: clamp(980px, 72vw, 1180px);
+        --card-radius: clamp(16px, 1.3vw, 22px);
+        --body-pad-x: clamp(20px, 2vw, 32px);
+        --body-pad-y: clamp(14px, 1.6vh, 24px);
+        --grid-gap: clamp(16px, 1.7vw, 30px);
+        --field-gap: clamp(7px, 0.9vh, 12px);
+        --field-h: clamp(38px, 4.6vh, 48px);
+        --textarea-h: clamp(76px, 10vh, 118px);
+        --code-pad: clamp(12px, 1.2vw, 18px);
+        --footer-h: clamp(56px, 7vh, 74px);
 
-    @media (min-width: 1201px) {
-        .report-create-page {
-            height: calc(100vh - 112px) !important;
-            overflow: hidden !important;
-        }
+        min-height: calc(100vh - 112px);
+        padding: var(--page-pad-y) clamp(12px, 2vw, 28px);
+        overflow: hidden !important;
+
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
     }
 
     .report-create-wrap {
-        width: 100%;
-        max-width: 1120px !important;
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        overflow: visible !important;
+        width: min(100%, var(--wrap-width));
+        margin: 0 auto;
+        transform: scale(var(--create-scale));
         transform-origin: top center;
     }
 
     .report-create-back {
-        margin-bottom: 3px !important;
+        margin-bottom: clamp(2px, 0.5vh, 8px) !important;
+        font-size: clamp(12px, 0.8vw, 14px) !important;
+        line-height: 1.2 !important;
     }
 
     .report-create-title {
-        margin-bottom: 10px !important;
-        font-size: 29px !important;
+        margin: 0 0 clamp(8px, 1.2vh, 16px) !important;
+        font-size: clamp(25px, 2vw, 34px) !important;
         line-height: 1.08 !important;
+        letter-spacing: -0.5px;
     }
 
     .report-create-card {
         width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        display: block !important;
-        border-radius: 18px !important;
-        overflow: visible !important;
+        border-radius: var(--card-radius) !important;
+        overflow: hidden !important;
     }
 
     .report-create-form {
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-        display: block !important;
+        width: 100%;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     .report-create-body {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
+        padding: var(--body-pad-y) var(--body-pad-x) clamp(8px, 1vh, 14px) !important;
         overflow: visible !important;
-        display: block !important;
-        padding: 16px 26px 8px !important;
     }
 
     .report-create-grid {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        overflow: visible !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--grid-gap) !important;
         align-items: start !important;
-        gap: 22px !important;
     }
 
     .report-create-column {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        overflow: visible !important;
+        min-width: 0;
     }
 
     .report-section-heading {
-        margin-bottom: 8px !important;
+        margin-bottom: clamp(8px, 1vh, 14px) !important;
+        padding-bottom: clamp(7px, 0.8vh, 12px) !important;
     }
 
     .report-section-heading span {
-        font-size: 15px !important;
+        font-size: clamp(13px, 0.95vw, 16px) !important;
     }
 
-    .report-form-group {
-        margin-bottom: 9px !important;
+    .report-form-group,
+    .report-info-box,
+    .report-code-box {
+        margin-bottom: var(--field-gap) !important;
     }
 
     .report-form-group label {
         margin-bottom: 5px !important;
-        font-size: 13px !important;
+        font-size: clamp(12px, 0.85vw, 14px) !important;
         line-height: 1.25 !important;
     }
 
@@ -153,80 +137,84 @@
 
     .report-form-group input,
     .report-form-group select,
-    .report-form-group textarea,
-    .report-custom-trigger,
-    .report-info-box {
-        min-height: 38px !important;
-    }
-
-    .report-form-group input,
-    .report-form-group select,
     .report-custom-trigger {
-        height: 38px !important;
+        height: var(--field-h) !important;
+        min-height: var(--field-h) !important;
         padding-top: 0 !important;
         padding-bottom: 0 !important;
     }
 
     .report-form-group textarea {
-        min-height: 78px !important;
-        max-height: 78px !important;
+        min-height: var(--textarea-h) !important;
+        max-height: var(--textarea-h) !important;
         resize: none !important;
         padding-top: 10px !important;
         padding-bottom: 10px !important;
     }
 
     .report-code-box {
-        margin-bottom: 10px !important;
-        padding: 13px !important;
+        padding: var(--code-pad) !important;
     }
 
     .report-code-head {
-        margin-bottom: 7px !important;
+        margin-bottom: clamp(6px, 0.8vh, 12px) !important;
     }
 
     .report-code-main {
-        min-height: 62px !important;
-        padding: 10px 14px !important;
+        min-height: clamp(58px, 7.4vh, 76px) !important;
+        padding: clamp(10px, 1.1vw, 16px) !important;
+        border-radius: 14px !important;
+    }
+
+    .report-code-main strong {
+        font-size: clamp(15px, 1vw, 18px) !important;
+    }
+
+    .report-copy-btn {
+        width: clamp(38px, 2.8vw, 46px) !important;
+        height: clamp(38px, 2.8vw, 46px) !important;
         border-radius: 14px !important;
     }
 
     .report-info-box {
-        min-height: 54px !important;
-        margin-bottom: 9px !important;
-        padding: 10px 14px !important;
+        min-height: clamp(50px, 6.2vh, 64px) !important;
+        padding: clamp(10px, 1vw, 15px) !important;
     }
 
     .report-info-box span {
-        font-size: 12px !important;
+        font-size: clamp(11px, 0.8vw, 13px) !important;
     }
 
     .report-info-box strong {
-        font-size: 15px !important;
-    }
-
-    .report-create-footer {
-        position: static !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
-        z-index: auto !important;
-        min-height: 58px !important;
-        padding: 9px 26px !important;
-        border-radius: 0 0 18px 18px !important;
-    }
-
-    .report-btn-cancel,
-    .report-btn-submit {
-        min-height: 40px !important;
-        padding: 0 22px !important;
+        font-size: clamp(14px, 1vw, 17px) !important;
     }
 
     .report-note-help {
         display: block;
         margin-top: 5px !important;
+        color: var(--text-soft);
+        font-size: clamp(11px, 0.78vw, 13px) !important;
         line-height: 1.25 !important;
-        font-size: 12px !important;
         overflow-wrap: anywhere;
+    }
+
+    .report-create-footer {
+        position: static !important;
+        min-height: var(--footer-h) !important;
+        padding: clamp(8px, 1vh, 14px) var(--body-pad-x) !important;
+        border-radius: 0 0 var(--card-radius) var(--card-radius) !important;
+
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: clamp(10px, 1vw, 16px) !important;
+    }
+
+    .report-btn-cancel,
+    .report-btn-submit {
+        min-height: clamp(38px, 4.6vh, 48px) !important;
+        padding: 0 clamp(20px, 2vw, 34px) !important;
+        font-size: clamp(13px, 0.95vw, 16px) !important;
     }
 
     /* ================= REQUIRED STAR ================= */
@@ -240,19 +228,12 @@
 
     .report-form-group.has-error label .required-star {
         display: inline;
-        color: var(--hsu-red, #ff5c70) !important;
     }
 
-    /* ================= FILE ATTACHMENT - THEME SYNC ================= */
+    /* ================= FILE UPLOAD ================= */
 
     .report-form-group--file {
         position: relative;
-        margin-bottom: 9px !important;
-    }
-
-    .report-file-upload,
-    .report-file-inline {
-        width: 100%;
     }
 
     .report-file-native {
@@ -260,44 +241,43 @@
         width: 1px;
         height: 1px;
         opacity: 0;
-        overflow: hidden;
         pointer-events: none;
     }
 
+    .report-file-upload,
     .report-file-inline {
-        min-height: 54px;
-        padding: 8px 11px;
+        width: 100%;
+    }
+
+    .report-file-inline {
+        min-height: clamp(50px, 6.4vh, 66px);
+        padding: clamp(7px, 0.8vw, 11px);
         box-sizing: border-box;
 
         background: var(--report-file-surface-2);
         color: var(--report-file-text);
-        border: 1px dashed color-mix(in srgb, var(--report-file-blue) 72%, var(--report-file-border));
+        border: 1px dashed color-mix(in srgb, var(--report-file-blue) 68%, var(--report-file-border));
         border-radius: 15px;
 
         display: flex;
         align-items: center;
         gap: 9px;
 
-        transition:
-            border-color 0.2s ease,
-            background-color 0.2s ease,
-            box-shadow 0.2s ease,
-            transform 0.2s ease;
+        transition: 0.18s ease;
     }
 
-    .report-file-upload.is-dragging .report-file-inline,
-    .report-file-inline:hover {
+    .report-file-inline:hover,
+    .report-file-upload.is-dragging .report-file-inline {
         background: var(--report-file-surface);
         border-color: var(--report-file-blue);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--report-file-blue) 18%, transparent);
-        transform: translateY(-1px);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--report-file-blue) 16%, transparent);
     }
 
     .report-file-inline__trigger {
         flex: 0 0 auto;
-        height: 38px;
-        padding: 0 14px;
-        border-radius: 13px;
+        height: clamp(34px, 4.3vh, 40px);
+        padding: 0 clamp(12px, 1vw, 16px);
+        border-radius: 12px;
         border: 1px solid color-mix(in srgb, var(--report-file-blue) 42%, var(--report-file-border));
 
         background: var(--report-file-active-bg);
@@ -305,8 +285,8 @@
 
         cursor: pointer;
         font-family: inherit;
-        font-size: 13px;
-        font-weight: 800;
+        font-size: clamp(12px, 0.85vw, 14px);
+        font-weight: 850;
         line-height: 1;
         white-space: nowrap;
 
@@ -315,18 +295,13 @@
         justify-content: center;
         gap: 8px;
 
-        transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
+        transition: 0.18s ease;
     }
 
     .report-file-inline__trigger:hover {
         background: var(--report-file-blue);
         border-color: var(--report-file-blue);
         color: #ffffff;
-        box-shadow: 0 8px 18px color-mix(in srgb, var(--report-file-blue) 24%, transparent);
         transform: translateY(-1px);
     }
 
@@ -335,14 +310,14 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
         color: currentColor;
+        flex: 0 0 auto;
     }
 
-    .report-file-inline__icon {
+    .report-file-inline__icon,
+    .report-file-inline__icon svg {
         width: 18px;
         height: 18px;
-        opacity: 0.95;
     }
 
     .report-file-inline__icon svg,
@@ -355,25 +330,19 @@
         display: block;
     }
 
-    .report-file-inline__icon svg {
-        width: 18px;
-        height: 18px;
-    }
-
     .report-file-inline__colon {
         flex: 0 0 auto;
         color: var(--report-file-text);
         font-size: 18px;
         font-weight: 900;
         line-height: 1;
-        opacity: 0.95;
-        transform: translateY(-1px);
+        opacity: 0.9;
     }
 
     .report-file-inline__preview {
         flex: 1;
         min-width: 0;
-        min-height: 38px;
+        min-height: 36px;
 
         display: flex;
         align-items: center;
@@ -385,10 +354,8 @@
     .report-file-inline__empty {
         max-width: 100%;
         color: var(--report-file-text-soft);
-        font-size: 13px;
+        font-size: clamp(12px, 0.85vw, 14px);
         font-weight: 800;
-        line-height: 1.2;
-
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -396,7 +363,7 @@
 
     .report-file-inline__preview.has-file {
         align-items: flex-start;
-        max-height: 88px;
+        max-height: clamp(72px, 10vh, 96px);
         overflow-y: auto;
         padding-right: 4px;
         scrollbar-width: thin;
@@ -405,7 +372,6 @@
 
     .report-file-inline__preview.has-file::-webkit-scrollbar {
         width: 6px;
-        height: 6px;
     }
 
     .report-file-inline__preview.has-file::-webkit-scrollbar-track {
@@ -419,7 +385,7 @@
 
     .report-file-chip {
         min-width: 0;
-        max-width: 218px;
+        max-width: min(230px, 100%);
         height: 38px;
         padding: 4px 7px 4px 5px;
         box-sizing: border-box;
@@ -433,10 +399,7 @@
         align-items: center;
         gap: 7px;
 
-        transition:
-            background-color 0.18s ease,
-            border-color 0.18s ease,
-            transform 0.18s ease;
+        transition: 0.18s ease;
     }
 
     .report-file-chip:hover {
@@ -449,11 +412,9 @@
         width: 28px;
         height: 28px;
         border-radius: 9px;
-
         background: color-mix(in srgb, var(--report-file-blue) 16%, var(--report-file-surface-2));
         color: var(--report-file-blue);
         border: 1px solid color-mix(in srgb, var(--report-file-blue) 24%, var(--report-file-border));
-
         overflow: hidden;
     }
 
@@ -465,31 +426,21 @@
     .report-file-chip__icon--pdf {
         background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 16%, var(--report-file-surface-2));
         color: var(--hsu-red, #ef3b2d);
-        border-color: color-mix(in srgb, var(--hsu-red, #ef3b2d) 26%, var(--report-file-border));
-    }
-
-    .report-file-chip__icon--word {
-        background: color-mix(in srgb, var(--report-file-blue) 16%, var(--report-file-surface-2));
-        color: var(--report-file-blue);
-        border-color: color-mix(in srgb, var(--report-file-blue) 26%, var(--report-file-border));
     }
 
     .report-file-chip__icon--excel {
         background: color-mix(in srgb, var(--success, #16a34a) 16%, var(--report-file-surface-2));
         color: var(--success, #16a34a);
-        border-color: color-mix(in srgb, var(--success, #16a34a) 26%, var(--report-file-border));
     }
 
     .report-file-chip__icon--archive {
         background: color-mix(in srgb, var(--warning, #f59e0b) 18%, var(--report-file-surface-2));
         color: var(--warning, #f59e0b);
-        border-color: color-mix(in srgb, var(--warning, #f59e0b) 28%, var(--report-file-border));
     }
 
     .report-file-chip__icon--image {
         background: color-mix(in srgb, var(--info, #0ea5e9) 16%, var(--report-file-surface-2));
         color: var(--info, #0ea5e9);
-        border-color: color-mix(in srgb, var(--info, #0ea5e9) 26%, var(--report-file-border));
     }
 
     .report-file-chip__thumb {
@@ -497,15 +448,14 @@
         height: 30px;
         border-radius: 9px;
         object-fit: cover;
-        border: 1px solid var(--report-file-border);
         flex: 0 0 30px;
         background: var(--report-file-surface-2);
+        border: 1px solid var(--report-file-border);
     }
 
     .report-file-chip__content {
         min-width: 0;
         flex: 1;
-        display: block;
     }
 
     .report-file-chip__name,
@@ -520,8 +470,8 @@
     .report-file-chip__name {
         color: var(--report-file-text);
         font-size: 12px;
-        font-weight: 800;
-        line-height: 1.15;
+        font-weight: 850;
+        line-height: 1.1;
     }
 
     .report-file-chip__meta {
@@ -537,58 +487,32 @@
         height: 21px;
         border: 0;
         border-radius: 999px;
-
         background: color-mix(in srgb, var(--report-file-text) 8%, transparent);
         color: var(--report-file-text);
-
         cursor: pointer;
         font-size: 15px;
-        font-weight: 800;
+        font-weight: 850;
         line-height: 1;
 
         display: inline-flex;
         align-items: center;
         justify-content: center;
-
         flex: 0 0 21px;
 
-        transition:
-            background-color 0.2s ease,
-            color 0.2s ease,
-            transform 0.2s ease;
+        transition: 0.18s ease;
     }
 
     .report-file-chip__remove:hover {
         background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 22%, transparent);
-        color: var(--report-file-text);
         transform: translateY(-1px);
     }
 
-    @supports not (color: color-mix(in srgb, red 50%, blue)) {
-        .report-file-inline,
-        .report-file-chip,
-        .report-file-chip__icon,
-        .report-file-inline__trigger,
-        .report-file-chip__remove {
-            background: var(--report-file-surface-2);
-            color: var(--report-file-text);
-            border-color: var(--report-file-border);
-        }
-
-        .report-file-inline__trigger {
-            background: var(--report-file-active-bg);
-            color: var(--report-file-active-text);
-        }
-
-        .report-file-chip__icon {
-            color: var(--report-file-blue);
-        }
-    }
+    /* ================= RESPONSIVE ================= */
 
     @media (max-width: 1200px) {
-        html,
-        body {
-            overflow-y: auto !important;
+        .report-create-page {
+            min-height: auto;
+            overflow: visible !important;
         }
 
         .report-create-grid {
@@ -597,13 +521,28 @@
     }
 
     @media (max-width: 768px) {
-        html,
-        body {
-            overflow-y: auto !important;
+        .report-create-page {
+            padding: 12px;
         }
 
         .report-create-wrap {
-            max-width: 100% !important;
+            width: 100%;
+            transform: none !important;
+        }
+
+        .report-create-body {
+            padding: 16px !important;
+        }
+
+        .report-create-footer {
+            padding: 12px 16px !important;
+            flex-direction: column-reverse !important;
+            align-items: stretch !important;
+        }
+
+        .report-btn-cancel,
+        .report-btn-submit {
+            width: 100%;
         }
 
         .report-file-inline {
@@ -625,14 +564,29 @@
         }
 
         .report-file-chip {
-            max-width: 100%;
             width: 100%;
+            max-width: 100%;
+        }
+    }
+
+    @supports not (color: color-mix(in srgb, red 50%, blue)) {
+        .report-file-inline,
+        .report-file-chip,
+        .report-file-chip__icon {
+            background: var(--report-file-surface-2);
+            color: var(--report-file-text);
+            border-color: var(--report-file-border);
+        }
+
+        .report-file-inline__trigger {
+            background: var(--report-file-active-bg);
+            color: var(--report-file-active-text);
         }
     }
 </style>
 
 <section class="report-create-page">
-    <div class="report-create-wrap">
+    <div class="report-create-wrap" id="reportCreateWrap">
         <a href="{{ url_for('report_page') }}" class="report-create-back">
             « Quay lại
         </a>
@@ -931,40 +885,43 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("reportCreateForm");
-    const timeInput = document.getElementById("time");
-    const timeDisplay = document.getElementById("timeDisplay");
+    const $ = (selector, parent = document) => parent.querySelector(selector);
+    const $$ = (selector, parent = document) => Array.from(parent.querySelectorAll(selector));
 
-    const reportNameInput = document.getElementById("report_name");
-    const reportTypeSelect = document.getElementById("report_type");
+    const form = $("#reportCreateForm");
+    const wrap = $("#reportCreateWrap");
+    const page = $(".report-create-page");
 
-    const reportCodeInput = document.getElementById("report_code");
-    const reportCodeDisplay = document.getElementById("reportCodeDisplay");
-    const copyReportCodeBtn = document.getElementById("copyReportCodeBtn");
+    const timeInput = $("#time");
+    const timeDisplay = $("#timeDisplay");
+    const reportNameInput = $("#report_name");
+    const reportTypeSelect = $("#report_type");
+    const reportCodeInput = $("#report_code");
+    const reportCodeDisplay = $("#reportCodeDisplay");
+    const copyReportCodeBtn = $("#copyReportCodeBtn");
 
-    const assetSelectBox = document.querySelector("[data-asset-select]");
-    const assetTrigger = document.getElementById("assetTrigger");
-    const assetSelectedText = document.getElementById("assetSelectedText");
-    const assetSelectedList = document.getElementById("assetSelectedList");
-    const assetOptionButtons = document.querySelectorAll("[data-asset-select] .report-custom-option");
+    const assetSelectBox = $("[data-asset-select]");
+    const assetTrigger = $("#assetTrigger");
+    const assetSelectedText = $("#assetSelectedText");
+    const assetSelectedList = $("#assetSelectedList");
+    const assetOptionButtons = $$("[data-asset-select] .report-custom-option");
 
-    const assetIdInput = document.getElementById("asset_id");
-    const assetCodeInput = document.getElementById("asset_code");
-    const assetNameInput = document.getElementById("asset_name");
+    const assetIdInput = $("#asset_id");
+    const assetCodeInput = $("#asset_code");
+    const assetNameInput = $("#asset_name");
+    const assetIdsInput = $("#asset_ids");
+    const assetCodesInput = $("#asset_codes");
+    const assetNamesInput = $("#asset_names");
 
-    const assetIdsInput = document.getElementById("asset_ids");
-    const assetCodesInput = document.getElementById("asset_codes");
-    const assetNamesInput = document.getElementById("asset_names");
+    const filesInput = $("#files");
+    const reportFileUpload = $("#reportFileUpload");
+    const reportFileTrigger = $("#reportFileTrigger");
+    const reportFilePreview = $("#reportFilePreview");
 
-    const filesInput = document.getElementById("files");
-    const reportFileUpload = document.getElementById("reportFileUpload");
-    const reportFileTrigger = document.getElementById("reportFileTrigger");
-    const reportFilePreview = document.getElementById("reportFilePreview");
-
-    const toast = document.getElementById("reportCreateToast");
-    const toastTitle = document.getElementById("reportCreateToastTitle");
-    const toastMessage = document.getElementById("reportCreateToastMessage");
-    const closeToastBtn = document.getElementById("closeReportToastBtn");
+    const toast = $("#reportCreateToast");
+    const toastTitle = $("#reportCreateToastTitle");
+    const toastMessage = $("#reportCreateToastMessage");
+    const closeToastBtn = $("#closeReportToastBtn");
 
     let allowSubmit = false;
     let toastTimer = null;
@@ -974,54 +931,36 @@ document.addEventListener("DOMContentLoaded", function () {
     let previewObjectUrls = [];
 
     const fileIconMap = {
-        image: `
-            <svg viewBox="0 0 24 24">
-                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-                <circle cx="8.5" cy="10" r="1.5"></circle>
-                <path d="m21 15-5-5L5 21"></path>
-            </svg>
-        `,
-        pdf: `
-            <svg viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <path d="M7 16h10"></path>
-                <path d="M7 13h10"></path>
-            </svg>
-        `,
-        word: `
-            <svg viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <path d="M7 13h10"></path>
-                <path d="M7 17h7"></path>
-            </svg>
-        `,
-        excel: `
-            <svg viewBox="0 0 24 24">
-                <path d="M4 4h16v16H4z"></path>
-                <path d="M4 10h16"></path>
-                <path d="M4 16h16"></path>
-                <path d="M10 4v16"></path>
-                <path d="M16 4v16"></path>
-            </svg>
-        `,
-        archive: `
-            <svg viewBox="0 0 24 24">
-                <path d="M21 8v13H3V8"></path>
-                <path d="M1 3h22v5H1z"></path>
-                <path d="M10 12h4"></path>
-            </svg>
-        `,
-        file: `
-            <svg viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <path d="M14 2v6h6"></path>
-                <path d="M8 13h8"></path>
-                <path d="M8 17h5"></path>
-            </svg>
-        `
+        image: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>',
+        pdf: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M7 16h10"></path><path d="M7 13h10"></path></svg>',
+        word: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M7 13h10"></path><path d="M7 17h7"></path></svg>',
+        excel: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path><path d="M4 16h16"></path><path d="M10 4v16"></path><path d="M16 4v16"></path></svg>',
+        archive: '<svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>',
+        file: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>'
     };
+
+    function fitPageToScreen() {
+        if (!wrap || !page || window.innerWidth <= 1200) {
+            document.documentElement.style.setProperty("--create-scale", "1");
+            return;
+        }
+
+        document.documentElement.style.setProperty("--create-scale", "1");
+
+        requestAnimationFrame(function () {
+            const pageRect = page.getBoundingClientRect();
+            const wrapRect = wrap.getBoundingClientRect();
+
+            const availableHeight = Math.max(420, window.innerHeight - pageRect.top - 12);
+            const availableWidth = Math.max(760, window.innerWidth - 48);
+
+            const heightScale = availableHeight / wrap.scrollHeight;
+            const widthScale = availableWidth / wrapRect.width;
+            const nextScale = Math.min(1, Math.max(0.78, heightScale, 0), Math.max(0.78, widthScale, 0));
+
+            document.documentElement.style.setProperty("--create-scale", nextScale.toFixed(3));
+        });
+    }
 
     function getVietnamDateTimeValue() {
         const parts = new Intl.DateTimeFormat("en-CA", {
@@ -1036,23 +975,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const map = {};
 
-        parts.forEach(function (part) {
+        parts.forEach(part => {
             map[part.type] = part.value;
         });
 
-        return map.hour + ":" + map.minute + " " + map.day + "/" + map.month + "/" + map.year;
+        return `${map.hour}:${map.minute} ${map.day}/${map.month}/${map.year}`;
     }
 
     function updateRealTime() {
         const value = getVietnamDateTimeValue();
 
-        if (timeInput) {
-            timeInput.value = value;
-        }
-
-        if (timeDisplay) {
-            timeDisplay.textContent = value;
-        }
+        if (timeInput) timeInput.value = value;
+        if (timeDisplay) timeDisplay.textContent = value;
     }
 
     function showFallbackToast(title, message) {
@@ -1061,20 +995,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        if (toastTitle) {
-            toastTitle.textContent = title;
-        }
-
-        if (toastMessage) {
-            toastMessage.textContent = message;
-        }
+        if (toastTitle) toastTitle.textContent = title;
+        if (toastMessage) toastMessage.textContent = message;
 
         toast.classList.add("is-show");
 
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () {
-            toast.classList.remove("is-show");
-        }, 3500);
+        toastTimer = setTimeout(() => toast.classList.remove("is-show"), 3500);
     }
 
     function showToast(title, message, type = "error") {
@@ -1084,11 +1011,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (typeof window.sonner === "function") {
-            window.sonner({
-                type: type,
-                title: title,
-                description: message
-            });
+            window.sonner({ type, title, description: message });
             return;
         }
 
@@ -1096,49 +1019,36 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getGroup(field) {
-        return field.closest("[data-field-group]");
+        return field?.closest("[data-field-group]");
     }
 
     function setError(field, message) {
         const group = getGroup(field);
-
         if (!group) return;
 
-        const error = group.querySelector(".report-form-error");
+        const error = $(".report-form-error", group);
         group.classList.add("has-error");
 
-        if (error) {
-            error.textContent = message;
-        }
+        if (error) error.textContent = message;
     }
 
     function clearError(field) {
         const group = getGroup(field);
-
-        if (!group) return;
-
-        group.classList.remove("has-error");
+        if (group) group.classList.remove("has-error");
     }
 
     function setAssetError(message) {
-        const group = document.getElementById("assetFieldGroup");
-
+        const group = $("#assetFieldGroup");
         if (!group) return;
 
-        const error = group.querySelector(".report-form-error");
+        const error = $(".report-form-error", group);
         group.classList.add("has-error");
 
-        if (error) {
-            error.textContent = message;
-        }
+        if (error) error.textContent = message;
     }
 
     function clearAssetError() {
-        const group = document.getElementById("assetFieldGroup");
-
-        if (!group) return;
-
-        group.classList.remove("has-error");
+        $("#assetFieldGroup")?.classList.remove("has-error");
     }
 
     function validateField(field) {
@@ -1159,31 +1069,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function closeSelects(exceptBox = null) {
-        document
-            .querySelectorAll("[data-custom-select], [data-asset-select]")
-            .forEach(function (box) {
-                if (box !== exceptBox) {
-                    box.classList.remove("is-open");
-                }
-            });
+        $$("[data-custom-select], [data-asset-select]").forEach(box => {
+            if (box !== exceptBox) box.classList.remove("is-open");
+        });
     }
 
     function syncSelect(box) {
         const select = document.getElementById(box.dataset.target);
-        const text = box.querySelector(".report-custom-trigger span");
-        const options = box.querySelectorAll(".report-custom-option");
+        const text = $(".report-custom-trigger span", box);
+        const options = $$(".report-custom-option", box);
 
         if (!select || !text) return;
 
         let selectedText = "";
 
-        options.forEach(function (option) {
+        options.forEach(option => {
             const selected = option.dataset.value === select.value;
             option.classList.toggle("is-selected", selected);
-
-            if (selected) {
-                selectedText = option.textContent.trim();
-            }
+            if (selected) selectedText = option.textContent.trim();
         });
 
         text.textContent = selectedText || select.options[0].textContent.trim();
@@ -1194,9 +1097,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         assetSelectBox.classList.toggle("is-required", isAssetRequiredByType());
 
-        if (!isAssetRequiredByType()) {
-            clearAssetError();
-        }
+        if (!isAssetRequiredByType()) clearAssetError();
     }
 
     function getAssetKey(asset) {
@@ -1215,10 +1116,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function hasAsset(asset) {
         const key = getAssetKey(asset);
+        return selectedAssets.some(item => getAssetKey(item) === key);
+    }
 
-        return selectedAssets.some(function (item) {
-            return getAssetKey(item) === key;
+    function renderSelectedAssets() {
+        if (!assetSelectedList) return;
+
+        assetSelectedList.innerHTML = "";
+
+        if (selectedAssets.length === 0) {
+            assetSelectedList.style.display = "none";
+            return;
+        }
+
+        assetSelectedList.style.display = "block";
+
+        selectedAssets.forEach(asset => {
+            const item = document.createElement("div");
+            item.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;";
+
+            const text = document.createElement("span");
+            text.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.textContent = "×";
+            removeButton.dataset.removeAssetKey = getAssetKey(asset);
+            removeButton.style.cursor = "pointer";
+
+            item.append(text, removeButton);
+            assetSelectedList.appendChild(item);
         });
+
+        fitPageToScreen();
     }
 
     function syncSelectedAssets() {
@@ -1228,21 +1158,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (assetCodeInput) assetCodeInput.value = firstAsset.code || "";
         if (assetNameInput) assetNameInput.value = firstAsset.name || "";
 
-        if (assetIdsInput) {
-            assetIdsInput.value = selectedAssets.map(item => item.id).filter(Boolean).join(",");
-        }
+        if (assetIdsInput) assetIdsInput.value = selectedAssets.map(item => item.id).filter(Boolean).join(",");
+        if (assetCodesInput) assetCodesInput.value = selectedAssets.map(item => item.code).filter(Boolean).join(",");
+        if (assetNamesInput) assetNamesInput.value = selectedAssets.map(item => item.name).filter(Boolean).join(",");
 
-        if (assetCodesInput) {
-            assetCodesInput.value = selectedAssets.map(item => item.code).filter(Boolean).join(",");
-        }
-
-        if (assetNamesInput) {
-            assetNamesInput.value = selectedAssets.map(item => item.name).filter(Boolean).join(",");
-        }
-
-        assetOptionButtons.forEach(function (option) {
+        assetOptionButtons.forEach(option => {
             if (option.dataset.clearAssets === "true") return;
-
             option.classList.toggle("is-selected", hasAsset(optionToAsset(option)));
         });
 
@@ -1260,41 +1181,6 @@ document.addEventListener("DOMContentLoaded", function () {
         renderSelectedAssets();
         clearAssetError();
         autoFillReportName();
-    }
-
-    function renderSelectedAssets() {
-        if (!assetSelectedList) return;
-
-        assetSelectedList.innerHTML = "";
-
-        if (selectedAssets.length === 0) {
-            assetSelectedList.style.display = "none";
-            return;
-        }
-
-        assetSelectedList.style.display = "block";
-
-        selectedAssets.forEach(function (asset) {
-            const item = document.createElement("div");
-            item.style.display = "flex";
-            item.style.alignItems = "center";
-            item.style.justifyContent = "space-between";
-            item.style.gap = "10px";
-            item.style.marginTop = "6px";
-
-            const text = document.createElement("span");
-            text.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
-
-            const removeButton = document.createElement("button");
-            removeButton.type = "button";
-            removeButton.textContent = "×";
-            removeButton.setAttribute("data-remove-asset-key", getAssetKey(asset));
-            removeButton.style.cursor = "pointer";
-
-            item.appendChild(text);
-            item.appendChild(removeButton);
-            assetSelectedList.appendChild(item);
-        });
     }
 
     function clearSelectedAssets() {
@@ -1315,11 +1201,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!key) return;
 
-        if (hasAsset(asset)) {
-            selectedAssets = selectedAssets.filter(item => getAssetKey(item) !== key);
-        } else {
-            selectedAssets.push(asset);
-        }
+        selectedAssets = hasAsset(asset)
+            ? selectedAssets.filter(item => getAssetKey(item) !== key)
+            : [...selectedAssets, asset];
 
         syncSelectedAssets();
     }
@@ -1358,72 +1242,61 @@ document.addEventListener("DOMContentLoaded", function () {
     function validateForm() {
         updateAssetRequirement();
 
-        const fields = form.querySelectorAll("[data-required='true']");
+        const fields = $$("[data-required='true']", form);
         let valid = true;
         let firstInvalid = null;
 
-        fields.forEach(function (field) {
+        fields.forEach(field => {
             const ok = validateField(field);
 
             if (!ok) {
                 valid = false;
-
-                if (!firstInvalid) {
-                    firstInvalid = field;
-                }
+                if (!firstInvalid) firstInvalid = field;
             }
         });
 
         if (!validateAssetSelection()) {
             valid = false;
-
-            if (!firstInvalid) {
-                firstInvalid = assetTrigger;
-            }
+            if (!firstInvalid) firstInvalid = assetTrigger;
         }
 
         if (firstInvalid) {
-            const group = getGroup(firstInvalid) || document.getElementById("assetFieldGroup");
-            const trigger = group ? group.querySelector(".report-custom-trigger") : null;
+            const group = getGroup(firstInvalid) || $("#assetFieldGroup");
+            const trigger = group ? $(".report-custom-trigger", group) : null;
 
-            firstInvalid.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
+            firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
 
-            setTimeout(function () {
-                if (trigger) {
-                    trigger.focus();
-                } else {
-                    firstInvalid.focus();
-                }
+            setTimeout(() => {
+                if (trigger) trigger.focus();
+                else firstInvalid.focus();
             }, 250);
         }
 
+        fitPageToScreen();
         return valid;
     }
 
     function initNormalCustomSelects() {
-        document.querySelectorAll("[data-custom-select]").forEach(function (box) {
+        $$("[data-custom-select]").forEach(box => {
             const select = document.getElementById(box.dataset.target);
-            const trigger = box.querySelector(".report-custom-trigger");
-            const options = box.querySelectorAll(".report-custom-option");
+            const trigger = $(".report-custom-trigger", box);
+            const options = $$(".report-custom-option", box);
 
             if (!select || !trigger) return;
 
             syncSelect(box);
 
-            trigger.addEventListener("click", function (event) {
+            trigger.addEventListener("click", event => {
                 event.stopPropagation();
 
                 const isOpen = box.classList.contains("is-open");
-
                 closeSelects(box);
                 box.classList.toggle("is-open", !isOpen);
+                fitPageToScreen();
             });
 
-            options.forEach(function (option) {
-                option.addEventListener("click", function (event) {
+            options.forEach(option => {
+                option.addEventListener("click", event => {
                     event.stopPropagation();
 
                     select.value = option.dataset.value || "";
@@ -1438,10 +1311,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
 
                     box.classList.remove("is-open");
+                    fitPageToScreen();
                 });
             });
 
-            select.addEventListener("change", function () {
+            select.addEventListener("change", () => {
                 syncSelect(box);
                 validateField(select);
 
@@ -1449,6 +1323,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     updateAssetRequirement();
                     autoFillReportName();
                 }
+
+                fitPageToScreen();
             });
         });
     }
@@ -1456,42 +1332,36 @@ document.addEventListener("DOMContentLoaded", function () {
     function initAssetSelect() {
         if (!assetSelectBox || !assetTrigger) return;
 
-        assetTrigger.addEventListener("click", function (event) {
+        assetTrigger.addEventListener("click", event => {
             event.stopPropagation();
 
             const isOpen = assetSelectBox.classList.contains("is-open");
-
             closeSelects(assetSelectBox);
             assetSelectBox.classList.toggle("is-open", !isOpen);
+            fitPageToScreen();
         });
 
-        assetOptionButtons.forEach(function (option) {
-            option.addEventListener("click", function (event) {
+        assetOptionButtons.forEach(option => {
+            option.addEventListener("click", event => {
                 event.stopPropagation();
 
                 toggleAsset(option);
                 validateAssetSelection();
-
                 assetSelectBox.classList.add("is-open");
+                fitPageToScreen();
             });
         });
 
-        if (assetSelectedList) {
-            assetSelectedList.addEventListener("click", function (event) {
-                const removeButton = event.target.closest("[data-remove-asset-key]");
+        assetSelectedList?.addEventListener("click", event => {
+            const removeButton = event.target.closest("[data-remove-asset-key]");
+            if (!removeButton) return;
 
-                if (!removeButton) return;
+            const key = removeButton.dataset.removeAssetKey;
+            selectedAssets = selectedAssets.filter(asset => getAssetKey(asset) !== key);
 
-                const key = removeButton.getAttribute("data-remove-asset-key");
-
-                selectedAssets = selectedAssets.filter(function (asset) {
-                    return getAssetKey(asset) !== key;
-                });
-
-                syncSelectedAssets();
-                validateAssetSelection();
-            });
-        }
+            syncSelectedAssets();
+            validateAssetSelection();
+        });
     }
 
     function formatFileSize(size) {
@@ -1523,10 +1393,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function clearPreviewObjectUrls() {
-        previewObjectUrls.forEach(function (url) {
-            URL.revokeObjectURL(url);
-        });
-
+        previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
         previewObjectUrls = [];
     }
 
@@ -1534,51 +1401,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const extension = getFileExtension(file.name).toLowerCase();
         const mime = String(file.type || "").toLowerCase();
 
-        if (mime.startsWith("image/")) {
-            return {
-                type: "image",
-                className: "report-file-chip__icon--image",
-                svg: fileIconMap.image
-            };
-        }
+        if (mime.startsWith("image/")) return { className: "report-file-chip__icon--image", svg: fileIconMap.image };
+        if (extension === "pdf") return { className: "report-file-chip__icon--pdf", svg: fileIconMap.pdf };
+        if (["doc", "docx"].includes(extension)) return { className: "report-file-chip__icon--word", svg: fileIconMap.word };
+        if (["xls", "xlsx", "csv"].includes(extension)) return { className: "report-file-chip__icon--excel", svg: fileIconMap.excel };
+        if (["zip", "rar", "7z"].includes(extension)) return { className: "report-file-chip__icon--archive", svg: fileIconMap.archive };
 
-        if (extension === "pdf") {
-            return {
-                type: "pdf",
-                className: "report-file-chip__icon--pdf",
-                svg: fileIconMap.pdf
-            };
-        }
-
-        if (["doc", "docx"].includes(extension)) {
-            return {
-                type: "word",
-                className: "report-file-chip__icon--word",
-                svg: fileIconMap.word
-            };
-        }
-
-        if (["xls", "xlsx", "csv"].includes(extension)) {
-            return {
-                type: "excel",
-                className: "report-file-chip__icon--excel",
-                svg: fileIconMap.excel
-            };
-        }
-
-        if (["zip", "rar", "7z"].includes(extension)) {
-            return {
-                type: "archive",
-                className: "report-file-chip__icon--archive",
-                svg: fileIconMap.archive
-            };
-        }
-
-        return {
-            type: "file",
-            className: "report-file-chip__icon--file",
-            svg: fileIconMap.file
-        };
+        return { className: "report-file-chip__icon--file", svg: fileIconMap.file };
     }
 
     function syncFilesInputFromStore() {
@@ -1586,23 +1415,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const dataTransfer = new DataTransfer();
 
-        selectedFilesStore.forEach(function (file) {
-            dataTransfer.items.add(file);
-        });
-
+        selectedFilesStore.forEach(file => dataTransfer.items.add(file));
         filesInput.files = dataTransfer.files;
     }
 
     function addFilesToStore(fileList) {
-        Array.from(fileList || []).forEach(function (file) {
+        Array.from(fileList || []).forEach(file => {
             const fileKey = getFileKey(file);
-            const exists = selectedFilesStore.some(function (item) {
-                return getFileKey(item) === fileKey;
-            });
+            const exists = selectedFilesStore.some(item => getFileKey(item) === fileKey);
 
-            if (!exists) {
-                selectedFilesStore.push(file);
-            }
+            if (!exists) selectedFilesStore.push(file);
         });
 
         syncFilesInputFromStore();
@@ -1610,10 +1432,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function removeFileAt(indexToRemove) {
-        selectedFilesStore = selectedFilesStore.filter(function (_, index) {
-            return index !== indexToRemove;
-        });
-
+        selectedFilesStore = selectedFilesStore.filter((_, index) => index !== indexToRemove);
         syncFilesInputFromStore();
         renderSelectedFiles();
     }
@@ -1626,17 +1445,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (selectedFilesStore.length === 0) {
             reportFilePreview.classList.remove("has-file");
-            reportFilePreview.innerHTML = `
-                <span class="report-file-inline__empty">
-                    Chưa có tệp nào được chọn
-                </span>
-            `;
+            reportFilePreview.innerHTML = '<span class="report-file-inline__empty">Chưa có tệp nào được chọn</span>';
+            fitPageToScreen();
             return;
         }
 
         reportFilePreview.classList.add("has-file");
 
-        selectedFilesStore.forEach(function (file, index) {
+        selectedFilesStore.forEach((file, index) => {
             const safeName = escapeHtml(file.name);
             const safeMeta = escapeHtml(getFileExtension(file.name) + " · " + formatFileSize(file.size));
             const iconInfo = getFileIconInfo(file);
@@ -1651,11 +1467,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 previewObjectUrls.push(imageUrl);
 
                 previewHtml = `
-                    <img
-                        src="${imageUrl}"
-                        alt="${safeName}"
-                        class="report-file-chip__thumb"
-                    >
+                    <img src="${imageUrl}" alt="${safeName}" class="report-file-chip__thumb">
                 `;
             } else {
                 previewHtml = `
@@ -1667,14 +1479,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             chip.innerHTML = `
                 ${previewHtml}
-
                 <span class="report-file-chip__content">
-                    <span class="report-file-chip__name" title="${safeName}">
-                        ${safeName}
-                    </span>
+                    <span class="report-file-chip__name" title="${safeName}">${safeName}</span>
                     <span class="report-file-chip__meta">${safeMeta}</span>
                 </span>
-
                 <button
                     type="button"
                     class="report-file-chip__remove"
@@ -1687,58 +1495,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
             reportFilePreview.appendChild(chip);
         });
+
+        fitPageToScreen();
     }
 
     function initFileUpload() {
         if (!filesInput || !reportFileUpload) return;
 
-        if (reportFileTrigger) {
-            reportFileTrigger.addEventListener("click", function () {
-                filesInput.value = "";
-                filesInput.click();
-            });
-        }
+        reportFileTrigger?.addEventListener("click", () => {
+            filesInput.value = "";
+            filesInput.click();
+        });
 
         filesInput.addEventListener("change", function () {
             addFilesToStore(this.files);
         });
 
-        ["dragenter", "dragover"].forEach(function (eventName) {
-            reportFileUpload.addEventListener(eventName, function (event) {
+        ["dragenter", "dragover"].forEach(eventName => {
+            reportFileUpload.addEventListener(eventName, event => {
                 event.preventDefault();
                 event.stopPropagation();
                 reportFileUpload.classList.add("is-dragging");
             });
         });
 
-        ["dragleave", "drop"].forEach(function (eventName) {
-            reportFileUpload.addEventListener(eventName, function (event) {
+        ["dragleave", "drop"].forEach(eventName => {
+            reportFileUpload.addEventListener(eventName, event => {
                 event.preventDefault();
                 event.stopPropagation();
                 reportFileUpload.classList.remove("is-dragging");
             });
         });
 
-        reportFileUpload.addEventListener("drop", function (event) {
+        reportFileUpload.addEventListener("drop", event => {
             const files = event.dataTransfer ? event.dataTransfer.files : null;
-
-            if (!files || files.length === 0) return;
-
-            addFilesToStore(files);
+            if (files && files.length) addFilesToStore(files);
         });
 
-        if (reportFilePreview) {
-            reportFilePreview.addEventListener("click", function (event) {
-                const removeButton = event.target.closest("[data-remove-file-index]");
+        reportFilePreview?.addEventListener("click", event => {
+            const removeButton = event.target.closest("[data-remove-file-index]");
+            if (!removeButton) return;
 
-                if (!removeButton) return;
+            event.preventDefault();
+            event.stopPropagation();
 
-                event.preventDefault();
-                event.stopPropagation();
-
-                removeFileAt(Number(removeButton.getAttribute("data-remove-file-index")));
-            });
-        }
+            removeFileAt(Number(removeButton.dataset.removeFileIndex));
+        });
 
         renderSelectedFiles();
     }
@@ -1760,10 +1562,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         copyReportCodeBtn.classList.add("copied");
-
-        setTimeout(function () {
-            copyReportCodeBtn.classList.remove("copied");
-        }, 1200);
+        setTimeout(() => copyReportCodeBtn.classList.remove("copied"), 1200);
     }
 
     updateRealTime();
@@ -1773,29 +1572,22 @@ document.addEventListener("DOMContentLoaded", function () {
         reportCodeDisplay.textContent = reportCodeInput.value.trim();
     }
 
-    if (reportNameInput) {
-        reportNameInput.addEventListener("input", function () {
-            reportNameTouched = true;
-        });
-    }
+    reportNameInput?.addEventListener("input", () => {
+        reportNameTouched = true;
+    });
 
-    if (reportTypeSelect) {
-        reportTypeSelect.addEventListener("change", function () {
-            updateAssetRequirement();
-            autoFillReportName();
-        });
-    }
+    reportTypeSelect?.addEventListener("change", () => {
+        updateAssetRequirement();
+        autoFillReportName();
+        fitPageToScreen();
+    });
 
-    if (copyReportCodeBtn) {
-        copyReportCodeBtn.addEventListener("click", copyReportCode);
-    }
+    copyReportCodeBtn?.addEventListener("click", copyReportCode);
 
-    if (closeToastBtn && toast) {
-        closeToastBtn.addEventListener("click", function () {
-            clearTimeout(toastTimer);
-            toast.classList.remove("is-show");
-        });
-    }
+    closeToastBtn?.addEventListener("click", () => {
+        clearTimeout(toastTimer);
+        toast?.classList.remove("is-show");
+    });
 
     initNormalCustomSelects();
     initAssetSelect();
@@ -1803,28 +1595,30 @@ document.addEventListener("DOMContentLoaded", function () {
     updateAssetRequirement();
     syncSelectedAssets();
 
-    document.addEventListener("click", function () {
-        closeSelects();
+    document.addEventListener("click", () => closeSelects());
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeSelects();
     });
 
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-            closeSelects();
-        }
-    });
-
+    window.addEventListener("resize", fitPageToScreen);
     window.addEventListener("beforeunload", clearPreviewObjectUrls);
+    window.addEventListener("load", fitPageToScreen);
+
+    if (window.ResizeObserver && wrap) {
+        new ResizeObserver(fitPageToScreen).observe(wrap);
+    }
 
     if (form) {
-        const fields = form.querySelectorAll("[data-required='true']");
-
-        fields.forEach(function (field) {
-            field.addEventListener("input", function () {
+        $$("[data-required='true']", form).forEach(field => {
+            field.addEventListener("input", () => {
                 validateField(field);
+                fitPageToScreen();
             });
 
-            field.addEventListener("change", function () {
+            field.addEventListener("change", () => {
                 validateField(field);
+                fitPageToScreen();
             });
         });
 
@@ -1832,6 +1626,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (allowSubmit) return;
 
             event.preventDefault();
+
             updateRealTime();
             updateAssetRequirement();
             syncFilesInputFromStore();
@@ -1849,6 +1644,8 @@ document.addEventListener("DOMContentLoaded", function () {
             form.submit();
         });
     }
+
+    fitPageToScreen();
 });
 </script>
 {% endblock %}
