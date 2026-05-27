@@ -5,9 +5,14 @@ from datetime import datetime
 import requests
 
 
+# URL backend API thật, ví dụ: http://127.0.0.1:5001
 BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:5001")
+
+# Số dòng hiển thị mỗi trang ở giao diện activity
 ACTIVITY_PAGE_LIMIT = 10
 
+
+# Danh sách loại hoạt động mặc định nếu API filter-options không trả đủ dữ liệu
 DEFAULT_TYPE_OPTIONS = [
     "Báo cáo",
     "Thu hồi",
@@ -21,6 +26,7 @@ DEFAULT_TYPE_OPTIONS = [
 ]
 
 
+# Lấy user id hiện tại từ session user
 def get_current_user_id(current_user):
     if not isinstance(current_user, dict):
         return ""
@@ -34,6 +40,7 @@ def get_current_user_id(current_user):
     )
 
 
+# Ép kiểu int an toàn, lỗi thì trả default
 def safe_int(value, default=1):
     try:
         number = int(value)
@@ -43,6 +50,7 @@ def safe_int(value, default=1):
     return number
 
 
+# Format thời gian để hiển thị ở bảng
 def format_datetime(value):
     if not value:
         return "Chưa có dữ liệu"
@@ -75,6 +83,7 @@ def format_datetime(value):
     return text
 
 
+# Lấy text trạng thái hoạt động dựa vào status_code
 def get_status_text(activity):
     status_code = activity.get("status_code")
 
@@ -101,6 +110,7 @@ def get_status_text(activity):
     return "Không xác định"
 
 
+# Tự xác định loại hoạt động dựa vào module/action/path/target_name
 def get_activity_type(activity):
     module = str(activity.get("module") or "").lower()
     action = str(activity.get("action") or "").lower()
@@ -136,6 +146,7 @@ def get_activity_type(activity):
     return "Hệ thống"
 
 
+# Tạo mã hiển thị ACT-xxxxxx cho từng log
 def build_activity_code(activity, index=0):
     raw_id = (
         activity.get("id")
@@ -153,6 +164,7 @@ def build_activity_code(activity, index=0):
     return "ACT-" + str(index + 1).zfill(6)
 
 
+# Tạo nội dung chi tiết dễ đọc cho bảng
 def build_activity_detail(activity):
     action = activity.get("action") or "Thao tác hệ thống"
     target_name = activity.get("target_name") or ""
@@ -167,6 +179,7 @@ def build_activity_detail(activity):
     return action
 
 
+# Chuẩn hóa 1 activity từ API thành dữ liệu dễ render ở template
 def normalize_activity(activity, index=0):
     if not isinstance(activity, dict):
         activity = {}
@@ -220,6 +233,7 @@ def normalize_activity(activity, index=0):
     }
 
 
+# Gọi API GET và trả về payload JSON + status code
 def get_json(url, headers=None, params=None):
     try:
         response = requests.get(
@@ -243,6 +257,7 @@ def get_json(url, headers=None, params=None):
         }, 500
 
 
+# Lấy options cho bộ lọc loại hoạt động và người dùng
 def get_activity_filter_options(headers):
     url = f"{BACKEND_API_URL}/api/activities/filter-options"
 
@@ -266,6 +281,7 @@ def get_activity_filter_options(headers):
     }
 
 
+# Tạo danh sách loại hoạt động để render select
 def build_type_options(filter_options):
     api_options = filter_options.get("type_options") or []
 
@@ -287,6 +303,7 @@ def build_type_options(filter_options):
     return values
 
 
+# Tạo dictionary đếm số lượng theo loại hoạt động
 def build_type_counts(filter_options):
     counts = {}
 
@@ -302,6 +319,7 @@ def build_type_counts(filter_options):
     return counts
 
 
+# Tạo danh sách tên người dùng để render select
 def build_user_options(filter_options):
     options = []
 
@@ -319,6 +337,7 @@ def build_user_options(filter_options):
     return options
 
 
+# Tạo dictionary đếm số lượng theo người dùng
 def build_user_counts(filter_options):
     counts = {}
 
@@ -334,7 +353,17 @@ def build_user_counts(filter_options):
     return counts
 
 
-def get_activities_from_api(headers, page, search_value, selected_type, selected_user_name):
+# Lấy danh sách hoạt động từ API
+# Đã thêm start_date/end_date để áp dụng bộ lọc thời gian
+def get_activities_from_api(
+    headers,
+    page,
+    search_value,
+    selected_type,
+    selected_user_name,
+    selected_start_date,
+    selected_end_date,
+):
     url = f"{BACKEND_API_URL}/api/activities"
 
     params = {
@@ -350,6 +379,14 @@ def get_activities_from_api(headers, page, search_value, selected_type, selected
 
     if selected_user_name and selected_user_name != "Tất cả":
         params["user_name"] = selected_user_name
+
+    # Gửi ngày bắt đầu sang API backend
+    if selected_start_date:
+        params["start_date"] = selected_start_date
+
+    # Gửi ngày kết thúc sang API backend
+    if selected_end_date:
+        params["end_date"] = selected_end_date
 
     payload, status_code = get_json(
         url,
@@ -389,6 +426,7 @@ def get_activities_from_api(headers, page, search_value, selected_type, selected
     }
 
 
+# Tạo toàn bộ context để render activity page
 def get_activity_page_context(args, current_user):
     current_user_id = get_current_user_id(current_user)
 
@@ -397,6 +435,7 @@ def get_activity_page_context(args, current_user):
     if page < 1:
         page = 1
 
+    # Lấy keyword tìm kiếm
     search_value = (
         args.get("search")
         or args.get("keyword")
@@ -404,16 +443,34 @@ def get_activity_page_context(args, current_user):
         or ""
     ).strip()
 
+    # Lấy loại hoạt động đang chọn
     selected_type = (
         args.get("type")
         or args.get("activity_type")
         or "Tất cả"
     ).strip()
 
+    # Lấy người dùng đang chọn
     selected_user_name = (
         args.get("user_name")
         or args.get("full_name")
         or "Tất cả"
+    ).strip()
+
+    # Lấy ngày bắt đầu từ calendar.html
+    selected_start_date = (
+        args.get("start_date")
+        or args.get("date_from")
+        or args.get("from_date")
+        or ""
+    ).strip()
+
+    # Lấy ngày kết thúc từ calendar.html
+    selected_end_date = (
+        args.get("end_date")
+        or args.get("date_to")
+        or args.get("to_date")
+        or ""
     ).strip()
 
     if not selected_type:
@@ -434,6 +491,8 @@ def get_activity_page_context(args, current_user):
         search_value=search_value,
         selected_type=selected_type,
         selected_user_name=selected_user_name,
+        selected_start_date=selected_start_date,
+        selected_end_date=selected_end_date,
     )
 
     activities = result["activities"]
@@ -454,10 +513,13 @@ def get_activity_page_context(args, current_user):
 
     total_activity_count = filter_options.get("total") or total_records
 
+    # Có filter active thì hiện nút xóa filter
     has_active_filter = bool(
         search_value
         or selected_type != "Tất cả"
         or selected_user_name != "Tất cả"
+        or selected_start_date
+        or selected_end_date
     )
 
     return {
@@ -471,6 +533,12 @@ def get_activity_page_context(args, current_user):
         "selected_type": selected_type,
         "selected_activity_type": selected_type,
         "selected_user_name": selected_user_name,
+
+        # Hai biến này để calendar.html giữ lại ngày đã chọn
+        "selected_start_date_value": selected_start_date,
+        "selected_end_date_value": selected_end_date,
+        "start_date": selected_start_date,
+        "end_date": selected_end_date,
 
         "activity_type_options": type_options,
         "type_options": type_options,
@@ -492,6 +560,10 @@ def get_activity_page_context(args, current_user):
 
         "current_user": current_user,
     }
+
+
+# Export Excel danh sách hoạt động
+# Đã thêm start_date/end_date để export đúng theo bộ lọc thời gian đang chọn
 def export_activities_excel(args, current_user):
     current_user_id = get_current_user_id(current_user)
 
@@ -520,6 +592,20 @@ def export_activities_excel(args, current_user):
         or "Tất cả"
     ).strip()
 
+    selected_start_date = (
+        args.get("start_date")
+        or args.get("date_from")
+        or args.get("from_date")
+        or ""
+    ).strip()
+
+    selected_end_date = (
+        args.get("end_date")
+        or args.get("date_to")
+        or args.get("to_date")
+        or ""
+    ).strip()
+
     if search_value:
         params["search"] = search_value
 
@@ -528,6 +614,14 @@ def export_activities_excel(args, current_user):
 
     if selected_user_name and selected_user_name != "Tất cả":
         params["user_name"] = selected_user_name
+
+    # Gửi ngày bắt đầu khi export Excel
+    if selected_start_date:
+        params["start_date"] = selected_start_date
+
+    # Gửi ngày kết thúc khi export Excel
+    if selected_end_date:
+        params["end_date"] = selected_end_date
 
     try:
         response = requests.get(

@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản Lý Tài Sản HSU</title>
 
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="{{ url_for('static', filename='images/favicon-logo.png') }}?v=3"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="{{ url_for('static', filename='images/favicon-logo.png') }}?v=3"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="{{ url_for('static', filename='images/favicon-logo.png') }}?v=3"
+    />
+    <link
+      rel="shortcut icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/favicon-logo.png') }}?v=3"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='images/favicon-logo.png') }}?v=3"
+    />
+
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link
@@ -27,8 +56,6 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/components/sonner.css') }}"
     />
-
-    <!-- Thêm dòng này -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/components/toast.css') }}"
@@ -36,14 +63,8 @@
   </head>
 
   <body id="app-body">
-    {% include 'components/header.html' %}
-
-    {% block content %}{% endblock %}
-
-    {% include 'components/sonner.html' %}
-
-    <!-- Thêm dòng này -->
-    {% include 'components/toast.html' %}
+    {% include 'components/header.html' %} {% block content %}{% endblock %} {%
+    include 'components/sonner.html' %} {% include 'components/toast.html' %}
 
     <script>
       const body = document.getElementById("app-body");
@@ -62,6 +83,10 @@
         } else {
           localStorage.setItem("theme", "light");
         }
+      }
+
+      if (window.lucide) {
+        lucide.createIcons();
       }
     </script>
   </body>

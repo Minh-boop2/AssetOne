@@ -86,7 +86,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
       notificationWrapper.dataset.socketUrl || "http://localhost:5001";
 
     const api = {
-      data: "/notifications/data?limit=20",
+      data: "/notifications/data?limit=10",
       readAll: "/notifications/read-all",
       markRead: function (id) {
         return "/notifications/" + encodeURIComponent(id) + "/read";
@@ -95,7 +95,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
 
     const cacheKey = "assetone.notifications." + userId;
     const cacheTimeKey = cacheKey + ".savedAt";
-    const maxCacheItems = 20;
+    const maxCacheItems = 10;
     const maxCacheAgeMs = 24 * 60 * 60 * 1000;
 
     let notifications = [];

@@ -92,6 +92,18 @@
   --notification-footer-hover-bg: rgba(168, 85, 247, 0.08);
 }
 
+.notification-wrapper,
+.notification-wrapper * {
+  font-family: inherit;
+}
+
+.notification-wrapper button,
+.notification-wrapper input,
+.notification-wrapper textarea,
+.notification-wrapper select {
+  font: inherit;
+}
+
 .notification-wrapper {
   position: relative;
   display: inline-flex;
@@ -211,14 +223,17 @@
   margin: 0;
   color: var(--notification-title-color);
   font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0;
 }
 
 .notification-panel-header p {
   margin: 4px 0 0;
   color: var(--notification-subtitle-color);
   font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
 .notification-read-all-btn {
@@ -228,6 +243,7 @@
   color: var(--notification-action-color);
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
   padding: 8px 10px;
   cursor: pointer;
   white-space: nowrap;
@@ -319,8 +335,9 @@
 .notification-title {
   color: var(--notification-item-title-color);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.35;
+  letter-spacing: 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -330,7 +347,9 @@
 .notification-message {
   color: var(--notification-item-message-color);
   font-size: 13px;
+  font-weight: 400;
   line-height: 1.35;
+  letter-spacing: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -344,6 +363,8 @@
   gap: 8px;
   color: var(--notification-item-meta-color);
   font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 .notification-meta span:first-child {
@@ -373,6 +394,7 @@
   padding: 34px 16px;
   color: var(--notification-empty-color);
   font-size: 14px;
+  font-weight: 400;
   text-align: center;
 }
 
@@ -384,6 +406,7 @@
   color: var(--notification-action-color);
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
   padding: 8px 12px;
   cursor: pointer;
   transition:
@@ -409,6 +432,7 @@
   gap: 10px;
   font-size: 14px;
   font-weight: 700;
+  line-height: 1.3;
   cursor: pointer;
   transition:
     background 0.18s ease,

@@ -12,25 +12,36 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/activity/activity_table.css') }}"
 />
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/components/calendar.css') }}"
+/>
 
-{% set activity_logs = activities|default(activity_logs|default(logs|default([],
-true), true), true) %} {% set search_value =
-search_value|default(search_q|default(request.args.get('search', ''), true),
-true) %} {% set selected_type_value =
-selected_type|default(selected_activity_type|default(request.args.get('type',
-'Tất cả'), true), true) %} {% set selected_user_name_value =
-selected_user_name|default(request.args.get('user_name', 'Tất cả'), true) %} {%
-set activity_type_options =
-activity_type_options|default(type_options|default([], true), true) %} {% set
-activity_user_options =
-activity_user_options|default(user_name_options|default([], true), true) %} {%
-set type_counts = type_counts|default({}, true) %} {% set user_name_counts =
-user_name_counts|default({}, true) %} {% set all_activity_count =
-total_records|default(total_activity_count|default(activity_logs|length, true),
-true) %} {% set total_activity_count = all_activity_count %} {% set
-activity_has_active_filter = has_active_filter|default(false, true) or
-search_value or selected_type_value != 'Tất cả' or selected_user_name_value !=
-'Tất cả' %}
+{% set activity_logs = activities|default(activity_logs|default(logs|default([], true), true), true) %}
+{% set search_value = search_value|default(search_q|default(request.args.get('search', ''), true), true) %}
+{% set selected_type_value = selected_type|default(selected_activity_type|default(request.args.get('type', 'Tất cả'), true), true) %}
+{% set selected_user_name_value = selected_user_name|default(request.args.get('user_name', 'Tất cả'), true) %}
+
+{% set selected_start_date_value = selected_start_date_value|default(start_date|default(request.args.get('start_date', ''), true), true) %}
+{% set selected_end_date_value = selected_end_date_value|default(end_date|default(request.args.get('end_date', ''), true), true) %}
+
+{% set activity_type_options = activity_type_options|default(type_options|default([], true), true) %}
+{% set activity_user_options = activity_user_options|default(user_name_options|default([], true), true) %}
+{% set type_counts = type_counts|default({}, true) %}
+{% set user_name_counts = user_name_counts|default({}, true) %}
+
+{# Số tổng trong filter phải là tổng ban đầu, không lấy total_records sau khi lọc #}
+{% set all_activity_count = total_activity_count|default(total_records|default(activity_logs|length, true), true) %}
+{% set total_activity_count = all_activity_count %}
+
+{% set activity_has_active_filter =
+  has_active_filter|default(false, true)
+  or search_value
+  or selected_type_value != 'Tất cả'
+  or selected_user_name_value != 'Tất cả'
+  or selected_start_date_value
+  or selected_end_date_value
+%}
 
 <form method="GET" action="{{ url_for('activity_page') }}" id="activityForm">
   <section class="activity-page">
@@ -47,9 +58,9 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
         <input type="hidden" name="page" value="1" />
 
         <div class="activity-filter-item activity-filter-item--search">
-          <label class="activity-filter-label" for="activitySearch"
-            >Tìm kiếm</label
-          >
+          <label class="activity-filter-label" for="activitySearch">
+            Tìm kiếm
+          </label>
 
           <input
             id="activitySearch"
@@ -76,14 +87,15 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
             <button type="button" class="activity-count-select__button">
               <span class="activity-count-select__value">
                 <span class="activity-count-select__label">
-                  {{ selected_type_value if selected_type_value != 'Tất cả' else
-                  'Tất cả loại' }}
+                  {{ selected_type_value if selected_type_value != 'Tất cả' else 'Tất cả loại' }}
                 </span>
 
                 <span class="activity-count-select__count">
-                  {% if selected_type_value == 'Tất cả' %} {{ all_activity_count
-                  }} {% else %} {{ type_counts.get(selected_type_value, 0) }} {%
-                  endif %}
+                  {% if selected_type_value == 'Tất cả' %}
+                    {{ all_activity_count }}
+                  {% else %}
+                    {{ type_counts.get(selected_type_value, 0) }}
+                  {% endif %}
                 </span>
               </span>
 
@@ -100,12 +112,12 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
                 data-label="Tất cả loại"
                 data-count="{{ all_activity_count }}"
               >
-                <span class="activity-count-select__option-label"
-                  >Tất cả loại</span
-                >
-                <span class="activity-count-select__option-count"
-                  >{{ all_activity_count }}</span
-                >
+                <span class="activity-count-select__option-label">
+                  Tất cả loại
+                </span>
+                <span class="activity-count-select__option-count">
+                  {{ all_activity_count }}
+                </span>
               </button>
 
               {% for item in activity_type_options %}
@@ -116,12 +128,12 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
                 data-label="{{ item }}"
                 data-count="{{ type_counts.get(item, 0) }}"
               >
-                <span class="activity-count-select__option-label"
-                  >{{ item }}</span
-                >
-                <span class="activity-count-select__option-count"
-                  >{{ type_counts.get(item, 0) }}</span
-                >
+                <span class="activity-count-select__option-label">
+                  {{ item }}
+                </span>
+                <span class="activity-count-select__option-count">
+                  {{ type_counts.get(item, 0) }}
+                </span>
               </button>
               {% endfor %}
             </div>
@@ -142,15 +154,15 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
             <button type="button" class="activity-count-select__button">
               <span class="activity-count-select__value">
                 <span class="activity-count-select__label">
-                  {{ selected_user_name_value if selected_user_name_value !=
-                  'Tất cả' else 'Tất cả người dùng' }}
+                  {{ selected_user_name_value if selected_user_name_value != 'Tất cả' else 'Tất cả người dùng' }}
                 </span>
 
                 <span class="activity-count-select__count">
-                  {% if selected_user_name_value == 'Tất cả' %} {{
-                  all_activity_count }} {% else %} {{
-                  user_name_counts.get(selected_user_name_value, 0) }} {% endif
-                  %}
+                  {% if selected_user_name_value == 'Tất cả' %}
+                    {{ all_activity_count }}
+                  {% else %}
+                    {{ user_name_counts.get(selected_user_name_value, 0) }}
+                  {% endif %}
                 </span>
               </span>
 
@@ -167,12 +179,12 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
                 data-label="Tất cả người dùng"
                 data-count="{{ all_activity_count }}"
               >
-                <span class="activity-count-select__option-label"
-                  >Tất cả người dùng</span
-                >
-                <span class="activity-count-select__option-count"
-                  >{{ all_activity_count }}</span
-                >
+                <span class="activity-count-select__option-label">
+                  Tất cả người dùng
+                </span>
+                <span class="activity-count-select__option-count">
+                  {{ all_activity_count }}
+                </span>
               </button>
 
               {% for item in activity_user_options %}
@@ -183,16 +195,20 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
                 data-label="{{ item }}"
                 data-count="{{ user_name_counts.get(item, 0) }}"
               >
-                <span class="activity-count-select__option-label"
-                  >{{ item }}</span
-                >
-                <span class="activity-count-select__option-count"
-                  >{{ user_name_counts.get(item, 0) }}</span
-                >
+                <span class="activity-count-select__option-label">
+                  {{ item }}
+                </span>
+                <span class="activity-count-select__option-count">
+                  {{ user_name_counts.get(item, 0) }}
+                </span>
               </button>
               {% endfor %}
             </div>
           </div>
+        </div>
+
+        <div class="activity-filter-item activity-filter-item--calendar">
+          {% include "components/calendar.html" %}
         </div>
 
         <div class="activity-filter-actions">
@@ -287,6 +303,14 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
         });
     }
 
+    function closeAllActivityCalendars() {
+      document
+        .querySelectorAll("[data-activity-calendar]")
+        .forEach(function (calendarBox) {
+          calendarBox.classList.remove("open");
+        });
+    }
+
     function exportActivities() {
       if (!exportActivityBtn) return;
 
@@ -298,22 +322,20 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
 
       params.delete("page");
 
-      const targetUrl = exportUrl + "?" + params.toString();
-
-      window.location.href = targetUrl;
+      window.location.href = exportUrl + "?" + params.toString();
     }
 
     document
       .querySelectorAll("[data-activity-count-select]")
       .forEach(function (selectBox) {
         const trigger = selectBox.querySelector(
-          ".activity-count-select__button",
+          ".activity-count-select__button"
         );
         const hiddenInput = selectBox.querySelector('input[type="hidden"]');
         const label = selectBox.querySelector(".activity-count-select__label");
         const count = selectBox.querySelector(".activity-count-select__count");
         const options = selectBox.querySelectorAll(
-          ".activity-count-select__option",
+          ".activity-count-select__option"
         );
 
         if (!trigger || !hiddenInput) return;
@@ -321,6 +343,8 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
         trigger.addEventListener("click", function (event) {
           event.preventDefault();
           event.stopPropagation();
+
+          closeAllActivityCalendars();
 
           document
             .querySelectorAll("[data-activity-count-select]")
@@ -387,17 +411,20 @@ search_value or selected_type_value != 'Tất cả' or selected_user_name_value 
         event.stopPropagation();
 
         closeAllActivitySelects();
+        closeAllActivityCalendars();
         exportActivities();
       });
     }
 
     document.addEventListener("click", function () {
       closeAllActivitySelects();
+      closeAllActivityCalendars();
     });
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeAllActivitySelects();
+        closeAllActivityCalendars();
       }
     });
   });
