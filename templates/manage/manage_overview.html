@@ -400,7 +400,7 @@
     function submitFilterDebounced() {
       updateClearButton();
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(submitFilterNow, 260);
+      debounceTimer = setTimeout(submitFilterNow, 300);
     }
 
     document.querySelectorAll(".filter-select").forEach(function (select) {
