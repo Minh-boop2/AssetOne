@@ -70,12 +70,7 @@
             <label class="filter-label">Loại báo cáo</label>
 
             <div class="report-count-select" data-count-select data-count-field="type">
-                <input
-                    type="hidden"
-                    class="js-report-filter"
-                    name="type"
-                    value="{{ selected_type }}"
-                >
+                <input type="hidden" class="js-report-filter" name="type" value="{{ selected_type }}">
 
                 <button type="button" class="report-count-select__button">
                     <span class="report-count-select__value">
@@ -123,12 +118,7 @@
             <label class="filter-label">Phòng ban</label>
 
             <div class="report-count-select" data-count-select data-count-field="department">
-                <input
-                    type="hidden"
-                    class="js-report-filter"
-                    name="department"
-                    value="{{ selected_dept }}"
-                >
+                <input type="hidden" class="js-report-filter" name="department" value="{{ selected_dept }}">
 
                 <button type="button" class="report-count-select__button">
                     <span class="report-count-select__value">
@@ -176,12 +166,7 @@
             <label class="filter-label">Vị trí</label>
 
             <div class="report-count-select" data-count-select data-count-field="location">
-                <input
-                    type="hidden"
-                    class="js-report-filter"
-                    name="location"
-                    value="{{ selected_location }}"
-                >
+                <input type="hidden" class="js-report-filter" name="location" value="{{ selected_location }}">
 
                 <button type="button" class="report-count-select__button">
                     <span class="report-count-select__value">
@@ -229,12 +214,7 @@
             <label class="filter-label">Trạng thái</label>
 
             <div class="report-count-select" data-count-select data-count-field="status">
-                <input
-                    type="hidden"
-                    class="js-report-filter"
-                    name="status"
-                    value="{{ selected_status }}"
-                >
+                <input type="hidden" class="js-report-filter" name="status" value="{{ selected_status }}">
 
                 <button type="button" class="report-count-select__button">
                     <span class="report-count-select__value">
@@ -288,10 +268,7 @@
                 ×
             </a>
 
-            <a
-                href="{{ url_for('new_report_page') }}"
-                class="action-btn action-btn--primary action-btn--add"
-            >
+            <a href="{{ url_for('new_report_page') }}" class="action-btn action-btn--primary action-btn--add">
                 + Báo cáo mới
             </a>
         </div>
@@ -329,34 +306,15 @@
     ];
 
     const FILTER_CONFIG = {
-        type: {
-            name: "type",
-            allLabel: "Tất cả loại",
-            mode: "dynamic"
-        },
-        department: {
-            name: "department",
-            allLabel: "Tất cả phòng",
-            mode: "fixed",
-            options: FIXED_DEPARTMENTS
-        },
-        location: {
-            name: "location",
-            allLabel: "Tất cả vị trí",
-            mode: "fixed",
-            options: FIXED_LOCATIONS
-        },
-        status: {
-            name: "status",
-            allLabel: "Tất cả trạng thái",
-            mode: "dynamic"
-        }
+        type: { name: "type", allLabel: "Tất cả loại", mode: "dynamic" },
+        department: { name: "department", allLabel: "Tất cả phòng", mode: "fixed", options: FIXED_DEPARTMENTS },
+        location: { name: "location", allLabel: "Tất cả vị trí", mode: "fixed", options: FIXED_LOCATIONS },
+        status: { name: "status", allLabel: "Tất cả trạng thái", mode: "dynamic" }
     };
 
     let activeRequestController = null;
     let activeCountController = null;
     let searchTimer = null;
-
     let baseCountsCache = null;
     let resetCountsCache = null;
     let resetTableHtmlCache = "";
@@ -367,7 +325,6 @@
     function initReportFilter() {
         const filterSection = document.querySelector(".report-filter-section");
         const reportSearchInput = document.getElementById("reportSearch");
-
         if (!filterSection) return;
 
         baseCountsCache = getCurrentCounts();
@@ -375,11 +332,7 @@
         applyCounts(baseCountsCache);
         updateResetButtonState();
 
-        refreshBaseCountsFromAllPages({
-            searchValue: getSearchValue(),
-            saveAsCurrentBase: true
-        });
-
+        refreshBaseCountsFromAllPages({ searchValue: getSearchValue(), saveAsCurrentBase: true });
         preloadResetSnapshot();
 
         document.querySelectorAll("[data-count-select]").forEach(initCountSelect);
@@ -391,10 +344,7 @@
 
                 searchTimer = setTimeout(function () {
                     fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
-                        refreshBaseCountsFromAllPages({
-                            searchValue: getSearchValue(),
-                            saveAsCurrentBase: true
-                        });
+                        refreshBaseCountsFromAllPages({ searchValue: getSearchValue(), saveAsCurrentBase: true });
                     });
                 }, SEARCH_DELAY);
             });
@@ -405,31 +355,23 @@
                     clearTimeout(searchTimer);
 
                     fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
-                        refreshBaseCountsFromAllPages({
-                            searchValue: getSearchValue(),
-                            saveAsCurrentBase: true
-                        });
+                        refreshBaseCountsFromAllPages({ searchValue: getSearchValue(), saveAsCurrentBase: true });
                     });
                 }
 
                 if (event.key === "Escape") {
                     event.preventDefault();
                     clearTimeout(searchTimer);
-
                     reportSearchInput.value = "";
 
                     fetchAndReplaceReport(buildCleanUrl(true), true).then(function () {
-                        refreshBaseCountsFromAllPages({
-                            searchValue: "",
-                            saveAsCurrentBase: true
-                        });
+                        refreshBaseCountsFromAllPages({ searchValue: "", saveAsCurrentBase: true });
                     });
                 }
             });
         }
 
         const resetButton = filterSection.querySelector(".btn-reset");
-
         if (resetButton) {
             resetButton.addEventListener("click", function (event) {
                 event.preventDefault();
@@ -440,9 +382,7 @@
         document.addEventListener("click", handleDocumentClick);
 
         document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") {
-                closeAllSelects();
-            }
+            if (event.key === "Escape") closeAllSelects();
         });
 
         window.addEventListener("popstate", function () {
@@ -460,7 +400,6 @@
     function initCountSelect(selectBox) {
         const trigger = selectBox.querySelector(".report-count-select__button");
         const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-
         if (!trigger || !hiddenInput) return;
 
         trigger.addEventListener("click", function (event) {
@@ -468,9 +407,7 @@
             event.stopPropagation();
 
             document.querySelectorAll("[data-count-select]").forEach(function (otherSelectBox) {
-                if (otherSelectBox !== selectBox) {
-                    otherSelectBox.classList.remove("open");
-                }
+                if (otherSelectBox !== selectBox) otherSelectBox.classList.remove("open");
             });
 
             selectBox.classList.toggle("open");
@@ -480,27 +417,20 @@
     }
 
     function rebindDynamicSelectOptions(selectBox) {
-        const options = selectBox.querySelectorAll(".report-count-select__option");
-
-        options.forEach(function (option) {
+        selectBox.querySelectorAll(".report-count-select__option").forEach(function (option) {
             if (option.dataset.bound === "true") return;
-
             option.dataset.bound = "true";
 
             option.addEventListener("click", function (event) {
                 const hiddenInput = selectBox.querySelector('input[type="hidden"]');
-
                 event.preventDefault();
                 event.stopPropagation();
-
                 if (!hiddenInput) return;
 
                 hiddenInput.value = option.dataset.value || ALL_VALUE;
-
                 selectBox.classList.remove("open");
                 applyCounts(baseCountsCache || getCurrentCounts());
                 updateResetButtonState();
-
                 fetchAndReplaceReport(buildCleanUrl(true), true);
             });
         });
@@ -518,10 +448,7 @@
         const pageLink = event.target.closest(".pagination-buttons a.page-btn");
 
         if (pageLink) {
-            if (
-                pageLink.classList.contains("disabled") ||
-                pageLink.getAttribute("aria-disabled") === "true"
-            ) {
+            if (pageLink.classList.contains("disabled") || pageLink.getAttribute("aria-disabled") === "true") {
                 event.preventDefault();
                 return;
             }
@@ -532,9 +459,7 @@
             return;
         }
 
-        if (!event.target.closest("[data-count-select]")) {
-            closeAllSelects();
-        }
+        if (!event.target.closest("[data-count-select]")) closeAllSelects();
     }
 
     function getFilterSection() {
@@ -554,16 +479,11 @@
     function setPage(value) {
         const section = getFilterSection();
         const pageInput = section ? section.querySelector('input[name="page"]') : null;
-
-        if (pageInput) {
-            pageInput.value = String(value || 1);
-        }
+        if (pageInput) pageInput.value = String(value || 1);
     }
 
     function buildCleanUrl(resetPage) {
-        if (resetPage) {
-            setPage(1);
-        }
+        if (resetPage) setPage(1);
 
         const form = getFilterForm();
         const params = new URLSearchParams();
@@ -575,15 +495,11 @@
                 if (key === "_ajax" || key === "_ts") return;
 
                 if (key === "page") {
-                    if (value && String(value) !== "1") {
-                        params.set(key, value);
-                    }
-
+                    if (value && String(value) !== "1") params.set(key, value);
                     return;
                 }
 
                 if (!value || value === ALL_VALUE) return;
-
                 params.set(key, value);
             });
 
@@ -601,40 +517,25 @@
         const action = form ? (form.getAttribute("action") || window.location.pathname) : window.location.pathname;
         const params = new URLSearchParams();
 
-        if (searchValue) {
-            params.set("search", searchValue);
-        }
-
-        if (page && Number(page) !== 1) {
-            params.set("page", String(page));
-        }
+        if (searchValue) params.set("search", searchValue);
+        if (page && Number(page) !== 1) params.set("page", String(page));
 
         const query = params.toString();
-
         return action + (query ? "?" + query : "");
     }
 
     function buildResetUrl() {
         const form = getFilterForm();
-
-        if (form) {
-            return form.getAttribute("action") || window.location.pathname;
-        }
-
-        return window.location.pathname;
+        return form ? (form.getAttribute("action") || window.location.pathname) : window.location.pathname;
     }
 
     function resetAllFiltersInstantly() {
         const section = getFilterSection();
         const searchInput = document.getElementById("reportSearch");
-
         if (!section) return;
 
         clearTimeout(searchTimer);
-
-        if (searchInput) {
-            searchInput.value = "";
-        }
+        if (searchInput) searchInput.value = "";
 
         section.querySelectorAll(".js-report-filter").forEach(function (input) {
             input.value = ALL_VALUE;
@@ -651,29 +552,21 @@
             applyCounts(baseCountsCache);
         }
 
-        if (resetTableHtmlCache) {
-            replaceTableHtml(resetTableHtmlCache);
-        }
+        if (resetTableHtmlCache) replaceTableHtml(resetTableHtmlCache);
 
         const resetUrl = buildResetUrl();
 
         window.history.replaceState({}, "", resetUrl);
 
         fetchAndReplaceReport(resetUrl, false).then(function () {
-            refreshBaseCountsFromAllPages({
-                searchValue: "",
-                saveAsCurrentBase: true
-            });
+            refreshBaseCountsFromAllPages({ searchValue: "", saveAsCurrentBase: true });
         });
 
         preloadResetSnapshot();
     }
 
     async function fetchAndReplaceReport(cleanUrl, updateHistory) {
-        if (activeRequestController) {
-            activeRequestController.abort();
-        }
-
+        if (activeRequestController) activeRequestController.abort();
         activeRequestController = new AbortController();
 
         try {
@@ -688,16 +581,12 @@
                 signal: activeRequestController.signal
             });
 
-            if (!response.ok) {
-                throw new Error("Không thể tải danh sách báo cáo.");
-            }
+            if (!response.ok) throw new Error("Không thể tải danh sách báo cáo.");
 
             const contentType = response.headers.get("content-type") || "";
             let payload = null;
 
-            if (contentType.includes("application/json")) {
-                payload = await response.json();
-            }
+            if (contentType.includes("application/json")) payload = await response.json();
 
             if (payload && payload.table_html) {
                 replaceTableHtml(payload.table_html);
@@ -708,9 +597,7 @@
 
             syncAllSelects();
 
-            if (updateHistory) {
-                window.history.replaceState({}, "", cleanUrl);
-            }
+            if (updateHistory) window.history.replaceState({}, "", cleanUrl);
         } catch (error) {
             if (error.name === "AbortError") return;
             window.location.href = cleanUrl;
@@ -721,10 +608,7 @@
 
     async function preloadResetSnapshot() {
         try {
-            const result = await getCountsAndFirstTableHtml({
-                searchValue: ""
-            });
-
+            const result = await getCountsAndFirstTableHtml({ searchValue: "" });
             resetCountsCache = result.counts;
             resetTableHtmlCache = result.firstTableHtml || resetTableHtmlCache;
         } catch (error) {
@@ -737,9 +621,7 @@
         const searchValue = safeOptions.searchValue || "";
         const cacheKey = searchValue;
 
-        if (activeCountController) {
-            activeCountController.abort();
-        }
+        if (activeCountController) activeCountController.abort();
 
         activeCountController = new AbortController();
         currentSearchBaseKey = cacheKey;
@@ -756,10 +638,7 @@
 
             if (searchValue === "") {
                 resetCountsCache = result.counts;
-
-                if (result.firstTableHtml) {
-                    resetTableHtmlCache = result.firstTableHtml;
-                }
+                if (result.firstTableHtml) resetTableHtmlCache = result.firstTableHtml;
             }
 
             if (safeOptions.saveAsCurrentBase !== false) {
@@ -782,13 +661,10 @@
         const totalPages = Math.max(1, getTotalPagesFromDocument(firstDoc));
         const allRows = [];
 
-        collectRowsFromDocument(firstDoc).forEach(function (row) {
-            allRows.push(row);
-        });
+        collectRowsFromDocument(firstDoc).forEach(row => allRows.push(row));
 
         const firstCard = firstDoc.querySelector(".report-overview-card");
         const firstTableHtml = firstCard ? firstCard.outerHTML : "";
-
         const requests = [];
 
         for (let page = 2; page <= totalPages; page++) {
@@ -796,24 +672,16 @@
                 fetchHtml(buildBaseCountUrl(page, searchValue), signal)
                     .then(parseHtml)
                     .then(collectRowsFromDocument)
-                    .catch(function () {
-                        return [];
-                    })
+                    .catch(() => [])
             );
         }
 
         const pageRows = await Promise.all(requests);
 
-        pageRows.forEach(function (rows) {
-            rows.forEach(function (row) {
-                allRows.push(row);
-            });
-        });
-
-        const counts = buildCountsFromRows(deduplicateRows(allRows));
+        pageRows.forEach(rows => rows.forEach(row => allRows.push(row)));
 
         return {
-            counts: counts,
+            counts: buildCountsFromRows(deduplicateRows(allRows)),
             firstTableHtml: firstTableHtml
         };
     }
@@ -821,15 +689,11 @@
     async function fetchHtml(url, signal) {
         const response = await fetch(url, {
             method: "GET",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
-            },
+            headers: { "X-Requested-With": "XMLHttpRequest" },
             signal: signal
         });
 
-        if (!response.ok) {
-            throw new Error("Không thể tải dữ liệu.");
-        }
+        if (!response.ok) throw new Error("Không thể tải dữ liệu.");
 
         const contentType = response.headers.get("content-type") || "";
 
@@ -843,16 +707,13 @@
 
     function toAjaxUrl(url, ajaxType) {
         const ajaxUrl = new URL(url, window.location.origin);
-
         ajaxUrl.searchParams.set("_ajax", ajaxType || "report_list");
         ajaxUrl.searchParams.set("_ts", Date.now().toString());
-
         return ajaxUrl.toString();
     }
 
     function parseHtml(html) {
-        const parser = new DOMParser();
-        return parser.parseFromString(html || "", "text/html");
+        return new DOMParser().parseFromString(html || "", "text/html");
     }
 
     function replacePageTableFromHtml(html) {
@@ -862,25 +723,18 @@
         const nextCard = doc.querySelector(".report-overview-card");
         const currentCard = document.querySelector(".report-overview-card");
 
-        if (nextCard && currentCard) {
-            currentCard.replaceWith(nextCard);
-        }
+        if (nextCard && currentCard) currentCard.replaceWith(nextCard);
     }
 
     function replaceTableHtml(tableHtml) {
         const currentCard = document.querySelector(".report-overview-card");
-
         if (!currentCard || !tableHtml) return;
 
         const template = document.createElement("template");
-
         template.innerHTML = tableHtml.trim();
 
         const nextCard = template.content.querySelector(".report-overview-card");
-
-        if (nextCard) {
-            currentCard.replaceWith(nextCard);
-        }
+        if (nextCard) currentCard.replaceWith(nextCard);
     }
 
     function collectRowsFromDocument(doc) {
@@ -890,9 +744,7 @@
 
         if (!table) return [];
 
-        const headers = Array.from(table.querySelectorAll("thead th")).map(function (cell) {
-            return normalizeText(cell.textContent);
-        });
+        const headers = Array.from(table.querySelectorAll("thead th")).map(cell => normalizeText(cell.textContent));
 
         const indexMap = {
             code: findHeaderIndex(headers, ["ma bao cao"]),
@@ -916,9 +768,7 @@
                 department: getCellText(cells, indexMap.department),
                 location: getCellText(cells, indexMap.location)
             };
-        }).filter(function (row) {
-            return row.code || row.name || row.type || row.status || row.department || row.location;
-        });
+        }).filter(row => row.code || row.name || row.type || row.status || row.department || row.location);
     }
 
     function getCellText(cells, index) {
@@ -929,9 +779,7 @@
     function findHeaderIndex(headers, keys) {
         for (let i = 0; i < headers.length; i++) {
             for (let j = 0; j < keys.length; j++) {
-                if (headers[i].includes(keys[j])) {
-                    return i;
-                }
+                if (headers[i].includes(keys[j])) return i;
             }
         }
 
@@ -942,30 +790,20 @@
         const text = doc.body ? doc.body.textContent || "" : "";
         const match = text.match(/Trang\s+\d+\s*\/\s*(\d+)/i);
 
-        if (match && match[1]) {
-            return Number(match[1]) || 1;
-        }
+        if (match && match[1]) return Number(match[1]) || 1;
 
         const pageNumbers = Array.from(doc.querySelectorAll(".pagination-buttons .page-btn"))
-            .map(function (item) {
-                return Number((item.textContent || "").trim());
-            })
-            .filter(function (number) {
-                return !Number.isNaN(number);
-            });
+            .map(item => Number((item.textContent || "").trim()))
+            .filter(number => !Number.isNaN(number));
 
-        if (pageNumbers.length) {
-            return Math.max.apply(null, pageNumbers);
-        }
-
-        return 1;
+        return pageNumbers.length ? Math.max.apply(null, pageNumbers) : 1;
     }
 
     function deduplicateRows(rows) {
         const seen = new Set();
         const result = [];
 
-        rows.forEach(function (row) {
+        rows.forEach(row => {
             const key = [
                 row.code,
                 row.name,
@@ -994,27 +832,17 @@
             status: {}
         };
 
-        FIXED_DEPARTMENTS.forEach(function (department) {
-            counts.department[department] = 0;
-        });
+        FIXED_DEPARTMENTS.forEach(department => counts.department[department] = 0);
+        FIXED_LOCATIONS.forEach(location => counts.location[location] = 0);
 
-        FIXED_LOCATIONS.forEach(function (location) {
-            counts.location[location] = 0;
-        });
-
-        rows.forEach(function (row) {
+        rows.forEach(row => {
             increment(counts.type, normalizeReportType(row.type));
 
             const department = normalizeDepartment(row.department);
             const location = normalizeLocation(row.location);
 
-            if (department) {
-                increment(counts.department, department);
-            }
-
-            if (location) {
-                increment(counts.location, location);
-            }
+            if (department) increment(counts.department, department);
+            if (location) increment(counts.location, location);
 
             increment(counts.status, normalizeStatus(row.status));
         });
@@ -1026,98 +854,40 @@
         const text = normalizeText(value || "");
 
         if (!text) return "";
-
-        if (text.includes("hanh chinh")) {
-            return "Phòng Hành Chính";
-        }
-
-        if (text.includes("it") || text.includes("cong nghe thong tin") || text.includes("cntt")) {
-            return "Phòng IT";
-        }
-
-        if (text.includes("ke toan")) {
-            return "Phòng Kế Toán";
-        }
-
-        if (text.includes("ki thuat") || text.includes("ky thuat")) {
-            return "Phòng Kĩ Thuật";
-        }
-
-        if (text.includes("nhan su")) {
-            return "Phòng Nhân Sự";
-        }
-
-        if (text.includes("thiet ke")) {
-            return "Phòng Thiết Kế";
-        }
+        if (text.includes("hanh chinh")) return "Phòng Hành Chính";
+        if (text.includes("it") || text.includes("cong nghe thong tin") || text.includes("cntt")) return "Phòng IT";
+        if (text.includes("ke toan")) return "Phòng Kế Toán";
+        if (text.includes("ki thuat") || text.includes("ky thuat")) return "Phòng Kĩ Thuật";
+        if (text.includes("nhan su")) return "Phòng Nhân Sự";
+        if (text.includes("thiet ke")) return "Phòng Thiết Kế";
 
         return "";
     }
 
     function normalizeLocation(value) {
         const text = normalizeText(value || "");
-
         if (!text) return "";
 
-        /*
-            Fix lỗi đếm tầng:
-            - "Tầng 10" không bị nhận nhầm thành "Tầng 1".
-            - Hỗ trợ dạng: Tầng 1, tang 1, tang1, floor 1, floor1.
-        */
         const match = text.match(/(?:^|[^a-z0-9])(?:tang|floor)\s*0?(10|[1-9])(?=$|[^0-9])/);
-
-        if (!match || !match[1]) {
-            return "";
-        }
+        if (!match || !match[1]) return "";
 
         const floorNumber = Number(match[1]);
-
-        if (floorNumber >= 1 && floorNumber <= 10) {
-            return "Tầng " + floorNumber;
-        }
-
-        return "";
+        return floorNumber >= 1 && floorNumber <= 10 ? "Tầng " + floorNumber : "";
     }
 
     function normalizeReportType(typeText) {
         const rawType = normalizeSpaces(typeText || "");
         const normalizedType = normalizeText(rawType);
 
-        if (!rawType) {
-            return "Khác";
-        }
-
-        if (normalizedType.includes("bao hong")) {
-            return "Báo hỏng";
-        }
-
-        if (normalizedType.includes("can cap moi")) {
-            return "Cần cấp mới";
-        }
-
-        if (normalizedType.includes("ban giao")) {
-            return "Bàn giao";
-        }
-
-        if (normalizedType.includes("bao tri")) {
-            return "Bảo trì";
-        }
-
-        if (normalizedType.includes("thu hoi")) {
-            return "Thu hồi";
-        }
-
-        if (normalizedType.includes("kiem ke")) {
-            return "Kiểm kê";
-        }
-
-        if (normalizedType.includes("cap nhat")) {
-            return "Cập nhật";
-        }
-
-        if (normalizedType.includes("khac")) {
-            return "Khác";
-        }
+        if (!rawType) return "Khác";
+        if (normalizedType.includes("bao hong")) return "Báo hỏng";
+        if (normalizedType.includes("can cap moi")) return "Cần cấp mới";
+        if (normalizedType.includes("ban giao")) return "Bàn giao";
+        if (normalizedType.includes("bao tri")) return "Bảo trì";
+        if (normalizedType.includes("thu hoi")) return "Thu hồi";
+        if (normalizedType.includes("kiem ke")) return "Kiểm kê";
+        if (normalizedType.includes("cap nhat")) return "Cập nhật";
+        if (normalizedType.includes("khac")) return "Khác";
 
         return rawType;
     }
@@ -1126,21 +896,10 @@
         const rawStatus = normalizeSpaces(statusText || "");
         const normalized = normalizeText(rawStatus);
 
-        if (normalized.includes("hoan thanh") || normalized.includes("da xem")) {
-            return "Hoàn thành";
-        }
-
-        if (normalized.includes("dang xu ly")) {
-            return "Đang xử lý";
-        }
-
-        if (normalized.includes("tu choi") || normalized.includes("da huy")) {
-            return "Đã hủy";
-        }
-
-        if (normalized.includes("cho xu ly")) {
-            return "Chờ xử lý";
-        }
+        if (normalized.includes("hoan thanh") || normalized.includes("da xem")) return "Hoàn thành";
+        if (normalized.includes("dang xu ly")) return "Đang xử lý";
+        if (normalized.includes("tu choi") || normalized.includes("da huy")) return "Đã hủy";
+        if (normalized.includes("cho xu ly")) return "Chờ xử lý";
 
         return rawStatus || "Chờ xử lý";
     }
@@ -1161,9 +920,7 @@
     }
 
     function normalizeSpaces(value) {
-        return String(value || "")
-            .replace(/\s+/g, " ")
-            .trim();
+        return String(value || "").replace(/\s+/g, " ").trim();
     }
 
     function setGlobalLoading(isLoading) {
@@ -1182,9 +939,7 @@
     }
 
     function closeAllSelects() {
-        document.querySelectorAll("[data-count-select]").forEach(function (selectBox) {
-            selectBox.classList.remove("open");
-        });
+        document.querySelectorAll("[data-count-select]").forEach(selectBox => selectBox.classList.remove("open"));
     }
 
     function updateResetButtonState() {
@@ -1204,9 +959,7 @@
 
         const hasSearch = searchInput && searchInput.value.trim();
 
-        const hasDropdownFilter = Array.from(
-            section.querySelectorAll(".js-report-filter")
-        ).some(function (input) {
+        const hasDropdownFilter = Array.from(section.querySelectorAll(".js-report-filter")).some(function (input) {
             return input.value && input.value !== ALL_VALUE;
         });
 
@@ -1215,7 +968,6 @@
 
     function syncCurrentJson(counts) {
         const jsonElement = document.getElementById("reportFilterCountsJson");
-
         if (!jsonElement) return;
 
         jsonElement.textContent = JSON.stringify(normalizeCounts(counts));
@@ -1224,9 +976,7 @@
     function getCurrentCounts() {
         const jsonElement = document.getElementById("reportFilterCountsJson");
 
-        if (!jsonElement) {
-            return normalizeCounts({});
-        }
+        if (!jsonElement) return normalizeCounts({});
 
         try {
             return normalizeCounts(JSON.parse(jsonElement.textContent || "{}"));
@@ -1249,43 +999,31 @@
 
     function normalizeCount(value) {
         const number = Number(value);
-
-        if (Number.isNaN(number)) {
-            return 0;
-        }
-
-        return number;
+        return Number.isNaN(number) ? 0 : number;
     }
 
     function getCountFor(field, value) {
         const counts = baseCountsCache || getCurrentCounts();
 
-        if (!value || value === ALL_VALUE) {
-            return normalizeCount(counts.total);
-        }
+        if (!value || value === ALL_VALUE) return normalizeCount(counts.total);
 
         const fieldCounts = counts[field] || {};
-
         return normalizeCount(fieldCounts[value]);
     }
 
     function applyCounts(counts) {
         const normalizedCounts = normalizeCounts(counts);
-
         syncCurrentJson(normalizedCounts);
         rebuildAllSelectOptions(normalizedCounts);
         syncAllSelects();
     }
 
     function rebuildAllSelectOptions(counts) {
-        Object.keys(FILTER_CONFIG).forEach(function (field) {
-            rebuildSelectOptions(field, counts);
-        });
+        Object.keys(FILTER_CONFIG).forEach(field => rebuildSelectOptions(field, counts));
     }
 
     function rebuildSelectOptions(field, counts) {
         const selectBox = document.querySelector('[data-count-select][data-count-field="' + field + '"]');
-
         if (!selectBox) return;
 
         const config = FILTER_CONFIG[field];
@@ -1299,16 +1037,10 @@
             items = config.options || [];
         } else {
             items = Object.keys(fieldCounts)
-                .filter(function (item) {
-                    return item && item !== ALL_VALUE;
-                })
-                .sort(function (a, b) {
-                    return a.localeCompare(b, "vi");
-                });
+                .filter(item => item && item !== ALL_VALUE)
+                .sort((a, b) => a.localeCompare(b, "vi"));
 
-            if (selectedValue !== ALL_VALUE && !items.includes(selectedValue)) {
-                items.push(selectedValue);
-            }
+            if (selectedValue !== ALL_VALUE && !items.includes(selectedValue)) items.push(selectedValue);
         }
 
         if (!menu) return;
@@ -1332,7 +1064,6 @@
         });
 
         menu.classList.toggle("is-scrollable", items.length + 1 >= 5);
-
         rebindDynamicSelectOptions(selectBox);
     }
 
@@ -1383,14 +1114,10 @@
             option.dataset.count = String(nextCount);
             option.classList.toggle("is-active", value === selectedValue);
 
-            if (optionCount) {
-                optionCount.textContent = nextCount;
-            }
+            if (optionCount) optionCount.textContent = nextCount;
         });
 
-        const activeOption = options.find(function (option) {
-            return (option.dataset.value || ALL_VALUE) === selectedValue;
-        });
+        const activeOption = options.find(option => (option.dataset.value || ALL_VALUE) === selectedValue);
 
         if (buttonLabel) {
             if (activeOption) {
@@ -1404,9 +1131,7 @@
             }
         }
 
-        if (buttonCount) {
-            buttonCount.textContent = getCountFor(field, selectedValue);
-        }
+        if (buttonCount) buttonCount.textContent = getCountFor(field, selectedValue);
     }
 })();
 </script>

@@ -3,647 +3,107 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_detail.css') }}">
 
-<style>
-    /* ================= SHOW FULL CONTENT - NO INNER SCROLL ================= */
-
-    html,
-    body {
-        min-height: 100%;
-        height: auto !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-    }
-
-    .main-content,
-    .content,
-    .page-content,
-    .app-content {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        overflow: visible !important;
-    }
-
-    .report-detail-page {
-        --report-detail-surface: var(--surface, #111f38);
-        --report-detail-surface-2: var(--surface-2, #172746);
-        --report-detail-bg-soft: var(--surface-2, #172746);
-        --report-detail-border: var(--border, rgba(91, 128, 196, 0.36));
-        --report-detail-text: var(--text, #ffffff);
-        --report-detail-text-soft: var(--text-soft, #a8bbd8);
-        --report-detail-blue: var(--hsu-blue, #3b82f6);
-        --report-detail-blue-hover: var(--hsu-blue-hover, #2563eb);
-        --report-detail-red: var(--hsu-red, #ef3b2d);
-        --report-detail-green: #16a34a;
-
-        height: auto !important;
-        max-height: none !important;
-        min-height: calc(100vh - 112px) !important;
-        overflow: visible !important;
-        display: block !important;
-    }
-
-    .report-detail-wrap,
-    .report-detail-main-card,
-    .report-detail-scroll {
-        height: auto !important;
-        max-height: none !important;
-        min-height: 0 !important;
-        overflow: visible !important;
-        display: block !important;
-    }
-
-    .report-detail-topbar,
-    .report-detail-header {
-        position: relative !important;
-        top: auto !important;
-        bottom: auto !important;
-        z-index: 10 !important;
-    }
-
-    .report-detail-hero {
-        position: relative !important;
-        top: auto !important;
-        bottom: auto !important;
-        z-index: 8 !important;
-        border-radius: 18px 18px 0 0;
-    }
-
-    .report-detail-footer {
-        position: relative !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
-        z-index: 9 !important;
-    }
-
-    /* ================= LAYOUT TUNING ================= */
-
-    .report-detail-grid {
-        align-items: stretch;
-    }
-
-    .report-detail-left,
-    .report-detail-right {
-        min-width: 0;
-    }
-
-    .report-detail-info-grid.report-detail-info-grid--three {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-    }
-
-    .report-detail-section--content {
-        margin-top: 14px;
-    }
-
-    .report-detail-section--files {
-        margin-top: 14px;
-    }
-
-    .report-detail-section-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    @media (max-width: 980px) {
-        .report-detail-info-grid.report-detail-info-grid--three {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 640px) {
-        .report-detail-info-grid.report-detail-info-grid--three {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* ================= REPORT ACTION / FILE STYLE ================= */
-
-    .report-detail-action-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .report-detail-approve-btn,
-    .report-detail-reject-btn,
-    .report-detail-download-all-btn,
-    .report-file-download-btn,
-    .report-file-preview-btn {
-        border: 0;
-        outline: 0;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-family: inherit;
-        font-weight: 700;
-        border-radius: 12px;
-        transition:
-            transform 0.15s ease,
-            box-shadow 0.15s ease,
-            opacity 0.15s ease,
-            background-color 0.15s ease,
-            border-color 0.15s ease,
-            color 0.15s ease;
-    }
-
-    .report-detail-approve-btn,
-    .report-detail-reject-btn,
-    .report-detail-download-all-btn {
-        min-height: 42px;
-        padding: 0 16px;
-        color: #ffffff !important;
-        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
-    }
-
-    .report-detail-download-all-btn {
-        background: var(--report-detail-blue);
-    }
-
-    .report-detail-download-all-btn,
-    .report-detail-download-all-btn span,
-    .report-detail-download-all-btn svg {
-        color: #ffffff !important;
-        opacity: 1 !important;
-    }
-
-    .report-detail-download-all-btn--compact {
-        min-height: 34px !important;
-        height: 34px;
-        padding: 0 12px !important;
-        border-radius: 10px !important;
-        font-size: 12px;
-        line-height: 1;
-        gap: 6px;
-        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-    }
-
-    .report-detail-download-all-btn--compact svg {
-        width: 15px !important;
-        height: 15px !important;
-    }
-
-    .report-detail-download-all-btn--footer {
-        min-height: 40px;
-        padding: 0 14px;
-        font-size: 14px;
-    }
-
-    .report-detail-approve-btn {
-        background: var(--report-detail-green);
-    }
-
-    .report-detail-reject-btn {
-        background: var(--report-detail-red);
-    }
-
-    .report-detail-approve-btn:hover,
-    .report-detail-reject-btn:hover,
-    .report-detail-download-all-btn:hover,
-    .report-file-download-btn:hover,
-    .report-file-preview-btn:hover {
-        transform: translateY(-1px);
-    }
-
-    .report-detail-download-all-btn:hover {
-        background: var(--report-detail-blue-hover);
-    }
-
-    .report-detail-action-disabled {
-        opacity: 0.58;
-        cursor: not-allowed;
-        transform: none !important;
-    }
-
-    /* ================= FILE ATTACHMENT - SYSTEM THEME SYNC ================= */
-
-    .report-file-list {
-        display: grid;
-        gap: 10px;
-        margin-top: 12px;
-    }
-
-    .report-file-card {
-        border: 1px solid var(--report-detail-border);
-        border-radius: 16px;
-        padding: 12px;
-
-        background: var(--report-detail-surface);
-        color: var(--report-detail-text);
-
-        display: grid;
-        grid-template-columns: 40px 1fr auto;
-        gap: 12px;
-        align-items: center;
-
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-        transition:
-            transform 0.16s ease,
-            background-color 0.16s ease,
-            border-color 0.16s ease,
-            box-shadow 0.16s ease;
-    }
-
-    .report-file-card:hover {
-        background: var(--report-detail-surface-2);
-        border-color: color-mix(in srgb, var(--report-detail-blue) 55%, var(--report-detail-border));
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
-        transform: translateY(-1px);
-    }
-
-    .report-file-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
-
-        background: color-mix(in srgb, var(--report-detail-blue) 14%, var(--report-detail-surface-2));
-        color: var(--report-detail-blue);
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border: 1px solid color-mix(in srgb, var(--report-detail-blue) 22%, var(--report-detail-border));
-    }
-
-    .report-file-icon svg,
-    .report-file-download-btn svg,
-    .report-file-preview-btn svg,
-    .report-detail-download-all-btn svg {
-        width: 18px;
-        height: 18px;
-        fill: currentColor;
-    }
-
-    .report-file-info {
-        min-width: 0;
-    }
-
-    .report-file-info strong {
-        display: block;
-        color: var(--report-detail-text);
-        font-size: 14px;
-        font-weight: 800;
-
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .report-file-info span {
-        display: block;
-        color: var(--report-detail-text-soft);
-        font-size: 12px;
-        font-weight: 600;
-        margin-top: 4px;
-    }
-
-    .report-file-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .report-file-preview-btn {
-        background: color-mix(in srgb, var(--report-detail-surface-2) 82%, var(--report-detail-text) 8%);
-        color: var(--report-detail-text);
-        padding: 9px 11px;
-        border: 1px solid var(--report-detail-border);
-    }
-
-    .report-file-preview-btn:hover {
-        background: var(--report-detail-surface-2);
-        border-color: color-mix(in srgb, var(--report-detail-blue) 36%, var(--report-detail-border));
-    }
-
-    .report-file-download-btn {
-        background: color-mix(in srgb, var(--report-detail-blue) 16%, var(--report-detail-surface-2));
-        color: var(--report-detail-blue);
-        padding: 9px 11px;
-        border: 1px solid color-mix(in srgb, var(--report-detail-blue) 28%, var(--report-detail-border));
-    }
-
-    .report-file-download-btn:hover {
-        background: color-mix(in srgb, var(--report-detail-blue) 24%, var(--report-detail-surface-2));
-        color: var(--report-detail-blue-hover);
-        border-color: color-mix(in srgb, var(--report-detail-blue) 46%, var(--report-detail-border));
-    }
-
-    .report-detail-file-empty {
-        margin-top: 12px;
-        padding: 16px;
-        border-radius: 16px;
-
-        background: var(--report-detail-surface);
-        color: var(--report-detail-text-soft);
-        border: 1px solid var(--report-detail-border);
-
-        font-weight: 600;
-    }
-
-    /* Fallback cho trình duyệt chưa hỗ trợ color-mix */
-    @supports not (color: color-mix(in srgb, red 50%, blue)) {
-        .report-file-card {
-            background: var(--report-detail-surface);
-        }
-
-        .report-file-card:hover {
-            background: var(--report-detail-surface-2);
-            border-color: var(--report-detail-blue);
-        }
-
-        .report-file-icon {
-            background: var(--report-detail-surface-2);
-            color: var(--report-detail-blue);
-            border-color: var(--report-detail-border);
-        }
-
-        .report-file-preview-btn {
-            background: var(--report-detail-surface-2);
-            color: var(--report-detail-text);
-            border-color: var(--report-detail-border);
-        }
-
-        .report-file-download-btn {
-            background: var(--report-detail-surface-2);
-            color: var(--report-detail-blue);
-            border-color: var(--report-detail-border);
-        }
-    }
-
-    /* ================= FILE PREVIEW MODAL - SYSTEM THEME SYNC ================= */
-
-    .report-file-preview-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: rgba(15, 23, 42, 0.66);
-        backdrop-filter: blur(4px);
-    }
-
-    .report-file-preview-modal.is-show {
-        display: flex;
-    }
-
-    .report-file-preview-dialog {
-        width: min(960px, 100%);
-        max-height: min(760px, 92vh);
-
-        background: var(--report-detail-surface);
-        color: var(--report-detail-text);
-        border: 1px solid var(--report-detail-border);
-
-        border-radius: 22px;
-        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
-
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .report-file-preview-head {
-        padding: 16px 18px;
-        border-bottom: 1px solid var(--report-detail-border);
-
-        background: var(--report-detail-surface-2);
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-    }
-
-    .report-file-preview-head h3 {
-        margin: 0;
-        font-size: 16px;
-        color: var(--report-detail-text);
-        word-break: break-word;
-    }
-
-    .report-file-preview-head p {
-        margin: 4px 0 0;
-        color: var(--report-detail-text-soft);
-        font-size: 13px;
-    }
-
-    .report-file-preview-close {
-        width: 38px;
-        height: 38px;
-        border-radius: 999px;
-        border: 1px solid var(--report-detail-border);
-
-        background: var(--report-detail-surface);
-        color: var(--report-detail-text);
-
-        cursor: pointer;
-        font-size: 22px;
-        line-height: 1;
-        transition: 0.15s ease;
-    }
-
-    .report-file-preview-close:hover {
-        background: var(--report-detail-surface-2);
-    }
-
-    .report-file-preview-body {
-        padding: 18px;
-        overflow: auto;
-
-        background: var(--report-detail-bg-soft);
-        color: var(--report-detail-text);
-
-        min-height: 260px;
-    }
-
-    .report-file-preview-body img {
-        display: block;
-        max-width: 100%;
-        max-height: 620px;
-        margin: 0 auto;
-        border-radius: 16px;
-        background: var(--report-detail-surface);
-        border: 1px solid var(--report-detail-border);
-    }
-
-    .report-file-preview-body iframe {
-        width: 100%;
-        height: 620px;
-        border: 0;
-        border-radius: 16px;
-        background: var(--report-detail-surface);
-    }
-
-    .report-file-preview-empty {
-        min-height: 260px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
-        text-align: center;
-        color: var(--report-detail-text-soft);
-        gap: 8px;
-    }
-
-    .report-file-preview-empty strong {
-        color: var(--report-detail-text);
-        font-size: 18px;
-    }
-
-    .report-file-preview-foot {
-        padding: 14px 18px;
-        border-top: 1px solid var(--report-detail-border);
-        background: var(--report-detail-surface-2);
-
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .report-file-preview-download {
-        min-height: 40px;
-        padding: 0 14px;
-        border-radius: 12px;
-
-        background: var(--report-detail-blue);
-        color: #fff;
-
-        text-decoration: none;
-
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-
-        font-family: inherit;
-        font-weight: 700;
-        transition: 0.15s ease;
-    }
-
-    .report-file-preview-download:hover {
-        background: var(--report-detail-blue-hover);
-        color: #fff;
-        text-decoration: none;
-        transform: translateY(-1px);
-    }
-
-    @media (max-width: 720px) {
-        .report-file-card {
-            grid-template-columns: 40px 1fr;
-        }
-
-        .report-file-actions {
-            grid-column: 1 / -1;
-            justify-content: flex-end;
-        }
-
-        .report-detail-action-row {
-            width: 100%;
-        }
-
-        .report-detail-approve-btn,
-        .report-detail-reject-btn,
-        .report-detail-download-all-btn {
-            flex: 1;
-        }
-    }
-</style>
-
-{% macro show_value(value, fallback='Chưa có dữ liệu') %}
+{% macro text(value, fallback='Chưa có dữ liệu') -%}
     {{ value if value else fallback }}
-{% endmacro %}
+{%- endmacro %}
 
-{% macro info_box(label, value, fallback='Chưa có dữ liệu') %}
-    <div class="report-detail-info-item">
-        <span>{{ label }}</span>
-        <strong>{{ show_value(value, fallback) }}</strong>
-    </div>
+{% macro role_label(role) -%}
+    {% set r = role|default('', true)|lower %}
+    {% if r == 'admin' %}Admin
+    {% elif r in ['manage', 'manager', 'quan_ly', 'quản lý', 'quan ly'] %}Quản lý
+    {% elif r in ['staff', 'employee', 'nhân viên', 'nhan vien'] %}Nhân viên
+    {% else %}{{ role|default('Chưa có chức vụ', true) }}
+    {% endif %}
+{%- endmacro %}
+
+{% macro card_info(label, value, fallback='Chưa có dữ liệu') %}
+<div class="report-detail-info-item">
+    <span>{{ label }}</span>
+    <strong>{{ text(value, fallback) }}</strong>
+</div>
 {% endmacro %}
 
 {% macro mini_info(label, value, fallback='Chưa có dữ liệu') %}
-    <div class="report-detail-mini-item">
-        <span>{{ label }}</span>
-        <strong>{{ show_value(value, fallback) }}</strong>
-    </div>
+<div class="report-detail-mini-item">
+    <span>{{ label }}</span>
+    <strong>{{ text(value, fallback) }}</strong>
+</div>
 {% endmacro %}
 
-{% macro download_icon() %}
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 16.5 6.75 11.25l1.4-1.4L11 12.7V3h2v9.7l2.85-2.85 1.4 1.4L12 16.5ZM5 21a2 2 0 0 1-2-2v-3h2v3h14v-3h2v3a2 2 0 0 1-2 2H5Z"/>
-    </svg>
+{% macro icon_box() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Zm9-2.3L6.4 8 12 10.8 17.6 8 12 5.2ZM5 9.6v5.7l6 3v-5.7l-6-3Zm8 8.7 6-3V9.6l-6 3v5.7Z"/>
+</svg>
 {% endmacro %}
 
-{% macro file_icon() %}
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 7V3.5L18.5 9H13Z"/>
-    </svg>
+{% macro icon_file() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm-1 7V3.5L18.5 9H13Z"/>
+</svg>
 {% endmacro %}
 
-{% macro eye_icon() %}
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5c6.5 0 10 7 10 7s-3.5 7-10 7S2 12 2 12s3.5-7 10-7Zm0 2C7.9 7 5.2 10.4 4.3 12c.9 1.6 3.6 5 7.7 5s6.8-3.4 7.7-5C18.8 10.4 16.1 7 12 7Zm0 2.5A2.5 2.5 0 1 1 12 14a2.5 2.5 0 0 1 0-5Z"/>
-    </svg>
+{% macro icon_down() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 16.5 6.75 11.25l1.4-1.4L11 12.7V3h2v9.7l2.85-2.85 1.4 1.4L12 16.5ZM5 21a2 2 0 0 1-2-2v-3h2v3h14v-3h2v3a2 2 0 0 1-2 2H5Z"/>
+</svg>
 {% endmacro %}
 
-{% macro check_icon() %}
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M9.2 16.2 4.8 11.8l-1.4 1.4 5.8 5.8L21 7.2l-1.4-1.4L9.2 16.2Z"/>
-    </svg>
+{% macro icon_eye() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 5c6.5 0 10 7 10 7s-3.5 7-10 7S2 12 2 12s3.5-7 10-7Zm0 2C7.9 7 5.2 10.4 4.3 12c.9 1.6 3.6 5 7.7 5s6.8-3.4 7.7-5C18.8 10.4 16.1 7 12 7Zm0 2.5A2.5 2.5 0 1 1 12 14a2.5 2.5 0 0 1 0-5Z"/>
+</svg>
 {% endmacro %}
 
-{% macro x_icon() %}
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.4 1.4Z"/>
-    </svg>
+{% macro icon_check() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M9.2 16.2 4.8 11.8l-1.4 1.4 5.8 5.8L21 7.2l-1.4-1.4L9.2 16.2Z"/>
+</svg>
+{% endmacro %}
+
+{% macro icon_x() %}
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7 4.3 4.3l6.3 6.3 6.3-6.3 1.4 1.4Z"/>
+</svg>
 {% endmacro %}
 
 <section class="report-detail-page">
     <div class="report-detail-wrap">
-        <div class="report-detail-topbar">
-            <a href="{{ url_for('report_page') }}" class="report-detail-back">
-                <span>&laquo;</span>
-                <strong>Quay lại</strong>
-            </a>
-        </div>
+        <a href="{{ url_for('report_page') }}" class="report-detail-back">
+            <span>&laquo;</span>
+            <strong>Quay lại</strong>
+        </a>
 
         {% if not report %}
             <div class="report-detail-empty-card">
                 <div class="report-detail-empty-icon">!</div>
                 <h1>Không tìm thấy báo cáo</h1>
                 <p>Báo cáo này có thể đã bị xóa hoặc không tồn tại trong hệ thống.</p>
-
-                <a href="{{ url_for('report_page') }}" class="report-detail-primary-btn">
-                    Về danh sách báo cáo
-                </a>
+                <a href="{{ url_for('report_page') }}" class="report-detail-primary-btn">Về danh sách báo cáo</a>
             </div>
         {% else %}
-            {% set row_index = report._row_index|default(report.row_index|default(report.report_id|default(report.id|default(report.display_report_code, true), true), true), true) %}
-            {% set report_type = report.display_report_type|default('Khác', true) %}
-            {% set report_status = report.display_report_status|default('Chờ xử lý', true) %}
-            {% set reporter = report.display_reporter|default('', true) %}
-            {% set detail = report.display_detail|default('', true) %}
-            {% set note = report.display_note|default('', true) %}
-            {% set report_files = report.files|default([], true) %}
-            {% set can_process = report_status == 'Chờ xử lý' or report_status == 'Đang xử lý' %}
+            {% set user = session.get('user') or {} %}
+            {% set login_role = (user.get('role') or current_user_role|default(current_admin_role|default('', true), true))|lower %}
+            {% set can_review = login_role in ['admin', 'manage', 'manager', 'quan_ly', 'quản lý', 'quan ly'] %}
+
+            {% set row_index = report._row_index|default(report.row_index|default(report.id|default(report.report_id|default('', true), true), true), true) %}
+            {% set code = report.report_code|default(report.code|default(report.auto_report_id|default(report.display_report_code|default('', true), true), true), true) %}
+            {% set name = report.display_report_name|default(report.report_name|default(report.name|default('', true), true), true) %}
+            {% set type = report.display_report_type|default(report.report_type|default('Khác', true), true) %}
+            {% set status = report.display_report_status|default(report.status|default('Chờ xử lý', true), true) %}
+            {% set time = report.display_time|default(report.time|default(report.created_at|default('', true), true), true) %}
+            {% set reporter = report.display_reporter|default(report.reporter|default('', true), true) %}
+            {% set reporter_role = report.display_reporter_role|default(report.reporter_role|default(report.role|default('', true), true), true) %}
+            {% set dept = report.display_department|default(report.department|default('', true), true) %}
+            {% set loc = report.display_location|default(report.location|default('', true), true) %}
+            {% set detail = report.display_detail|default(report.description|default(report.detail|default(report.content|default('', true), true), true), true) %}
+            {% set files = report.files|default([], true) %}
+            {% set can_process = can_review and status in ['Chờ xử lý', 'Đang xử lý'] %}
+            {% set asset_names = report.asset_names|default(report.display_asset_name|default(report.asset_name|default('', true), true), true) %}
+            {% set asset_codes = report.asset_codes|default(report.display_asset_code|default(report.asset_code|default('', true), true), true) %}
 
             <div class="report-detail-header">
-                <div>
-                    <h1>Chi tiết báo cáo</h1>
-                    <p>Theo dõi đầy đủ thông tin, nội dung và trạng thái của báo cáo tài sản.</p>
-                </div>
+                <h1>Chi tiết báo cáo</h1>
+                <p>Theo dõi đầy đủ thông tin, nội dung và trạng thái của báo cáo tài sản.</p>
             </div>
 
             <div class="report-detail-main-card">
@@ -651,7 +111,7 @@
                     <div class="report-detail-id-card">
                         <div>
                             <span>Mã báo cáo</span>
-                            <strong id="reportCodeText">{{ show_value(report.display_report_code) }}</strong>
+                            <strong id="reportCodeText">{{ text(code, 'Chưa có mã') }}</strong>
                         </div>
 
                         <button type="button" class="report-detail-copy-icon" id="copyReportCodeBtn" aria-label="Sao chép mã báo cáo">
@@ -664,219 +124,176 @@
 
                     <div class="report-detail-title-card">
                         <span>Tên báo cáo</span>
-                        <h2>{{ show_value(report.display_report_name) }}</h2>
+                        <h2>{{ text(name) }}</h2>
                     </div>
                 </div>
 
-                <div class="report-detail-scroll">
-                    <div class="report-detail-grid">
-                        <div class="report-detail-left">
-                            <div class="report-detail-section">
-                                <div class="report-detail-section-title">
-                                    <span>Thông tin báo cáo</span>
-                                </div>
-
-                                <div class="report-detail-info-grid report-detail-info-grid--three">
-                                    {{ info_box('Loại báo cáo', report_type, 'Khác') }}
-                                    {{ info_box('Trạng thái', report_status, 'Chờ xử lý') }}
-                                    {{ info_box('Thời gian tạo', report.display_time) }}
-                                </div>
+                <div class="report-detail-grid">
+                    <div class="report-detail-left">
+                        <div class="report-detail-section">
+                            <div class="report-detail-section-title">
+                                <span>Thông tin báo cáo</span>
                             </div>
 
-                            <div class="report-detail-section report-detail-section--content">
-                                <div class="report-detail-section-title">
-                                    <span>Nội dung báo cáo</span>
-                                </div>
+                            <div class="report-detail-info-grid report-detail-info-grid--three">
+                                {{ card_info('Loại báo cáo', type, 'Khác') }}
+                                {{ card_info('Trạng thái', status, 'Chờ xử lý') }}
+                                {{ card_info('Thời gian tạo', time) }}
+                            </div>
+                        </div>
 
-                                <div class="report-detail-content-box">
-                                    {% if detail %}
-                                        <p>{{ detail }}</p>
-                                    {% else %}
-                                        <p class="report-detail-muted">Chưa có nội dung báo cáo.</p>
-                                    {% endif %}
-                                </div>
-
-                                {% if note %}
-                                    <div class="report-detail-note-box">
-                                        <span>Ghi chú thêm</span>
-                                        <p>{{ note }}</p>
-                                    </div>
-                                {% endif %}
+                        <div class="report-detail-section report-detail-section--content">
+                            <div class="report-detail-section-title">
+                                <span>Nội dung báo cáo</span>
                             </div>
 
-                            <div class="report-detail-section report-detail-section--files">
-                                <div class="report-detail-section-title">
-                                    <span>File đính kèm</span>
-
-                                    {% if report_files %}
-                                        <button type="button" class="report-detail-download-all-btn report-detail-download-all-btn--compact js-download-all-files">
-                                            {{ download_icon() }}
-                                            <span>Tải tất cả</span>
-                                        </button>
-                                    {% endif %}
-                                </div>
-
-                                {% if report_files %}
-                                    <div class="report-file-list">
-                                        {% for file in report_files %}
-                                            {% set file_name = file.original_name|default(file.name|default(file.stored_name|default('File đính kèm', true), true), true) %}
-                                            {% set file_url = file.url|default('', true) %}
-                                            {% set file_ext = file.extension|default('', true) %}
-                                            {% set file_mime = file.mime_type|default('', true) %}
-                                            {% set file_size = file.size|default('', true) %}
-                                            {% set download_url = file_url ~ ('&download=1' if '?' in file_url else '?download=1') if file_url else '' %}
-
-                                            <div
-                                                class="report-file-card"
-                                                data-file-card
-                                                data-file-name="{{ file_name }}"
-                                                data-file-url="{{ file_url }}"
-                                                data-file-download-url="{{ download_url }}"
-                                                data-file-extension="{{ file_ext }}"
-                                                data-file-mime="{{ file_mime }}"
-                                                data-file-size="{{ file_size }}"
-                                            >
-                                                <div class="report-file-icon">
-                                                    {{ file_icon() }}
-                                                </div>
-
-                                                <div class="report-file-info">
-                                                    <strong>{{ file_name }}</strong>
-                                                    <span>
-                                                        {% if file_ext %}.{{ file_ext }}{% else %}Không rõ định dạng{% endif %}
-                                                        {% if file_size %} · {{ file_size }} bytes{% endif %}
-                                                    </span>
-                                                </div>
-
-                                                <div class="report-file-actions">
-                                                    <button
-                                                        type="button"
-                                                        class="report-file-preview-btn js-preview-file"
-                                                        data-file-name="{{ file_name }}"
-                                                        data-file-url="{{ file_url }}"
-                                                        data-file-download-url="{{ download_url }}"
-                                                        data-file-extension="{{ file_ext }}"
-                                                        data-file-mime="{{ file_mime }}"
-                                                        data-file-size="{{ file_size }}"
-                                                    >
-                                                        {{ eye_icon() }}
-                                                        <span>Xem</span>
-                                                    </button>
-
-                                                    {% if download_url %}
-                                                        <a
-                                                            href="{{ download_url }}"
-                                                            class="report-file-download-btn js-file-download-link"
-                                                            download
-                                                            title="Tải file"
-                                                        >
-                                                            {{ download_icon() }}
-                                                            <span>Tải</span>
-                                                        </a>
-                                                    {% else %}
-                                                        <button type="button" class="report-file-download-btn report-detail-action-disabled" disabled>
-                                                            {{ download_icon() }}
-                                                            <span>Tải</span>
-                                                        </button>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
+                            <div class="report-detail-content-box">
+                                {% if detail %}
+                                    <p>{{ detail }}</p>
                                 {% else %}
-                                    <div class="report-detail-file-empty">
-                                        Báo cáo này chưa có file đính kèm.
-                                    </div>
+                                    <p class="report-detail-muted">Chưa có nội dung báo cáo.</p>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="report-detail-right">
-                            <div class="report-detail-section">
-                                <div class="report-detail-section-title report-detail-section-title--soft">
-                                    <span>Người báo cáo</span>
-                                </div>
+                        <div class="report-detail-section report-detail-section--files">
+                            <div class="report-detail-section-title">
+                                <span>File đính kèm</span>
 
-                                <div class="report-detail-person-card">
-                                    <div class="report-detail-avatar">
-                                        {{ (reporter[:1] if reporter else 'A')|upper }}
-                                    </div>
-
-                                    <div>
-                                        <h3>{{ show_value(reporter, 'Chưa xác định') }}</h3>
-                                        <p>{{ show_value(report.display_reporter_role, 'Chưa có chức vụ') }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="report-detail-mini-list">
-                                    {{ mini_info('Phòng ban', report.display_department) }}
-                                    {{ mini_info('Vị trí', report.display_location) }}
-                                </div>
+                                {% if files %}
+                                    <button type="button" class="report-detail-download-all-btn report-detail-download-all-btn--compact js-download-all-files">
+                                        {{ icon_down() }}
+                                        <span>Tải tất cả</span>
+                                    </button>
+                                {% endif %}
                             </div>
 
-                            <div class="report-detail-section">
-                                <div class="report-detail-section-title report-detail-section-title--soft">
-                                    <span>Tài sản liên quan</span>
-                                </div>
+                            {% if files %}
+                                <div class="report-file-list">
+                                    {% for file in files %}
+                                        {% set fname = file.original_name|default(file.name|default(file.stored_name|default('File đính kèm', true), true), true) %}
+                                        {% set furl = file.url|default('', true) %}
+                                        {% set fext = file.extension|default('', true) %}
+                                        {% set fmime = file.mime_type|default('', true) %}
+                                        {% set fsize = file.size|default('', true) %}
+                                        {% set down = furl ~ ('&download=1' if '?' in furl else '?download=1') if furl else '' %}
 
-                                <div class="report-detail-asset-card">
-                                    <div class="report-detail-asset-icon">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Zm9-2.3L6.4 8 12 10.8 17.6 8 12 5.2ZM5 9.6v5.7l6 3v-5.7l-6-3Zm8 8.7 6-3V9.6l-6 3v5.7Z"/>
-                                        </svg>
-                                    </div>
+                                        <div class="report-file-card"
+                                            data-file-card
+                                            data-url="{{ furl }}"
+                                            data-down="{{ down }}"
+                                            data-name="{{ fname }}"
+                                            data-ext="{{ fext }}"
+                                            data-mime="{{ fmime }}"
+                                            data-size="{{ fsize }}">
+                                            <div class="report-file-icon">{{ icon_file() }}</div>
 
-                                    <div>
-                                        {% if report.asset_names %}
-                                            <h3>{{ report.asset_names }}</h3>
-                                            <p>{{ report.asset_codes|default('Nhiều tài sản', true) }}</p>
-                                        {% else %}
-                                            <h3>{{ show_value(report.display_asset_name, 'Chưa xác định') }}</h3>
-                                            <p>{{ show_value(report.display_asset_code, 'Không có mã tài sản') }}</p>
-                                        {% endif %}
-                                    </div>
+                                            <div class="report-file-info">
+                                                <strong>{{ fname }}</strong>
+                                                <span>
+                                                    {% if fext %}.{{ fext }}{% else %}Không rõ định dạng{% endif %}
+                                                    {% if fsize %} · {{ fsize }} bytes{% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="report-file-actions">
+                                                <button type="button" class="report-file-preview-btn js-preview-file">
+                                                    {{ icon_eye() }}
+                                                    <span>Xem</span>
+                                                </button>
+
+                                                {% if down %}
+                                                    <a href="{{ down }}" class="report-file-download-btn js-file-download-link" download>
+                                                        {{ icon_down() }}
+                                                        <span>Tải</span>
+                                                    </a>
+                                                {% else %}
+                                                    <button type="button" class="report-file-download-btn report-detail-action-disabled" disabled>
+                                                        {{ icon_down() }}
+                                                        <span>Tải</span>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="report-detail-file-empty">Báo cáo này chưa có file đính kèm.</div>
+                            {% endif %}
                         </div>
                     </div>
+
+                    <aside class="report-detail-right">
+                        <div class="report-detail-section">
+                            <div class="report-detail-section-title report-detail-section-title--soft">
+                                <span>Người báo cáo</span>
+                            </div>
+
+                            <div class="report-detail-person-card">
+                                <div class="report-detail-avatar">{{ (reporter[:1] if reporter else 'A')|upper }}</div>
+
+                                <div>
+                                    <h3>{{ text(reporter, 'Chưa xác định') }}</h3>
+                                    <p>{{ role_label(reporter_role) }}</p>
+                                </div>
+                            </div>
+
+                            <div class="report-detail-mini-list">
+                                {{ mini_info('Phòng ban', dept) }}
+                                {{ mini_info('Vị trí', loc) }}
+                            </div>
+                        </div>
+
+                        <div class="report-detail-section report-detail-section--related-assets">
+                            <div class="report-detail-section-title report-detail-section-title--soft">
+                                <span>Tài sản liên quan</span>
+                            </div>
+
+                            <div class="report-detail-related-list"
+                                id="reportRelatedAssets"
+                                data-reporter="{{ reporter }}"
+                                data-department="{{ dept }}"
+                                data-location="{{ loc }}"
+                                data-overview-url="{{ url_for('report_page') }}"
+                                data-asset-names="{{ asset_names }}"
+                                data-asset-codes="{{ asset_codes }}">
+                                <div class="report-detail-asset-card">
+                                    <div class="report-detail-asset-icon">{{ icon_box() }}</div>
+                                    <div class="report-detail-asset-info">
+                                        <h3>Đang tổng hợp dữ liệu...</h3>
+                                        <p>Từ bảng báo cáo</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
 
                 <div class="report-detail-footer">
-                    <a href="{{ url_for('report_page') }}" class="report-detail-secondary-btn">
-                        Quay lại danh sách
-                    </a>
+                    <a href="{{ url_for('report_page') }}" class="report-detail-secondary-btn">Quay lại danh sách</a>
 
-                    <div class="report-detail-action-row">
-                        {% if report_files %}
-                            <button type="button" class="report-detail-download-all-btn report-detail-download-all-btn--footer js-download-all-files">
-                                {{ download_icon() }}
-                                <span>Tải tất cả file</span>
-                            </button>
-                        {% endif %}
-
-                        {% if can_process %}
-                            <button
-                                type="button"
-                                class="report-detail-approve-btn js-approve-report"
-                                data-action-url="{{ url_for('approve_report_log', row_index=row_index) }}"
-                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                                data-report-type="{{ report_type }}"
-                            >
-                                {{ check_icon() }}
+                    {% if can_process %}
+                        <div class="report-detail-action-row">
+                            <button type="button"
+                                class="report-detail-approve-btn js-report-action"
+                                data-url="{{ url_for('approve_report_log', row_index=row_index) }}"
+                                data-kind="approve"
+                                data-name="{{ name }}"
+                                data-type="{{ type }}">
+                                {{ icon_check() }}
                                 <span>Duyệt</span>
                             </button>
 
-                            <button
-                                type="button"
-                                class="report-detail-reject-btn js-reject-report"
-                                data-action-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
-                                data-report-name="{{ report.display_report_name|default('báo cáo này', true) }}"
-                            >
-                                {{ x_icon() }}
+                            <button type="button"
+                                class="report-detail-reject-btn js-report-action"
+                                data-url="{{ url_for('cancel_report_log', row_index=row_index) }}"
+                                data-kind="reject"
+                                data-name="{{ name }}">
+                                {{ icon_x() }}
                                 <span>Từ chối</span>
                             </button>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}
@@ -885,7 +302,7 @@
     <div class="report-detail-toast" id="reportDetailToast" aria-hidden="true">
         <div class="report-detail-toast__icon"></div>
         <strong id="reportDetailToastText">Thao tác thành công</strong>
-        <button type="button" id="closeReportDetailToast" aria-label="Đóng">×</button>
+        <button type="button" id="closeReportDetailToast">×</button>
         <div class="report-detail-toast__progress"></div>
     </div>
 
@@ -897,14 +314,14 @@
                     <p id="filePreviewMeta">Đang tải thông tin file...</p>
                 </div>
 
-                <button type="button" class="report-file-preview-close" id="closeFilePreviewModal" aria-label="Đóng">×</button>
+                <button type="button" class="report-file-preview-close" id="closeFilePreviewModal">×</button>
             </div>
 
             <div class="report-file-preview-body" id="filePreviewBody"></div>
 
             <div class="report-file-preview-foot">
                 <a href="#" class="report-file-preview-download" id="filePreviewDownload" download>
-                    {{ download_icon() }}
+                    {{ icon_down() }}
                     <span>Tải file này</span>
                 </a>
             </div>
@@ -913,366 +330,316 @@
 </section>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const copyButton = document.getElementById("copyReportCodeBtn");
-    const reportCodeText = document.getElementById("reportCodeText");
-    const toast = document.getElementById("reportDetailToast");
-    const toastText = document.getElementById("reportDetailToastText");
-    const closeToastButton = document.getElementById("closeReportDetailToast");
+document.addEventListener("DOMContentLoaded", () => {
+    const $ = (s, p = document) => p.querySelector(s);
+    const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
 
-    const filePreviewModal = document.getElementById("filePreviewModal");
-    const filePreviewTitle = document.getElementById("filePreviewTitle");
-    const filePreviewMeta = document.getElementById("filePreviewMeta");
-    const filePreviewBody = document.getElementById("filePreviewBody");
-    const filePreviewDownload = document.getElementById("filePreviewDownload");
-    const closeFilePreviewModal = document.getElementById("closeFilePreviewModal");
+    const relatedBox = $("#reportRelatedAssets");
+    const toast = $("#reportDetailToast");
+    const modal = $("#filePreviewModal");
 
-    let toastTimer = null;
+    const esc = value => String(value || "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    }[c]));
 
-    function hideToast() {
-        if (!toast) return;
+    const norm = value => String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-        toast.classList.remove("is-show");
-        toast.setAttribute("aria-hidden", "true");
-    }
+    const splitData = value => String(value || "")
+        .split("|")
+        .map(item => item.trim())
+        .filter(Boolean);
 
     function showToast(message) {
-        if (!toast || !toastText) return;
+        const text = $("#reportDetailToastText");
 
-        toastText.textContent = message || "Thao tác thành công";
-        toast.classList.remove("is-show");
+        if (!toast || !text) return;
 
-        void toast.offsetWidth;
-
+        text.textContent = message || "Thao tác thành công";
         toast.classList.add("is-show");
-        toast.setAttribute("aria-hidden", "false");
 
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(hideToast, 3200);
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => toast.classList.remove("is-show"), 3000);
     }
 
-    async function copyReportCode() {
-        if (!reportCodeText) return;
+    function post(url, data = {}) {
+        if (!url) return;
 
-        const text = reportCodeText.textContent.trim();
-
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (error) {
-            const input = document.createElement("input");
-            input.value = text;
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand("copy");
-            document.body.removeChild(input);
-        }
-
-        showToast("Đã sao chép mã báo cáo");
-    }
-
-    function getDownloadUrl(url) {
-        if (!url) return "";
-
-        if (url.includes("download=1")) {
-            return url;
-        }
-
-        return url + (url.includes("?") ? "&" : "?") + "download=1";
-    }
-
-    function getExtension(fileName, extension) {
-        if (extension) {
-            return String(extension).replace(".", "").toLowerCase();
-        }
-
-        const name = String(fileName || "");
-        const parts = name.split(".");
-
-        if (parts.length <= 1) {
-            return "";
-        }
-
-        return parts.pop().toLowerCase();
-    }
-
-    function formatSize(size) {
-        const number = Number(size || 0);
-
-        if (!number) {
-            return "Không rõ dung lượng";
-        }
-
-        if (number >= 1024 * 1024) {
-            return (number / 1024 / 1024).toFixed(2) + " MB";
-        }
-
-        if (number >= 1024) {
-            return (number / 1024).toFixed(2) + " KB";
-        }
-
-        return number + " bytes";
-    }
-
-    function isImageExtension(extension) {
-        return ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(extension);
-    }
-
-    function isPdfExtension(extension) {
-        return extension === "pdf";
-    }
-
-    function openFilePreview(button) {
-        if (!filePreviewModal || !filePreviewBody) return;
-
-        const fileName = button.getAttribute("data-file-name") || "File đính kèm";
-        const fileUrl = button.getAttribute("data-file-url") || "";
-        const downloadUrl = button.getAttribute("data-file-download-url") || getDownloadUrl(fileUrl);
-        const extension = getExtension(fileName, button.getAttribute("data-file-extension") || "");
-        const mime = button.getAttribute("data-file-mime") || "Không rõ MIME type";
-        const size = formatSize(button.getAttribute("data-file-size") || "");
-
-        if (filePreviewTitle) {
-            filePreviewTitle.textContent = fileName;
-        }
-
-        if (filePreviewMeta) {
-            filePreviewMeta.textContent = "Định dạng: " + (extension ? "." + extension : "Không rõ") + " · " + mime + " · " + size;
-        }
-
-        if (filePreviewDownload) {
-            filePreviewDownload.href = downloadUrl || fileUrl || "#";
-        }
-
-        filePreviewBody.innerHTML = "";
-
-        if (!fileUrl) {
-            filePreviewBody.innerHTML = [
-                '<div class="report-file-preview-empty">',
-                '<strong>Không có đường dẫn file</strong>',
-                '<p>Không thể xem trước hoặc tải file này vì thiếu URL.</p>',
-                '</div>'
-            ].join("");
-        } else if (isImageExtension(extension)) {
-            const image = document.createElement("img");
-            image.src = fileUrl;
-            image.alt = fileName;
-            filePreviewBody.appendChild(image);
-        } else if (isPdfExtension(extension)) {
-            const iframe = document.createElement("iframe");
-            iframe.src = fileUrl;
-            iframe.title = fileName;
-            filePreviewBody.appendChild(iframe);
-        } else {
-            filePreviewBody.innerHTML = [
-                '<div class="report-file-preview-empty">',
-                '<strong>Không hỗ trợ xem trước trực tiếp</strong>',
-                '<p>File này có thể là Word, Excel, PowerPoint hoặc file nén. Bạn hãy tải xuống để mở bằng ứng dụng phù hợp.</p>',
-                '</div>'
-            ].join("");
-        }
-
-        filePreviewModal.classList.add("is-show");
-        filePreviewModal.setAttribute("aria-hidden", "false");
-    }
-
-    function closePreview() {
-        if (!filePreviewModal || !filePreviewBody) return;
-
-        filePreviewModal.classList.remove("is-show");
-        filePreviewModal.setAttribute("aria-hidden", "true");
-        filePreviewBody.innerHTML = "";
-    }
-
-    function downloadAllFiles() {
-        const links = Array.from(document.querySelectorAll(".js-file-download-link"))
-            .map(function (link) {
-                return link.getAttribute("href");
-            })
-            .filter(Boolean);
-
-        if (!links.length) {
-            showToast("Không có file để tải");
-            return;
-        }
-
-        links.forEach(function (url, index) {
-            setTimeout(function () {
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "";
-                a.style.display = "none";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }, index * 350);
-        });
-
-        showToast("Đang tải " + links.length + " file");
-    }
-
-    function submitAction(actionUrl, fields) {
         const form = document.createElement("form");
-
         form.method = "POST";
-        form.action = actionUrl;
+        form.action = url;
         form.style.display = "none";
 
-        Object.keys(fields || {}).forEach(function (key) {
+        Object.entries({ next: location.href, ...data }).forEach(([name, value]) => {
             const input = document.createElement("input");
             input.type = "hidden";
-            input.name = key;
-            input.value = fields[key];
+            input.name = name;
+            input.value = value;
             form.appendChild(input);
         });
-
-        const nextInput = document.createElement("input");
-        nextInput.type = "hidden";
-        nextInput.name = "next";
-        nextInput.value = window.location.href;
-        form.appendChild(nextInput);
 
         document.body.appendChild(form);
         form.submit();
     }
 
-    async function confirmApprove(button) {
-        const actionUrl = button.getAttribute("data-action-url");
-        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
-        const reportType = button.getAttribute("data-report-type") || "";
+    function fileSize(value) {
+        const size = Number(value || 0);
 
-        if (!actionUrl) return;
+        if (!size) return "Không rõ dung lượng";
+        if (size >= 1048576) return `${(size / 1048576).toFixed(2)} MB`;
+        if (size >= 1024) return `${(size / 1024).toFixed(2)} KB`;
 
-        let message = "Bạn có chắc muốn duyệt " + reportName + " không?";
+        return `${size} bytes`;
+    }
 
-        if (reportType === "Báo hỏng") {
-            message += " Sau khi duyệt, tài sản liên quan sẽ chuyển sang trạng thái hỏng.";
-        } else if (reportType === "Cần cấp mới") {
-            message += " Sau khi duyệt, hệ thống sẽ xử lý cấp phát tài sản theo báo cáo.";
-        }
+    function fileExt(name, ext) {
+        if (ext) return String(ext).replace(".", "").toLowerCase();
 
-        let confirmed = false;
+        const parts = String(name || "").split(".");
 
-        if (typeof window.toastConfirm === "function") {
-            confirmed = await window.toastConfirm({
-                type: "warning",
-                title: "Xác nhận duyệt báo cáo",
-                message: message,
-                confirmText: "Duyệt",
-                cancelText: "Hủy",
-                danger: false,
-                closeOnBackdrop: false,
-                closeOnEsc: true
-            });
+        return parts.length > 1 ? parts.pop().toLowerCase() : "";
+    }
+
+    function openPreview(card) {
+        if (!card || !modal) return;
+
+        const name = card.dataset.name || "File đính kèm";
+        const url = card.dataset.url || "";
+        const down = card.dataset.down || url;
+        const ext = fileExt(name, card.dataset.ext);
+
+        $("#filePreviewTitle").textContent = name;
+        $("#filePreviewMeta").textContent = `Định dạng: ${ext ? "." + ext : "Không rõ"} · ${card.dataset.mime || "Không rõ MIME type"} · ${fileSize(card.dataset.size)}`;
+        $("#filePreviewDownload").href = down || "#";
+
+        const body = $("#filePreviewBody");
+
+        if (!url) {
+            body.innerHTML = '<div class="report-file-preview-empty"><strong>Không có đường dẫn file</strong><p>Không thể xem trước file này.</p></div>';
+        } else if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) {
+            body.innerHTML = `<img src="${url}" alt="${esc(name)}">`;
+        } else if (ext === "pdf") {
+            body.innerHTML = `<iframe src="${url}" title="${esc(name)}"></iframe>`;
         } else {
-            confirmed = confirm(message);
+            body.innerHTML = '<div class="report-file-preview-empty"><strong>Không hỗ trợ xem trước trực tiếp</strong><p>Hãy tải xuống để mở file này.</p></div>';
         }
 
-        if (!confirmed) return;
+        modal.classList.add("is-show");
+    }
 
-        submitAction(actionUrl, {
-            approval_note: "Duyệt từ trang chi tiết báo cáo"
+    function assetsFrom(namesRaw, codesRaw) {
+        const names = splitData(namesRaw);
+        const codes = splitData(codesRaw);
+
+        if (!names.length && String(namesRaw || "").trim()) names.push(String(namesRaw).trim());
+
+        return names.map((name, index) => ({
+            name,
+            code: codes[index] || codes[0] || "Không có mã tài sản"
+        }));
+    }
+
+    function renderAssets(items) {
+        if (!relatedBox) return;
+
+        const map = new Map();
+
+        (items || []).forEach(asset => {
+            if (!asset.name) return;
+            map.set(`${norm(asset.code)}|${norm(asset.name)}`, asset);
         });
+
+        const list = Array.from(map.values());
+
+        relatedBox.innerHTML = list.length ? list.map(asset => `
+            <div class="report-detail-asset-card">
+                <div class="report-detail-asset-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Zm9-2.3L6.4 8 12 10.8 17.6 8 12 5.2ZM5 9.6v5.7l6 3v-5.7l-6-3Zm8 8.7 6-3V9.6l-6 3v5.7Z"/></svg>
+                </div>
+                <div class="report-detail-asset-info">
+                    <h3 title="${esc(asset.name)}">${esc(asset.name)}</h3>
+                    <p title="${esc(asset.code)}">${esc(asset.code)}</p>
+                </div>
+            </div>
+        `).join("") : `
+            <div class="report-detail-asset-card">
+                <div class="report-detail-asset-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Zm9-2.3L6.4 8 12 10.8 17.6 8 12 5.2ZM5 9.6v5.7l6 3v-5.7l-6-3Zm8 8.7 6-3V9.6l-6 3v5.7Z"/></svg>
+                </div>
+                <div class="report-detail-asset-info">
+                    <h3>Chưa có tài sản liên quan</h3>
+                    <p>Không có dữ liệu tài sản thật từ bảng báo cáo</p>
+                </div>
+            </div>
+        `;
     }
 
-    async function confirmReject(button) {
-        const actionUrl = button.getAttribute("data-action-url");
-        const reportName = button.getAttribute("data-report-name") || "báo cáo này";
+    function parseRows(doc) {
+        return $$(".report-table-data-source [data-report-row]", doc).map(row => ({
+            reporter: row.dataset.reporter || "",
+            department: row.dataset.department || "",
+            location: row.dataset.location || "",
+            assetNames: row.dataset.assetNames || "",
+            assetCodes: row.dataset.assetCodes || ""
+        }));
+    }
 
-        if (!actionUrl) return;
+    function totalPages(doc) {
+        const match = (doc.body?.innerText || "").match(/Trang\s+\d+\s*\/\s*(\d+)/i);
+        return Math.max(1, Number(match?.[1] || 1));
+    }
 
-        const message = "Bạn có chắc muốn từ chối " + reportName + " không? Báo cáo sẽ được chuyển sang trạng thái đã hủy/từ chối.";
+    async function fetchPage(page) {
+        const url = new URL(relatedBox?.dataset.overviewUrl || "/report", location.origin);
+        url.searchParams.set("page", page);
 
-        let confirmed = false;
-
-        if (typeof window.toastConfirm === "function") {
-            confirmed = await window.toastConfirm({
-                type: "error",
-                title: "Xác nhận từ chối báo cáo",
-                message: message,
-                confirmText: "Từ chối",
-                cancelText: "Hủy",
-                danger: true,
-                closeOnBackdrop: false,
-                closeOnEsc: true
-            });
-        } else {
-            confirmed = confirm(message);
-        }
-
-        if (!confirmed) return;
-
-        submitAction(actionUrl, {
-            cancel_reason: "Từ chối từ trang chi tiết báo cáo",
-            reason: "Từ chối từ trang chi tiết báo cáo"
+        const res = await fetch(url, {
+            headers: { Accept: "text/html" },
+            credentials: "same-origin"
         });
+
+        return res.ok ? new DOMParser().parseFromString(await res.text(), "text/html") : null;
     }
 
-    if (copyButton) {
-        copyButton.addEventListener("click", copyReportCode);
-    }
+    async function loadRelatedAssets() {
+        if (!relatedBox) return;
 
-    if (closeToastButton) {
-        closeToastButton.addEventListener("click", hideToast);
-    }
+        const baseAssets = assetsFrom(relatedBox.dataset.assetNames, relatedBox.dataset.assetCodes);
+        const cacheKey = [
+            "report-assets",
+            norm(relatedBox.dataset.reporter),
+            norm(relatedBox.dataset.department),
+            norm(relatedBox.dataset.location)
+        ].join(":");
 
-    if (closeFilePreviewModal) {
-        closeFilePreviewModal.addEventListener("click", closePreview);
-    }
+        const cached = sessionStorage.getItem(cacheKey);
 
-    if (filePreviewModal) {
-        filePreviewModal.addEventListener("click", function (event) {
-            if (event.target === filePreviewModal) {
-                closePreview();
+        if (cached) {
+            try {
+                renderAssets(JSON.parse(cached));
+            } catch {
+                renderAssets(baseAssets);
             }
-        });
+        } else {
+            renderAssets(baseAssets);
+        }
+
+        setTimeout(async () => {
+            try {
+                const first = await fetchPage(1);
+                if (!first) return;
+
+                let rows = parseRows(first);
+                const pages = Math.min(totalPages(first), 100);
+                const docs = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetchPage(i + 2)));
+
+                docs.forEach(doc => {
+                    if (doc) rows = rows.concat(parseRows(doc));
+                });
+
+                const reporter = norm(relatedBox.dataset.reporter);
+                const dept = norm(relatedBox.dataset.department);
+                const loc = norm(relatedBox.dataset.location);
+                const assets = [...baseAssets];
+
+                rows.forEach(row => {
+                    if (norm(row.reporter) === reporter && norm(row.department) === dept && norm(row.location) === loc) {
+                        assets.push(...assetsFrom(row.assetNames, row.assetCodes));
+                    }
+                });
+
+                sessionStorage.setItem(cacheKey, JSON.stringify(assets));
+                renderAssets(assets);
+            } catch (error) {
+                console.warn("Không thể tổng hợp tài sản liên quan:", error);
+            }
+        }, 0);
     }
 
-    document.querySelectorAll(".js-preview-file").forEach(function (button) {
-        button.addEventListener("click", function () {
-            openFilePreview(button);
-        });
+    $("#copyReportCodeBtn")?.addEventListener("click", async () => {
+        const code = $("#reportCodeText")?.textContent.trim();
+
+        if (!code) return;
+
+        try {
+            await navigator.clipboard.writeText(code);
+        } catch {
+            const input = document.createElement("input");
+            input.value = code;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            input.remove();
+        }
+
+        showToast("Đã sao chép mã báo cáo");
     });
 
-    document.querySelectorAll("[data-file-card]").forEach(function (card) {
-        card.addEventListener("click", function (event) {
-            if (
-                event.target.closest(".report-file-actions") ||
-                event.target.closest("a") ||
-                event.target.closest("button")
-            ) {
+    $$(".js-preview-file").forEach(btn => {
+        btn.addEventListener("click", () => openPreview(btn.closest("[data-file-card]")));
+    });
+
+    $$(".js-download-all-files").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const links = $$(".js-file-download-link").map(link => link.href).filter(Boolean);
+
+            if (!links.length) {
+                showToast("Không có file để tải");
                 return;
             }
 
-            const previewButton = card.querySelector(".js-preview-file");
+            links.forEach((href, index) => {
+                setTimeout(() => {
+                    const a = document.createElement("a");
+                    a.href = href;
+                    a.download = "";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                }, index * 250);
+            });
 
-            if (previewButton) {
-                openFilePreview(previewButton);
-            }
+            showToast(`Đang tải ${links.length} file`);
         });
     });
 
-    document.querySelectorAll(".js-download-all-files").forEach(function (button) {
-        button.addEventListener("click", downloadAllFiles);
-    });
+    $$(".js-report-action").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const approve = btn.dataset.kind === "approve";
+            const name = btn.dataset.name || "báo cáo này";
+            const ok = confirm(approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`);
 
-    document.querySelectorAll(".js-approve-report").forEach(function (button) {
-        button.addEventListener("click", function () {
-            confirmApprove(button);
+            if (!ok) return;
+
+            post(btn.dataset.url, approve
+                ? { approval_note: "Duyệt từ trang chi tiết báo cáo" }
+                : {
+                    cancel_reason: "Từ chối từ trang chi tiết báo cáo",
+                    reason: "Từ chối từ trang chi tiết báo cáo"
+                }
+            );
         });
     });
 
-    document.querySelectorAll(".js-reject-report").forEach(function (button) {
-        button.addEventListener("click", function () {
-            confirmReject(button);
-        });
+    $("#closeReportDetailToast")?.addEventListener("click", () => toast?.classList.remove("is-show"));
+    $("#closeFilePreviewModal")?.addEventListener("click", () => modal?.classList.remove("is-show"));
+
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) modal.classList.remove("is-show");
     });
 
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-            hideToast();
-            closePreview();
-        }
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") modal?.classList.remove("is-show");
     });
+
+    loadRelatedAssets();
 });
 </script>
 {% endblock %}

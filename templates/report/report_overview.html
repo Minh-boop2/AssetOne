@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_filter.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_table.css') }}">
 
-<form method="GET" action="{{ url_for('report_page') }}" id="reportForm">
+<form method="GET" action="{{ url_for('report_page') }}" id="reportForm" class="report-form-page">
     <section class="report-page">
         <div class="report-page__header">
             <h1 class="report-page__title">Báo cáo tài sản</h1>
@@ -12,32 +12,26 @@
         </div>
 
         {% include "report/report_filter.html" %}
-
         {% include "report/report_table.html" %}
     </section>
 </form>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("reportForm");
-
     if (!form) return;
 
     const pageInput = form.querySelector('input[name="page"]');
 
     function submitReportForm() {
-        if (pageInput) {
-            pageInput.value = "1";
-        }
-
+        if (pageInput) pageInput.value = "1";
         form.submit();
     }
 
-    document.addEventListener("keydown", function (event) {
+    document.addEventListener("keydown", event => {
         if (event.key !== "Enter") return;
 
         const tagName = event.target.tagName ? event.target.tagName.toLowerCase() : "";
-
         if (tagName === "textarea") return;
 
         event.preventDefault();

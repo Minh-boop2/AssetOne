@@ -1,969 +1,236 @@
 {% extends 'main.html' %}
 
 {% block content %}
-{% set auto_code = auto_report_id|default('Report-000000', true) %}
+{% set auto_code = auto_report_id|default(report_code|default(display_report_code|default('REPORT-000000', true), true), true) %}
 {% set reporter_name = current_user_name|default(current_admin_name|default('Chưa xác định', true), true) %}
 {% set reporter_role = current_user_role|default(current_admin_role|default('Chưa xác định', true), true) %}
 {% set reporter_department = current_user_department|default('Chưa cập nhật', true) %}
 {% set reporter_location = current_user_location|default('Chưa cập nhật', true) %}
+{% set asset_list = asset_options|default(assets|default(user_assets|default(assigned_assets|default([], true), true), true), true) %}
+{% set report_type_list = report_type_options|default(['Báo hỏng', 'Cần cấp mới', 'Khác'], true) %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/report/report_create.css') }}">
 
-<style>
-    /* ================= RESPONSIVE PAGE FIT ================= */
-
-    html,
-    body {
-        min-height: 100%;
-        overflow-x: hidden !important;
-    }
-
-    .main-content,
-    .content,
-    .page-content,
-    .app-content,
-    #app,
-    #app-body,
-    main {
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: visible !important;
-    }
-
-    .report-create-page {
-        --report-file-surface: var(--surface);
-        --report-file-surface-2: var(--surface-2);
-        --report-file-border: var(--border);
-        --report-file-text: var(--text);
-        --report-file-text-soft: var(--text-soft);
-        --report-file-blue: var(--hsu-blue);
-        --report-file-active-bg: var(--select-active-bg);
-        --report-file-active-text: var(--select-active-text);
-
-        --create-scale: 1;
-        --page-pad-y: clamp(4px, 0.8vh, 12px);
-        --wrap-width: clamp(980px, 72vw, 1180px);
-        --card-radius: clamp(16px, 1.3vw, 22px);
-        --body-pad-x: clamp(20px, 2vw, 32px);
-        --body-pad-y: clamp(14px, 1.6vh, 24px);
-        --grid-gap: clamp(16px, 1.7vw, 30px);
-        --field-gap: clamp(7px, 0.9vh, 12px);
-        --field-h: clamp(38px, 4.6vh, 48px);
-        --textarea-h: clamp(76px, 10vh, 118px);
-        --code-pad: clamp(12px, 1.2vw, 18px);
-        --footer-h: clamp(56px, 7vh, 74px);
-
-        min-height: calc(100vh - 112px);
-        padding: var(--page-pad-y) clamp(12px, 2vw, 28px);
-        overflow: hidden !important;
-
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-    }
-
-    .report-create-wrap {
-        width: min(100%, var(--wrap-width));
-        margin: 0 auto;
-        transform: scale(var(--create-scale));
-        transform-origin: top center;
-    }
-
-    .report-create-back {
-        margin-bottom: clamp(2px, 0.5vh, 8px) !important;
-        font-size: clamp(12px, 0.8vw, 14px) !important;
-        line-height: 1.2 !important;
-    }
-
-    .report-create-title {
-        margin: 0 0 clamp(8px, 1.2vh, 16px) !important;
-        font-size: clamp(25px, 2vw, 34px) !important;
-        line-height: 1.08 !important;
-        letter-spacing: -0.5px;
-    }
-
-    .report-create-card {
-        width: 100% !important;
-        border-radius: var(--card-radius) !important;
-        overflow: hidden !important;
-    }
-
-    .report-create-form {
-        width: 100%;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    .report-create-body {
-        padding: var(--body-pad-y) var(--body-pad-x) clamp(8px, 1vh, 14px) !important;
-        overflow: visible !important;
-    }
-
-    .report-create-grid {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: var(--grid-gap) !important;
-        align-items: start !important;
-    }
-
-    .report-create-column {
-        min-width: 0;
-    }
-
-    .report-section-heading {
-        margin-bottom: clamp(8px, 1vh, 14px) !important;
-        padding-bottom: clamp(7px, 0.8vh, 12px) !important;
-    }
-
-    .report-section-heading span {
-        font-size: clamp(13px, 0.95vw, 16px) !important;
-    }
-
-    .report-form-group,
-    .report-info-box,
-    .report-code-box {
-        margin-bottom: var(--field-gap) !important;
-    }
-
-    .report-form-group label {
-        margin-bottom: 5px !important;
-        font-size: clamp(12px, 0.85vw, 14px) !important;
-        line-height: 1.25 !important;
-    }
-
-    .report-form-group.has-error > label {
-        color: var(--hsu-red, #ff5c70) !important;
-    }
-
-    .report-form-group input,
-    .report-form-group select,
-    .report-custom-trigger {
-        height: var(--field-h) !important;
-        min-height: var(--field-h) !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-    }
-
-    .report-form-group textarea {
-        min-height: var(--textarea-h) !important;
-        max-height: var(--textarea-h) !important;
-        resize: none !important;
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
-    }
-
-    .report-code-box {
-        padding: var(--code-pad) !important;
-    }
-
-    .report-code-head {
-        margin-bottom: clamp(6px, 0.8vh, 12px) !important;
-    }
-
-    .report-code-main {
-        min-height: clamp(58px, 7.4vh, 76px) !important;
-        padding: clamp(10px, 1.1vw, 16px) !important;
-        border-radius: 14px !important;
-    }
-
-    .report-code-main strong {
-        font-size: clamp(15px, 1vw, 18px) !important;
-    }
-
-    .report-copy-btn {
-        width: clamp(38px, 2.8vw, 46px) !important;
-        height: clamp(38px, 2.8vw, 46px) !important;
-        border-radius: 14px !important;
-    }
-
-    .report-info-box {
-        min-height: clamp(50px, 6.2vh, 64px) !important;
-        padding: clamp(10px, 1vw, 15px) !important;
-    }
-
-    .report-info-box span {
-        font-size: clamp(11px, 0.8vw, 13px) !important;
-    }
-
-    .report-info-box strong {
-        font-size: clamp(14px, 1vw, 17px) !important;
-    }
-
-    .report-note-help {
-        display: block;
-        margin-top: 5px !important;
-        color: var(--text-soft);
-        font-size: clamp(11px, 0.78vw, 13px) !important;
-        line-height: 1.25 !important;
-        overflow-wrap: anywhere;
-    }
-
-    .report-create-footer {
-        position: static !important;
-        min-height: var(--footer-h) !important;
-        padding: clamp(8px, 1vh, 14px) var(--body-pad-x) !important;
-        border-radius: 0 0 var(--card-radius) var(--card-radius) !important;
-
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        gap: clamp(10px, 1vw, 16px) !important;
-    }
-
-    .report-btn-cancel,
-    .report-btn-submit {
-        min-height: clamp(38px, 4.6vh, 48px) !important;
-        padding: 0 clamp(20px, 2vw, 34px) !important;
-        font-size: clamp(13px, 0.95vw, 16px) !important;
-    }
-
-    /* ================= REQUIRED STAR ================= */
-
-    .required-star {
-        display: none;
-        margin-left: 4px;
-        color: var(--hsu-red, #ff5c70);
-        font-weight: 900;
-    }
-
-    .report-form-group.has-error label .required-star {
-        display: inline;
-    }
-
-    /* ================= FILE UPLOAD ================= */
-
-    .report-form-group--file {
-        position: relative;
-    }
-
-    .report-file-native {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    .report-file-upload,
-    .report-file-inline {
-        width: 100%;
-    }
-
-    .report-file-inline {
-        min-height: clamp(50px, 6.4vh, 66px);
-        padding: clamp(7px, 0.8vw, 11px);
-        box-sizing: border-box;
-
-        background: var(--report-file-surface-2);
-        color: var(--report-file-text);
-        border: 1px dashed color-mix(in srgb, var(--report-file-blue) 68%, var(--report-file-border));
-        border-radius: 15px;
-
-        display: flex;
-        align-items: center;
-        gap: 9px;
-
-        transition: 0.18s ease;
-    }
-
-    .report-file-inline:hover,
-    .report-file-upload.is-dragging .report-file-inline {
-        background: var(--report-file-surface);
-        border-color: var(--report-file-blue);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--report-file-blue) 16%, transparent);
-    }
-
-    .report-file-inline__trigger {
-        flex: 0 0 auto;
-        height: clamp(34px, 4.3vh, 40px);
-        padding: 0 clamp(12px, 1vw, 16px);
-        border-radius: 12px;
-        border: 1px solid color-mix(in srgb, var(--report-file-blue) 42%, var(--report-file-border));
-
-        background: var(--report-file-active-bg);
-        color: var(--report-file-active-text);
-
-        cursor: pointer;
-        font-family: inherit;
-        font-size: clamp(12px, 0.85vw, 14px);
-        font-weight: 850;
-        line-height: 1;
-        white-space: nowrap;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        transition: 0.18s ease;
-    }
-
-    .report-file-inline__trigger:hover {
-        background: var(--report-file-blue);
-        border-color: var(--report-file-blue);
-        color: #ffffff;
-        transform: translateY(-1px);
-    }
-
-    .report-file-inline__icon,
-    .report-file-chip__icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: currentColor;
-        flex: 0 0 auto;
-    }
-
-    .report-file-inline__icon,
-    .report-file-inline__icon svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    .report-file-inline__icon svg,
-    .report-file-chip__icon svg {
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2.25;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        display: block;
-    }
-
-    .report-file-inline__colon {
-        flex: 0 0 auto;
-        color: var(--report-file-text);
-        font-size: 18px;
-        font-weight: 900;
-        line-height: 1;
-        opacity: 0.9;
-    }
-
-    .report-file-inline__preview {
-        flex: 1;
-        min-width: 0;
-        min-height: 36px;
-
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        flex-wrap: wrap;
-        overflow: hidden;
-    }
-
-    .report-file-inline__empty {
-        max-width: 100%;
-        color: var(--report-file-text-soft);
-        font-size: clamp(12px, 0.85vw, 14px);
-        font-weight: 800;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .report-file-inline__preview.has-file {
-        align-items: flex-start;
-        max-height: clamp(72px, 10vh, 96px);
-        overflow-y: auto;
-        padding-right: 4px;
-        scrollbar-width: thin;
-        scrollbar-color: color-mix(in srgb, var(--report-file-blue) 45%, var(--report-file-border)) transparent;
-    }
-
-    .report-file-inline__preview.has-file::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .report-file-inline__preview.has-file::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .report-file-inline__preview.has-file::-webkit-scrollbar-thumb {
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--report-file-blue) 45%, var(--report-file-border));
-    }
-
-    .report-file-chip {
-        min-width: 0;
-        max-width: min(230px, 100%);
-        height: 38px;
-        padding: 4px 7px 4px 5px;
-        box-sizing: border-box;
-
-        background: var(--report-file-surface);
-        color: var(--report-file-text);
-        border: 1px solid var(--report-file-border);
-        border-radius: 12px;
-
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-
-        transition: 0.18s ease;
-    }
-
-    .report-file-chip:hover {
-        background: var(--report-file-surface-2);
-        border-color: color-mix(in srgb, var(--report-file-blue) 44%, var(--report-file-border));
-        transform: translateY(-1px);
-    }
-
-    .report-file-chip__icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 9px;
-        background: color-mix(in srgb, var(--report-file-blue) 16%, var(--report-file-surface-2));
-        color: var(--report-file-blue);
-        border: 1px solid color-mix(in srgb, var(--report-file-blue) 24%, var(--report-file-border));
-        overflow: hidden;
-    }
-
-    .report-file-chip__icon svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .report-file-chip__icon--pdf {
-        background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 16%, var(--report-file-surface-2));
-        color: var(--hsu-red, #ef3b2d);
-    }
-
-    .report-file-chip__icon--excel {
-        background: color-mix(in srgb, var(--success, #16a34a) 16%, var(--report-file-surface-2));
-        color: var(--success, #16a34a);
-    }
-
-    .report-file-chip__icon--archive {
-        background: color-mix(in srgb, var(--warning, #f59e0b) 18%, var(--report-file-surface-2));
-        color: var(--warning, #f59e0b);
-    }
-
-    .report-file-chip__icon--image {
-        background: color-mix(in srgb, var(--info, #0ea5e9) 16%, var(--report-file-surface-2));
-        color: var(--info, #0ea5e9);
-    }
-
-    .report-file-chip__thumb {
-        width: 30px;
-        height: 30px;
-        border-radius: 9px;
-        object-fit: cover;
-        flex: 0 0 30px;
-        background: var(--report-file-surface-2);
-        border: 1px solid var(--report-file-border);
-    }
-
-    .report-file-chip__content {
-        min-width: 0;
-        flex: 1;
-    }
-
-    .report-file-chip__name,
-    .report-file-chip__meta {
-        display: block;
-        max-width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .report-file-chip__name {
-        color: var(--report-file-text);
-        font-size: 12px;
-        font-weight: 850;
-        line-height: 1.1;
-    }
-
-    .report-file-chip__meta {
-        margin-top: 2px;
-        color: var(--report-file-text-soft);
-        font-size: 10px;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .report-file-chip__remove {
-        width: 21px;
-        height: 21px;
-        border: 0;
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--report-file-text) 8%, transparent);
-        color: var(--report-file-text);
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 850;
-        line-height: 1;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 21px;
-
-        transition: 0.18s ease;
-    }
-
-    .report-file-chip__remove:hover {
-        background: color-mix(in srgb, var(--hsu-red, #ef3b2d) 22%, transparent);
-        transform: translateY(-1px);
-    }
-
-    /* ================= RESPONSIVE ================= */
-
-    @media (max-width: 1200px) {
-        .report-create-page {
-            min-height: auto;
-            overflow: visible !important;
-        }
-
-        .report-create-grid {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .report-create-page {
-            padding: 12px;
-        }
-
-        .report-create-wrap {
-            width: 100%;
-            transform: none !important;
-        }
-
-        .report-create-body {
-            padding: 16px !important;
-        }
-
-        .report-create-footer {
-            padding: 12px 16px !important;
-            flex-direction: column-reverse !important;
-            align-items: stretch !important;
-        }
-
-        .report-btn-cancel,
-        .report-btn-submit {
-            width: 100%;
-        }
-
-        .report-file-inline {
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        .report-file-inline__trigger {
-            flex: 1;
-        }
-
-        .report-file-inline__colon {
-            display: none;
-        }
-
-        .report-file-inline__preview {
-            flex: 1 1 100%;
-            width: 100%;
-        }
-
-        .report-file-chip {
-            width: 100%;
-            max-width: 100%;
-        }
-    }
-
-    @supports not (color: color-mix(in srgb, red 50%, blue)) {
-        .report-file-inline,
-        .report-file-chip,
-        .report-file-chip__icon {
-            background: var(--report-file-surface-2);
-            color: var(--report-file-text);
-            border-color: var(--report-file-border);
-        }
-
-        .report-file-inline__trigger {
-            background: var(--report-file-active-bg);
-            color: var(--report-file-active-text);
-        }
-    }
-</style>
-
 <section class="report-create-page">
-    <div class="report-create-wrap" id="reportCreateWrap">
-        <a href="{{ url_for('report_page') }}" class="report-create-back">
-            « Quay lại
-        </a>
-
+    <div class="report-create-wrap">
+        <a href="{{ url_for('report_page') }}" class="report-create-back">« Quay lại</a>
         <h1 class="report-create-title">Thêm báo cáo mới</h1>
 
-        <div class="report-create-card">
-            <form
-                id="reportCreateForm"
-                method="POST"
-                action="{{ url_for('new_report_page') }}"
-                enctype="multipart/form-data"
-                class="report-create-form"
-                novalidate
-            >
-                <input type="hidden" id="report_code" name="report_code" value="{{ auto_code }}">
+        <form id="reportCreateForm" method="POST" action="{{ url_for('new_report_page') }}" enctype="multipart/form-data" class="report-create-card" novalidate>
+            <input type="hidden" id="report_code" name="report_code" value="{{ auto_code }}">
+            <input type="hidden" id="display_report_code" name="display_report_code" value="{{ auto_code }}">
+            <input type="hidden" id="code" name="code" value="{{ auto_code }}">
+            <input type="hidden" id="auto_report_id" name="auto_report_id" value="{{ auto_code }}">
 
-                <input type="hidden" id="asset_id" name="asset_id" value="">
-                <input type="hidden" id="asset_code" name="asset_code" value="">
-                <input type="hidden" id="asset_name" name="asset_name" value="">
+            <input type="hidden" id="asset_id" name="asset_id">
+            <input type="hidden" id="asset_code" name="asset_code">
+            <input type="hidden" id="asset_name" name="asset_name">
+            <input type="hidden" id="asset_ids" name="asset_ids">
+            <input type="hidden" id="asset_codes" name="asset_codes">
+            <input type="hidden" id="asset_names" name="asset_names">
 
-                <input type="hidden" id="asset_ids" name="asset_ids" value="">
-                <input type="hidden" id="asset_codes" name="asset_codes" value="">
-                <input type="hidden" id="asset_names" name="asset_names" value="">
+            <input type="hidden" name="status" value="Chờ xử lý">
+            <input type="hidden" name="reporter" value="{{ reporter_name }}">
+            <input type="hidden" name="reporter_role" value="{{ reporter_role }}">
+            <input type="hidden" name="department" value="{{ reporter_department }}">
+            <input type="hidden" name="location" value="{{ reporter_location }}">
 
-                <input type="hidden" name="status" value="Chờ xử lý">
+            <div class="report-create-grid">
+                <div class="report-create-column">
+                    <div class="report-section-heading">ĐỊNH DANH BÁO CÁO</div>
 
-                <input type="hidden" id="reporter" name="reporter" value="{{ reporter_name }}">
-                <input type="hidden" id="reporter_role" name="reporter_role" value="{{ reporter_role }}">
-                <input type="hidden" id="department" name="department" value="{{ reporter_department }}">
-                <input type="hidden" id="location" name="location" value="{{ reporter_location }}">
+                    <div class="report-code-box">
+                        <div class="report-code-head">
+                            <span>Đã xác thực</span>
+                            <strong>ID UNIQUE</strong>
+                        </div>
 
-                <div class="report-create-body">
-                    <div class="report-create-grid">
-                        <div class="report-create-column">
-                            <div class="report-section-heading">
-                                <span>Định danh báo cáo</span>
+                        <div class="report-code-main">
+                            <div>
+                                <span>Mã báo cáo</span>
+                                <strong id="reportCodeDisplay">{{ auto_code }}</strong>
                             </div>
 
-                            <div class="report-code-box">
-                                <div class="report-code-head">
-                                    <span>Đã xác thực</span>
-                                    <strong>ID UNIQUE</strong>
-                                </div>
+                            <button type="button" class="report-copy-btn" id="copyReportCodeBtn" title="Sao chép mã báo cáo">
+                                <svg class="copy-normal" viewBox="0 0 24 24">
+                                    <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z"/>
+                                    <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25H12A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z"/>
+                                </svg>
+                                <svg class="copy-done" viewBox="0 0 24 24">
+                                    <path d="M9.55 16.55 4.8 11.8l1.4-1.4 3.35 3.35 8.25-8.25 1.4 1.4-9.65 9.65Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
 
-                                <div class="report-code-main">
-                                    <div>
-                                        <span>Mã báo cáo</span>
-                                        <strong id="reportCodeDisplay">{{ auto_code }}</strong>
-                                    </div>
+                    <div class="report-form-group" data-field>
+                        <label for="report_name">Tên báo cáo <span>*</span></label>
+                        <input id="report_name" name="report_name" type="text" placeholder="Ví dụ: Báo hỏng - Laptop Dell XPS 15">
+                        <small>Vui lòng nhập tên báo cáo.</small>
+                    </div>
 
-                                    <button
-                                        type="button"
-                                        class="report-copy-btn"
-                                        id="copyReportCodeBtn"
-                                        title="Sao chép mã báo cáo"
-                                    >
-                                        <svg class="copy-icon copy-icon-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                            <path d="M9 3.75A2.25 2.25 0 0 0 6.75 6v8.25A2.25 2.25 0 0 0 9 16.5h6A2.25 2.25 0 0 0 17.25 14.25V6A2.25 2.25 0 0 0 15 3.75H9Zm0 1.5h6c.414 0 .75.336.75.75v8.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V6c0-.414.336-.75.75-.75Z"/>
-                                            <path d="M5.25 8.25A2.25 2.25 0 0 0 3 10.5v7.5A2.25 2.25 0 0 0 5.25 20.25H12A2.25 2.25 0 0 0 14.25 18v-.75h-1.5V18a.75.75 0 0 1-.75.75H5.25A.75.75 0 0 1 4.5 18v-7.5c0-.414.336-.75.75-.75H6v-1.5h-.75Z"/>
-                                        </svg>
+                    <div class="report-form-group" data-field>
+                        <label for="report_type">Loại báo cáo <span>*</span></label>
 
-                                        <svg class="copy-icon copy-icon-success" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                            <path d="M9.55 16.55 4.8 11.8l1.4-1.4 3.35 3.35 8.25-8.25 1.4 1.4-9.65 9.65Z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+                        <select id="report_type" name="report_type" class="report-native-select">
+                            <option value="">-- Chọn loại báo cáo --</option>
+                            {% for item in report_type_list %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
 
-                            <div class="report-form-group" data-field-group>
-                                <label for="report_name">
-                                    Tên báo cáo <span class="required-star">*</span>
-                                </label>
-                                <input
-                                    id="report_name"
-                                    name="report_name"
-                                    type="text"
-                                    placeholder="Ví dụ: Báo hỏng - Laptop Dell XPS 15"
-                                    data-required="true"
-                                    data-message="Vui lòng nhập tên báo cáo."
-                                >
-                                <small class="report-form-error">Vui lòng nhập tên báo cáo.</small>
-                            </div>
+                        <div class="report-select" data-select="report_type">
+                            <button type="button" class="report-select-btn">
+                                <span>-- Chọn loại báo cáo --</span>
+                                <b>▾</b>
+                            </button>
 
-                            <div class="report-form-group" data-field-group>
-                                <label for="report_type">
-                                    Loại báo cáo <span class="required-star">*</span>
-                                </label>
-
-                                <select
-                                    id="report_type"
-                                    name="report_type"
-                                    class="report-native-select"
-                                    data-required="true"
-                                    data-message="Vui lòng chọn loại báo cáo."
-                                >
-                                    <option value="">-- Chọn loại báo cáo --</option>
-                                    {% for item in report_type_options %}
-                                        <option value="{{ item }}">{{ item }}</option>
-                                    {% endfor %}
-                                </select>
-
-                                <div class="report-custom-select" data-custom-select data-target="report_type">
-                                    <button type="button" class="report-custom-trigger">
-                                        <span>-- Chọn loại báo cáo --</span>
-                                        <b>▾</b>
-                                    </button>
-
-                                    <div class="report-custom-menu">
-                                        <button
-                                            type="button"
-                                            class="report-custom-option is-placeholder"
-                                            data-value=""
-                                        >
-                                            -- Chọn loại báo cáo --
-                                        </button>
-
-                                        {% for item in report_type_options %}
-                                            <button
-                                                type="button"
-                                                class="report-custom-option"
-                                                data-value="{{ item }}"
-                                            >
-                                                {{ item }}
-                                            </button>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-
-                                <small class="report-form-error">Vui lòng chọn loại báo cáo.</small>
-                            </div>
-
-                            <div class="report-info-box">
-                                <span>Người báo cáo</span>
-                                <strong>{{ reporter_name }}</strong>
-                            </div>
-
-                            <div class="report-form-group" data-field-group id="assetFieldGroup">
-                                <label for="asset_name">Tài sản đang sở hữu</label>
-
-                                <div class="report-custom-select" data-asset-select>
-                                    <button
-                                        type="button"
-                                        class="report-custom-trigger"
-                                        id="assetTrigger"
-                                    >
-                                        <span id="assetSelectedText">-- Chọn tài sản đang sở hữu --</span>
-                                        <b>▾</b>
-                                    </button>
-
-                                    <div class="report-custom-menu">
-                                        {% if asset_options|default([]) %}
-                                            <button
-                                                type="button"
-                                                class="report-custom-option is-placeholder"
-                                                data-clear-assets="true"
-                                            >
-                                                -- Bỏ chọn tất cả --
-                                            </button>
-
-                                            {% for asset in asset_options|default([]) %}
-                                                {% set option_id = asset.id|default('', true) %}
-                                                {% set option_code = asset.code|default(asset.asset_code|default('', true), true) %}
-                                                {% set option_name = asset.name|default(asset.asset_name|default('', true), true) %}
-                                                {% set option_department = asset.department|default('', true) %}
-                                                {% set option_location = asset.location|default('', true) %}
-
-                                                <button
-                                                    type="button"
-                                                    class="report-custom-option"
-                                                    data-asset-id="{{ option_id }}"
-                                                    data-asset-code="{{ option_code }}"
-                                                    data-asset-name="{{ option_name }}"
-                                                    data-asset-department="{{ option_department }}"
-                                                    data-asset-location="{{ option_location }}"
-                                                >
-                                                    <strong>
-                                                        {{ option_code }}{% if option_code and option_name %} - {% endif %}{{ option_name }}
-                                                    </strong>
-                                                </button>
-                                            {% endfor %}
-                                        {% else %}
-                                            <button
-                                                type="button"
-                                                class="report-custom-option is-placeholder"
-                                                disabled
-                                            >
-                                                Bạn chưa có tài sản đang sở hữu
-                                            </button>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div
-                                    id="assetSelectedList"
-                                    class="report-note-help"
-                                    style="display: none; margin-top: 10px;"
-                                ></div>
-
-                                <small class="report-note-help">
-                                    Với loại “Báo hỏng” hoặc “Cần cấp mới”, bạn phải chọn ít nhất một tài sản đang sở hữu.
-                                </small>
-
-                                <small class="report-form-error">Vui lòng chọn tài sản đang sở hữu.</small>
+                            <div class="report-select-menu">
+                                <button type="button" data-value="">-- Chọn loại báo cáo --</button>
+                                {% for item in report_type_list %}
+                                    <button type="button" data-value="{{ item }}">{{ item }}</button>
+                                {% endfor %}
                             </div>
                         </div>
 
-                        <div class="report-create-column">
-                            <div class="report-section-heading">
-                                <span>Thông tin báo cáo</span>
-                            </div>
+                        <small>Vui lòng chọn loại báo cáo.</small>
+                    </div>
 
-                            <div class="report-form-group" data-field-group>
-                                <label for="description">
-                                    Nội dung / Ghi chú <span class="required-star">*</span>
-                                </label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    placeholder="Nhập nội dung hoặc ghi chú cho báo cáo..."
-                                    data-required="true"
-                                    data-message="Vui lòng nhập nội dung báo cáo."
-                                ></textarea>
-                                <small class="report-form-error">Vui lòng nhập nội dung báo cáo.</small>
-                            </div>
+                    <div class="report-info-box">
+                        <span>Người báo cáo</span>
+                        <strong>{{ reporter_name }}</strong>
+                    </div>
 
-                            <div class="report-form-group report-form-group--file">
-                                <label for="files">File đính kèm</label>
-
-                                <div class="report-file-upload" id="reportFileUpload">
-                                    <input
-                                        id="files"
-                                        name="files"
-                                        type="file"
-                                        multiple
-                                        class="report-file-native"
-                                    >
-
-                                    <div class="report-file-inline">
-                                        <button
-                                            type="button"
-                                            class="report-file-inline__trigger"
-                                            id="reportFileTrigger"
-                                        >
-                                            <span>Chọn tệp</span>
-
-                                            <span class="report-file-inline__icon" aria-hidden="true">
-                                                <svg viewBox="0 0 24 24">
-                                                    <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                                                </svg>
-                                            </span>
-                                        </button>
-
-                                        <span class="report-file-inline__colon">:</span>
-
-                                        <div
-                                            class="report-file-inline__preview"
-                                            id="reportFilePreview"
-                                            aria-live="polite"
-                                        >
-                                            <span class="report-file-inline__empty">
-                                                Chưa có tệp nào được chọn
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <small class="report-note-help">
-                                    Có thể tải ảnh, PDF, Word, Excel hoặc file nén nếu cần.
-                                </small>
-                            </div>
-
-                            <div class="report-info-box">
-                                <span>Ngày tạo báo cáo</span>
-                                <strong id="timeDisplay">{{ current_time }}</strong>
-                                <input id="time" type="hidden" name="time" value="{{ current_time }}">
-                            </div>
-                        </div>
+                    <div class="report-form-group report-form-group--description" data-field>
+                        <label for="description">Nội dung / Ghi chú <span>*</span></label>
+                        <textarea id="description" name="description" rows="4" data-max-words="250" placeholder="Nhập nội dung hoặc ghi chú cho báo cáo..."></textarea>
+                        <small>Vui lòng nhập nội dung báo cáo.</small>
                     </div>
                 </div>
 
-                <div class="report-create-footer">
-                    <a href="{{ url_for('report_page') }}" class="report-btn-cancel">Hủy bỏ</a>
-                    <button type="submit" class="report-btn-submit">Xác nhận thêm mới</button>
-                </div>
-            </form>
-        </div>
-    </div>
+                <div class="report-create-column">
+                    <div class="report-section-heading">THÔNG TIN BÁO CÁO</div>
 
-    <div class="report-create-toast" id="reportCreateToast">
-        <strong id="reportCreateToastTitle">Tạo báo cáo không thành công</strong>
-        <span id="reportCreateToastMessage">Vui lòng nhập đầy đủ thông tin bắt buộc*.</span>
-        <button type="button" id="closeReportToastBtn">×</button>
+                    <div class="report-form-group report-form-group--asset" id="assetField" data-field>
+                        <label>Tài sản đang sở hữu <span>*</span></label>
+
+                        <div class="report-pickbox" id="assetBox">
+                            <div class="report-pickbox-head">
+                                <button type="button" class="report-pick-btn" id="assetBtn">Chọn tài sản <b>▾</b></button>
+                                <span>:</span>
+                                <strong id="assetSummary">Chưa chọn tài sản nào</strong>
+                            </div>
+
+                            <div class="report-picked-list is-empty" id="assetPreview"></div>
+
+                            <div class="report-pick-menu" id="assetMenu">
+                                {% if asset_list %}
+                                    <button type="button" data-clear="1">-- Bỏ chọn tất cả --</button>
+                                    {% for asset in asset_list %}
+                                        {% set aid = asset.id|default(asset.value|default(asset.asset_id|default(asset._id|default('', true), true), true), true) %}
+                                        {% set acode = asset.code|default(asset.asset_code|default(aid, true), true) %}
+                                        {% set aname = asset.name|default(asset.asset_name|default(asset.asset|default(asset.label|default('Tài sản', true), true), true), true) %}
+                                        {% set akey = aid|default(acode|default(aname, true), true) %}
+                                        <button type="button" data-id="{{ aid }}" data-code="{{ acode }}" data-name="{{ aname }}" data-key="{{ akey }}">
+                                            {{ acode }}{% if acode and aname %} - {% endif %}{{ aname }}
+                                        </button>
+                                    {% endfor %}
+                                {% else %}
+                                    <button type="button" disabled>Không có tài sản đang sở hữu</button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <em>Với loại “Báo hỏng” hoặc “Cần cấp mới”, bạn phải chọn ít nhất một tài sản đang sở hữu.</em>
+                        <small>Vui lòng chọn tài sản đang sở hữu.</small>
+                    </div>
+
+                    <div class="report-form-group report-form-group--file">
+                        <label for="files">File đính kèm</label>
+
+                        <div class="report-pickbox" id="fileBox">
+                            <input id="files" name="files" type="file" multiple class="report-file-native">
+
+                            <div class="report-pickbox-head">
+                                <button type="button" class="report-pick-btn" id="fileBtn">
+                                    Chọn tệp
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                    </svg>
+                                </button>
+                                <span>:</span>
+                                <strong id="fileSummary">Chưa có tệp nào được chọn</strong>
+                            </div>
+
+                            <div class="report-picked-list is-empty" id="filePreview"></div>
+                        </div>
+
+                        <em>Có thể tải ảnh, PDF, Word, Excel hoặc file nén nếu cần.</em>
+                    </div>
+
+                    <div class="report-info-box report-info-box--date">
+                        <span>Ngày tạo báo cáo</span>
+                        <strong id="timeDisplay">{{ current_time }}</strong>
+                        <input id="time" type="hidden" name="time" value="{{ current_time }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-create-footer">
+                <a href="{{ url_for('report_page') }}" class="report-btn-cancel">Hủy bỏ</a>
+                <button type="submit" class="report-btn-submit">Xác nhận thêm mới</button>
+            </div>
+        </form>
     </div>
 </section>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const $ = (selector, parent = document) => parent.querySelector(selector);
-    const $$ = (selector, parent = document) => Array.from(parent.querySelectorAll(selector));
-
-    const form = $("#reportCreateForm");
-    const wrap = $("#reportCreateWrap");
-    const page = $(".report-create-page");
-
-    const timeInput = $("#time");
-    const timeDisplay = $("#timeDisplay");
-    const reportNameInput = $("#report_name");
-    const reportTypeSelect = $("#report_type");
-    const reportCodeInput = $("#report_code");
-    const reportCodeDisplay = $("#reportCodeDisplay");
-    const copyReportCodeBtn = $("#copyReportCodeBtn");
-
-    const assetSelectBox = $("[data-asset-select]");
-    const assetTrigger = $("#assetTrigger");
-    const assetSelectedText = $("#assetSelectedText");
-    const assetSelectedList = $("#assetSelectedList");
-    const assetOptionButtons = $$("[data-asset-select] .report-custom-option");
-
-    const assetIdInput = $("#asset_id");
-    const assetCodeInput = $("#asset_code");
-    const assetNameInput = $("#asset_name");
-    const assetIdsInput = $("#asset_ids");
-    const assetCodesInput = $("#asset_codes");
-    const assetNamesInput = $("#asset_names");
-
-    const filesInput = $("#files");
-    const reportFileUpload = $("#reportFileUpload");
-    const reportFileTrigger = $("#reportFileTrigger");
-    const reportFilePreview = $("#reportFilePreview");
-
-    const toast = $("#reportCreateToast");
-    const toastTitle = $("#reportCreateToastTitle");
-    const toastMessage = $("#reportCreateToastMessage");
-    const closeToastBtn = $("#closeReportToastBtn");
-
-    let allowSubmit = false;
-    let toastTimer = null;
-    let reportNameTouched = false;
-    let selectedAssets = [];
-    let selectedFilesStore = [];
-    let previewObjectUrls = [];
-
-    const fileIconMap = {
-        image: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>',
-        pdf: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M7 16h10"></path><path d="M7 13h10"></path></svg>',
-        word: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M7 13h10"></path><path d="M7 17h7"></path></svg>',
-        excel: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M4 10h16"></path><path d="M4 16h16"></path><path d="M10 4v16"></path><path d="M16 4v16"></path></svg>',
-        archive: '<svg viewBox="0 0 24 24"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>',
-        file: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>'
+document.addEventListener("DOMContentLoaded", () => {
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const esc = v => String(v || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
+    const f = {
+        form: $("#reportCreateForm"), type: $("#report_type"), name: $("#report_name"), note: $("#description"),
+        time: $("#time"), timeText: $("#timeDisplay"), codeText: $("#reportCodeDisplay"), copy: $("#copyReportCodeBtn"),
+        assetBox: $("#assetBox"), assetBtn: $("#assetBtn"), assetMenu: $("#assetMenu"), assetPreview: $("#assetPreview"), assetSummary: $("#assetSummary"),
+        fileInput: $("#files"), fileBtn: $("#fileBtn"), filePreview: $("#filePreview"), fileSummary: $("#fileSummary")
     };
 
-    function fitPageToScreen() {
-        if (!wrap || !page || window.innerWidth <= 1200) {
-            document.documentElement.style.setProperty("--create-scale", "1");
-            return;
-        }
+    let assets = [], files = [], nameTouched = false, submitted = false, canSubmit = false;
 
-        document.documentElement.style.setProperty("--create-scale", "1");
+    const notifyError = (title, text) => {
+        if (window.sonner?.error) return window.sonner.error(title, text);
+        if (window.toast?.error) return window.toast.error(title, text);
+        alert(`${title}\n${text}`);
+    };
 
-        requestAnimationFrame(function () {
-            const pageRect = page.getBoundingClientRect();
-            const wrapRect = wrap.getBoundingClientRect();
+    const mark = (el, ok, force = submitted) => el?.closest("[data-field]")?.classList.toggle("has-error", force && !ok);
+    const hasValue = el => !!el.value.trim();
+    const needAsset = () => ["báo hỏng", "cần cấp mới", "cấp phát mới"].includes(f.type.value.trim().toLowerCase());
 
-            const availableHeight = Math.max(420, window.innerHeight - pageRect.top - 12);
-            const availableWidth = Math.max(760, window.innerWidth - 48);
+    const validateText = (el, force) => {
+        const ok = hasValue(el);
+        mark(el, ok, force);
+        return ok;
+    };
 
-            const heightScale = availableHeight / wrap.scrollHeight;
-            const widthScale = availableWidth / wrapRect.width;
-            const nextScale = Math.min(1, Math.max(0.78, heightScale, 0), Math.max(0.78, widthScale, 0));
+    const validateAsset = (force, notify = false) => {
+        const ok = !needAsset() || assets.length > 0;
+        mark($("#assetField"), ok, force);
+        if (!ok && notify) notifyError("Thiếu tài sản", "Vui lòng chọn tài sản đang sở hữu.");
+        return ok;
+    };
 
-            document.documentElement.style.setProperty("--create-scale", nextScale.toFixed(3));
-        });
-    }
+    const makeCode = () => "REPORT-" + Array.from({ length: 8 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
+    const codeInputs = ["#report_code", "#display_report_code", "#code", "#auto_report_id"].map($).filter(Boolean);
+    let code = (codeInputs[0]?.value || "").trim().toUpperCase();
 
-    function getVietnamDateTimeValue() {
-        const parts = new Intl.DateTimeFormat("en-CA", {
+    if (!/^REPORT-[A-Z0-9]{8}$/.test(code) || code === "REPORT-000000") code = makeCode();
+    codeInputs.forEach(i => i.value = code);
+    f.codeText.textContent = code;
+
+    const updateTime = () => {
+        const p = new Intl.DateTimeFormat("en-CA", {
             timeZone: "Asia/Ho_Chi_Minh",
             year: "numeric",
             month: "2-digit",
@@ -971,681 +238,193 @@ document.addEventListener("DOMContentLoaded", function () {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false
-        }).formatToParts(new Date());
+        }).formatToParts(new Date()).reduce((m, x) => (m[x.type] = x.value, m), {});
+        const val = `${p.hour}:${p.minute} ${p.day}/${p.month}/${p.year}`;
+        f.time.value = val;
+        f.timeText.textContent = val;
+    };
 
-        const map = {};
+    const resizeNote = () => {
+        const max = Number(f.note.dataset.maxWords || 250);
+        const words = f.note.value.trim().split(/\s+/).filter(Boolean);
+        if (words.length > max) {
+            f.note.value = words.slice(0, max).join(" ");
+            notifyError("Nội dung quá dài", `Nội dung / Ghi chú chỉ được tối đa ${max} từ.`);
+        }
+        f.note.style.height = "auto";
+        f.note.style.height = `${Math.max(110, f.note.scrollHeight)}px`;
+    };
 
-        parts.forEach(part => {
-            map[part.type] = part.value;
-        });
+    const syncAssetInputs = () => {
+        const first = assets[0] || {};
+        $("#asset_id").value = first.id || "";
+        $("#asset_code").value = first.code || "";
+        $("#asset_name").value = first.name || "";
+        $("#asset_ids").value = assets.map(a => a.id).filter(Boolean).join("|");
+        $("#asset_codes").value = assets.map(a => a.code).filter(Boolean).join("|");
+        $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join("|");
+    };
 
-        return `${map.hour}:${map.minute} ${map.day}/${map.month}/${map.year}`;
-    }
+    const drawAssets = () => {
+        const selected = new Set(assets.map(a => a.key));
+        syncAssetInputs();
 
-    function updateRealTime() {
-        const value = getVietnamDateTimeValue();
+        f.assetSummary.textContent = assets.length ? `Đã chọn ${assets.length} tài sản` : "Chưa chọn tài sản nào";
+        f.assetPreview.classList.toggle("is-empty", !assets.length);
+        f.assetPreview.innerHTML = assets.map(a => `
+            <div class="picked-item">
+                <i></i><span title="${esc(a.code + ' - ' + a.name)}">${esc(a.code)} - ${esc(a.name)}</span>
+                <button type="button" data-remove-asset="${esc(a.key)}">×</button>
+            </div>
+        `).join("");
 
-        if (timeInput) timeInput.value = value;
-        if (timeDisplay) timeDisplay.textContent = value;
-    }
+        $$("#assetMenu button[data-key]").forEach(btn => btn.classList.toggle("is-selected", selected.has(btn.dataset.key)));
 
-    function showFallbackToast(title, message) {
-        if (!toast) {
-            alert(title + (message ? "\n" + message : ""));
-            return;
+        if (!nameTouched && assets.length && needAsset()) {
+            f.name.value = assets.length === 1 ? `${f.type.value} - ${assets[0].name}` : `${f.type.value} - ${assets.length} tài sản`;
+            validateText(f.name, submitted);
         }
 
-        if (toastTitle) toastTitle.textContent = title;
-        if (toastMessage) toastMessage.textContent = message;
+        validateAsset(submitted, false);
+    };
 
-        toast.classList.add("is-show");
+    const syncFiles = () => {
+        const dt = new DataTransfer();
+        files.forEach(x => dt.items.add(x));
+        f.fileInput.files = dt.files;
+    };
 
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove("is-show"), 3500);
-    }
+    const drawFiles = () => {
+        f.fileSummary.textContent = files.length ? `Đã chọn ${files.length} file` : "Chưa có tệp nào được chọn";
+        f.filePreview.classList.toggle("is-empty", !files.length);
+        f.filePreview.innerHTML = files.map((x, i) => `
+            <div class="picked-item">
+                <i></i><span title="${esc(x.name)}">${esc(x.name)}</span>
+                <button type="button" data-remove-file="${i}">×</button>
+            </div>
+        `).join("");
+        syncFiles();
+    };
 
-    function showToast(title, message, type = "error") {
-        if (window.sonner && typeof window.sonner[type] === "function") {
-            window.sonner[type](title, message);
-            return;
-        }
+    $$(".report-select").forEach(box => {
+        const select = document.getElementById(box.dataset.select);
+        const label = box.querySelector("span");
 
-        if (typeof window.sonner === "function") {
-            window.sonner({ type, title, description: message });
-            return;
-        }
-
-        showFallbackToast(title, message);
-    }
-
-    function getGroup(field) {
-        return field?.closest("[data-field-group]");
-    }
-
-    function setError(field, message) {
-        const group = getGroup(field);
-        if (!group) return;
-
-        const error = $(".report-form-error", group);
-        group.classList.add("has-error");
-
-        if (error) error.textContent = message;
-    }
-
-    function clearError(field) {
-        const group = getGroup(field);
-        if (group) group.classList.remove("has-error");
-    }
-
-    function setAssetError(message) {
-        const group = $("#assetFieldGroup");
-        if (!group) return;
-
-        const error = $(".report-form-error", group);
-        group.classList.add("has-error");
-
-        if (error) error.textContent = message;
-    }
-
-    function clearAssetError() {
-        $("#assetFieldGroup")?.classList.remove("has-error");
-    }
-
-    function validateField(field) {
-        const value = (field.value || "").trim();
-
-        if (field.dataset.required === "true" && !value) {
-            setError(field, field.dataset.message || "Vui lòng nhập thông tin.");
-            return false;
-        }
-
-        clearError(field);
-        return true;
-    }
-
-    function isAssetRequiredByType() {
-        const type = (reportTypeSelect?.value || "").trim();
-        return type === "Báo hỏng" || type === "Cần cấp mới";
-    }
-
-    function closeSelects(exceptBox = null) {
-        $$("[data-custom-select], [data-asset-select]").forEach(box => {
-            if (box !== exceptBox) box.classList.remove("is-open");
-        });
-    }
-
-    function syncSelect(box) {
-        const select = document.getElementById(box.dataset.target);
-        const text = $(".report-custom-trigger span", box);
-        const options = $$(".report-custom-option", box);
-
-        if (!select || !text) return;
-
-        let selectedText = "";
-
-        options.forEach(option => {
-            const selected = option.dataset.value === select.value;
-            option.classList.toggle("is-selected", selected);
-            if (selected) selectedText = option.textContent.trim();
-        });
-
-        text.textContent = selectedText || select.options[0].textContent.trim();
-    }
-
-    function updateAssetRequirement() {
-        if (!assetSelectBox) return;
-
-        assetSelectBox.classList.toggle("is-required", isAssetRequiredByType());
-
-        if (!isAssetRequiredByType()) clearAssetError();
-    }
-
-    function getAssetKey(asset) {
-        return asset.id || asset.code || asset.name;
-    }
-
-    function optionToAsset(option) {
-        return {
-            id: option.dataset.assetId || "",
-            code: option.dataset.assetCode || "",
-            name: option.dataset.assetName || "",
-            department: option.dataset.assetDepartment || "",
-            location: option.dataset.assetLocation || ""
+        box.querySelector(".report-select-btn").onclick = e => {
+            e.stopPropagation();
+            box.classList.toggle("is-open");
+            f.assetBox.classList.remove("is-open");
         };
-    }
 
-    function hasAsset(asset) {
-        const key = getAssetKey(asset);
-        return selectedAssets.some(item => getAssetKey(item) === key);
-    }
+        box.querySelectorAll(".report-select-menu button").forEach(btn => {
+            btn.onclick = e => {
+                e.stopPropagation();
+                select.value = btn.dataset.value;
+                label.textContent = btn.textContent;
+                box.classList.remove("is-open");
+                validateText(select, submitted);
+                validateAsset(submitted, false);
+            };
+        });
+    });
 
-    function renderSelectedAssets() {
-        if (!assetSelectedList) return;
+    f.assetBtn.onclick = e => {
+        e.stopPropagation();
+        f.assetBox.classList.toggle("is-open");
+        $$(".report-select").forEach(x => x.classList.remove("is-open"));
+    };
 
-        assetSelectedList.innerHTML = "";
+    f.assetMenu.onclick = e => {
+        const btn = e.target.closest("button");
+        if (!btn || btn.disabled) return;
+        e.stopPropagation();
 
-        if (selectedAssets.length === 0) {
-            assetSelectedList.style.display = "none";
+        if (btn.dataset.clear) assets = [];
+        else {
+            const key = btn.dataset.key || btn.dataset.id || btn.dataset.code || btn.dataset.name;
+            const item = { id: btn.dataset.id, code: btn.dataset.code, name: btn.dataset.name, key };
+            assets = assets.some(a => a.key === key) ? assets.filter(a => a.key !== key) : [...assets, item];
+        }
+
+        drawAssets();
+    };
+
+    f.assetPreview.onclick = e => {
+        const btn = e.target.closest("[data-remove-asset]");
+        if (!btn) return;
+        e.stopPropagation();
+        assets = assets.filter(a => a.key !== btn.dataset.removeAsset);
+        drawAssets();
+    };
+
+    f.fileBtn.onclick = () => {
+        f.fileInput.value = "";
+        f.fileInput.click();
+    };
+
+    f.fileInput.onchange = () => {
+        [...f.fileInput.files].forEach(x => {
+            const key = `${x.name}_${x.size}_${x.lastModified}`;
+            if (!files.some(y => `${y.name}_${y.size}_${y.lastModified}` === key)) files.push(x);
+        });
+        drawFiles();
+    };
+
+    f.filePreview.onclick = e => {
+        const btn = e.target.closest("[data-remove-file]");
+        if (!btn) return;
+        files.splice(Number(btn.dataset.removeFile), 1);
+        drawFiles();
+    };
+
+    f.copy.onclick = async () => {
+        try { await navigator.clipboard.writeText(code); } catch {}
+        f.copy.classList.add("copied");
+        setTimeout(() => f.copy.classList.remove("copied"), 1000);
+    };
+
+    f.name.oninput = () => {
+        nameTouched = true;
+        validateText(f.name, submitted);
+    };
+
+    f.note.oninput = () => {
+        validateText(f.note, submitted);
+        resizeNote();
+    };
+
+    document.onclick = () => {
+        $$(".report-select").forEach(x => x.classList.remove("is-open"));
+        f.assetBox.classList.remove("is-open");
+    };
+
+    updateTime();
+    setInterval(updateTime, 30000);
+    resizeNote();
+    drawAssets();
+    drawFiles();
+
+    f.form.onsubmit = e => {
+        if (canSubmit) return;
+        e.preventDefault();
+
+        submitted = true;
+        updateTime();
+        resizeNote();
+
+        const okName = validateText(f.name, true);
+        const okType = validateText(f.type, true);
+        const okNote = validateText(f.note, true);
+        const okAsset = validateAsset(true, false);
+
+        if (!okName || !okType || !okNote || !okAsset) {
+            notifyError("Tạo báo cáo không thành công", "Vui lòng nhập đầy đủ thông tin bắt buộc.");
             return;
         }
 
-        assetSelectedList.style.display = "block";
-
-        selectedAssets.forEach(asset => {
-            const item = document.createElement("div");
-            item.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;";
-
-            const text = document.createElement("span");
-            text.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
-
-            const removeButton = document.createElement("button");
-            removeButton.type = "button";
-            removeButton.textContent = "×";
-            removeButton.dataset.removeAssetKey = getAssetKey(asset);
-            removeButton.style.cursor = "pointer";
-
-            item.append(text, removeButton);
-            assetSelectedList.appendChild(item);
-        });
-
-        fitPageToScreen();
-    }
-
-    function syncSelectedAssets() {
-        const firstAsset = selectedAssets[0] || {};
-
-        if (assetIdInput) assetIdInput.value = firstAsset.id || "";
-        if (assetCodeInput) assetCodeInput.value = firstAsset.code || "";
-        if (assetNameInput) assetNameInput.value = firstAsset.name || "";
-
-        if (assetIdsInput) assetIdsInput.value = selectedAssets.map(item => item.id).filter(Boolean).join(",");
-        if (assetCodesInput) assetCodesInput.value = selectedAssets.map(item => item.code).filter(Boolean).join(",");
-        if (assetNamesInput) assetNamesInput.value = selectedAssets.map(item => item.name).filter(Boolean).join(",");
-
-        assetOptionButtons.forEach(option => {
-            if (option.dataset.clearAssets === "true") return;
-            option.classList.toggle("is-selected", hasAsset(optionToAsset(option)));
-        });
-
-        if (assetSelectedText) {
-            if (selectedAssets.length === 0) {
-                assetSelectedText.textContent = "-- Chọn tài sản đang sở hữu --";
-            } else if (selectedAssets.length === 1) {
-                const asset = selectedAssets[0];
-                assetSelectedText.textContent = (asset.code ? asset.code + " - " : "") + asset.name;
-            } else {
-                assetSelectedText.textContent = "Đã chọn " + selectedAssets.length + " tài sản";
-            }
-        }
-
-        renderSelectedAssets();
-        clearAssetError();
-        autoFillReportName();
-    }
-
-    function clearSelectedAssets() {
-        selectedAssets = [];
-        syncSelectedAssets();
-    }
-
-    function toggleAsset(option) {
-        if (!option || option.disabled) return;
-
-        if (option.dataset.clearAssets === "true") {
-            clearSelectedAssets();
-            return;
-        }
-
-        const asset = optionToAsset(option);
-        const key = getAssetKey(asset);
-
-        if (!key) return;
-
-        selectedAssets = hasAsset(asset)
-            ? selectedAssets.filter(item => getAssetKey(item) !== key)
-            : [...selectedAssets, asset];
-
-        syncSelectedAssets();
-    }
-
-    function autoFillReportName() {
-        if (!reportNameInput || !reportTypeSelect) return;
-
-        const reportType = (reportTypeSelect.value || "").trim();
-
-        if (!reportType || selectedAssets.length === 0 || reportNameTouched) return;
-
-        if (reportType === "Báo hỏng" || reportType === "Cần cấp mới") {
-            reportNameInput.value = selectedAssets.length === 1
-                ? reportType + " - " + selectedAssets[0].name
-                : reportType + " - " + selectedAssets.length + " tài sản";
-
-            validateField(reportNameInput);
-        }
-    }
-
-    function validateAssetSelection() {
-        if (!isAssetRequiredByType()) {
-            clearAssetError();
-            return true;
-        }
-
-        if (selectedAssets.length === 0) {
-            setAssetError("Vui lòng chọn ít nhất một tài sản đang sở hữu trong danh sách.");
-            return false;
-        }
-
-        clearAssetError();
-        return true;
-    }
-
-    function validateForm() {
-        updateAssetRequirement();
-
-        const fields = $$("[data-required='true']", form);
-        let valid = true;
-        let firstInvalid = null;
-
-        fields.forEach(field => {
-            const ok = validateField(field);
-
-            if (!ok) {
-                valid = false;
-                if (!firstInvalid) firstInvalid = field;
-            }
-        });
-
-        if (!validateAssetSelection()) {
-            valid = false;
-            if (!firstInvalid) firstInvalid = assetTrigger;
-        }
-
-        if (firstInvalid) {
-            const group = getGroup(firstInvalid) || $("#assetFieldGroup");
-            const trigger = group ? $(".report-custom-trigger", group) : null;
-
-            firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
-
-            setTimeout(() => {
-                if (trigger) trigger.focus();
-                else firstInvalid.focus();
-            }, 250);
-        }
-
-        fitPageToScreen();
-        return valid;
-    }
-
-    function initNormalCustomSelects() {
-        $$("[data-custom-select]").forEach(box => {
-            const select = document.getElementById(box.dataset.target);
-            const trigger = $(".report-custom-trigger", box);
-            const options = $$(".report-custom-option", box);
-
-            if (!select || !trigger) return;
-
-            syncSelect(box);
-
-            trigger.addEventListener("click", event => {
-                event.stopPropagation();
-
-                const isOpen = box.classList.contains("is-open");
-                closeSelects(box);
-                box.classList.toggle("is-open", !isOpen);
-                fitPageToScreen();
-            });
-
-            options.forEach(option => {
-                option.addEventListener("click", event => {
-                    event.stopPropagation();
-
-                    select.value = option.dataset.value || "";
-                    select.dispatchEvent(new Event("change", { bubbles: true }));
-
-                    syncSelect(box);
-                    validateField(select);
-
-                    if (select.id === "report_type") {
-                        updateAssetRequirement();
-                        autoFillReportName();
-                    }
-
-                    box.classList.remove("is-open");
-                    fitPageToScreen();
-                });
-            });
-
-            select.addEventListener("change", () => {
-                syncSelect(box);
-                validateField(select);
-
-                if (select.id === "report_type") {
-                    updateAssetRequirement();
-                    autoFillReportName();
-                }
-
-                fitPageToScreen();
-            });
-        });
-    }
-
-    function initAssetSelect() {
-        if (!assetSelectBox || !assetTrigger) return;
-
-        assetTrigger.addEventListener("click", event => {
-            event.stopPropagation();
-
-            const isOpen = assetSelectBox.classList.contains("is-open");
-            closeSelects(assetSelectBox);
-            assetSelectBox.classList.toggle("is-open", !isOpen);
-            fitPageToScreen();
-        });
-
-        assetOptionButtons.forEach(option => {
-            option.addEventListener("click", event => {
-                event.stopPropagation();
-
-                toggleAsset(option);
-                validateAssetSelection();
-                assetSelectBox.classList.add("is-open");
-                fitPageToScreen();
-            });
-        });
-
-        assetSelectedList?.addEventListener("click", event => {
-            const removeButton = event.target.closest("[data-remove-asset-key]");
-            if (!removeButton) return;
-
-            const key = removeButton.dataset.removeAssetKey;
-            selectedAssets = selectedAssets.filter(asset => getAssetKey(asset) !== key);
-
-            syncSelectedAssets();
-            validateAssetSelection();
-        });
-    }
-
-    function formatFileSize(size) {
-        const number = Number(size || 0);
-
-        if (!number) return "Không rõ dung lượng";
-        if (number >= 1024 * 1024) return (number / 1024 / 1024).toFixed(2) + " MB";
-        if (number >= 1024) return (number / 1024).toFixed(2) + " KB";
-
-        return number + " bytes";
-    }
-
-    function escapeHtml(value) {
-        return String(value || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    function getFileExtension(fileName) {
-        const parts = String(fileName || "").split(".");
-        return parts.length <= 1 ? "FILE" : parts.pop().toUpperCase();
-    }
-
-    function getFileKey(file) {
-        return [file.name || "", file.size || 0, file.lastModified || 0].join("__");
-    }
-
-    function clearPreviewObjectUrls() {
-        previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
-        previewObjectUrls = [];
-    }
-
-    function getFileIconInfo(file) {
-        const extension = getFileExtension(file.name).toLowerCase();
-        const mime = String(file.type || "").toLowerCase();
-
-        if (mime.startsWith("image/")) return { className: "report-file-chip__icon--image", svg: fileIconMap.image };
-        if (extension === "pdf") return { className: "report-file-chip__icon--pdf", svg: fileIconMap.pdf };
-        if (["doc", "docx"].includes(extension)) return { className: "report-file-chip__icon--word", svg: fileIconMap.word };
-        if (["xls", "xlsx", "csv"].includes(extension)) return { className: "report-file-chip__icon--excel", svg: fileIconMap.excel };
-        if (["zip", "rar", "7z"].includes(extension)) return { className: "report-file-chip__icon--archive", svg: fileIconMap.archive };
-
-        return { className: "report-file-chip__icon--file", svg: fileIconMap.file };
-    }
-
-    function syncFilesInputFromStore() {
-        if (!filesInput) return;
-
-        const dataTransfer = new DataTransfer();
-
-        selectedFilesStore.forEach(file => dataTransfer.items.add(file));
-        filesInput.files = dataTransfer.files;
-    }
-
-    function addFilesToStore(fileList) {
-        Array.from(fileList || []).forEach(file => {
-            const fileKey = getFileKey(file);
-            const exists = selectedFilesStore.some(item => getFileKey(item) === fileKey);
-
-            if (!exists) selectedFilesStore.push(file);
-        });
-
-        syncFilesInputFromStore();
-        renderSelectedFiles();
-    }
-
-    function removeFileAt(indexToRemove) {
-        selectedFilesStore = selectedFilesStore.filter((_, index) => index !== indexToRemove);
-        syncFilesInputFromStore();
-        renderSelectedFiles();
-    }
-
-    function renderSelectedFiles() {
-        if (!reportFilePreview) return;
-
-        clearPreviewObjectUrls();
-        reportFilePreview.innerHTML = "";
-
-        if (selectedFilesStore.length === 0) {
-            reportFilePreview.classList.remove("has-file");
-            reportFilePreview.innerHTML = '<span class="report-file-inline__empty">Chưa có tệp nào được chọn</span>';
-            fitPageToScreen();
-            return;
-        }
-
-        reportFilePreview.classList.add("has-file");
-
-        selectedFilesStore.forEach((file, index) => {
-            const safeName = escapeHtml(file.name);
-            const safeMeta = escapeHtml(getFileExtension(file.name) + " · " + formatFileSize(file.size));
-            const iconInfo = getFileIconInfo(file);
-            const chip = document.createElement("div");
-
-            chip.className = "report-file-chip";
-
-            let previewHtml = "";
-
-            if (file.type && file.type.startsWith("image/")) {
-                const imageUrl = URL.createObjectURL(file);
-                previewObjectUrls.push(imageUrl);
-
-                previewHtml = `
-                    <img src="${imageUrl}" alt="${safeName}" class="report-file-chip__thumb">
-                `;
-            } else {
-                previewHtml = `
-                    <span class="report-file-chip__icon ${iconInfo.className}" aria-hidden="true">
-                        ${iconInfo.svg}
-                    </span>
-                `;
-            }
-
-            chip.innerHTML = `
-                ${previewHtml}
-                <span class="report-file-chip__content">
-                    <span class="report-file-chip__name" title="${safeName}">${safeName}</span>
-                    <span class="report-file-chip__meta">${safeMeta}</span>
-                </span>
-                <button
-                    type="button"
-                    class="report-file-chip__remove"
-                    data-remove-file-index="${index}"
-                    aria-label="Xóa tệp ${safeName}"
-                >
-                    ×
-                </button>
-            `;
-
-            reportFilePreview.appendChild(chip);
-        });
-
-        fitPageToScreen();
-    }
-
-    function initFileUpload() {
-        if (!filesInput || !reportFileUpload) return;
-
-        reportFileTrigger?.addEventListener("click", () => {
-            filesInput.value = "";
-            filesInput.click();
-        });
-
-        filesInput.addEventListener("change", function () {
-            addFilesToStore(this.files);
-        });
-
-        ["dragenter", "dragover"].forEach(eventName => {
-            reportFileUpload.addEventListener(eventName, event => {
-                event.preventDefault();
-                event.stopPropagation();
-                reportFileUpload.classList.add("is-dragging");
-            });
-        });
-
-        ["dragleave", "drop"].forEach(eventName => {
-            reportFileUpload.addEventListener(eventName, event => {
-                event.preventDefault();
-                event.stopPropagation();
-                reportFileUpload.classList.remove("is-dragging");
-            });
-        });
-
-        reportFileUpload.addEventListener("drop", event => {
-            const files = event.dataTransfer ? event.dataTransfer.files : null;
-            if (files && files.length) addFilesToStore(files);
-        });
-
-        reportFilePreview?.addEventListener("click", event => {
-            const removeButton = event.target.closest("[data-remove-file-index]");
-            if (!removeButton) return;
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            removeFileAt(Number(removeButton.dataset.removeFileIndex));
-        });
-
-        renderSelectedFiles();
-    }
-
-    async function copyReportCode() {
-        if (!reportCodeInput || !copyReportCodeBtn) return;
-
-        const text = reportCodeInput.value.trim();
-
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (error) {
-            const tempInput = document.createElement("input");
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-        }
-
-        copyReportCodeBtn.classList.add("copied");
-        setTimeout(() => copyReportCodeBtn.classList.remove("copied"), 1200);
-    }
-
-    updateRealTime();
-    setInterval(updateRealTime, 30000);
-
-    if (reportCodeInput && reportCodeDisplay) {
-        reportCodeDisplay.textContent = reportCodeInput.value.trim();
-    }
-
-    reportNameInput?.addEventListener("input", () => {
-        reportNameTouched = true;
-    });
-
-    reportTypeSelect?.addEventListener("change", () => {
-        updateAssetRequirement();
-        autoFillReportName();
-        fitPageToScreen();
-    });
-
-    copyReportCodeBtn?.addEventListener("click", copyReportCode);
-
-    closeToastBtn?.addEventListener("click", () => {
-        clearTimeout(toastTimer);
-        toast?.classList.remove("is-show");
-    });
-
-    initNormalCustomSelects();
-    initAssetSelect();
-    initFileUpload();
-    updateAssetRequirement();
-    syncSelectedAssets();
-
-    document.addEventListener("click", () => closeSelects());
-
-    document.addEventListener("keydown", event => {
-        if (event.key === "Escape") closeSelects();
-    });
-
-    window.addEventListener("resize", fitPageToScreen);
-    window.addEventListener("beforeunload", clearPreviewObjectUrls);
-    window.addEventListener("load", fitPageToScreen);
-
-    if (window.ResizeObserver && wrap) {
-        new ResizeObserver(fitPageToScreen).observe(wrap);
-    }
-
-    if (form) {
-        $$("[data-required='true']", form).forEach(field => {
-            field.addEventListener("input", () => {
-                validateField(field);
-                fitPageToScreen();
-            });
-
-            field.addEventListener("change", () => {
-                validateField(field);
-                fitPageToScreen();
-            });
-        });
-
-        form.addEventListener("submit", function (event) {
-            if (allowSubmit) return;
-
-            event.preventDefault();
-
-            updateRealTime();
-            updateAssetRequirement();
-            syncFilesInputFromStore();
-
-            if (!validateForm()) {
-                showToast(
-                    "Tạo báo cáo không thành công",
-                    "Vui lòng nhập đầy đủ thông tin bắt buộc*.",
-                    "error"
-                );
-                return;
-            }
-
-            allowSubmit = true;
-            form.submit();
-        });
-    }
-
-    fitPageToScreen();
+        canSubmit = true;
+        f.form.submit();
+    };
 });
 </script>
 {% endblock %}
