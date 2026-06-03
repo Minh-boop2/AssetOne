@@ -230,8 +230,8 @@
 }
 
 .dot-inactive {
-  background: var(--text-soft);
-  box-shadow: 0 0 8px rgba(148, 163, 184, 0.22);
+  background: var(--hsu-red, #ef4444);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.45);
 }
 
 /* =========================================
@@ -399,6 +399,16 @@
 .action-menu__item--danger:hover {
   background: rgba(239, 68, 68, 0.12);
   color: var(--hsu-red, #ef4444) !important;
+  transform: translateX(2px);
+}
+
+.action-menu__item--restore {
+  color: var(--hsu-green, #10b981) !important;
+}
+
+.action-menu__item--restore:hover {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--hsu-green, #10b981) !important;
   transform: translateX(2px);
 }
 

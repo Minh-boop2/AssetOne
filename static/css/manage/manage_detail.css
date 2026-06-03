@@ -227,8 +227,12 @@ body.dark-theme .manage-detail-page,
 }
 
 .status-pill.inactive .dot {
-  background: var(--md-text-muted);
-  box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.16);
+  background: var(--md-danger);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.status-pill.inactive {
+  border-color: rgba(239, 68, 68, 0.28);
 }
 
 .detail-card-body {
@@ -421,6 +425,17 @@ body.dark-theme .manage-detail-page,
 .detail-btn-danger:hover {
   transform: translateY(-1px);
   box-shadow: 0 16px 32px rgba(239, 68, 68, 0.3);
+}
+
+.detail-btn-restore {
+  background: linear-gradient(135deg, var(--md-success), #34d399);
+  color: #ffffff;
+  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.24);
+}
+
+.detail-btn-restore:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.3);
 }
 
 @media (max-width: 900px) {

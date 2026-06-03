@@ -74,6 +74,10 @@ def clean_manage_page_data(page_data):
     return page_data
 
 
+def redirect_back_to_manage():
+    return redirect(request.referrer or url_for("manage"))
+
+
 def register_manage_routes(app):
 
     @app.route("/manage")
@@ -205,10 +209,7 @@ def register_manage_routes(app):
 
         flash(message, category)
 
-        if not success:
-            return redirect(url_for("manage"))
-
-        return redirect(url_for("user_detail", id=id))
+        return redirect_back_to_manage()
 
     @app.route("/manage/delete/<string:id>", methods=["GET", "POST"])
     def user_delete(id):
@@ -223,5 +224,5 @@ def register_manage_routes(app):
             flash(message, category)
             return redirect(url_for("manage"))
 
-        flash("Xóa nhân sự thành công", category or "success")
+        flash(message or "Cập nhật trạng thái nhân sự thành công", category or "success")
         return redirect(url_for("manage"))

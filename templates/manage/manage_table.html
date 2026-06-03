@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=44">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=46">
 
 <div class="m-overview-card">
   <div class="m-card-header">
@@ -21,6 +21,12 @@
       <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
         <path d="M12 20h9"></path>
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"></path>
+      </svg>
+    {% elif type == 'restore' %}
+      <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+        <path d="M3 4v5h5"></path>
+        <path d="M12 7v5l3 2"></path>
       </svg>
     {% else %}
       <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
@@ -80,6 +86,8 @@
   {% macro render_emp_action(row) %}
     {% set action_id = row.db_id if row.db_id is defined and row.db_id else row.id %}
     {% set row_name = row.name if row.name is defined and row.name else 'nhân sự này' %}
+    {% set status_code = row.status_code if row.status_code is defined else '' %}
+    {% set is_active = status_code == 'HOAT_DONG' %}
 
     <div class="action-menu-center">
       <div class="action-menu">
@@ -106,14 +114,20 @@
 
           <button
             type="button"
-            class="action-menu__item action-menu__item--danger delete-user-action"
-            data-delete-url="{{ url_for('user_delete', id=action_id) }}"
+            class="action-menu__item {% if is_active %}action-menu__item--danger{% else %}action-menu__item--restore{% endif %} change-user-status-action"
+            data-action-url="{{ url_for('user_toggle_status', id=action_id) }}"
             data-user-name="{{ row_name }}"
             data-user-code="{{ row.id }}"
+            data-current-status="{{ status_code }}"
             role="menuitem"
           >
-            {{ svg_icon('trash') }}
-            <span>Xóa nhân sự</span>
+            {% if is_active %}
+              {{ svg_icon('trash') }}
+              <span>Ngưng hoạt động</span>
+            {% else %}
+              {{ svg_icon('restore') }}
+              <span>Cấp lại</span>
+            {% endif %}
           </button>
         </div>
       </div>
@@ -239,31 +253,50 @@
       dropdown.style.top = top + "px";
     }
 
-    async function confirmDeleteUser(button) {
-      const deleteUrl = button.dataset.deleteUrl;
+    async function confirmChangeUserStatus(button) {
+      const actionUrl = button.dataset.actionUrl;
       const userName = button.dataset.userName || "nhân sự này";
       const userCode = button.dataset.userCode || "";
+      const currentStatus = button.dataset.currentStatus || "";
 
-      if (!deleteUrl) return;
+      if (!actionUrl) return;
 
       closeActionMenus();
 
-      const message =
-        "Bạn có chắc muốn xóa " +
-        userName +
-        (userCode ? " (" + userCode + ")" : "") +
-        " không? Hành động này không thể hoàn tác.";
+      const isActive = currentStatus === "HOAT_DONG";
+
+      const title = isActive
+        ? "Xác nhận ngưng hoạt động"
+        : "Xác nhận cấp lại tài khoản";
+
+      const confirmText = isActive
+        ? "Ngưng hoạt động"
+        : "Cấp lại";
+
+      const message = isActive
+        ? (
+            "Bạn có chắc muốn chuyển " +
+            userName +
+            (userCode ? " (" + userCode + ")" : "") +
+            " sang trạng thái ngưng hoạt động không?"
+          )
+        : (
+            "Bạn có chắc muốn cấp lại tài khoản cho " +
+            userName +
+            (userCode ? " (" + userCode + ")" : "") +
+            " không?"
+          );
 
       let confirmed = false;
 
       if (typeof window.toastConfirm === "function") {
         confirmed = await window.toastConfirm({
-          type: "error",
-          title: "Xác nhận xóa nhân sự",
+          type: isActive ? "error" : "success",
+          title: title,
           message: message,
-          confirmText: "Xóa",
+          confirmText: confirmText,
           cancelText: "Hủy",
-          danger: true,
+          danger: isActive,
           closeOnBackdrop: false,
           closeOnEsc: true
         });
@@ -272,13 +305,13 @@
       }
 
       if (confirmed) {
-        window.location.href = deleteUrl;
+        window.location.href = actionUrl;
       }
     }
 
     document.addEventListener("click", function (event) {
       const trigger = event.target.closest(".action-menu__trigger");
-      const deleteButton = event.target.closest(".delete-user-action");
+      const statusButton = event.target.closest(".change-user-status-action");
 
       if (trigger) {
         event.preventDefault();
@@ -303,10 +336,10 @@
         return;
       }
 
-      if (deleteButton) {
+      if (statusButton) {
         event.preventDefault();
         event.stopPropagation();
-        confirmDeleteUser(deleteButton);
+        confirmChangeUserStatus(statusButton);
         return;
       }
 
