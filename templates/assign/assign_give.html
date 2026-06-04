@@ -1,19 +1,31 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assgin/assign_give.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign_give.css') }}?v=bulk_assign_02" />
 
-{% set asset_code = info.asset_code or '---' %}
-{% set asset_name = info.asset or info.asset_name or '---' %}
-{% set asset_status = info.status or '---' %}
+{% set selected_assets = assets if assets is defined and assets else [info] %}
+{% set first_asset = selected_assets[0] %}
+{% set asset_ids_value = selected_asset_ids if selected_asset_ids is defined and selected_asset_ids else '' %}
+{% set is_bulk = is_bulk_assign if is_bulk_assign is defined else selected_assets|length > 1 %}
+{% set asset_count = selected_assets|length %}
+{% set allow_assign_value = allow_assign if allow_assign is defined else true %}
+
+{% set ns = namespace(ids=[]) %}
+{% for item in selected_assets %}
+  {% set item_id = item.id or item.mongo_id or item.db_id or item.asset_id or item._id %}
+  {% if item_id %}
+    {% set ns.ids = ns.ids + [item_id] %}
+  {% endif %}
+{% endfor %}
+
+{% if not asset_ids_value %}
+  {% set asset_ids_value = ns.ids|join(',') %}
+{% endif %}
 
 <section class="assign-give-page">
   <div class="assign-give-header">
     <div>
-      <h1>Cấp phát tài sản</h1>
+      <h1>{% if is_bulk %}Cấp phát nhiều tài sản{% else %}Cấp phát tài sản{% endif %}</h1>
     </div>
 
     <a href="{{ url_for('assign_page') }}" class="assign-give-back">
@@ -24,22 +36,28 @@
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="assign-give-flashes">
-      {% for category, message in messages %}
-      <div class="assign-give-alert assign-give-alert--{{ category }}">
-        <i class="fas fa-info-circle"></i>
-        <span>{{ message }}</span>
+      <div class="assign-give-flashes">
+        {% for category, message in messages %}
+          <div class="assign-give-alert assign-give-alert--{{ category }}">
+            <i class="fas fa-info-circle"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
     {% endif %}
   {% endwith %}
 
-  {% if not allow_assign %}
-  <div class="assign-give-alert assign-give-alert--warning">
-    <i class="fas fa-triangle-exclamation"></i>
-    <span>Tài sản này không ở trạng thái Chưa dùng nên không thể cấp phát.</span>
-  </div>
+  {% if not allow_assign_value %}
+    <div class="assign-give-alert assign-give-alert--warning">
+      <i class="fas fa-triangle-exclamation"></i>
+      <span>
+        {% if is_bulk %}
+          Một hoặc nhiều tài sản không ở trạng thái Chưa dùng nên không thể cấp phát.
+        {% else %}
+          Tài sản này không ở trạng thái Chưa dùng nên không thể cấp phát.
+        {% endif %}
+      </span>
+    </div>
   {% endif %}
 
   <div class="assign-give-grid">
@@ -47,59 +65,94 @@
       <div class="assign-give-card__header">
         <h2>Thông tin tài sản</h2>
 
-        <span
-          class="assign-give-status {% if info.status == 'Đang sử dụng' %}assign-give-status--using{% else %}assign-give-status--free{% endif %}"
-        >
-          {{ asset_status }}
+        <span class="assign-give-status {% if first_asset.status == 'Đang sử dụng' %}assign-give-status--using{% else %}assign-give-status--free{% endif %}">
+          {% if is_bulk %}{{ asset_count }} tài sản{% else %}{{ first_asset.status or '---' }}{% endif %}
         </span>
       </div>
 
-      <div class="asset-summary">
-        <div class="asset-summary__item">
-          <span>Mã tài sản</span>
-          <strong>#{{ asset_code }}</strong>
-        </div>
+      {% if is_bulk %}
+        <div class="asset-summary">
+          <div class="asset-summary__item asset-summary__item--full">
+            <span>Số tài sản cấp phát</span>
+            <strong>{{ asset_count }} tài sản</strong>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Tên tài sản</span>
-          <strong>{{ asset_name }}</strong>
-        </div>
+          <div class="asset-summary__item asset-summary__item--full">
+            <span>Danh sách tài sản</span>
 
-        <div class="asset-summary__item">
-          <span>Loại thiết bị</span>
-          <strong>{{ info.type or info.category or '---' }}</strong>
-        </div>
+            <div class="assign-bulk-preview">
+              {% for item in selected_assets %}
+                <div class="assign-bulk-preview__item">
+                  <strong>#{{ item.asset_code or '---' }} - {{ item.asset or item.asset_name or '---' }}</strong>
+                  <small>{{ item.type or item.category or '---' }} · {{ item.status or '---' }}</small>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Trạng thái</span>
-          <strong>{{ asset_status }}</strong>
-        </div>
+          <div class="asset-summary__item">
+            <span>Trạng thái yêu cầu</span>
+            <strong>Chưa dùng</strong>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Người sử dụng hiện tại</span>
-          <strong>{{ info.receiver or info.user or '---' }}</strong>
-        </div>
+          <div class="asset-summary__item">
+            <span>Sau khi cấp phát</span>
+            <strong>Chuyển sang Đang sử dụng</strong>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Phòng ban hiện tại</span>
-          <strong>{{ info.department or '---' }}</strong>
+          <div class="asset-summary__item asset-summary__item--full">
+            <span>Ghi chú</span>
+            <strong>Các tài sản đã chọn sẽ được cấp phát cho cùng một người nhận.</strong>
+          </div>
         </div>
+      {% else %}
+        <div class="asset-summary">
+          <div class="asset-summary__item">
+            <span>Mã tài sản</span>
+            <strong>#{{ first_asset.asset_code or '---' }}</strong>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Vị trí hiện tại</span>
-          <strong>{{ info.location or '---' }}</strong>
-        </div>
+          <div class="asset-summary__item">
+            <span>Tên tài sản</span>
+            <strong>{{ first_asset.asset or first_asset.asset_name or '---' }}</strong>
+          </div>
 
-        <div class="asset-summary__item">
-          <span>Bảo hành</span>
-          <strong>{{ info.warranty or '---' }}</strong>
-        </div>
+          <div class="asset-summary__item">
+            <span>Loại thiết bị</span>
+            <strong>{{ first_asset.type or first_asset.category or '---' }}</strong>
+          </div>
 
-        <div class="asset-summary__item asset-summary__item--full">
-          <span>Thông số / ghi chú</span>
-          <strong>{{ info.spec or info.notes or '---' }}</strong>
+          <div class="asset-summary__item">
+            <span>Trạng thái</span>
+            <strong>{{ first_asset.status or '---' }}</strong>
+          </div>
+
+          <div class="asset-summary__item">
+            <span>Người sử dụng hiện tại</span>
+            <strong>{{ first_asset.receiver or first_asset.user or '---' }}</strong>
+          </div>
+
+          <div class="asset-summary__item">
+            <span>Phòng ban hiện tại</span>
+            <strong>{{ first_asset.department or '---' }}</strong>
+          </div>
+
+          <div class="asset-summary__item">
+            <span>Vị trí hiện tại</span>
+            <strong>{{ first_asset.location or '---' }}</strong>
+          </div>
+
+          <div class="asset-summary__item">
+            <span>Bảo hành</span>
+            <strong>{{ first_asset.warranty or '---' }}</strong>
+          </div>
+
+          <div class="asset-summary__item asset-summary__item--full">
+            <span>Thông số / ghi chú</span>
+            <strong>{{ first_asset.spec or first_asset.notes or '---' }}</strong>
+          </div>
         </div>
-      </div>
+      {% endif %}
     </div>
 
     <div class="assign-give-card">
@@ -107,17 +160,20 @@
         <h2>Chọn người nhận</h2>
       </div>
 
-      <form method="POST" class="assign-give-form" id="assignGiveForm">
+      <form method="POST" class="assign-give-form" id="assignGiveForm" data-asset-count="{{ asset_count }}">
+        <input type="hidden" name="user_id" id="selectedUserId" />
+        <input type="hidden" name="asset_ids" id="selectedAssetIds" value="{{ asset_ids_value }}" />
+        <input type="hidden" name="assign_mode" value="{% if is_bulk %}bulk{% else %}single{% endif %}" />
+
+        {% for item_id in ns.ids %}
+          <input type="hidden" name="asset_id_list" value="{{ item_id }}" />
+        {% endfor %}
+
         <label class="assign-give-label" for="userSearchInput">
           Tìm kiếm người dùng
         </label>
 
-        <input type="hidden" name="user_id" id="selectedUserId" />
-
-        <div
-          class="assign-user-search {% if not allow_assign %}is-disabled{% endif %}"
-          id="assignUserSearch"
-        >
+        <div class="assign-user-search {% if not allow_assign_value %}is-disabled{% endif %}" id="assignUserSearch">
           <div class="assign-user-search__control">
             <i class="fas fa-search"></i>
             <input
@@ -126,7 +182,7 @@
               class="assign-user-search__input"
               placeholder="Nhập tên, mã nhân viên, email, phòng ban..."
               autocomplete="off"
-              {% if not allow_assign %}disabled{% endif %}
+              {% if not allow_assign_value %}disabled{% endif %}
             />
           </div>
 
@@ -144,10 +200,7 @@
         </div>
 
         <div class="assign-give-actions">
-          <a
-            href="{{ url_for('assign_page') }}"
-            class="assign-give-btn assign-give-btn--secondary"
-          >
+          <a href="{{ url_for('assign_page') }}" class="assign-give-btn assign-give-btn--secondary">
             Hủy
           </a>
 
@@ -155,10 +208,10 @@
             type="submit"
             class="assign-give-btn assign-give-btn--primary"
             id="assignSubmitBtn"
-            {% if not allow_assign %}disabled{% endif %}
+            {% if not allow_assign_value %}disabled{% endif %}
           >
             <i class="fas fa-user-check"></i>
-            Cấp phát
+            {% if is_bulk %}Cấp phát {{ asset_count }} tài sản{% else %}Cấp phát{% endif %}
           </button>
         </div>
       </form>
@@ -171,17 +224,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const userSearchInput = document.getElementById("userSearchInput");
   const userSearchResults = document.getElementById("userSearchResults");
   const selectedUserId = document.getElementById("selectedUserId");
+  const selectedAssetIds = document.getElementById("selectedAssetIds");
   const selectedUserBox = document.getElementById("selectedUserBox");
   const assignForm = document.getElementById("assignGiveForm");
   const searchBox = document.getElementById("assignUserSearch");
   const submitBtn = document.getElementById("assignSubmitBtn");
 
   let searchTimer = null;
-  let latestKeyword = "";
   let activeRequest = null;
+  let latestKeyword = "";
   let selectedUser = null;
   let selectedDisplayText = "";
   let isSubmitting = false;
+
+  const assetIds = String(selectedAssetIds?.value || "")
+    .split(",")
+    .map(id => id.trim())
+    .filter(Boolean);
+
+  const assetCount = assetIds.length || Number(assignForm?.dataset.assetCount || 1);
 
   function escapeHtml(value) {
     return String(value || "")
@@ -193,32 +254,20 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function notify(type, title, description) {
-    const toast = window.sonner || window.toast;
-
-    if (typeof toast === "function") {
-      toast({
-        type: type || "default",
-        title: title || "Thông báo",
-        description: description || "",
-      });
-      return;
-    }
-
+    if (window.sonner?.[type]) return window.sonner[type](title, description || "");
+    if (window.toast?.[type]) return window.toast[type](title, description || "");
     alert(description ? `${title}\n${description}` : title);
   }
 
   function setSearchLoading(isLoading) {
-    if (!searchBox) return;
-    searchBox.classList.toggle("is-searching", isLoading);
+    searchBox?.classList.toggle("is-searching", isLoading);
   }
 
   function resetSelectedUser() {
     selectedUser = null;
     selectedDisplayText = "";
 
-    if (selectedUserId) {
-      selectedUserId.value = "";
-    }
+    if (selectedUserId) selectedUserId.value = "";
 
     if (selectedUserBox) {
       selectedUserBox.innerHTML = `
@@ -249,7 +298,6 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedUserBox.innerHTML = `
       <div class="selected-user-profile">
         <div class="selected-user-avatar">${avatarText}</div>
-
         <div class="selected-user-info">
           <h3>${name}</h3>
           <p>${code} · ${email}</p>
@@ -271,6 +319,11 @@ document.addEventListener("DOMContentLoaded", function () {
           <span>Vị trí / tầng</span>
           <strong>${floor}</strong>
         </div>
+
+        <div>
+          <span>Số tài sản cấp phát</span>
+          <strong>${assetCount} tài sản</strong>
+        </div>
       </div>
     `;
   }
@@ -287,48 +340,46 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderUserResults(users) {
-    if (!users || users.length === 0) {
+    if (!users || !users.length) {
       renderResultsEmpty();
       return;
     }
 
-    userSearchResults.innerHTML = users
-      .map(function (user) {
-        const name = escapeHtml(user.full_name || "---");
-        const code = escapeHtml(user.employee_code || "---");
-        const email = escapeHtml(user.email || "---");
-        const department = escapeHtml(user.department || "---");
-        const floor = escapeHtml(user.floor || "---");
-        const phone = escapeHtml(user.phone || "---");
+    userSearchResults.innerHTML = users.map(user => {
+      const name = escapeHtml(user.full_name || "---");
+      const code = escapeHtml(user.employee_code || "---");
+      const email = escapeHtml(user.email || "---");
+      const department = escapeHtml(user.department || "---");
+      const floor = escapeHtml(user.floor || "---");
+      const phone = escapeHtml(user.phone || "---");
 
-        return `
-          <button
-            type="button"
-            class="assign-user-search__option"
-            data-id="${escapeHtml(user.id || "")}"
-            data-name="${name}"
-            data-code="${code}"
-            data-email="${email}"
-            data-phone="${phone}"
-            data-department="${department}"
-            data-floor="${floor}"
-          >
-            <span class="assign-user-search__main">
-              <strong>${name}</strong>
-              <small>${code} · ${email}</small>
-            </span>
+      return `
+        <button
+          type="button"
+          class="assign-user-search__option"
+          data-id="${escapeHtml(user.id || "")}"
+          data-name="${name}"
+          data-code="${code}"
+          data-email="${email}"
+          data-phone="${phone}"
+          data-department="${department}"
+          data-floor="${floor}"
+        >
+          <span class="assign-user-search__main">
+            <strong>${name}</strong>
+            <small>${code} · ${email}</small>
+          </span>
 
-            <span class="assign-user-search__meta">
-              ${department || "---"} · ${floor || "---"}
-            </span>
-          </button>
-        `;
-      })
-      .join("");
+          <span class="assign-user-search__meta">
+            ${department || "---"} · ${floor || "---"}
+          </span>
+        </button>
+      `;
+    }).join("");
 
     userSearchResults
       .querySelectorAll(".assign-user-search__option")
-      .forEach(function (button) {
+      .forEach(button => {
         button.addEventListener("click", function () {
           selectUser({
             id: button.dataset.id,
@@ -346,9 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function searchUsers(keyword) {
     latestKeyword = keyword;
 
-    if (activeRequest) {
-      activeRequest.abort();
-    }
+    if (activeRequest) activeRequest.abort();
 
     if (!keyword) {
       setSearchLoading(false);
@@ -361,27 +410,20 @@ document.addEventListener("DOMContentLoaded", function () {
     setSearchLoading(true);
 
     try {
-      const response = await fetch(
-        `/assign/users/search?keyword=${encodeURIComponent(keyword)}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          signal: activeRequest.signal,
-        }
-      );
+      const response = await fetch(`/assign/users/search?keyword=${encodeURIComponent(keyword)}`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        signal: activeRequest.signal,
+      });
 
-      if (!response.ok) {
-        throw new Error("Search user failed");
-      }
+      if (!response.ok) throw new Error("Search user failed");
 
       const data = await response.json();
 
-      if (latestKeyword !== keyword) {
-        return;
-      }
+      if (latestKeyword !== keyword) return;
 
       renderUserResults(data.items || []);
     } catch (error) {
@@ -406,10 +448,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       clearTimeout(searchTimer);
-
-      searchTimer = setTimeout(function () {
-        searchUsers(keyword);
-      }, 280);
+      searchTimer = setTimeout(() => searchUsers(keyword), 220);
     });
   }
 
@@ -417,18 +456,19 @@ document.addEventListener("DOMContentLoaded", function () {
     assignForm.addEventListener("submit", function (event) {
       event.preventDefault();
 
-      if (!selectedUserId || !selectedUserId.value || !selectedUser) {
-        notify(
-          "warning",
-          "Thiếu thông tin",
-          "Vui lòng chọn người dùng nhận tài sản trước khi cấp phát."
-        );
+      if (!selectedAssetIds || !selectedAssetIds.value.trim()) {
+        notify("warning", "Thiếu tài sản", "Không tìm thấy danh sách tài sản cần cấp phát.");
+        return;
+      }
 
+      if (!selectedUserId || !selectedUserId.value || !selectedUser) {
+        notify("warning", "Thiếu thông tin", "Vui lòng chọn người dùng nhận tài sản trước khi cấp phát.");
         userSearchInput?.focus();
         return;
       }
 
       if (isSubmitting) return;
+
       isSubmitting = true;
 
       if (submitBtn) {
@@ -437,15 +477,7 @@ document.addEventListener("DOMContentLoaded", function () {
         submitBtn.innerHTML = `<span class="btn-spinner"></span> Đang cấp phát`;
       }
 
-      notify(
-        "success",
-        "Cấp phát thành công",
-        `Đã cấp phát tài sản cho ${selectedUser.full_name || "nhân viên"}.`
-      );
-
-      setTimeout(function () {
-        assignForm.submit();
-      }, 350);
+      assignForm.submit();
     });
   }
 });

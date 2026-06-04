@@ -9,8 +9,7 @@ body:has(.assign-give-page) {
   min-height: 0;
   padding: clamp(14px, 1.4vw, 24px) clamp(18px, 1.8vw, 28px);
   color: var(--text);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -173,10 +172,34 @@ body:has(.assign-give-page) {
 
 .asset-summary {
   min-height: 0;
+  padding-right: 4px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(12px, 0.95vw, 14px);
-  overflow: hidden;
+  overflow-y: auto; /* BULK ASSET -> cho phép cuộn khi cấp phát nhiều tài sản */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.asset-summary::-webkit-scrollbar,
+.assign-bulk-preview::-webkit-scrollbar {
+  width: 8px;
+}
+
+.asset-summary::-webkit-scrollbar-track,
+.assign-bulk-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asset-summary::-webkit-scrollbar-thumb,
+.assign-bulk-preview::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.asset-summary::-webkit-scrollbar-thumb:hover,
+.assign-bulk-preview::-webkit-scrollbar-thumb:hover {
+  background: var(--text-soft);
 }
 
 .asset-summary__item {
@@ -208,6 +231,46 @@ body:has(.assign-give-page) {
   font-weight: 850;
   line-height: 1.5;
   word-break: break-word;
+}
+
+.assign-bulk-preview {
+  max-height: min(330px, 38vh); /* BULK LIST -> danh sách tài sản được chọn từ bảng /assign */
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.assign-bulk-preview__item {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.assign-bulk-preview__item strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.assign-bulk-preview__item small {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
 }
 
 .assign-give-form {
@@ -525,6 +588,10 @@ body:has(.assign-give-page) {
   transform: none;
 }
 
+.assign-give-btn.is-loading {
+  pointer-events: none;
+}
+
 .btn-spinner {
   width: 14px;
   height: 14px;
@@ -557,6 +624,15 @@ body:has(.assign-give-page) {
     grid-template-columns: 1fr;
     overflow: visible;
   }
+
+  .asset-summary {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .assign-bulk-preview {
+    max-height: 320px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -581,6 +657,10 @@ body:has(.assign-give-page) {
 
   .asset-summary {
     grid-template-columns: 1fr;
+  }
+
+  .assign-bulk-preview {
+    max-height: 260px;
   }
 
   .assign-give-actions {

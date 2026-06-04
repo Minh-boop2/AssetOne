@@ -73,9 +73,6 @@ def build_headers(extra_headers=None, has_json_body=False):
 
     current_user_id = get_current_user_id()
 
-    # Quan trọng:
-    # API backend dùng X-User-Id để check permission_required(...)
-    # và lọc dữ liệu theo role.
     if current_user_id:
         headers["X-User-Id"] = current_user_id
 
@@ -301,6 +298,29 @@ def assign_asset_to_user_api(asset_id, user_id):
         }
 
     return True, data or {}
+
+
+def assign_many_assets_to_user_api(asset_ids, user_id):
+    success_ids = []
+    failed_items = []
+
+    for asset_id in asset_ids:
+        success, result = assign_asset_to_user_api(asset_id, user_id)
+
+        if success:
+            success_ids.append(asset_id)
+        else:
+            failed_items.append({
+                "asset_id": asset_id,
+                "message": result.get("message", "Cấp phát thất bại.")
+            })
+
+    return len(failed_items) == 0, {
+        "success_ids": success_ids,
+        "failed_items": failed_items,
+        "success_count": len(success_ids),
+        "failed_count": len(failed_items),
+    }
 
 
 def unassign_asset_from_user_api(asset_id):

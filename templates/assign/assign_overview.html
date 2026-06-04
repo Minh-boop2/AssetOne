@@ -1,7 +1,19 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=20260603_assign_short_confirm">
+
+{% set counts = counts or {} %}
+{% set categories = categories or [] %}
+{% set departments = departments or [] %}
+{% set status_options = status_options or [] %}
+{% set total_items = total_items or 0 %}
+{% set current_page = current_page or 1 %}
+{% set total_pages = total_pages or 1 %}
+{% set selected_cat = selected_cat or 'Tất cả' %}
+{% set selected_dept = selected_dept or 'Tất cả' %}
+{% set selected_status = selected_status or 'Tất cả' %}
+{% set search_q = search_q or '' %}
 
 {% set type_labels = type_labels or {
   'laptop': 'Laptop',
@@ -61,14 +73,14 @@
     <label class="filter-label">{{ title }}</label>
 
     <div class="filter-select" id="{{ id }}">
-      <input type="hidden" name="{{ name }}" value="{{ selected_value }}" />
+      <input type="hidden" name="{{ name }}" value="{{ selected_value }}">
 
       <button type="button" class="filter-select__button">
         <span class="filter-select__value">
           <span class="filter-select__label">{{ selected_label }}</span>
           <span class="filter-select__count">{{ selected_count }}</span>
         </span>
-        <i class="fas fa-chevron-down filter-select__caret"></i>
+        <span class="filter-select__arrow">▾</span>
       </button>
 
       <div class="filter-select__menu">
@@ -88,87 +100,102 @@
   </div>
 {% endmacro %}
 
-<section class="assign-page">
+<section class="assign-page" id="assignPage">
   <div class="assets-page__header">
     <h1 class="assets-page__title">Quản lý cấp phát</h1>
     <p>Theo dõi danh sách và lịch sử bàn giao thiết bị nhân viên</p>
   </div>
 
   <form action="{{ url_for('assign_page') }}" method="GET" id="filterForm" class="filter-bar">
-    <input type="hidden" name="page" value="{{ current_page or 1 }}" id="filterPageInput" />
-    <input type="hidden" name="per_page" value="10" />
+    <input type="hidden" name="page" value="{{ current_page }}" id="filterPageInput">
+    <input type="hidden" name="per_page" value="10">
 
     <div class="filter-item filter-item--search">
       <label class="filter-label">Tìm kiếm</label>
       <input
         type="text"
         name="search"
-        value="{{ search_q or '' }}"
+        value="{{ search_q }}"
         placeholder="Gõ tên, mã tài sản hoặc người dùng..."
         class="filter-control"
         id="assignSearchInput"
         autocomplete="off"
-      />
+      >
     </div>
 
-    {{ filter_select(
-      'select-category',
-      'category',
-      'Loại thiết bị',
-      selected_cat or 'Tất cả',
-      'Tất cả loại',
-      categories,
-      counts.get('categories', {}),
-      counts.get('total', 0),
-      type_labels
-    ) }}
-
-    {{ filter_select(
-      'select-department',
-      'department',
-      'Phòng ban',
-      selected_dept or 'Tất cả',
-      'Tất cả phòng',
-      departments,
-      counts.get('departments', {}),
-      counts.get('total', 0)
-    ) }}
-
-    {{ filter_select(
-      'select-status',
-      'status',
-      'Trạng thái',
-      selected_status or 'Tất cả',
-      'Tất cả trạng thái',
-      status_options,
-      counts.get('status', {}),
-      counts.get('total', 0)
-    ) }}
+    {{ filter_select('select-category', 'category', 'Loại thiết bị', selected_cat, 'Tất cả loại', categories, counts.get('categories', {}), counts.get('total', total_items), type_labels) }}
+    {{ filter_select('select-department', 'department', 'Phòng ban', selected_dept, 'Tất cả phòng', departments, counts.get('departments', {}), counts.get('total', total_items)) }}
+    {{ filter_select('select-status', 'status', 'Trạng thái', selected_status, 'Tất cả trạng thái', status_options, counts.get('status', {}), counts.get('total', total_items)) }}
 
     <div class="filter-actions">
       <a
         href="{{ url_for('assign_page') }}"
         class="page-btn filter-clear-btn"
-        id="assignClearFilter"
         title="Xóa lọc"
         {% if not search_q and selected_dept == 'Tất cả' and selected_cat == 'Tất cả' and selected_status == 'Tất cả' %}hidden{% endif %}
-      >
-        ✕
-      </a>
+      >✕</a>
     </div>
   </form>
 
-  <div class="table-container" id="assignTableContainer">
+  <div class="table-container">
     <div class="table-header-wrapper">
-      <h2 class="table-list-title">Danh sách cấp phát tài sản</h2>
+      <div class="table-header-left">
+        <div class="table-title-row">
+          <h2 class="table-list-title">Danh sách cấp phát tài sản</h2>
+
+          <label class="assign-bulk-toggle" for="bulkModeToggle">
+            <input type="checkbox" id="bulkModeToggle">
+            <span class="assign-bulk-check"></span>
+            <span>Chọn nhiều tài sản</span>
+          </label>
+
+          <div class="assign-asset-picker" id="assignAssetPicker" hidden>
+            <button type="button" class="assign-picker-btn" id="assignPickerBtn">
+              <span>Chọn tài sản để thao tác</span>
+            </button>
+
+            <span class="assign-picker-summary" id="bulkSummary">Chưa chọn tài sản nào</span>
+
+            <div class="assign-picker-menu" id="assignPickerMenu">
+              {% for row in assigns %}
+                {% set row_id = row.id or row.mongo_id or row.db_id or row.asset_id or row._id %}
+                {% set row_status = (row.status or '')|string|lower|trim %}
+                {% set is_free = row_status in ['chưa dùng', 'chưa sử dụng', 'available', 'unused'] %}
+                {% set is_using = row_status in ['đang sử dụng', 'using', 'in_use'] %}
+                {% set give_url = row.give_url if row.give_url is defined and row.give_url else url_for('assign_give', id=row_id) %}
+                {% set state = 'free' if is_free else ('using' if is_using else 'other') %}
+
+                <button
+                  type="button"
+                  class="assign-picker-option"
+                  data-id="{{ row_id }}"
+                  data-state="{{ state }}"
+                  data-give-url="{{ give_url }}"
+                  data-asset-code="{{ row.asset_code or '---' }}"
+                  data-asset-name="{{ row.asset or row.asset_name or '---' }}"
+                  data-receiver="{{ row.receiver or row.user or '---' }}"
+                >
+                  <span class="assign-picker-dot"></span>
+                  <span class="assign-picker-text">{{ row.asset_code or '---' }} - {{ row.asset or row.asset_name or '---' }}</span>
+                  <span class="assign-picker-check">✓</span>
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="assign-bulk-actions" id="bulkActions">
+            <a href="#" class="assign-bulk-btn assign-bulk-btn--primary" id="bulkAssignBtn" hidden>Cấp phát nhiều</a>
+            <button type="button" class="assign-bulk-btn assign-bulk-btn--warning" id="bulkUnassignBtn" hidden>Thu hồi nhiều</button>
+          </div>
+        </div>
+      </div>
 
       <div class="table-info-count">
-        Hiển thị <strong>{{ assigns|length }}</strong> trên
-        <strong>{{ total_items }}</strong> bản ghi
+        Hiển thị <strong>{{ assigns|length }}</strong> trên <strong>{{ total_items }}</strong> bản ghi
       </div>
     </div>
 
-    <div class="table-scroll">
+    <div class="table-scroll" id="assignTableScroll">
       <table class="custom-table assign-table">
         <thead>
           <tr>
@@ -191,15 +218,24 @@
             {% set is_using = row_status in ['đang sử dụng', 'using', 'in_use'] %}
             {% set can_assign = row.can_assign or is_free %}
             {% set can_unassign = row.can_unassign or is_using %}
+            {% set give_url = row.give_url if row.give_url is defined and row.give_url else url_for('assign_give', id=row_id) %}
+            {% set detail_url = row.detail_url if row.detail_url is defined and row.detail_url else url_for('assign_detail', id=row_id) %}
+            {% set unassign_url = row.unassign_url if row.unassign_url is defined and row.unassign_url else url_for('assign_unassign', id=row_id) %}
 
-            <tr>
+            <tr
+              class="assign-row"
+              data-id="{{ row_id }}"
+              data-state="{{ 'free' if is_free else ('using' if is_using else 'other') }}"
+              data-give-url="{{ give_url }}"
+              data-asset-code="{{ row.asset_code or '---' }}"
+              data-asset-name="{{ row.asset or row.asset_name or '---' }}"
+              data-receiver="{{ row.receiver or row.user or '---' }}"
+            >
               <td class="asset-code">{{ row.asset_code or '---' }}</td>
               <td class="font-bold">{{ row.asset or row.asset_name or '---' }}</td>
 
               {% set row_type = row.type or row.category or '' %}
-              <td class="text-soft">
-                {{ type_labels.get(row_type|lower, row_type) if row_type else '---' }}
-              </td>
+              <td class="text-soft">{{ type_labels.get(row_type|lower, row_type) if row_type else '---' }}</td>
 
               <td>
                 <div class="status-container">
@@ -224,28 +260,18 @@
                   <div class="action-menu">
                     <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác" aria-expanded="false">
                       <span class="action-menu__dots" aria-hidden="true">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <span></span><span></span><span></span>
                       </span>
                     </button>
 
                     <div class="action-menu__dropdown" role="menu">
-                      <a
-                        href="{{ row.detail_url if row.detail_url is defined and row.detail_url else url_for('assign_detail', id=row_id) }}"
-                        class="action-menu__item action-menu__item--view"
-                        role="menuitem"
-                      >
+                      <a href="{{ detail_url }}" class="action-menu__item action-menu__item--view" role="menuitem">
                         {{ action_icon('eye') }}
                         <span>Xem chi tiết</span>
                       </a>
 
                       {% if can_assign %}
-                        <a
-                          href="{{ row.give_url if row.give_url is defined and row.give_url else url_for('assign_give', id=row_id) }}"
-                          class="action-menu__item action-menu__item--assign"
-                          role="menuitem"
-                        >
+                        <a href="{{ give_url }}" class="action-menu__item action-menu__item--assign" role="menuitem">
                           {{ action_icon('give') }}
                           <span>Cấp phát</span>
                         </a>
@@ -253,7 +279,7 @@
 
                       {% if can_unassign %}
                         <form
-                          action="{{ row.unassign_url if row.unassign_url is defined and row.unassign_url else url_for('assign_unassign', id=row_id) }}"
+                          action="{{ unassign_url }}"
                           method="POST"
                           class="action-menu__form js-unassign-form"
                           data-asset-code="{{ row.asset_code or '---' }}"
@@ -281,17 +307,13 @@
     </div>
 
     <div class="pagination">
-      <div class="pagination-info">
-        Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
-      </div>
+      <div class="pagination-info">Trang <strong>{{ current_page }}</strong> / {{ total_pages }}</div>
 
       <div class="pagination-controls">
         <a
           href="{{ url_for('assign_page', page=current_page-1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
           class="page-btn page-btn--nav {% if current_page <= 1 %}disabled{% endif %}"
-        >
-          « Trước
-        </a>
+        >« Trước</a>
 
         {% set start_page = current_page - 1 %}
         {% set end_page = current_page + 1 %}
@@ -307,13 +329,8 @@
           {% set end_page = total_pages %}
         {% endif %}
 
-        {% if start_page < 1 %}
-          {% set start_page = 1 %}
-        {% endif %}
-
-        {% if end_page > total_pages %}
-          {% set end_page = total_pages %}
-        {% endif %}
+        {% if start_page < 1 %}{% set start_page = 1 %}{% endif %}
+        {% if end_page > total_pages %}{% set end_page = total_pages %}{% endif %}
 
         {% for p in range(start_page, end_page + 1) %}
           {% if p == current_page %}
@@ -322,112 +339,384 @@
             <a
               href="{{ url_for('assign_page', page=p, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
               class="page-btn"
-            >
-              {{ p }}
-            </a>
+            >{{ p }}</a>
           {% endif %}
         {% endfor %}
 
         <a
           href="{{ url_for('assign_page', page=current_page+1, per_page=10, search=search_q, department=selected_dept, category=selected_cat, status=selected_status) }}"
           class="page-btn page-btn--nav {% if current_page >= total_pages %}disabled{% endif %}"
-        >
-          Sau »
-        </a>
+        >Sau »</a>
       </div>
     </div>
   </div>
 </section>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("filterForm");
-  const pageInput = document.getElementById("filterPageInput");
-  const searchInput = document.getElementById("assignSearchInput");
+  const searchInput = form?.querySelector('input[name="search"]');
+  const clearBtn = document.querySelector(".filter-clear-btn");
+  const openedClass = "show";
 
-  let searchTimer = null;
+  let timer = null;
+  let controller = null;
+  let selectedIds = new Set();
 
-  function closeMenus() {
-    document.querySelectorAll(".filter-select__menu.show").forEach(menu => menu.classList.remove("show"));
-    document.querySelectorAll(".action-menu__dropdown.show").forEach(menu => menu.classList.remove("show"));
-    document.querySelectorAll(".action-menu__trigger[aria-expanded='true']").forEach(btn => btn.setAttribute("aria-expanded", "false"));
-  }
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-  function submitFilter() {
-    if (pageInput) pageInput.value = 1;
-    form.submit();
-  }
+  const notify = (type, title, text) => {
+    if (window.sonner?.[type]) return window.sonner[type](title, text || "");
+    if (window.toast?.[type]) return window.toast[type](title, text || "");
+    alert(text ? `${title}\n${text}` : title);
+  };
 
-  function positionActionMenu(trigger, dropdown) {
-    const rect = trigger.getBoundingClientRect();
-    const gap = 8;
-    const pad = 12;
-    const width = dropdown.offsetWidth || 190;
-    const height = dropdown.offsetHeight || 120;
+  const askConfirm = async ({ title, message, confirmText = "Xác nhận", danger = true }) => {
+    if (typeof window.toastConfirm === "function") {
+      return await window.toastConfirm({
+        type: "warning",
+        title,
+        message,
+        confirmText,
+        cancelText: "Hủy",
+        danger,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    }
 
-    let left = rect.right - width;
-    let top = rect.bottom + gap;
+    return confirm(message);
+  };
 
-    if (left < pad) left = pad;
-    if (left + width > window.innerWidth - pad) left = window.innerWidth - width - pad;
-    if (top + height > window.innerHeight - pad) top = rect.top - height - gap;
-    if (top < pad) top = pad;
-
-    dropdown.style.left = left + "px";
-    dropdown.style.top = top + "px";
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener("input", function () {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(submitFilter, 300);
+  const closeMenus = except => {
+    $$(".filter-select__menu, .action-menu__dropdown").forEach(menu => {
+      if (menu !== except) menu.classList.remove(openedClass);
     });
 
-    searchInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        clearTimeout(searchTimer);
-        submitFilter();
+    $$(".action-menu__trigger[aria-expanded='true']").forEach(btn => {
+      btn.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  const rows = () => $$(".assign-row");
+  const selectedRows = () => rows().filter(row => selectedIds.has(row.dataset.id));
+
+  function hasFilter() {
+    if (!form) return false;
+
+    const params = new URLSearchParams(new FormData(form));
+
+    for (const [key, value] of params.entries()) {
+      const v = String(value || "").trim();
+
+      if (key === "page" || key === "per_page") continue;
+      if (key === "search" && v) return true;
+      if (key !== "search" && v && v !== "Tất cả") return true;
+    }
+
+    return false;
+  }
+
+  function updateClearButton() {
+    if (clearBtn) clearBtn.hidden = !hasFilter();
+  }
+
+  function buildUrl(page) {
+    const params = new URLSearchParams(new FormData(form));
+
+    if (page) params.set("page", page);
+    else params.delete("page");
+
+    Array.from(params.entries()).forEach(([key, value]) => {
+      if (!value || value === "Tất cả") params.delete(key);
+    });
+
+    const query = params.toString();
+    return form.action + (query ? "?" + query : "");
+  }
+
+  async function loadAssignTable(url, pushState = true) {
+    if (!form) return;
+
+    if (controller) controller.abort();
+    controller = new AbortController();
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "X-Requested-With": "fetch" },
+        signal: controller.signal
+      });
+
+      if (!response.ok) return;
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const nextTable = doc.querySelector(".table-container");
+      const currentTable = document.querySelector(".table-container");
+
+      if (nextTable && currentTable) {
+        currentTable.replaceWith(nextTable);
+        selectedIds.clear();
+        updateBulk();
       }
-    });
+
+      if (pushState) window.history.replaceState({}, "", url);
+    } catch (error) {
+      if (error.name !== "AbortError") console.error(error);
+    }
   }
 
-  document.addEventListener("click", async function (event) {
-    const selectBtn = event.target.closest(".filter-select__button");
-    const option = event.target.closest(".filter-select__option");
-    const actionBtn = event.target.closest(".action-menu__trigger");
-    const unassignForm = event.target.closest(".js-unassign-form");
+  function submitFilterNow() {
+    updateClearButton();
+    loadAssignTable(buildUrl(), true);
+  }
 
-    if (selectBtn) {
-      event.preventDefault();
-      event.stopPropagation();
+  function submitFilterDebounced() {
+    updateClearButton();
+    clearTimeout(timer);
+    timer = setTimeout(submitFilterNow, 160);
+  }
 
-      const menu = selectBtn.closest(".filter-select").querySelector(".filter-select__menu");
-      const opened = menu.classList.contains("show");
+  function resetFilters() {
+    if (searchInput) searchInput.value = "";
 
+    form.querySelectorAll('input[type="hidden"]').forEach(input => {
+      if (input.name !== "per_page" && input.name !== "page") input.value = "Tất cả";
+    });
+
+    $$(".filter-select").forEach(select => {
+      const hidden = select.querySelector('input[type="hidden"]');
+      const label = select.querySelector(".filter-select__label");
+      const count = select.querySelector(".filter-select__count");
+      const first = select.querySelector(".filter-select__option");
+
+      if (!hidden || !label || !first) return;
+
+      const firstLabel = first.querySelector(".filter-select__option-label");
+      const firstCount = first.querySelector(".filter-select__option-count");
+
+      hidden.value = "Tất cả";
+      label.textContent = firstLabel ? firstLabel.textContent.trim() : "Tất cả";
+
+      if (count && firstCount) count.textContent = firstCount.textContent.trim();
+    });
+
+    updateClearButton();
+  }
+
+  function buildAssignUrl(items) {
+    const ids = items.map(row => row.dataset.id).filter(Boolean).join(",");
+    const first = items[0]?.dataset.giveUrl || "#";
+
+    return `${first}${first.includes("?") ? "&" : "?"}ids=${encodeURIComponent(ids)}`;
+  }
+
+  function updateBulk() {
+    const bulkToggle = $("#bulkModeToggle");
+    const picker = $("#assignAssetPicker");
+    const bulkActions = $("#bulkActions");
+    const bulkSummary = $("#bulkSummary");
+    const bulkAssignBtn = $("#bulkAssignBtn");
+    const bulkUnassignBtn = $("#bulkUnassignBtn");
+    const table = $(".table-container");
+    const isBulk = !!bulkToggle?.checked;
+
+    table?.classList.toggle("is-bulk-mode", isBulk);
+
+    if (!isBulk) {
+      selectedIds.clear();
+
+      if (picker) picker.hidden = true;
+
+      bulkActions?.classList.remove("is-visible");
       closeMenus();
-      menu.classList.toggle("show", !opened);
+    } else if (picker) {
+      picker.hidden = false;
+    }
+
+    const items = selectedRows();
+    const states = [...new Set(items.map(row => row.dataset.state))];
+
+    rows().forEach(row => {
+      row.classList.toggle("is-selected", selectedIds.has(row.dataset.id));
+    });
+
+    bulkActions?.classList.remove("is-visible");
+
+    if (bulkAssignBtn) {
+      bulkAssignBtn.hidden = true;
+      bulkAssignBtn.removeAttribute("href");
+    }
+
+    if (bulkUnassignBtn) bulkUnassignBtn.hidden = true;
+
+    if (!isBulk || !items.length) {
+      if (bulkSummary) bulkSummary.textContent = "Chưa chọn tài sản nào";
       return;
     }
 
-    if (option) {
+    if (states.length > 1 || states[0] === "other") {
+      if (bulkSummary) bulkSummary.textContent = `Đã chọn ${items.length} tài sản - chỉ chọn cùng trạng thái`;
+      return;
+    }
+
+    if (bulkSummary) bulkSummary.textContent = `Đã chọn ${items.length} tài sản`;
+
+    if (states[0] === "free" && bulkActions && bulkAssignBtn) {
+      bulkActions.classList.add("is-visible");
+      bulkAssignBtn.hidden = false;
+      bulkAssignBtn.href = buildAssignUrl(items);
+    }
+
+    if (states[0] === "using" && bulkActions && bulkUnassignBtn) {
+      bulkActions.classList.add("is-visible");
+      bulkUnassignBtn.hidden = false;
+    }
+  }
+
+  async function bulkUnassign() {
+    const btn = $("#bulkUnassignBtn");
+    const items = selectedRows();
+    const states = [...new Set(items.map(row => row.dataset.state))];
+
+    if (!items.length) {
+      return notify("warning", "Chưa chọn tài sản", "Vui lòng chọn ít nhất một tài sản để thu hồi.");
+    }
+
+    if (states.length !== 1 || states[0] !== "using") {
+      return notify("error", "Không thể thu hồi", "Chỉ được chọn các tài sản đang sử dụng.");
+    }
+
+    const ok = await askConfirm({
+      title: "Xác nhận thu hồi nhiều",
+      confirmText: "Thu hồi",
+      message: `Bạn có chắc muốn thu hồi ${items.length} tài sản đã chọn không?`
+    });
+
+    if (!ok) return;
+
+    const forms = items.map(row => $(".js-unassign-form", row)).filter(Boolean);
+
+    if (!forms.length) {
+      return notify("error", "Không thể thu hồi", "Không tìm thấy biểu mẫu thu hồi.");
+    }
+
+    try {
+      if (btn) btn.disabled = true;
+
+      for (const itemForm of forms) {
+        await fetch(itemForm.action, {
+          method: "POST",
+          body: new FormData(itemForm),
+          credentials: "same-origin",
+          headers: { "X-Requested-With": "fetch" }
+        });
+      }
+
+      notify("success", "Thu hồi thành công", `Đã thu hồi ${forms.length} tài sản.`);
+      loadAssignTable(location.href, false);
+    } catch {
+      notify("error", "Thu hồi không thành công", "Vui lòng thử lại sau.");
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  $$(".filter-select").forEach(select => {
+    const button = select.querySelector(".filter-select__button");
+    const menu = select.querySelector(".filter-select__menu");
+    const input = select.querySelector('input[type="hidden"]');
+    const label = select.querySelector(".filter-select__label");
+    const count = select.querySelector(".filter-select__count");
+
+    if (!button || !menu || !input || !label) return;
+
+    button.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
 
-      const select = option.closest(".filter-select");
-      const input = select.querySelector('input[type="hidden"]');
-      const label = select.querySelector(".filter-select__label");
-      const count = select.querySelector(".filter-select__count");
+      const isOpen = menu.classList.contains(openedClass);
+      closeMenus(menu);
+      menu.classList.toggle(openedClass, !isOpen);
+    });
 
-      input.value = option.dataset.value || "Tất cả";
-      label.textContent = option.querySelector(".filter-select__option-label")?.textContent.trim() || input.value;
+    select.querySelectorAll(".filter-select__option").forEach(option => {
+      option.addEventListener("click", () => {
+        const optionLabel = option.querySelector(".filter-select__option-label");
+        const optionCount = option.querySelector(".filter-select__option-count");
 
-      if (count) {
-        count.textContent = option.querySelector(".filter-select__option-count")?.textContent.trim() || "";
-      }
+        input.value = option.dataset.value || "Tất cả";
+        label.textContent = optionLabel ? optionLabel.textContent.trim() : input.value;
+
+        if (count && optionCount) count.textContent = optionCount.textContent.trim();
+
+        closeMenus();
+        submitFilterNow();
+      });
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", submitFilterDebounced);
+  }
+
+  if (form) {
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      submitFilterNow();
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", event => {
+      event.preventDefault();
+      resetFilters();
+      closeMenus();
+      loadAssignTable(form.action, true);
+    });
+  }
+
+  document.addEventListener("change", event => {
+    if (event.target.closest("#bulkModeToggle")) updateBulk();
+  });
+
+  document.addEventListener("click", async event => {
+    const pageBtn = event.target.closest(".table-container .page-btn:not(.disabled)");
+    const pickerBtn = event.target.closest("#assignPickerBtn");
+    const row = event.target.closest(".assign-row");
+    const bulkUnassignBtn = event.target.closest("#bulkUnassignBtn");
+    const actionBtn = event.target.closest(".action-menu__trigger");
+    const unassignForm = event.target.closest(".js-unassign-form");
+
+    if (pageBtn && pageBtn.tagName === "A") {
+      event.preventDefault();
+      loadAssignTable(pageBtn.href, true);
+      return;
+    }
+
+    if (pickerBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMenus();
+      return;
+    }
+
+    if (row && $("#bulkModeToggle")?.checked && !event.target.closest(".action-menu")) {
+      event.preventDefault();
+
+      selectedIds.has(row.dataset.id)
+        ? selectedIds.delete(row.dataset.id)
+        : selectedIds.add(row.dataset.id);
 
       closeMenus();
-      submitFilter();
+      updateBulk();
+      return;
+    }
+
+    if (bulkUnassignBtn) {
+      event.preventDefault();
+      bulkUnassign();
       return;
     }
 
@@ -435,15 +724,31 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault();
       event.stopPropagation();
 
-      const dropdown = actionBtn.closest(".action-menu").querySelector(".action-menu__dropdown");
-      const opened = dropdown.classList.contains("show");
+      const dropdown = $(".action-menu__dropdown", actionBtn.closest(".action-menu"));
+      const opened = dropdown?.classList.contains(openedClass);
 
       closeMenus();
 
-      if (!opened) {
-        dropdown.classList.add("show");
+      if (!opened && dropdown) {
+        dropdown.classList.add(openedClass);
         actionBtn.setAttribute("aria-expanded", "true");
-        positionActionMenu(actionBtn, dropdown);
+
+        const rect = actionBtn.getBoundingClientRect();
+        const gap = 8;
+        const pad = 12;
+        const width = dropdown.offsetWidth || 190;
+        const height = dropdown.offsetHeight || 120;
+
+        let left = rect.right - width;
+        let top = rect.bottom + gap;
+
+        if (left < pad) left = pad;
+        if (left + width > innerWidth - pad) left = innerWidth - width - pad;
+        if (top + height > innerHeight - pad) top = rect.top - height - gap;
+        if (top < pad) top = pad;
+
+        dropdown.style.left = `${left}px`;
+        dropdown.style.top = `${top}px`;
       }
 
       return;
@@ -451,47 +756,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (unassignForm) {
       event.preventDefault();
+      closeMenus();
 
-      const assetCode = unassignForm.dataset.assetCode || "---";
-      const assetName = unassignForm.dataset.assetName || "---";
-      const receiver = unassignForm.dataset.receiver || "---";
+      const ok = await askConfirm({
+        title: "Xác nhận thu hồi",
+        confirmText: "Thu hồi",
+        message: "Bạn có chắc muốn thu hồi tài sản này không?"
+      });
 
-      const message =
-        "Bạn có chắc muốn thu hồi tài sản này không?\n\n" +
-        "Mã tài sản: #" + assetCode + "\n" +
-        "Tên tài sản: " + assetName + "\n" +
-        "Người đang sử dụng: " + receiver;
-
-      let confirmed = confirm(message);
-
-      if (typeof window.toastConfirm === "function") {
-        confirmed = await window.toastConfirm({
-          type: "warning",
-          title: "Xác nhận thu hồi",
-          message,
-          confirmText: "Thu hồi",
-          cancelText: "Hủy",
-          danger: true,
-          closeOnBackdrop: false,
-          closeOnEsc: true
-        });
-      }
-
-      if (confirmed) unassignForm.submit();
+      if (ok) unassignForm.submit();
       return;
     }
 
-    if (!event.target.closest(".filter-select") && !event.target.closest(".action-menu")) {
+    if (!event.target.closest(".filter-select, .assign-asset-picker, .assign-bulk-actions, .action-menu")) {
       closeMenus();
     }
   });
 
-  window.addEventListener("resize", closeMenus);
-  window.addEventListener("scroll", closeMenus, true);
-
-  document.addEventListener("keydown", function (event) {
+  document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeMenus();
   });
+
+  updateClearButton();
+  updateBulk();
 });
 </script>
 {% endblock %}

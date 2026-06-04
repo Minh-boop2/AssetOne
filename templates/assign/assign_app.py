@@ -1,4 +1,3 @@
-
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
 
 from .assign_backend import (
@@ -13,6 +12,7 @@ from .assign_backend import (
     get_inventory_from_assets_api,
     get_active_users_from_api,
     assign_asset_to_user_api,
+    assign_many_assets_to_user_api,
     unassign_asset_from_user_api,
 )
 
@@ -160,6 +160,60 @@ def get_status_class(status):
         return "status-reject"
 
     return "status-dangxuly"
+
+
+def split_asset_ids(raw_ids="", fallback_id=""):
+    asset_ids = []
+
+    for value in str(raw_ids or "").split(","):
+        value = value.strip()
+        if value and value not in asset_ids:
+            asset_ids.append(value)
+
+    if fallback_id and fallback_id not in asset_ids:
+        asset_ids.insert(0, fallback_id)
+
+    return asset_ids
+
+
+def get_asset_ids_for_give(default_id):
+    raw_ids = (
+        request.form.get("asset_ids", "").strip()
+        if request.method == "POST"
+        else request.args.get("ids", "").strip()
+    )
+
+    asset_ids = split_asset_ids(raw_ids, fallback_id=default_id)
+
+    if request.method == "POST":
+        for extra_id in request.form.getlist("asset_id_list"):
+            extra_id = str(extra_id or "").strip()
+            if extra_id and extra_id not in asset_ids:
+                asset_ids.append(extra_id)
+
+    return asset_ids
+
+
+def load_assign_assets(asset_ids):
+    assets = []
+    errors = []
+
+    for asset_id in asset_ids:
+        info, error = api_request("GET", f"/api/assign/{asset_id}")
+
+        if error or not info:
+            errors.append(error or f"Không tìm thấy tài sản #{asset_id}")
+        else:
+            assets.append(info)
+
+    return assets, errors
+
+
+def build_give_redirect_url(id, asset_ids):
+    if len(asset_ids) <= 1:
+        return url_for("assign_give", id=id)
+
+    return url_for("assign_give", id=id, ids=",".join(asset_ids))
 
 
 def build_assign_row_payload(row):
@@ -474,42 +528,60 @@ def register_assign_routes(app):
         if permission_redirect:
             return permission_redirect
 
-        info, error = api_request("GET", f"/api/assign/{id}")
+        asset_ids = get_asset_ids_for_give(id)
+        assets, errors = load_assign_assets(asset_ids)
 
-        if error or not info:
-            flash(error or "Không tìm thấy tài sản cần cấp phát.", "danger")
+        if errors or not assets:
+            flash(
+                errors[0] if errors else "Không tìm thấy tài sản cần cấp phát.",
+                "danger",
+            )
             return redirect(url_for("assign_page"))
 
-        allow_assign = can_assign_asset(info)
+        info = assets[0]
+        allow_assign = all(can_assign_asset(item) for item in assets)
+        is_bulk_assign = len(asset_ids) > 1
 
         if request.method == "POST":
             user_id = request.form.get("user_id", "").strip()
 
             if not allow_assign:
                 flash(
-                    "Tài sản này không ở trạng thái Chưa dùng nên không thể cấp phát.",
+                    "Một hoặc nhiều tài sản không ở trạng thái Chưa dùng nên không thể cấp phát.",
                     "danger",
                 )
-                return redirect(url_for("assign_page"))
+                return redirect(build_give_redirect_url(id, asset_ids))
 
             if not user_id:
                 flash("Vui lòng chọn người dùng nhận tài sản.", "warning")
-                return redirect(url_for("assign_give", id=id))
+                return redirect(build_give_redirect_url(id, asset_ids))
 
-            success, result = assign_asset_to_user_api(id, user_id)
+            success, result = assign_many_assets_to_user_api(asset_ids, user_id)
 
             if not success:
-                flash(result.get("message", "Cấp phát tài sản thất bại."), "danger")
-                return redirect(url_for("assign_give", id=id))
+                flash(
+                    f"Đã cấp phát {result.get('success_count', 0)} tài sản, "
+                    f"còn {result.get('failed_count', 0)} tài sản thất bại.",
+                    "warning",
+                )
+                return redirect(build_give_redirect_url(id, asset_ids))
 
-            flash("Cấp phát tài sản thành công.", "success")
+            flash(
+                f"Cấp phát thành công {len(asset_ids)} tài sản."
+                if is_bulk_assign
+                else "Cấp phát tài sản thành công.",
+                "success",
+            )
             return redirect(url_for("assign_page"))
 
         return render_template(
             "assign/assign_give.html",
             info=info,
+            assets=assets,
             users=[],
             allow_assign=allow_assign,
+            is_bulk_assign=is_bulk_assign,
+            selected_asset_ids=",".join(asset_ids),
             **assign_permission_context(),
         )
 
