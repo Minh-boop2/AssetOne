@@ -29,6 +29,37 @@ DEFAULT_ROLE_OPTIONS = [
 ]
 
 
+# Các field có thể được template/JS dùng để gửi nhiều tài sản.
+# Backend API đã hỗ trợ các tên này, nhưng frontend proxy cần giữ đủ nhiều value
+# thay vì ép MultiDict thành dict thường làm mất lựa chọn.
+ASSET_FORM_FIELDS = [
+    "asset_ids",
+    "asset_codes",
+    "assets",
+    "selected_assets",
+    "selected_asset_ids",
+    "selected_asset_codes",
+    "asset_id",
+    "asset_code",
+    "asset",
+]
+
+ASSET_ID_LIKE_FIELDS = [
+    "asset_ids",
+    "selected_asset_ids",
+    "assets",
+    "selected_assets",
+    "asset_id",
+    "asset",
+]
+
+ASSET_CODE_LIKE_FIELDS = [
+    "asset_codes",
+    "selected_asset_codes",
+    "asset_code",
+]
+
+
 def _clean(value):
     return str(value or "").strip()
 
@@ -60,6 +91,126 @@ def _unique(values):
             result.append(value)
 
     return result
+
+
+def _flatten_values(value):
+    values = []
+
+    if value is None:
+        return values
+
+    if isinstance(value, dict):
+        for key in [
+            "asset_id",
+            "id",
+            "_id",
+            "asset_code",
+            "code",
+            "value",
+            "asset",
+        ]:
+            if value.get(key) not in [None, ""]:
+                values.extend(_flatten_values(value.get(key)))
+                break
+
+        return values
+
+    if isinstance(value, (list, tuple, set)):
+        for item in value:
+            values.extend(_flatten_values(item))
+
+        return values
+
+    text = _clean(value)
+
+    if not text:
+        return values
+
+    # Frontend có thể gửi một chuỗi "A1,A2" hoặc "A1;A2".
+    # Tách tại đây để luôn gửi xuống backend dạng chuẩn.
+    for part in re.split(r"[,;]", text):
+        part = _clean(part)
+
+        if part:
+            values.append(part)
+
+    return values
+
+
+def _join_values(value, separator=", "):
+    values = _unique(_flatten_values(value))
+
+    if values:
+        return separator.join(values)
+
+    return _clean(value)
+
+
+def _get_form_values(form_data, key):
+    if not form_data:
+        return []
+
+    if hasattr(form_data, "getlist"):
+        try:
+            return form_data.getlist(key)
+        except Exception:
+            pass
+
+    if isinstance(form_data, dict):
+        value = form_data.get(key)
+
+        if isinstance(value, (list, tuple, set)):
+            return list(value)
+
+        if value not in [None, ""]:
+            return [value]
+
+    return []
+
+
+def _collect_form_values(form_data, fields):
+    values = []
+
+    for field in fields:
+        for value in _get_form_values(form_data, field):
+            values.extend(_flatten_values(value))
+
+    return _unique(values)
+
+
+def _build_report_form_payload(form_data):
+    # Giữ các field bình thường như report_name/report_type/description...
+    # Với MultiDict, items() chỉ lấy một giá trị đại diện cho mỗi key,
+    # sau đó các field tài sản sẽ được xử lý riêng bằng getlist().
+    if hasattr(form_data, "items"):
+        data = {
+            key: value
+            for key, value in form_data.items()
+        }
+    elif isinstance(form_data, dict):
+        data = dict(form_data)
+    else:
+        data = {}
+
+    # Giữ đủ nhiều value cho từng field tài sản nếu template gửi dạng multiple.
+    for field in ASSET_FORM_FIELDS:
+        values = _collect_form_values(form_data, [field])
+
+        if values:
+            data[field] = ",".join(values)
+
+    # Gửi thêm field chuẩn asset_ids/asset_codes để backend service chắc chắn đọc được,
+    # dù template đang dùng asset_id, selected_asset_ids, assets...
+    asset_id_values = _collect_form_values(form_data, ASSET_ID_LIKE_FIELDS)
+    asset_code_values = _collect_form_values(form_data, ASSET_CODE_LIKE_FIELDS)
+
+    if asset_id_values:
+        data["asset_ids"] = ",".join(asset_id_values)
+
+    if asset_code_values:
+        data["asset_codes"] = ",".join(asset_code_values)
+
+    return data
 
 
 def _now_text():
@@ -374,18 +525,34 @@ def _normalize_asset(item):
     if not isinstance(item, dict):
         item = {}
 
+    asset_id = _clean(_first(item, "id", "_id", "asset_id", "value"))
+    asset_code = _clean(_first(item, "asset_code", "code"))
+    asset_name = _clean(_first(item, "asset_name", "asset", "name"))
+
+    value = _clean(_first(item, "value", "id", "_id", "asset_id", "asset_code", "code"))
+    label = _clean(item.get("label"))
+
+    if not label:
+        if asset_code and asset_name:
+            label = f"{asset_code} - {asset_name}"
+        else:
+            label = asset_name or asset_code or value
+
     return {
-        "id": _clean(_first(item, "id", "_id")),
-        "code": _clean(_first(item, "code", "asset_code")),
-        "asset_code": _clean(_first(item, "asset_code", "code")),
-        "name": _clean(_first(item, "name", "asset_name", "asset")),
-        "asset_name": _clean(_first(item, "asset_name", "asset", "name")),
+        "id": asset_id or asset_code,
+        "value": value or asset_id or asset_code,
+        "code": asset_code,
+        "asset_code": asset_code,
+        "name": asset_name,
+        "asset_name": asset_name,
+        "label": label,
         "type": _clean(_first(item, "type", "category")),
         "category": _clean(_first(item, "category", "type")),
         "department": _clean(_first(item, "department", "dept")),
         "location": _clean(_first(item, "location", "floor", "place")),
         "status": _clean(item.get("status")),
         "user": _clean(_first(item, "user", "receiver")),
+        "receiver": _clean(_first(item, "receiver", "user")),
         "employee_code": _clean(item.get("employee_code")),
     }
 
@@ -430,9 +597,9 @@ def normalize_report(item, index=0):
 
     asset_code = _clean(_first(item, "asset_code", "code"))
 
-    asset_names = _clean(item.get("asset_names"))
-    asset_codes = _clean(item.get("asset_codes"))
-    asset_ids = _clean(item.get("asset_ids"))
+    asset_names = _join_values(item.get("asset_names"))
+    asset_codes = _join_values(item.get("asset_codes"))
+    asset_ids = _join_values(item.get("asset_ids"))
 
     reporter = _clean(
         _first(
@@ -514,9 +681,9 @@ def api_get_report_detail(report_id):
 
 
 def api_create_report(form_data, uploaded_files=None):
-    data = dict(form_data or {})
+    data = _build_report_form_payload(form_data)
 
-    if data.get("report_code") == "Report-000000":
+    if data.get("report_code") in ["Report-000000", "REPORT-000000"]:
         data.pop("report_code", None)
 
     files = _build_files_payload(uploaded_files)
@@ -898,7 +1065,7 @@ def search_report_assets(keyword):
             "message": payload.get("message", "Không lấy được danh sách tài sản."),
         }
 
-    raw_items = payload.get("data") or payload.get("items") or []
+    raw_items = payload.get("data") or payload.get("items") or payload.get("assets") or []
     results = []
     seen = set()
 

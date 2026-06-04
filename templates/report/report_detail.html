@@ -246,7 +246,7 @@
 
                         <div class="report-detail-section report-detail-section--related-assets">
                             <div class="report-detail-section-title report-detail-section-title--soft">
-                                <span>Tài sản liên quan</span>
+                                <span>Tài sản trong báo cáo</span>
                             </div>
 
                             <div class="report-detail-related-list"
@@ -255,8 +255,9 @@
                                 data-department="{{ dept }}"
                                 data-location="{{ loc }}"
                                 data-overview-url="{{ url_for('report_page') }}"
-                                data-asset-names="{{ asset_names }}"
-                                data-asset-codes="{{ asset_codes }}">
+                                data-assets='{{ report.assets|default([], true)|tojson|e }}'
+                                data-asset-names="{{ asset_names|e }}"
+                                data-asset-codes="{{ asset_codes|e }}">
                                 <div class="report-detail-asset-card">
                                     <div class="report-detail-asset-icon">{{ icon_box() }}</div>
                                     <div class="report-detail-asset-info">
@@ -352,10 +353,77 @@ document.addEventListener("DOMContentLoaded", () => {
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 
-    const splitData = value => String(value || "")
-        .split("|")
-        .map(item => item.trim())
-        .filter(Boolean);
+    const cleanAssetToken = value => String(value || "")
+        .trim()
+        .replace(/^\[+|\]+$/g, "")
+        .replace(/^[(]+|[)]+$/g, "")
+        .replace(/^["']+|["']+$/g, "")
+        .trim();
+
+    const decodeText = value => String(value || "")
+        .replace(/&quot;/g, '"')
+        .replace(/&#34;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&apos;/g, "'");
+
+    const splitData = value => {
+        if (Array.isArray(value)) {
+            return value
+                .flatMap(item => splitData(item))
+                .map(cleanAssetToken)
+                .filter(Boolean);
+        }
+
+        let text = decodeText(value).trim();
+
+        if (!text) return [];
+
+        if (/^\[.*\]$/.test(text)) {
+            try {
+                return splitData(JSON.parse(text));
+            } catch {
+                try {
+                    return splitData(JSON.parse(text.replace(/'/g, '"')));
+                } catch {
+                    text = text.replace(/^\[/, "").replace(/\]$/, "");
+                }
+            }
+        }
+
+        return text
+            .split(/\s*(?:\||;|,)\s*/)
+            .map(cleanAssetToken)
+            .filter(Boolean)
+            .filter(item => item !== "[" && item !== "]");
+    };
+
+    function assetsFromJson(value) {
+        const text = decodeText(value).trim();
+
+        if (!text || text === "[]") return [];
+
+        try {
+            const rawAssets = JSON.parse(text);
+
+            if (!Array.isArray(rawAssets)) return [];
+
+            return rawAssets.map(asset => {
+                if (typeof asset === "string") {
+                    return {
+                        name: cleanAssetToken(asset),
+                        code: "Không có mã tài sản"
+                    };
+                }
+
+                return {
+                    name: cleanAssetToken(asset.asset_name || asset.name || asset.asset || asset.label || ""),
+                    code: cleanAssetToken(asset.asset_code || asset.code || asset.id || asset.asset_id || "Không có mã tài sản")
+                };
+            }).filter(asset => asset.name || asset.code);
+        } catch {
+            return [];
+        }
+    }
 
     function showToast(message) {
         const text = $("#reportDetailToastText");
@@ -434,16 +502,26 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.add("is-show");
     }
 
-    function assetsFrom(namesRaw, codesRaw) {
+    function assetsFrom(namesRaw, codesRaw, assetsRaw = "") {
+        const assets = assetsFromJson(assetsRaw);
+
+        if (assets.length) return assets;
+
         const names = splitData(namesRaw);
         const codes = splitData(codesRaw);
+        const max = Math.max(names.length, codes.length);
 
-        if (!names.length && String(namesRaw || "").trim()) names.push(String(namesRaw).trim());
+        if (!max) return [];
 
-        return names.map((name, index) => ({
-            name,
-            code: codes[index] || codes[0] || "Không có mã tài sản"
-        }));
+        return Array.from({ length: max }, (_, index) => {
+            const name = names[index] || codes[index] || "Tài sản chưa có tên";
+            const code = codes[index] || "Không có mã tài sản";
+
+            return {
+                name,
+                code
+            };
+        });
     }
 
     function renderAssets(items) {
@@ -481,86 +559,18 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    function parseRows(doc) {
-        return $$(".report-table-data-source [data-report-row]", doc).map(row => ({
-            reporter: row.dataset.reporter || "",
-            department: row.dataset.department || "",
-            location: row.dataset.location || "",
-            assetNames: row.dataset.assetNames || "",
-            assetCodes: row.dataset.assetCodes || ""
-        }));
-    }
-
-    function totalPages(doc) {
-        const match = (doc.body?.innerText || "").match(/Trang\s+\d+\s*\/\s*(\d+)/i);
-        return Math.max(1, Number(match?.[1] || 1));
-    }
-
-    async function fetchPage(page) {
-        const url = new URL(relatedBox?.dataset.overviewUrl || "/report", location.origin);
-        url.searchParams.set("page", page);
-
-        const res = await fetch(url, {
-            headers: { Accept: "text/html" },
-            credentials: "same-origin"
-        });
-
-        return res.ok ? new DOMParser().parseFromString(await res.text(), "text/html") : null;
-    }
-
-    async function loadRelatedAssets() {
+    function loadRelatedAssets() {
         if (!relatedBox) return;
 
-        const baseAssets = assetsFrom(relatedBox.dataset.assetNames, relatedBox.dataset.assetCodes);
-        const cacheKey = [
-            "report-assets",
-            norm(relatedBox.dataset.reporter),
-            norm(relatedBox.dataset.department),
-            norm(relatedBox.dataset.location)
-        ].join(":");
+        // Chỉ hiển thị tài sản thuộc CHÍNH báo cáo đang xem.
+        // Không quét /report và không cộng thêm tài sản từ các báo cáo khác của cùng người/phòng ban/vị trí.
+        const currentReportAssets = assetsFrom(
+            relatedBox.dataset.assetNames,
+            relatedBox.dataset.assetCodes,
+            relatedBox.dataset.assets
+        );
 
-        const cached = sessionStorage.getItem(cacheKey);
-
-        if (cached) {
-            try {
-                renderAssets(JSON.parse(cached));
-            } catch {
-                renderAssets(baseAssets);
-            }
-        } else {
-            renderAssets(baseAssets);
-        }
-
-        setTimeout(async () => {
-            try {
-                const first = await fetchPage(1);
-                if (!first) return;
-
-                let rows = parseRows(first);
-                const pages = Math.min(totalPages(first), 100);
-                const docs = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetchPage(i + 2)));
-
-                docs.forEach(doc => {
-                    if (doc) rows = rows.concat(parseRows(doc));
-                });
-
-                const reporter = norm(relatedBox.dataset.reporter);
-                const dept = norm(relatedBox.dataset.department);
-                const loc = norm(relatedBox.dataset.location);
-                const assets = [...baseAssets];
-
-                rows.forEach(row => {
-                    if (norm(row.reporter) === reporter && norm(row.department) === dept && norm(row.location) === loc) {
-                        assets.push(...assetsFrom(row.assetNames, row.assetCodes));
-                    }
-                });
-
-                sessionStorage.setItem(cacheKey, JSON.stringify(assets));
-                renderAssets(assets);
-            } catch (error) {
-                console.warn("Không thể tổng hợp tài sản liên quan:", error);
-            }
-        }, 0);
+        renderAssets(currentReportAssets);
     }
 
     $("#copyReportCodeBtn")?.addEventListener("click", async () => {

@@ -1,5 +1,12 @@
 /* =========================================
-   MANAGE OVERVIEW
+   File: manage.css
+   Nhiệm vụ:
+   - Style trang quản lý nhân sự.
+   - Gồm: tiêu đề, thẻ thống kê, bộ lọc, nút thêm mới, phân trang, toast.
+   - Toast:
+     + warning: vàng cho cập nhật nhân sự
+     + danger/error/ngưng hoạt động/xóa: đỏ
+     + success/cấp lại: xanh
 ========================================= */
 
 .manage-page-container {
@@ -45,10 +52,6 @@
   line-height: 1.35;
 }
 
-/* =========================================
-   STATS
-========================================= */
-
 .manage-stats-grid {
   flex: 0 0 auto;
   width: 100%;
@@ -69,11 +72,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .manage-stat-card:hover {
@@ -169,10 +168,6 @@
   color: var(--hsu-green, #22c55e);
 }
 
-/* =========================================
-   FILTER
-========================================= */
-
 .m-filter-section {
   flex: 0 0 auto;
   width: 100%;
@@ -216,11 +211,37 @@
   text-transform: uppercase;
 }
 
+.m-search-box {
+  position: relative;
+  width: 100%;
+}
+
+.m-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  color: var(--text-soft);
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.m-search-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .m-filter-input,
 .filter-select__button {
   width: 100%;
   height: 37px;
-  padding: 0 13px;
   border: 1px solid var(--border);
   border-radius: 10px;
   outline: none;
@@ -230,6 +251,14 @@
   font-size: 13px;
   font-weight: 600;
   transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.m-filter-input {
+  padding: 0 13px;
+}
+
+.m-filter-input-search {
+  padding-left: 38px;
 }
 
 .m-filter-input::placeholder {
@@ -250,11 +279,33 @@
 }
 
 .filter-select__button {
+  position: relative;
   cursor: pointer;
   text-align: left;
+  padding: 0 36px 0 13px;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.filter-select__button::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-soft);
+  border-bottom: 2px solid var(--text-soft);
+  transform: translateY(-65%) rotate(45deg);
+  opacity: 0.85;
+  transition: 0.18s ease;
+}
+
+.filter-select.is-open .filter-select__button::after {
+  border-color: var(--hsu-blue, #2563eb);
+  transform: translateY(-35%) rotate(225deg);
+  opacity: 1;
 }
 
 .filter-select__label {
@@ -268,6 +319,7 @@
 
 .filter-count {
   margin-left: auto;
+  padding-right: 4px;
   color: var(--text-soft);
   font-size: 12px;
   font-weight: 800;
@@ -292,6 +344,7 @@
 
 .filter-select__menu.show {
   display: block;
+  animation: filterMenuIn 0.18s ease;
 }
 
 .filter-select__option {
@@ -313,7 +366,8 @@
   transition: background 0.16s ease, color 0.16s ease;
 }
 
-.filter-select__option:hover {
+.filter-select__option:hover,
+.filter-select__option.is-selected {
   background: var(--surface-2);
   color: var(--hsu-blue, #2563eb);
 }
@@ -333,10 +387,6 @@
   font-weight: 800;
   flex: 0 0 auto;
 }
-
-/* =========================================
-   FILTER BUTTONS
-========================================= */
 
 .m-filter-clear-btn {
   width: 37px;
@@ -367,7 +417,6 @@
   display: none !important;
 }
 
-/* Nút Thêm mới đã chỉnh nhẹ giống trang cấp phát */
 .m-btn-add {
   height: 37px;
   min-width: 118px;
@@ -389,10 +438,7 @@
   justify-content: center;
   gap: 7px;
   flex: 0 0 auto;
-  transition:
-    transform 0.18s ease,
-    filter 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 
 .m-btn-add:hover {
@@ -407,10 +453,6 @@
   font-weight: 800;
   line-height: 1;
 }
-
-/* =========================================
-   TABLE TYPOGRAPHY
-========================================= */
 
 .manage-page-container .m-overview-card,
 .manage-page-container .m-overview-card * {
@@ -497,10 +539,6 @@
   font-weight: 800;
 }
 
-/* =========================================
-   PAGINATION - ĐÃ CHỈNH GIỐNG TRANG CẤP PHÁT
-========================================= */
-
 .manage-page-container .m-card-footer {
   min-height: 64px;
   padding: 12px 20px 14px;
@@ -582,28 +620,29 @@
   font-weight: 700 !important;
 }
 
-/* =========================================
-   TOAST
-========================================= */
-
+/* Toast dùng chung cho trang quản lý nhân sự */
 .manage-toast {
+  --toast-color: var(--hsu-green, #22c55e);
+  --toast-bg-soft: rgba(34, 197, 94, 0.14);
+
   position: fixed;
   top: 14px;
   right: 18px;
   z-index: 12000;
-  width: min(445px, calc(100vw - 36px));
-  min-height: 64px;
-  padding: 14px 52px 14px 16px;
-  border: 1px solid var(--border, #263449);
-  border-radius: 16px;
+  width: min(420px, calc(100vw - 36px));
+  min-height: 58px;
+  padding: 13px 48px 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--toast-color) 34%, var(--border, #263449));
+  border-left: 4px solid var(--toast-color);
+  border-radius: 14px;
   background: var(--surface, #111827);
   color: var(--text, #f8fafc);
   box-shadow:
-    0 20px 54px rgba(0, 0, 0, 0.34),
+    0 18px 46px rgba(0, 0, 0, 0.26),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
   overflow: hidden;
   animation: manageToastIn 0.22s ease;
 }
@@ -613,10 +652,25 @@
 }
 
 .manage-toast-icon {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 26px;
-  background: var(--toast-color, var(--hsu-green, #4caf50));
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 999px;
+  background: var(--toast-bg-soft);
+  color: var(--toast-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manage-toast-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .manage-toast-content {
@@ -626,16 +680,16 @@
 
 .manage-toast-title {
   color: var(--text, #f8fafc);
-  font-size: 15px;
-  font-weight: 900;
+  font-size: 14px;
+  font-weight: 850;
   line-height: 1.25;
-  letter-spacing: -0.1px;
+  letter-spacing: -0.05px;
 }
 
 .manage-toast-close {
   position: absolute;
-  top: 15px;
-  right: 14px;
+  top: 14px;
+  right: 12px;
   width: 28px;
   height: 28px;
   border: none;
@@ -643,7 +697,7 @@
   background: transparent;
   color: var(--text-soft, #94a3b8);
   cursor: pointer;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 300;
   line-height: 1;
   display: inline-flex;
@@ -661,28 +715,27 @@
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 4px;
+  height: 3px;
   width: 100%;
-  background: var(--toast-color, var(--hsu-green, #4caf50));
+  background: var(--toast-color);
   transform-origin: left center;
   animation: manageToastProgress var(--toast-duration, 2800ms) linear forwards;
 }
 
 .manage-toast-success {
-  --toast-color: var(--hsu-green, #4caf50);
+  --toast-color: var(--hsu-green, #22c55e);
+  --toast-bg-soft: rgba(34, 197, 94, 0.14);
 }
 
 .manage-toast-danger {
   --toast-color: var(--hsu-red, #ef4444);
+  --toast-bg-soft: rgba(239, 68, 68, 0.14);
 }
 
 .manage-toast-warning {
   --toast-color: #f6c94a;
+  --toast-bg-soft: rgba(246, 201, 74, 0.16);
 }
-
-/* =========================================
-   SCROLLBAR
-========================================= */
 
 .filter-select__menu::-webkit-scrollbar {
   width: 8px;
@@ -701,9 +754,17 @@
   background: var(--text-soft);
 }
 
-/* =========================================
-   ANIMATION
-========================================= */
+@keyframes filterMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 @keyframes manageToastIn {
   from {
@@ -733,10 +794,6 @@
     transform: scaleX(0);
   }
 }
-
-/* =========================================
-   RESPONSIVE
-========================================= */
 
 @media (max-width: 1366px) {
   .manage-page-container {
@@ -869,8 +926,8 @@
     top: 12px;
     right: 12px;
     width: calc(100vw - 24px);
-    min-height: 64px;
-    padding: 14px 50px 14px 15px;
+    min-height: 60px;
+    padding: 13px 48px 13px 14px;
   }
 
   .manage-toast-title {

@@ -1,7 +1,18 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}?v=43">
+<!--
+  File: manage_overview.html
+  Nhiệm vụ:
+  - Hiển thị trang quản lý nhân sự.
+  - Có thống kê tổng quan, bộ lọc, bảng nhân sự.
+  - Toast sau thao tác dùng chung một mẫu:
+    + warning: vàng cho cập nhật nhân sự
+    + danger/error/ngưng hoạt động/xóa: đỏ
+    + success/cấp lại: xanh
+-->
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}?v=46">
 
 {% macro stat_icon(type) %}
   {% if type == 'users' %}
@@ -30,6 +41,8 @@
 {% endmacro %}
 
 {% set has_filter = (search_q and search_q|trim) or (selected_dept and selected_dept != 'Tất cả') or (selected_role and selected_role != 'Tất cả') or (selected_floor and selected_floor != 'Tất cả') or (selected_status and selected_status != 'Tất cả') %}
+{% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
+{% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
 
 <section class="manage-page-container">
   <div class="assets-page__header">
@@ -73,25 +86,33 @@
     </div>
   </div>
 
-  {% set role_filter_label = selected_role_label if selected_role_label is defined else (selected_role if selected_role and selected_role != 'Tất cả' else 'Tất cả chức vụ') %}
-  {% set status_filter_label = selected_status_label if selected_status_label is defined else (selected_status if selected_status and selected_status != 'Tất cả' else 'Tất cả trạng thái') %}
-
   <div class="m-filter-section">
     <form action="{{ url_for('manage') }}" method="GET" id="filterForm" class="m-filter-form">
       <div class="m-filter-group m-filter-group-search">
         <label class="m-filter-label">Tìm kiếm</label>
-        <input
-          type="text"
-          name="search"
-          value="{{ search_q or '' }}"
-          placeholder="Tên, ID hoặc email..."
-          class="m-filter-input"
-          autocomplete="off"
-        >
+
+        <div class="m-search-box">
+          <span class="m-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="m20 20-3.5-3.5"></path>
+            </svg>
+          </span>
+
+          <input
+            type="text"
+            name="search"
+            value="{{ search_q or '' }}"
+            placeholder="Tên, ID hoặc email..."
+            class="m-filter-input m-filter-input-search"
+            autocomplete="off"
+          >
+        </div>
       </div>
 
       <div class="m-filter-group">
         <label class="m-filter-label">Phòng ban</label>
+
         <div class="filter-select">
           <input type="hidden" name="department" value="{{ selected_dept or 'Tất cả' }}">
 
@@ -122,6 +143,7 @@
 
       <div class="m-filter-group">
         <label class="m-filter-label">Chức vụ</label>
+
         <div class="filter-select">
           <input type="hidden" name="role" value="{{ selected_role or 'Tất cả' }}">
 
@@ -141,6 +163,7 @@
             {% for r in roles %}
               {% set r_value = r.value if r.value is defined else r %}
               {% set r_label = r.label if r.label is defined else r %}
+
               <button type="button" class="filter-select__option" data-value="{{ r_value }}">
                 <span class="opt-label">{{ r_label }}</span>
                 <span class="opt-count">{{ role_counts.get(r_value, 0) }}</span>
@@ -152,6 +175,7 @@
 
       <div class="m-filter-group">
         <label class="m-filter-label">Vị trí</label>
+
         <div class="filter-select">
           <input type="hidden" name="floor" value="{{ selected_floor or 'Tất cả' }}">
 
@@ -182,6 +206,7 @@
 
       <div class="m-filter-group">
         <label class="m-filter-label">Trạng thái</label>
+
         <div class="filter-select">
           <input type="hidden" name="status" value="{{ selected_status or 'Tất cả' }}">
 
@@ -201,6 +226,7 @@
             {% for s in user_status %}
               {% set s_value = s.value if s.value is defined else s %}
               {% set s_label = s.label if s.label is defined else s %}
+
               <button type="button" class="filter-select__option" data-value="{{ s_value }}">
                 <span class="opt-label">{{ s_label }}</span>
                 <span class="opt-count">{{ status_counts.get(s_value, 0) }}</span>
@@ -230,278 +256,347 @@
 </section>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("filterForm");
-    const searchInput = form ? form.querySelector('input[name="search"]') : null;
-    const clearBtn = document.querySelector(".m-filter-clear-btn");
-    const openedClass = "show";
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("filterForm");
+  const searchInput = form ? form.querySelector('input[name="search"]') : null;
+  const clearBtn = document.querySelector(".m-filter-clear-btn");
+  const openedClass = "show";
 
-    let debounceTimer = null;
-    let activeController = null;
+  let debounceTimer = null;
+  let activeController = null;
 
-    function getToastColor(type) {
-      if (type === "danger" || type === "error" || type === "delete") return "danger";
-      if (type === "warning") return "warning";
-      return "success";
+  // Chuẩn hóa type toast:
+  // - Cập nhật nhân sự -> warning vàng.
+  // - Ngưng hoạt động / xóa -> danger đỏ.
+  // - Cấp lại / mở hoạt động -> success xanh.
+  function normalizeToastType(type, message) {
+    const cleanType = String(type || "").toLowerCase();
+    const text = String(message || "").toLowerCase();
+
+    if (
+      cleanType === "warning" ||
+      text.includes("cập nhật nhân sự") ||
+      text.includes("lưu thay đổi")
+    ) {
+      return "warning";
     }
 
-    function showManageToast(message, type) {
-      const toastType = getToastColor(type || "success");
-      const duration = 2800;
+    if (
+      cleanType === "danger" ||
+      cleanType === "error" ||
+      cleanType === "delete" ||
+      cleanType === "inactive" ||
+      cleanType === "stop" ||
+      text.includes("ngừng hoạt động") ||
+      text.includes("ngưng hoạt động") ||
+      text.includes("đã ngưng") ||
+      text.includes("xóa")
+    ) {
+      return "danger";
+    }
 
-      document.querySelectorAll(".manage-toast").forEach(function (toast) {
+    return "success";
+  }
+
+  // Icon toast theo type
+  function getToastIcon(type) {
+    if (type === "danger") {
+      return '<svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+    }
+
+    if (type === "warning") {
+      return '<svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>';
+    }
+
+    return '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>';
+  }
+
+  // Hiển thị toast chung cho trang quản lý
+  function showManageToast(message, type) {
+    const toastType = normalizeToastType(type || "success", message);
+    const duration = 2800;
+
+    document.querySelectorAll(".manage-toast").forEach(function (toast) {
+      toast.remove();
+    });
+
+    const toast = document.createElement("div");
+    toast.className = "manage-toast manage-toast-" + toastType;
+    toast.style.setProperty("--toast-duration", duration + "ms");
+
+    const icon = document.createElement("div");
+    icon.className = "manage-toast-icon";
+    icon.innerHTML = getToastIcon(toastType);
+
+    const content = document.createElement("div");
+    content.className = "manage-toast-content";
+
+    const title = document.createElement("div");
+    title.className = "manage-toast-title";
+    title.textContent = message || "Thao tác thành công";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "manage-toast-close";
+    closeBtn.setAttribute("aria-label", "Đóng thông báo");
+    closeBtn.textContent = "×";
+
+    const progress = document.createElement("div");
+    progress.className = "manage-toast-progress";
+
+    content.appendChild(title);
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    toast.appendChild(closeBtn);
+    toast.appendChild(progress);
+    document.body.appendChild(toast);
+
+    function closeToast() {
+      if (toast.classList.contains("is-leaving")) return;
+
+      toast.classList.add("is-leaving");
+
+      setTimeout(function () {
         toast.remove();
-      });
-
-      const toast = document.createElement("div");
-      toast.className = "manage-toast manage-toast-" + toastType;
-      toast.style.setProperty("--toast-duration", duration + "ms");
-
-      const icon = document.createElement("div");
-      icon.className = "manage-toast-icon";
-
-      const content = document.createElement("div");
-      content.className = "manage-toast-content";
-
-      const title = document.createElement("div");
-      title.className = "manage-toast-title";
-      title.textContent = message || "Thao tác thành công";
-
-      const closeBtn = document.createElement("button");
-      closeBtn.type = "button";
-      closeBtn.className = "manage-toast-close";
-      closeBtn.setAttribute("aria-label", "Đóng thông báo");
-      closeBtn.textContent = "×";
-
-      const progress = document.createElement("div");
-      progress.className = "manage-toast-progress";
-
-      content.appendChild(title);
-      toast.appendChild(icon);
-      toast.appendChild(content);
-      toast.appendChild(closeBtn);
-      toast.appendChild(progress);
-      document.body.appendChild(toast);
-
-      const closeToast = function () {
-        if (toast.classList.contains("is-leaving")) return;
-
-        toast.classList.add("is-leaving");
-
-        setTimeout(function () {
-          toast.remove();
-        }, 180);
-      };
-
-      closeBtn.addEventListener("click", closeToast);
-      setTimeout(closeToast, duration);
+      }, 180);
     }
 
-    function showStoredManageToast() {
-      const rawToast = sessionStorage.getItem("manage_toast");
-      if (!rawToast) return;
+    closeBtn.addEventListener("click", closeToast);
+    setTimeout(closeToast, duration);
+  }
 
-      sessionStorage.removeItem("manage_toast");
+  // Lấy toast lưu tạm sau redirect
+  function showStoredManageToast() {
+    const rawToast = sessionStorage.getItem("manage_toast");
+    if (!rawToast) return;
 
-      let toastData = {
-        type: "success",
-        message: "Thao tác thành công"
-      };
+    sessionStorage.removeItem("manage_toast");
 
-      try {
-        toastData = JSON.parse(rawToast);
-      } catch (error) {
-        toastData.message = rawToast;
+    let toastData = {
+      type: "success",
+      message: "Thao tác thành công"
+    };
+
+    try {
+      toastData = JSON.parse(rawToast);
+    } catch (error) {
+      toastData.message = rawToast;
+    }
+
+    showManageToast(toastData.message, toastData.type);
+  }
+
+  function closeFilterMenus(exceptMenu) {
+    document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
+      if (menu !== exceptMenu) {
+        menu.classList.remove(openedClass);
       }
-
-      showManageToast(toastData.message, toastData.type);
-    }
-
-    function closeFilterMenus(exceptMenu) {
-      document.querySelectorAll(".filter-select__menu").forEach(function (menu) {
-        if (menu !== exceptMenu) menu.classList.remove(openedClass);
-      });
-    }
-
-    function hasActiveFilter() {
-      if (!form) return false;
-
-      const params = new URLSearchParams(new FormData(form));
-
-      for (const [key, value] of params.entries()) {
-        const cleanValue = String(value || "").trim();
-
-        if (key === "search" && cleanValue) return true;
-        if (key !== "search" && cleanValue && cleanValue !== "Tất cả") return true;
-      }
-
-      return false;
-    }
-
-    function updateClearButton() {
-      if (!clearBtn) return;
-      clearBtn.classList.toggle("is-hidden", !hasActiveFilter());
-    }
-
-    function buildManageUrl(page) {
-      const params = new URLSearchParams(new FormData(form));
-
-      if (page) {
-        params.set("page", page);
-      } else {
-        params.delete("page");
-      }
-
-      Array.from(params.entries()).forEach(function ([key, value]) {
-        if (!value || value === "Tất cả") params.delete(key);
-      });
-
-      const query = params.toString();
-      return form.action + (query ? "?" + query : "");
-    }
-
-    async function loadManageTable(url, pushState) {
-      if (!form) return;
-
-      if (activeController) activeController.abort();
-      activeController = new AbortController();
-
-      try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: { "X-Requested-With": "fetch" },
-          signal: activeController.signal
-        });
-
-        if (!response.ok) return;
-
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        const nextCard = doc.querySelector(".m-overview-card");
-        const currentCard = document.querySelector(".m-overview-card");
-
-        if (nextCard && currentCard) {
-          currentCard.replaceWith(nextCard);
-        }
-
-        if (pushState) {
-          window.history.replaceState({}, "", url);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") console.error(error);
-      }
-    }
-
-    function submitFilterNow() {
-      updateClearButton();
-      loadManageTable(buildManageUrl(), true);
-    }
-
-    function submitFilterDebounced() {
-      updateClearButton();
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(submitFilterNow, 300);
-    }
+    });
 
     document.querySelectorAll(".filter-select").forEach(function (select) {
-      const button = select.querySelector(".filter-select__button");
       const menu = select.querySelector(".filter-select__menu");
-      const input = select.querySelector('input[type="hidden"]');
-      const label = select.querySelector(".filter-select__label");
-      const count = select.querySelector(".filter-count");
-
-      if (!button || !menu || !input || !label) return;
-
-      button.addEventListener("click", function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const isOpen = menu.classList.contains(openedClass);
-        closeFilterMenus(menu);
-        menu.classList.toggle(openedClass, !isOpen);
-      });
-
-      select.querySelectorAll(".filter-select__option").forEach(function (option) {
-        option.addEventListener("click", function () {
-          const optionLabel = option.querySelector(".opt-label");
-          const optionCount = option.querySelector(".opt-count");
-
-          input.value = option.dataset.value || "Tất cả";
-          label.textContent = optionLabel ? optionLabel.textContent.trim() : input.value;
-
-          if (count && optionCount) {
-            count.textContent = optionCount.textContent.trim();
-          }
-
-          closeFilterMenus();
-          submitFilterNow();
-        });
-      });
+      select.classList.toggle("is-open", menu && menu.classList.contains(openedClass));
     });
+  }
 
-    if (searchInput) {
-      searchInput.addEventListener("input", submitFilterDebounced);
+  function hasActiveFilter() {
+    if (!form) return false;
+
+    const params = new URLSearchParams(new FormData(form));
+
+    for (const [key, value] of params.entries()) {
+      const cleanValue = String(value || "").trim();
+
+      if (key === "search" && cleanValue) return true;
+      if (key !== "search" && cleanValue && cleanValue !== "Tất cả") return true;
     }
 
-    if (clearBtn) {
-      clearBtn.addEventListener("click", function (event) {
-        event.preventDefault();
+    return false;
+  }
 
-        if (!form) return;
+  function updateClearButton() {
+    if (!clearBtn) return;
+    clearBtn.classList.toggle("is-hidden", !hasActiveFilter());
+  }
 
-        if (searchInput) {
-          searchInput.value = "";
+  function buildManageUrl(page) {
+    const params = new URLSearchParams(new FormData(form));
+
+    if (page) {
+      params.set("page", page);
+    } else {
+      params.delete("page");
+    }
+
+    Array.from(params.entries()).forEach(function ([key, value]) {
+      if (!value || value === "Tất cả") params.delete(key);
+    });
+
+    const query = params.toString();
+
+    return form.action + (query ? "?" + query : "");
+  }
+
+  async function loadManageTable(url, pushState) {
+    if (!form) return;
+
+    if (activeController) activeController.abort();
+    activeController = new AbortController();
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "X-Requested-With": "fetch" },
+        signal: activeController.signal
+      });
+
+      if (!response.ok) return;
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const nextCard = doc.querySelector(".m-overview-card");
+      const currentCard = document.querySelector(".m-overview-card");
+
+      if (nextCard && currentCard) {
+        currentCard.replaceWith(nextCard);
+      }
+
+      if (pushState) {
+        window.history.replaceState({}, "", url);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    }
+  }
+
+  function submitFilterNow() {
+    updateClearButton();
+    loadManageTable(buildManageUrl(), true);
+  }
+
+  function submitFilterDebounced() {
+    updateClearButton();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(submitFilterNow, 300);
+  }
+
+  function syncSelectedOption(select) {
+    const input = select.querySelector('input[type="hidden"]');
+    const value = input ? input.value : "Tất cả";
+
+    select.querySelectorAll(".filter-select__option").forEach(function (option) {
+      option.classList.toggle("is-selected", option.dataset.value === value);
+    });
+  }
+
+  document.querySelectorAll(".filter-select").forEach(function (select) {
+    const button = select.querySelector(".filter-select__button");
+    const menu = select.querySelector(".filter-select__menu");
+    const input = select.querySelector('input[type="hidden"]');
+    const label = select.querySelector(".filter-select__label");
+    const count = select.querySelector(".filter-count");
+
+    if (!button || !menu || !input || !label) return;
+
+    syncSelectedOption(select);
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const isOpen = menu.classList.contains(openedClass);
+
+      closeFilterMenus(menu);
+      menu.classList.toggle(openedClass, !isOpen);
+      select.classList.toggle("is-open", !isOpen);
+    });
+
+    select.querySelectorAll(".filter-select__option").forEach(function (option) {
+      option.addEventListener("click", function () {
+        const optionLabel = option.querySelector(".opt-label");
+        const optionCount = option.querySelector(".opt-count");
+
+        input.value = option.dataset.value || "Tất cả";
+        label.textContent = optionLabel ? optionLabel.textContent.trim() : input.value;
+
+        if (count && optionCount) {
+          count.textContent = optionCount.textContent.trim();
         }
 
-        form.querySelectorAll('input[type="hidden"]').forEach(function (input) {
-          input.value = "Tất cả";
-        });
-
-        document.querySelectorAll(".filter-select").forEach(function (select) {
-          const hidden = select.querySelector('input[type="hidden"]');
-          const label = select.querySelector(".filter-select__label");
-          const count = select.querySelector(".filter-count");
-          const firstOption = select.querySelector(".filter-select__option");
-
-          if (!hidden || !label || !firstOption) return;
-
-          const optionLabel = firstOption.querySelector(".opt-label");
-          const optionCount = firstOption.querySelector(".opt-count");
-
-          hidden.value = "Tất cả";
-          label.textContent = optionLabel ? optionLabel.textContent.trim() : "Tất cả";
-
-          if (count && optionCount) {
-            count.textContent = optionCount.textContent.trim();
-          }
-        });
-
+        syncSelectedOption(select);
         closeFilterMenus();
-        updateClearButton();
-        loadManageTable(form.action, true);
+        submitFilterNow();
       });
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", submitFilterDebounced);
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function (event) {
+      event.preventDefault();
+
+      if (!form) return;
+
+      if (searchInput) searchInput.value = "";
+
+      form.querySelectorAll('input[type="hidden"]').forEach(function (input) {
+        input.value = "Tất cả";
+      });
+
+      document.querySelectorAll(".filter-select").forEach(function (select) {
+        const hidden = select.querySelector('input[type="hidden"]');
+        const label = select.querySelector(".filter-select__label");
+        const count = select.querySelector(".filter-count");
+        const firstOption = select.querySelector(".filter-select__option");
+
+        if (!hidden || !label || !firstOption) return;
+
+        const optionLabel = firstOption.querySelector(".opt-label");
+        const optionCount = firstOption.querySelector(".opt-count");
+
+        hidden.value = "Tất cả";
+        label.textContent = optionLabel ? optionLabel.textContent.trim() : "Tất cả";
+
+        if (count && optionCount) {
+          count.textContent = optionCount.textContent.trim();
+        }
+
+        syncSelectedOption(select);
+      });
+
+      closeFilterMenus();
+      updateClearButton();
+      loadManageTable(form.action, true);
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    const pageBtn = event.target.closest(".m-overview-card .page-btn:not(.disabled)");
+
+    if (pageBtn && pageBtn.tagName === "A") {
+      event.preventDefault();
+      loadManageTable(pageBtn.href, true);
+      return;
     }
 
-    document.addEventListener("click", function (event) {
-      const pageBtn = event.target.closest(".m-overview-card .page-btn:not(.disabled)");
-
-      if (pageBtn && pageBtn.tagName === "A") {
-        event.preventDefault();
-        loadManageTable(pageBtn.href, true);
-        return;
-      }
-
-      if (!event.target.closest(".filter-select")) {
-        closeFilterMenus();
-      }
-    });
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeFilterMenus();
-    });
-
-    updateClearButton();
-    showStoredManageToast();
+    if (!event.target.closest(".filter-select")) {
+      closeFilterMenus();
+    }
   });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeFilterMenus();
+    }
+  });
+
+  updateClearButton();
+  showStoredManageToast();
+});
 </script>
 {% endblock %}

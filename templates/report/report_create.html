@@ -260,9 +260,9 @@ document.addEventListener("DOMContentLoaded", () => {
         $("#asset_id").value = first.id || "";
         $("#asset_code").value = first.code || "";
         $("#asset_name").value = first.name || "";
-        $("#asset_ids").value = assets.map(a => a.id).filter(Boolean).join("|");
-        $("#asset_codes").value = assets.map(a => a.code).filter(Boolean).join("|");
-        $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join("|");
+        $("#asset_ids").value = assets.map(a => a.id).filter(Boolean).join(",");
+        $("#asset_codes").value = assets.map(a => a.code).filter(Boolean).join(",");
+        $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join(",");
     };
 
     const drawAssets = () => {

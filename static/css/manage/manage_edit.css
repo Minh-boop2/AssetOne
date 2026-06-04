@@ -1,3 +1,10 @@
+/* File: manage_edit.css
+   Nhiệm vụ:
+   - Style cho trang chỉnh sửa hồ sơ nhân sự.
+   - Ô có thể chọn sẽ có mũi tên dropdown.
+   - Ô "Ngày tham gia" là readonly nên làm nhạt hơn để biết không bấm được.
+*/
+
 .manage-edit-page {
   --me-bg: #f6f8fc;
   --me-bg-soft: #eef4ff;
@@ -236,6 +243,7 @@ body.dark-theme .manage-edit-page,
   margin-left: 3px;
 }
 
+/* Style chung cho input, ô readonly và custom select */
 .edit-input,
 .edit-readonly-box,
 .edit-custom-select__trigger {
@@ -256,11 +264,28 @@ body.dark-theme .manage-edit-page,
   padding: 0 14px;
 }
 
+/* Ô readonly: dùng cho Ngày tham gia.
+   Làm nhạt hơn, cursor not-allowed để người dùng biết không bấm/sửa được. */
 .edit-readonly-box {
   padding: 0 14px;
-  color: var(--me-text-soft);
+  color: var(--me-text-muted);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(148, 163, 184, 0.08) 0,
+      rgba(148, 163, 184, 0.08) 6px,
+      transparent 6px,
+      transparent 12px
+    ),
+    var(--surface-2, var(--me-surface-card));
+  border-color: rgba(148, 163, 184, 0.42);
+  font-size: 13px;
+  font-weight: 800;
   display: flex;
   align-items: center;
+  cursor: not-allowed;
+  opacity: 0.82;
+  user-select: none;
 }
 
 .edit-name-input {
@@ -301,8 +326,10 @@ body.dark-theme .manage-edit-page,
   z-index: 90;
 }
 
+/* Nút custom select: ô nào chọn được sẽ có mũi tên */
 .edit-custom-select__trigger {
-  padding: 0 14px;
+  position: relative;
+  padding: 0 42px 0 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -310,25 +337,32 @@ body.dark-theme .manage-edit-page,
   gap: 12px;
 }
 
+/* Mũi tên dropdown cho ô có thể chọn */
+.edit-custom-select__trigger::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--me-text-soft);
+  border-bottom: 2px solid var(--me-text-soft);
+  transform: translateY(-65%) rotate(45deg);
+  transition: 0.2s ease;
+  opacity: 0.85;
+}
+
+.edit-custom-select.is-open .edit-custom-select__trigger::after {
+  border-color: var(--hsu-blue, var(--me-primary));
+  transform: translateY(-35%) rotate(225deg);
+  opacity: 1;
+}
+
 .edit-custom-select__trigger span {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.edit-custom-select__trigger i {
-  flex-shrink: 0;
-  color: var(--text-soft, var(--me-text-soft));
-  font-size: 9px;
-  opacity: 0.55;
-  transition: 0.2s ease;
-}
-
-.edit-custom-select.is-open .edit-custom-select__trigger i {
-  color: var(--hsu-blue, var(--me-primary));
-  opacity: 1;
-  transform: rotate(180deg);
 }
 
 .edit-custom-select__menu {

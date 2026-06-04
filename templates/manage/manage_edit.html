@@ -1,12 +1,21 @@
 {% extends 'main.html' %}
 
 {% block content %}
+
+<!-- CSS chung của module quản lý nhân sự -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=27">
+
+<!-- CSS riêng cho trang chỉnh sửa nhân sự -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=33">
 
 <section class="manage-edit-page">
   <div class="manage-edit-wrap">
+
+    {# Lấy id thật để gọi route edit. Ưu tiên db_id, nếu không có thì dùng id hiển thị. #}
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
+
+    {# Ngày tham gia chỉ để hiển thị, không cho chỉnh sửa. #}
+    {% set join_date = user.join_date or user.created_at or user.joined_at or 'Chưa có dữ liệu' %}
 
     <div class="edit-topbar">
       <a href="{{ url_for('manage') }}" class="edit-back-link">
@@ -25,12 +34,14 @@
         id="editUserForm"
         novalidate
       >
+
         <div class="edit-card-header">
           <div class="edit-code-box">
             <span class="edit-code-label">Mã nhân viên</span>
             <strong>{{ user.id }}</strong>
           </div>
 
+          <!-- Họ tên: có thể chỉnh sửa -->
           <div class="edit-name-box edit-field">
             <label class="edit-label" for="edit-name">
               Họ và tên nhân viên <span class="required-star">*</span>
@@ -51,12 +62,14 @@
 
         <div class="edit-card-body">
           <div class="edit-grid">
+
             <div class="edit-column">
               <h4 class="edit-section-title">
                 <i class="fas fa-user-circle"></i>
                 <span>Thông tin cá nhân & liên hệ</span>
               </h4>
 
+              <!-- Email: có thể chỉnh sửa -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-email">
                   Email công vụ <span class="required-star">*</span>
@@ -74,6 +87,7 @@
                 <small class="edit-field-error">Vui lòng nhập email hợp lệ.</small>
               </div>
 
+              <!-- Số điện thoại: có thể chỉnh sửa -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-phone">Số điện thoại</label>
 
@@ -86,6 +100,7 @@
                 >
               </div>
 
+              <!-- Trạng thái: select thật để gửi backend, custom select để hiển thị -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-status">Trạng thái tài khoản</label>
 
@@ -93,6 +108,7 @@
                   {% for status in user_status %}
                     {% set status_value = status.value if status.value is defined else status %}
                     {% set status_label = status.label if status.label is defined else status %}
+
                     <option
                       value="{{ status_value }}"
                       {% if user.status_code == status_value or user.status == status_label or user.status == status_value %}selected{% endif %}
@@ -105,13 +121,13 @@
                 <div class="edit-custom-select" data-custom-select data-target="edit-status">
                   <button type="button" class="edit-custom-select__trigger">
                     <span></span>
-                    <i class="fas fa-chevron-down"></i>
                   </button>
 
                   <div class="edit-custom-select__menu">
                     {% for status in user_status %}
                       {% set status_value = status.value if status.value is defined else status %}
                       {% set status_label = status.label if status.label is defined else status %}
+
                       <button type="button" class="edit-custom-select__option" data-value="{{ status_value }}">
                         {{ status_label }}
                       </button>
@@ -120,6 +136,7 @@
                 </div>
               </div>
 
+              <!-- Mật khẩu mới: để trống nếu không đổi -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-password">Mật khẩu mới</label>
 
@@ -139,6 +156,7 @@
                 <span>Vị trí & công tác</span>
               </h4>
 
+              <!-- Phòng ban: có thể chọn -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-department">Phòng ban / Đơn vị</label>
 
@@ -153,7 +171,6 @@
                 <div class="edit-custom-select" data-custom-select data-target="edit-department">
                   <button type="button" class="edit-custom-select__trigger">
                     <span></span>
-                    <i class="fas fa-chevron-down"></i>
                   </button>
 
                   <div class="edit-custom-select__menu">
@@ -166,6 +183,7 @@
                 </div>
               </div>
 
+              <!-- Vai trò: có thể chọn -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-role">Vai trò hệ thống</label>
 
@@ -173,6 +191,7 @@
                   {% for r in roles %}
                     {% set role_value = r.value if r.value is defined else r %}
                     {% set role_label = r.label if r.label is defined else r %}
+
                     <option
                       value="{{ role_value }}"
                       {% if user.role_code == role_value or user.role == role_label or user.role == role_value %}selected{% endif %}
@@ -185,13 +204,13 @@
                 <div class="edit-custom-select" data-custom-select data-target="edit-role">
                   <button type="button" class="edit-custom-select__trigger">
                     <span></span>
-                    <i class="fas fa-chevron-down"></i>
                   </button>
 
                   <div class="edit-custom-select__menu">
                     {% for r in roles %}
                       {% set role_value = r.value if r.value is defined else r %}
                       {% set role_label = r.label if r.label is defined else r %}
+
                       <button type="button" class="edit-custom-select__option" data-value="{{ role_value }}">
                         {{ role_label }}
                       </button>
@@ -200,11 +219,13 @@
                 </div>
               </div>
 
+              <!-- Tầng: có thể chọn -->
               <div class="edit-field">
                 <label class="edit-label" for="edit-floor">Vị trí tầng</label>
 
                 <select id="edit-floor" name="floor" class="edit-native-select">
                   <option value="">Chưa sắp xếp</option>
+
                   {% for f in floors %}
                     <option value="{{ f }}" {% if user.position == f %}selected{% endif %}>
                       {{ f }}
@@ -215,7 +236,6 @@
                 <div class="edit-custom-select" data-custom-select data-target="edit-floor">
                   <button type="button" class="edit-custom-select__trigger">
                     <span></span>
-                    <i class="fas fa-chevron-down"></i>
                   </button>
 
                   <div class="edit-custom-select__menu">
@@ -232,11 +252,12 @@
                 </div>
               </div>
 
+              <!-- Ngày tham gia: chỉ xem, không cho sửa -->
               <div class="edit-field">
                 <label class="edit-label">Ngày tham gia</label>
 
-                <div class="edit-readonly-box">
-                  {{ user.joined_at if user.joined_at else 'Chưa có dữ liệu' }}
+                <div class="edit-readonly-box" title="Ngày tham gia chỉ dùng để xem, không thể chỉnh sửa">
+                  {{ join_date }}
                 </div>
               </div>
             </div>
@@ -251,6 +272,7 @@
     </div>
   </div>
 
+  <!-- Modal xác nhận lưu thay đổi -->
   <div class="edit-confirm-overlay" id="saveConfirmOverlay" aria-hidden="true">
     <div class="edit-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
       <button type="button" class="edit-confirm-close" id="closeSaveConfirmBtn" aria-label="Đóng">
@@ -284,66 +306,69 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("editUserForm");
-  const confirmOverlay = document.getElementById("saveConfirmOverlay");
-  const confirmSaveBtn = document.getElementById("confirmSaveBtn");
-  const cancelSaveBtn = document.getElementById("cancelSaveBtn");
-  const closeSaveConfirmBtn = document.getElementById("closeSaveConfirmBtn");
+  const overlay = document.getElementById("saveConfirmOverlay");
+  const confirmBtn = document.getElementById("confirmSaveBtn");
+  const cancelBtn = document.getElementById("cancelSaveBtn");
+  const closeBtn = document.getElementById("closeSaveConfirmBtn");
   const redirectUrl = "{{ url_for('manage') }}";
 
   let isSubmitting = false;
 
+  // Mở modal xác nhận
   function openConfirm() {
-    if (!confirmOverlay) return;
-    confirmOverlay.classList.add("is-open");
-    confirmOverlay.setAttribute("aria-hidden", "false");
+    if (!overlay) return;
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
   }
 
+  // Đóng modal xác nhận
   function closeConfirm() {
-    if (!confirmOverlay) return;
-    confirmOverlay.classList.remove("is-open");
-    confirmOverlay.setAttribute("aria-hidden", "true");
+    if (!overlay) return;
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
   }
 
-  function setFieldError(field, message) {
+  // Hiện lỗi field
+  function setError(field, message) {
     const group = field.closest(".edit-field");
     if (!group) return;
 
     const error = group.querySelector(".edit-field-error");
     group.classList.add("has-error");
 
-    if (error) {
-      error.textContent = message || "Vui lòng nhập thông tin.";
-    }
+    if (error) error.textContent = message || "Vui lòng nhập thông tin.";
   }
 
-  function clearFieldError(field) {
+  // Xóa lỗi field
+  function clearError(field) {
     const group = field.closest(".edit-field");
-    if (!group) return;
-    group.classList.remove("has-error");
+    if (group) group.classList.remove("has-error");
   }
 
+  // Validate field bắt buộc
   function validateField(field) {
     const value = (field.value || "").trim();
     const type = field.getAttribute("type");
 
     if (field.hasAttribute("required") && !value) {
-      setFieldError(field, "Vui lòng nhập thông tin bắt buộc.");
+      setError(field, "Vui lòng nhập thông tin bắt buộc.");
       return false;
     }
 
     if (type === "email" && value) {
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if (!emailPattern.test(value)) {
-        setFieldError(field, "Vui lòng nhập email hợp lệ.");
+      if (!pattern.test(value)) {
+        setError(field, "Vui lòng nhập email hợp lệ.");
         return false;
       }
     }
 
-    clearFieldError(field);
+    clearError(field);
     return true;
   }
 
+  // Validate toàn form
   function validateForm() {
     if (!form) return false;
 
@@ -354,10 +379,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fields.forEach(function (field) {
       if (!validateField(field)) {
         valid = false;
-
-        if (!firstInvalid) {
-          firstInvalid = field;
-        }
+        if (!firstInvalid) firstInvalid = field;
       }
     });
 
@@ -372,45 +394,44 @@ document.addEventListener("DOMContentLoaded", function () {
     return valid;
   }
 
-  function closeCustomSelects(exceptBox = null) {
+  // Đóng custom select
+  function closeSelects(exceptBox = null) {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
-      if (box !== exceptBox) {
-        box.classList.remove("is-open");
-      }
+      if (box !== exceptBox) box.classList.remove("is-open");
     });
   }
 
-  function syncCustomSelect(box) {
-    const nativeSelect = document.getElementById(box.dataset.target);
-    const triggerText = box.querySelector(".edit-custom-select__trigger span");
+  // Đồng bộ custom select với select thật
+  function syncSelect(box) {
+    const select = document.getElementById(box.dataset.target);
+    const text = box.querySelector(".edit-custom-select__trigger span");
     const options = box.querySelectorAll(".edit-custom-select__option");
 
-    if (!nativeSelect || !triggerText) return;
+    if (!select || !text) return;
 
     let selectedText = "";
 
     options.forEach(function (option) {
-      const selected = option.dataset.value === nativeSelect.value;
+      const selected = option.dataset.value === select.value;
       option.classList.toggle("is-selected", selected);
 
-      if (selected) {
-        selectedText = option.textContent.trim();
-      }
+      if (selected) selectedText = option.textContent.trim();
     });
 
-    const selectedOption = nativeSelect.options[nativeSelect.selectedIndex];
-    triggerText.textContent = selectedText || (selectedOption ? selectedOption.textContent.trim() : "Chọn");
+    const selectedOption = select.options[select.selectedIndex];
+    text.textContent = selectedText || (selectedOption ? selectedOption.textContent.trim() : "Chọn");
   }
 
-  function initCustomSelects() {
+  // Khởi tạo custom select
+  function initSelects() {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
-      const nativeSelect = document.getElementById(box.dataset.target);
+      const select = document.getElementById(box.dataset.target);
       const trigger = box.querySelector(".edit-custom-select__trigger");
       const options = box.querySelectorAll(".edit-custom-select__option");
 
-      if (!nativeSelect || !trigger) return;
+      if (!select || !trigger) return;
 
-      syncCustomSelect(box);
+      syncSelect(box);
 
       trigger.addEventListener("click", function (event) {
         event.preventDefault();
@@ -418,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const isOpen = box.classList.contains("is-open");
 
-        closeCustomSelects(box);
+        closeSelects(box);
         box.classList.toggle("is-open", !isOpen);
       });
 
@@ -427,28 +448,31 @@ document.addEventListener("DOMContentLoaded", function () {
           event.preventDefault();
           event.stopPropagation();
 
-          nativeSelect.value = option.dataset.value || "";
-          nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          select.value = option.dataset.value || "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
 
-          syncCustomSelect(box);
+          syncSelect(box);
           box.classList.remove("is-open");
         });
       });
 
-      nativeSelect.addEventListener("change", function () {
-        syncCustomSelect(box);
+      select.addEventListener("change", function () {
+        syncSelect(box);
       });
     });
   }
 
-  async function submitAndRedirect() {
+  // Gửi form, lưu xong quay về danh sách và hiện toast vàng
+  async function submitForm() {
     if (!form || isSubmitting) return;
 
     isSubmitting = true;
     closeConfirm();
 
-    confirmSaveBtn.disabled = true;
-    confirmSaveBtn.textContent = "Đang lưu...";
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Đang lưu...";
+    }
 
     try {
       const response = await fetch(form.action, {
@@ -465,7 +489,8 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionStorage.setItem(
           "manage_toast",
           JSON.stringify({
-            type: "success",
+            /* Cập nhật nhân sự thành công phải dùng màu vàng */
+            type: "warning",
             message: "Cập nhật nhân sự thành công"
           })
         );
@@ -477,8 +502,11 @@ document.addEventListener("DOMContentLoaded", function () {
       throw new Error("Save failed");
     } catch (error) {
       isSubmitting = false;
-      confirmSaveBtn.disabled = false;
-      confirmSaveBtn.textContent = "Lưu";
+
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Lưu";
+      }
 
       if (window.sonner) {
         window.sonner.error("Lưu thay đổi không thành công", "Vui lòng thử lại.");
@@ -488,62 +516,42 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  initCustomSelects();
+  initSelects();
 
   if (form) {
     form.querySelectorAll("input[required], select[required]").forEach(function (field) {
-      field.addEventListener("input", function () {
-        validateField(field);
-      });
-
-      field.addEventListener("change", function () {
-        validateField(field);
-      });
-
-      field.addEventListener("blur", function () {
-        validateField(field);
+      ["input", "change", "blur"].forEach(function (eventName) {
+        field.addEventListener(eventName, function () {
+          validateField(field);
+        });
       });
     });
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
 
-      if (!validateForm()) return;
-
-      openConfirm();
+      if (validateForm()) openConfirm();
     });
   }
 
-  if (confirmSaveBtn) {
-    confirmSaveBtn.addEventListener("click", submitAndRedirect);
-  }
+  if (confirmBtn) confirmBtn.addEventListener("click", submitForm);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeConfirm);
+  if (closeBtn) closeBtn.addEventListener("click", closeConfirm);
 
-  if (cancelSaveBtn) {
-    cancelSaveBtn.addEventListener("click", closeConfirm);
-  }
-
-  if (closeSaveConfirmBtn) {
-    closeSaveConfirmBtn.addEventListener("click", closeConfirm);
-  }
-
-  if (confirmOverlay) {
-    confirmOverlay.addEventListener("click", function (event) {
-      if (event.target === confirmOverlay) {
-        closeConfirm();
-      }
+  if (overlay) {
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) closeConfirm();
     });
   }
 
   document.addEventListener("click", function (event) {
-    if (!event.target.closest("[data-custom-select]")) {
-      closeCustomSelects();
-    }
+    if (!event.target.closest("[data-custom-select]")) closeSelects();
   });
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       closeConfirm();
-      closeCustomSelects();
+      closeSelects();
     }
   });
 });
