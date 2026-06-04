@@ -6,13 +6,11 @@
   Nhiệm vụ:
   - Hiển thị trang quản lý nhân sự.
   - Có thống kê tổng quan, bộ lọc, bảng nhân sự.
-  - Toast sau thao tác dùng chung một mẫu:
-    + warning: vàng cho cập nhật nhân sự
-    + danger/error/ngưng hoạt động/xóa: đỏ
-    + success/cấp lại: xanh
+  - Toast dùng Sonner chung của hệ thống.
+  - Chống lặp toast: xóa toast cũ trước khi hiện toast mới.
 -->
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}?v=46">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}?v=49">
 
 {% macro stat_icon(type) %}
   {% if type == 'users' %}
@@ -265,21 +263,10 @@ document.addEventListener("DOMContentLoaded", function () {
   let debounceTimer = null;
   let activeController = null;
 
-  // Chuẩn hóa type toast:
-  // - Cập nhật nhân sự -> warning vàng.
-  // - Ngưng hoạt động / xóa -> danger đỏ.
-  // - Cấp lại / mở hoạt động -> success xanh.
-  function normalizeToastType(type, message) {
+  // Chuẩn hóa type toast cho Sonner
+  function normalizeSonnerType(type, message) {
     const cleanType = String(type || "").toLowerCase();
     const text = String(message || "").toLowerCase();
-
-    if (
-      cleanType === "warning" ||
-      text.includes("cập nhật nhân sự") ||
-      text.includes("lưu thay đổi")
-    ) {
-      return "warning";
-    }
 
     if (
       cleanType === "danger" ||
@@ -292,80 +279,64 @@ document.addEventListener("DOMContentLoaded", function () {
       text.includes("đã ngưng") ||
       text.includes("xóa")
     ) {
-      return "danger";
+      return "error";
+    }
+
+    if (
+      cleanType === "warning" ||
+      text.includes("cập nhật nhân sự") ||
+      text.includes("lưu thay đổi")
+    ) {
+      return "warning";
     }
 
     return "success";
   }
 
-  // Icon toast theo type
-  function getToastIcon(type) {
-    if (type === "danger") {
-      return '<svg viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+  // Xóa toast cũ trước khi hiện toast mới để tránh bị lặp
+  function clearOldSonnerToasts() {
+    if (window.sonner && typeof window.sonner.dismiss === "function") {
+      window.sonner.dismiss();
     }
 
-    if (type === "warning") {
-      return '<svg viewBox="0 0 24 24"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>';
-    }
-
-    return '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>';
-  }
-
-  // Hiển thị toast chung cho trang quản lý
-  function showManageToast(message, type) {
-    const toastType = normalizeToastType(type || "success", message);
-    const duration = 2800;
-
-    document.querySelectorAll(".manage-toast").forEach(function (toast) {
-      toast.remove();
-    });
-
-    const toast = document.createElement("div");
-    toast.className = "manage-toast manage-toast-" + toastType;
-    toast.style.setProperty("--toast-duration", duration + "ms");
-
-    const icon = document.createElement("div");
-    icon.className = "manage-toast-icon";
-    icon.innerHTML = getToastIcon(toastType);
-
-    const content = document.createElement("div");
-    content.className = "manage-toast-content";
-
-    const title = document.createElement("div");
-    title.className = "manage-toast-title";
-    title.textContent = message || "Thao tác thành công";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.className = "manage-toast-close";
-    closeBtn.setAttribute("aria-label", "Đóng thông báo");
-    closeBtn.textContent = "×";
-
-    const progress = document.createElement("div");
-    progress.className = "manage-toast-progress";
-
-    content.appendChild(title);
-    toast.appendChild(icon);
-    toast.appendChild(content);
-    toast.appendChild(closeBtn);
-    toast.appendChild(progress);
-    document.body.appendChild(toast);
-
-    function closeToast() {
-      if (toast.classList.contains("is-leaving")) return;
-
-      toast.classList.add("is-leaving");
-
-      setTimeout(function () {
+    document
+      .querySelectorAll("[data-sonner-toast], .sonner-toast, .sonner-item, .toast-item")
+      .forEach(function (toast) {
         toast.remove();
-      }, 180);
-    }
-
-    closeBtn.addEventListener("click", closeToast);
-    setTimeout(closeToast, duration);
+      });
   }
 
-  // Lấy toast lưu tạm sau redirect
+  // Gọi Sonner chung của hệ thống
+  function showSystemSonner(message, type) {
+    const sonnerType = normalizeSonnerType(type, message);
+    const text = message || "Thao tác thành công";
+
+    if (window.sonner) {
+      if (sonnerType === "error" && typeof window.sonner.error === "function") {
+        window.sonner.error(text);
+        return;
+      }
+
+      if (sonnerType === "warning" && typeof window.sonner.warning === "function") {
+        window.sonner.warning(text);
+        return;
+      }
+
+      if (sonnerType === "success" && typeof window.sonner.success === "function") {
+        window.sonner.success(text);
+        return;
+      }
+
+      if (typeof window.sonner.toast === "function") {
+        window.sonner.toast(text, { type: sonnerType });
+        return;
+      }
+    }
+
+    alert(text);
+  }
+
+  // Đọc toast lưu tạm sau redirect/reload
   function showStoredManageToast() {
     const rawToast = sessionStorage.getItem("manage_toast");
     if (!rawToast) return;
@@ -383,7 +354,13 @@ document.addEventListener("DOMContentLoaded", function () {
       toastData.message = rawToast;
     }
 
-    showManageToast(toastData.message, toastData.type);
+    setTimeout(function () {
+      clearOldSonnerToasts();
+
+      setTimeout(function () {
+        showSystemSonner(toastData.message, toastData.type);
+      }, 30);
+    }, 220);
   }
 
   function closeFilterMenus(exceptMenu) {

@@ -78,6 +78,57 @@ def redirect_back_to_manage():
     return redirect(request.referrer or url_for("manage"))
 
 
+def normalize_toast_type(category, message=""):
+    """
+    Chuẩn hóa màu toast trả về cho frontend.
+
+    warning: màu vàng cho cập nhật nhân sự
+    error: màu đỏ cho ngưng hoạt động / lỗi / xóa
+    success: màu xanh cho thêm mới / cấp lại / mở hoạt động
+    """
+    clean_category = str(category or "").lower()
+    clean_message = str(message or "").lower()
+
+    if (
+        clean_category in ["danger", "error", "delete", "inactive", "stop"]
+        or "ngưng hoạt động" in clean_message
+        or "ngừng hoạt động" in clean_message
+        or "đã ngưng" in clean_message
+        or "xóa" in clean_message
+    ):
+        return "error"
+
+    if (
+        clean_category == "warning"
+        or "cập nhật nhân sự" in clean_message
+        or "lưu thay đổi" in clean_message
+    ):
+        return "warning"
+
+    return "success"
+
+
+def ajax_response(success=True, message="", category="success", **extra):
+    """
+    Trả JSON cho request AJAX.
+
+    Mục đích:
+    - Không dùng flash khi frontend gọi bằng fetch.
+    - Tránh toast cũ từ backend chạy chồng lên toast mới của sessionStorage.
+    """
+    payload = {
+        "ok": success,
+        "success": success,
+        "message": message,
+        "category": category,
+        "toast_type": normalize_toast_type(category, message),
+    }
+
+    payload.update(extra)
+
+    return jsonify(payload)
+
+
 def register_manage_routes(app):
 
     @app.route("/manage")
@@ -126,8 +177,19 @@ def register_manage_routes(app):
             success, message, _ = create_user_from_form(request.form)
 
             if not success:
+                if is_ajax_request():
+                    return ajax_response(False, message, "danger"), 400
+
                 flash(message, "danger")
                 return redirect(url_for("manage_create"))
+
+            if is_ajax_request():
+                return ajax_response(
+                    True,
+                    "Thêm nhân sự thành công",
+                    "success",
+                    redirect_url=url_for("manage")
+                )
 
             flash("Thêm nhân sự thành công", "success")
             return redirect(url_for("manage"))
@@ -155,6 +217,9 @@ def register_manage_routes(app):
         user, error = get_user_detail_page_data(id)
 
         if error:
+            if is_ajax_request():
+                return ajax_response(False, error, "warning"), 404
+
             flash(error, "warning")
             return redirect(url_for("manage"))
 
@@ -175,8 +240,19 @@ def register_manage_routes(app):
             success, message, _ = update_user_from_form(id, request.form)
 
             if not success:
+                if is_ajax_request():
+                    return ajax_response(False, message, "danger"), 400
+
                 flash(message, "danger")
                 return redirect(url_for("user_edit", id=id))
+
+            if is_ajax_request():
+                return ajax_response(
+                    True,
+                    "Cập nhật nhân sự thành công",
+                    "warning",
+                    redirect_url=url_for("manage")
+                )
 
             flash("Cập nhật nhân sự thành công", "success")
             return redirect(url_for("user_detail", id=id))
@@ -184,6 +260,9 @@ def register_manage_routes(app):
         page_data, error = get_edit_page_data(id)
 
         if error:
+            if is_ajax_request():
+                return ajax_response(False, error, "warning"), 404
+
             flash(error, "warning")
             return redirect(url_for("manage"))
 
@@ -206,6 +285,20 @@ def register_manage_routes(app):
             return permission_redirect
 
         success, message, category = toggle_user_status(id)
+        toast_type = normalize_toast_type(category, message)
+
+        # Request AJAX/fetch không được flash.
+        # Nếu flash ở đây, frontend sẽ bị hiện 2 toast:
+        # 1 toast cũ từ flash backend + 1 toast mới từ sessionStorage.
+        if is_ajax_request():
+            status_code = 200 if success else 400
+
+            return ajax_response(
+                success,
+                message,
+                category,
+                toast_type=toast_type
+            ), status_code
 
         flash(message, category)
 
@@ -221,8 +314,22 @@ def register_manage_routes(app):
         success, message, category = delete_user(id)
 
         if not success:
+            if is_ajax_request():
+                return ajax_response(False, message, category), 400
+
             flash(message, category)
             return redirect(url_for("manage"))
 
-        flash(message or "Cập nhật trạng thái nhân sự thành công", category or "success")
+        final_message = message or "Cập nhật trạng thái nhân sự thành công"
+        final_category = category or "success"
+
+        if is_ajax_request():
+            return ajax_response(
+                True,
+                final_message,
+                final_category,
+                redirect_url=url_for("manage")
+            )
+
+        flash(final_message, final_category)
         return redirect(url_for("manage"))

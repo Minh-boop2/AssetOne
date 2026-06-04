@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=46">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=48">
 
 <div class="m-overview-card">
   <div class="m-card-header">
@@ -215,148 +215,204 @@
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const openedClass = "show";
+document.addEventListener("DOMContentLoaded", function () {
+  const openedClass = "show";
 
-    function closeActionMenus(exceptDropdown) {
-      document.querySelectorAll(".action-menu__dropdown." + openedClass).forEach(function (dropdown) {
-        if (dropdown !== exceptDropdown) {
-          dropdown.classList.remove(openedClass);
-          dropdown.style.left = "";
-          dropdown.style.top = "";
+  function closeActionMenus(exceptDropdown) {
+    document.querySelectorAll(".action-menu__dropdown." + openedClass).forEach(function (dropdown) {
+      if (dropdown !== exceptDropdown) {
+        dropdown.classList.remove(openedClass);
+        dropdown.style.left = "";
+        dropdown.style.top = "";
+      }
+    });
+
+    document.querySelectorAll(".action-menu__trigger[aria-expanded='true']").forEach(function (button) {
+      if (!exceptDropdown || !button.closest(".action-menu")?.contains(exceptDropdown)) {
+        button.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  function positionActionMenu(trigger, dropdown) {
+    const rect = trigger.getBoundingClientRect();
+    const gap = 8;
+    const padding = 12;
+    const width = dropdown.offsetWidth || 190;
+    const height = dropdown.offsetHeight || 150;
+
+    let left = rect.right - width;
+    let top = rect.bottom + gap;
+
+    if (left < padding) left = padding;
+    if (left + width > window.innerWidth - padding) left = window.innerWidth - width - padding;
+    if (top + height > window.innerHeight - padding) top = rect.top - height - gap;
+    if (top < padding) top = padding;
+
+    dropdown.style.left = left + "px";
+    dropdown.style.top = top + "px";
+  }
+
+  function showSystemSonner(message, type) {
+    const text = message || "Thao tác thành công";
+    const cleanType = String(type || "success").toLowerCase();
+
+    if (window.sonner) {
+      if (cleanType === "error" && typeof window.sonner.error === "function") {
+        window.sonner.error(text);
+        return;
+      }
+
+      if (cleanType === "warning" && typeof window.sonner.warning === "function") {
+        window.sonner.warning(text);
+        return;
+      }
+
+      if (typeof window.sonner.success === "function") {
+        window.sonner.success(text);
+        return;
+      }
+    }
+
+    alert(text);
+  }
+
+  async function toggleUserStatus(actionUrl, isActive, userName) {
+    try {
+      const response = await fetch(actionUrl, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "text/html, application/json"
         }
       });
 
-      document.querySelectorAll(".action-menu__trigger[aria-expanded='true']").forEach(function (button) {
-        if (!exceptDropdown || !button.closest(".action-menu")?.contains(exceptDropdown)) {
-          button.setAttribute("aria-expanded", "false");
-        }
-      });
-    }
+      if (!response.ok) {
+        throw new Error("Toggle status failed");
+      }
 
-    function positionActionMenu(trigger, dropdown) {
-      const rect = trigger.getBoundingClientRect();
-      const gap = 8;
-      const padding = 12;
-      const width = dropdown.offsetWidth || 190;
-      const height = dropdown.offsetHeight || 150;
-
-      let left = rect.right - width;
-      let top = rect.bottom + gap;
-
-      if (left < padding) left = padding;
-      if (left + width > window.innerWidth - padding) left = window.innerWidth - width - padding;
-      if (top + height > window.innerHeight - padding) top = rect.top - height - gap;
-      if (top < padding) top = padding;
-
-      dropdown.style.left = left + "px";
-      dropdown.style.top = top + "px";
-    }
-
-    async function confirmChangeUserStatus(button) {
-      const actionUrl = button.dataset.actionUrl;
-      const userName = button.dataset.userName || "nhân sự này";
-      const userCode = button.dataset.userCode || "";
-      const currentStatus = button.dataset.currentStatus || "";
-
-      if (!actionUrl) return;
-
-      closeActionMenus();
-
-      const isActive = currentStatus === "HOAT_DONG";
-
-      const title = isActive
-        ? "Xác nhận ngưng hoạt động"
-        : "Xác nhận cấp lại tài khoản";
-
-      const confirmText = isActive
-        ? "Ngưng hoạt động"
-        : "Cấp lại";
-
-      const message = isActive
-        ? (
-            "Bạn có chắc muốn chuyển " +
-            userName +
-            (userCode ? " (" + userCode + ")" : "") +
-            " sang trạng thái ngưng hoạt động không?"
-          )
-        : (
-            "Bạn có chắc muốn cấp lại tài khoản cho " +
-            userName +
-            (userCode ? " (" + userCode + ")" : "") +
-            " không?"
-          );
-
-      let confirmed = false;
-
-      if (typeof window.toastConfirm === "function") {
-        confirmed = await window.toastConfirm({
+      sessionStorage.setItem(
+        "manage_toast",
+        JSON.stringify({
           type: isActive ? "error" : "success",
-          title: title,
-          message: message,
-          confirmText: confirmText,
-          cancelText: "Hủy",
-          danger: isActive,
-          closeOnBackdrop: false,
-          closeOnEsc: true
-        });
-      } else {
-        confirmed = confirm(message);
-      }
+          message: isActive
+            ? "Đã ngưng hoạt động tài khoản của " + userName
+            : "Đã mở hoạt động tài khoản cho " + userName
+        })
+      );
 
-      if (confirmed) {
-        window.location.href = actionUrl;
-      }
+      window.location.reload();
+    } catch (error) {
+      showSystemSonner("Đổi trạng thái tài khoản không thành công", "error");
+    }
+  }
+
+  async function confirmChangeUserStatus(button) {
+    const actionUrl = button.dataset.actionUrl;
+    const userName = button.dataset.userName || "nhân sự này";
+    const userCode = button.dataset.userCode || "";
+    const currentStatus = button.dataset.currentStatus || "";
+
+    if (!actionUrl) return;
+
+    closeActionMenus();
+
+    const isActive = currentStatus === "HOAT_DONG";
+
+    const title = isActive
+      ? "Xác nhận ngưng hoạt động"
+      : "Xác nhận cấp lại tài khoản";
+
+    const confirmText = isActive
+      ? "Ngưng hoạt động"
+      : "Cấp lại";
+
+    const message = isActive
+      ? (
+          "Bạn có chắc muốn chuyển " +
+          userName +
+          (userCode ? " (" + userCode + ")" : "") +
+          " sang trạng thái ngưng hoạt động không?"
+        )
+      : (
+          "Bạn có chắc muốn cấp lại tài khoản cho " +
+          userName +
+          (userCode ? " (" + userCode + ")" : "") +
+          " không?"
+        );
+
+    let confirmed = false;
+
+    if (typeof window.toastConfirm === "function") {
+      confirmed = await window.toastConfirm({
+        type: isActive ? "error" : "success",
+        title: title,
+        message: message,
+        confirmText: confirmText,
+        cancelText: "Hủy",
+        danger: isActive,
+        closeOnBackdrop: false,
+        closeOnEsc: true
+      });
+    } else {
+      confirmed = confirm(message);
     }
 
-    document.addEventListener("click", function (event) {
-      const trigger = event.target.closest(".action-menu__trigger");
-      const statusButton = event.target.closest(".change-user-status-action");
+    if (confirmed) {
+      button.disabled = true;
+      await toggleUserStatus(actionUrl, isActive, userName);
+    }
+  }
 
-      if (trigger) {
-        event.preventDefault();
-        event.stopPropagation();
+  document.addEventListener("click", function (event) {
+    const trigger = event.target.closest(".action-menu__trigger");
+    const statusButton = event.target.closest(".change-user-status-action");
 
-        const dropdown = trigger.closest(".action-menu")?.querySelector(".action-menu__dropdown");
-        if (!dropdown) return;
+    if (trigger) {
+      event.preventDefault();
+      event.stopPropagation();
 
-        const isOpen = dropdown.classList.contains(openedClass);
+      const dropdown = trigger.closest(".action-menu")?.querySelector(".action-menu__dropdown");
+      if (!dropdown) return;
 
-        closeActionMenus(dropdown);
+      const isOpen = dropdown.classList.contains(openedClass);
 
-        if (isOpen) {
-          dropdown.classList.remove(openedClass);
-          trigger.setAttribute("aria-expanded", "false");
-        } else {
-          dropdown.classList.add(openedClass);
-          trigger.setAttribute("aria-expanded", "true");
-          positionActionMenu(trigger, dropdown);
-        }
+      closeActionMenus(dropdown);
 
-        return;
+      if (isOpen) {
+        dropdown.classList.remove(openedClass);
+        trigger.setAttribute("aria-expanded", "false");
+      } else {
+        dropdown.classList.add(openedClass);
+        trigger.setAttribute("aria-expanded", "true");
+        positionActionMenu(trigger, dropdown);
       }
 
-      if (statusButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        confirmChangeUserStatus(statusButton);
-        return;
-      }
+      return;
+    }
 
-      if (!event.target.closest(".action-menu__dropdown")) {
-        closeActionMenus();
-      }
-    });
+    if (statusButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      confirmChangeUserStatus(statusButton);
+      return;
+    }
 
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeActionMenus();
-    });
-
-    document.querySelectorAll(".m-table-scroll-container").forEach(function (container) {
-      container.addEventListener("scroll", closeActionMenus);
-    });
-
-    window.addEventListener("resize", closeActionMenus);
-    window.addEventListener("scroll", closeActionMenus, true);
+    if (!event.target.closest(".action-menu__dropdown")) {
+      closeActionMenus();
+    }
   });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeActionMenus();
+  });
+
+  document.querySelectorAll(".m-table-scroll-container").forEach(function (container) {
+    container.addEventListener("scroll", closeActionMenus);
+  });
+
+  window.addEventListener("resize", closeActionMenus);
+  window.addEventListener("scroll", closeActionMenus, true);
+});
 </script>

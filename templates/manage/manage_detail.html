@@ -1,14 +1,8 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=23"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=25">
 
 <section class="manage-detail-page">
   <div class="manage-detail-wrap">
@@ -109,18 +103,12 @@
         </div>
 
         <div class="detail-actions">
-          <a
-            href="{{ url_for('manage') }}"
-            class="detail-btn detail-btn-secondary"
-          >
+          <a href="{{ url_for('manage') }}" class="detail-btn detail-btn-secondary">
             <i class="fas fa-list"></i>
             Danh sách
           </a>
 
-          <a
-            href="{{ url_for('user_edit', id=action_id) }}"
-            class="detail-btn detail-btn-primary"
-          >
+          <a href="{{ url_for('user_edit', id=action_id) }}" class="detail-btn detail-btn-primary">
             <i class="fas fa-pen"></i>
             Chỉnh sửa
           </a>
@@ -151,6 +139,105 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const changeUserStatusBtn = document.getElementById("changeUserStatusBtn");
+
+  // Xóa toast cũ trước khi hiện toast mới để tránh bị lặp
+  function clearOldSonnerToasts() {
+    if (window.sonner && typeof window.sonner.dismiss === "function") {
+      window.sonner.dismiss();
+    }
+
+    document
+      .querySelectorAll("[data-sonner-toast], .sonner-toast, .sonner-item, .toast-item")
+      .forEach(function (toast) {
+        toast.remove();
+      });
+  }
+
+  // Gọi Sonner chung của hệ thống
+  function showSystemSonner(message, type) {
+    const text = message || "Thao tác thành công";
+    const cleanType = String(type || "success").toLowerCase();
+
+    if (window.sonner) {
+      if (cleanType === "error" && typeof window.sonner.error === "function") {
+        window.sonner.error(text);
+        return;
+      }
+
+      if (cleanType === "warning" && typeof window.sonner.warning === "function") {
+        window.sonner.warning(text);
+        return;
+      }
+
+      if (typeof window.sonner.success === "function") {
+        window.sonner.success(text);
+        return;
+      }
+    }
+
+    alert(text);
+  }
+
+  // Đọc toast lưu tạm sau khi reload trang detail
+  function showStoredManageToast() {
+    const rawToast = sessionStorage.getItem("manage_toast");
+    if (!rawToast) return;
+
+    sessionStorage.removeItem("manage_toast");
+
+    let toastData = {
+      type: "success",
+      message: "Thao tác thành công"
+    };
+
+    try {
+      toastData = JSON.parse(rawToast);
+    } catch (error) {
+      toastData.message = rawToast;
+    }
+
+    setTimeout(function () {
+      clearOldSonnerToasts();
+
+      setTimeout(function () {
+        showSystemSonner(toastData.message, toastData.type);
+      }, 30);
+    }, 220);
+  }
+
+  // Gọi route đổi trạng thái bằng fetch để tự kiểm soát toast
+  async function toggleUserStatus(actionUrl, isActive, userName) {
+    try {
+      const response = await fetch(actionUrl, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Accept": "text/html, application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Toggle status failed");
+      }
+
+      sessionStorage.setItem(
+        "manage_toast",
+        JSON.stringify({
+          type: isActive ? "error" : "success",
+          message: isActive
+            ? "Đã ngưng hoạt động tài khoản của " + userName
+            : "Đã mở hoạt động tài khoản cho " + userName
+        })
+      );
+
+      window.location.reload();
+    } catch (error) {
+      showSystemSonner("Đổi trạng thái tài khoản không thành công", "error");
+    }
+  }
+
+  showStoredManageToast();
 
   if (!changeUserStatusBtn) return;
 
@@ -203,7 +290,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (confirmed) {
-      window.location.href = actionUrl;
+      changeUserStatusBtn.disabled = true;
+      await toggleUserStatus(actionUrl, isActive, userName);
     }
   });
 });

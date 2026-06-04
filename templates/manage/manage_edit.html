@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
 
 <!-- CSS riêng cho trang chỉnh sửa nhân sự -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=33">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_edit.css') }}?v=34">
 
 <section class="manage-edit-page">
   <div class="manage-edit-wrap">
@@ -314,21 +314,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let isSubmitting = false;
 
-  // Mở modal xác nhận
   function openConfirm() {
     if (!overlay) return;
     overlay.classList.add("is-open");
     overlay.setAttribute("aria-hidden", "false");
   }
 
-  // Đóng modal xác nhận
   function closeConfirm() {
     if (!overlay) return;
     overlay.classList.remove("is-open");
     overlay.setAttribute("aria-hidden", "true");
   }
 
-  // Hiện lỗi field
   function setError(field, message) {
     const group = field.closest(".edit-field");
     if (!group) return;
@@ -339,13 +336,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (error) error.textContent = message || "Vui lòng nhập thông tin.";
   }
 
-  // Xóa lỗi field
   function clearError(field) {
     const group = field.closest(".edit-field");
     if (group) group.classList.remove("has-error");
   }
 
-  // Validate field bắt buộc
   function validateField(field) {
     const value = (field.value || "").trim();
     const type = field.getAttribute("type");
@@ -368,7 +363,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return true;
   }
 
-  // Validate toàn form
   function validateForm() {
     if (!form) return false;
 
@@ -394,14 +388,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return valid;
   }
 
-  // Đóng custom select
   function closeSelects(exceptBox = null) {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
       if (box !== exceptBox) box.classList.remove("is-open");
     });
   }
 
-  // Đồng bộ custom select với select thật
   function syncSelect(box) {
     const select = document.getElementById(box.dataset.target);
     const text = box.querySelector(".edit-custom-select__trigger span");
@@ -422,7 +414,6 @@ document.addEventListener("DOMContentLoaded", function () {
     text.textContent = selectedText || (selectedOption ? selectedOption.textContent.trim() : "Chọn");
   }
 
-  // Khởi tạo custom select
   function initSelects() {
     document.querySelectorAll("[data-custom-select]").forEach(function (box) {
       const select = document.getElementById(box.dataset.target);
@@ -462,7 +453,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Gửi form, lưu xong quay về danh sách và hiện toast vàng
+  // Lưu thành công: lưu type warning để trang danh sách gọi Sonner màu vàng
   async function submitForm() {
     if (!form || isSubmitting) return;
 
@@ -489,7 +480,6 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionStorage.setItem(
           "manage_toast",
           JSON.stringify({
-            /* Cập nhật nhân sự thành công phải dùng màu vàng */
             type: "warning",
             message: "Cập nhật nhân sự thành công"
           })
@@ -508,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function () {
         confirmBtn.textContent = "Lưu";
       }
 
-      if (window.sonner) {
+      if (window.sonner && typeof window.sonner.error === "function") {
         window.sonner.error("Lưu thay đổi không thành công", "Vui lòng thử lại.");
       } else {
         alert("Lưu thay đổi không thành công. Vui lòng thử lại.");
