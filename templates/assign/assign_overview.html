@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=20260603_assign_short_confirm">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=20260604_keep_bulk_select">
 
 {% set counts = counts or {} %}
 {% set categories = categories or [] %}
@@ -163,6 +163,7 @@
                 {% set is_free = row_status in ['chưa dùng', 'chưa sử dụng', 'available', 'unused'] %}
                 {% set is_using = row_status in ['đang sử dụng', 'using', 'in_use'] %}
                 {% set give_url = row.give_url if row.give_url is defined and row.give_url else url_for('assign_give', id=row_id) %}
+                {% set unassign_url = row.unassign_url if row.unassign_url is defined and row.unassign_url else url_for('assign_unassign', id=row_id) %}
                 {% set state = 'free' if is_free else ('using' if is_using else 'other') %}
 
                 <button
@@ -171,6 +172,7 @@
                   data-id="{{ row_id }}"
                   data-state="{{ state }}"
                   data-give-url="{{ give_url }}"
+                  data-unassign-url="{{ unassign_url }}"
                   data-asset-code="{{ row.asset_code or '---' }}"
                   data-asset-name="{{ row.asset or row.asset_name or '---' }}"
                   data-receiver="{{ row.receiver or row.user or '---' }}"
@@ -227,6 +229,7 @@
               data-id="{{ row_id }}"
               data-state="{{ 'free' if is_free else ('using' if is_using else 'other') }}"
               data-give-url="{{ give_url }}"
+              data-unassign-url="{{ unassign_url }}"
               data-asset-code="{{ row.asset_code or '---' }}"
               data-asset-name="{{ row.asset or row.asset_name or '---' }}"
               data-receiver="{{ row.receiver or row.user or '---' }}"
@@ -361,10 +364,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let timer = null;
   let controller = null;
-  let selectedIds = new Set();
+  let selectedAssets = new Map();
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+  const rows = () => $$(".assign-row");
+  const selectedRows = () => [...selectedAssets.values()];
+
+  const readAssetFromRow = row => ({
+    id: row.dataset.id,
+    state: row.dataset.state,
+    giveUrl: row.dataset.giveUrl,
+    unassignUrl: row.dataset.unassignUrl,
+    assetCode: row.dataset.assetCode || "---",
+    assetName: row.dataset.assetName || "---",
+    receiver: row.dataset.receiver || "---"
+  });
 
   const notify = (type, title, text) => {
     if (window.sonner?.[type]) return window.sonner[type](title, text || "");
@@ -398,9 +414,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.setAttribute("aria-expanded", "false");
     });
   };
-
-  const rows = () => $$(".assign-row");
-  const selectedRows = () => rows().filter(row => selectedIds.has(row.dataset.id));
 
   function hasFilter() {
     if (!form) return false;
@@ -436,6 +449,33 @@ document.addEventListener("DOMContentLoaded", () => {
     return form.action + (query ? "?" + query : "");
   }
 
+  function patchTable(nextTable) {
+    const scroller = $("#assignTableScroll");
+    const top = scroller?.scrollTop || 0;
+    const left = scroller?.scrollLeft || 0;
+
+    const patch = selector => {
+      const current = $(selector);
+      const next = $(selector, nextTable);
+
+      if (current && next && current.innerHTML !== next.innerHTML) {
+        current.innerHTML = next.innerHTML;
+      }
+    };
+
+    patch(".table-info-count");
+    patch(".table-scroll tbody");
+    patch("#assignPickerMenu");
+    patch(".pagination");
+
+    if (scroller) {
+      scroller.scrollTop = top;
+      scroller.scrollLeft = left;
+    }
+
+    updateBulk();
+  }
+
   async function loadAssignTable(url, pushState = true) {
     if (!form) return;
 
@@ -454,14 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const html = await response.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
       const nextTable = doc.querySelector(".table-container");
-      const currentTable = document.querySelector(".table-container");
 
-      if (nextTable && currentTable) {
-        currentTable.replaceWith(nextTable);
-        selectedIds.clear();
-        updateBulk();
-      }
-
+      if (nextTable) patchTable(nextTable);
       if (pushState) window.history.replaceState({}, "", url);
     } catch (error) {
       if (error.name !== "AbortError") console.error(error);
@@ -476,7 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function submitFilterDebounced() {
     updateClearButton();
     clearTimeout(timer);
-    timer = setTimeout(submitFilterNow, 160);
+    timer = setTimeout(submitFilterNow, 0);
   }
 
   function resetFilters() {
@@ -506,9 +540,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateClearButton();
   }
 
-  function buildAssignUrl(items) {
-    const ids = items.map(row => row.dataset.id).filter(Boolean).join(",");
-    const first = items[0]?.dataset.giveUrl || "#";
+  function buildAssignUrl() {
+    const items = selectedRows();
+    const ids = items.map(item => item.id).filter(Boolean).join(",");
+    const first = items[0]?.giveUrl || "#";
 
     return `${first}${first.includes("?") ? "&" : "?"}ids=${encodeURIComponent(ids)}`;
   }
@@ -525,22 +560,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     table?.classList.toggle("is-bulk-mode", isBulk);
 
-    if (!isBulk) {
-      selectedIds.clear();
-
-      if (picker) picker.hidden = true;
-
-      bulkActions?.classList.remove("is-visible");
-      closeMenus();
-    } else if (picker) {
-      picker.hidden = false;
-    }
-
-    const items = selectedRows();
-    const states = [...new Set(items.map(row => row.dataset.state))];
+    if (picker) picker.hidden = !isBulk;
 
     rows().forEach(row => {
-      row.classList.toggle("is-selected", selectedIds.has(row.dataset.id));
+      row.classList.toggle("is-selected", isBulk && selectedAssets.has(row.dataset.id));
     });
 
     bulkActions?.classList.remove("is-visible");
@@ -552,7 +575,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (bulkUnassignBtn) bulkUnassignBtn.hidden = true;
 
-    if (!isBulk || !items.length) {
+    if (!isBulk) {
+      closeMenus();
+      return;
+    }
+
+    const items = selectedRows();
+    const states = [...new Set(items.map(item => item.state))];
+
+    if (!items.length) {
       if (bulkSummary) bulkSummary.textContent = "Chưa chọn tài sản nào";
       return;
     }
@@ -567,7 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (states[0] === "free" && bulkActions && bulkAssignBtn) {
       bulkActions.classList.add("is-visible");
       bulkAssignBtn.hidden = false;
-      bulkAssignBtn.href = buildAssignUrl(items);
+      bulkAssignBtn.href = buildAssignUrl();
     }
 
     if (states[0] === "using" && bulkActions && bulkUnassignBtn) {
@@ -579,7 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function bulkUnassign() {
     const btn = $("#bulkUnassignBtn");
     const items = selectedRows();
-    const states = [...new Set(items.map(row => row.dataset.state))];
+    const states = [...new Set(items.map(item => item.state))];
 
     if (!items.length) {
       return notify("warning", "Chưa chọn tài sản", "Vui lòng chọn ít nhất một tài sản để thu hồi.");
@@ -597,25 +628,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!ok) return;
 
-    const forms = items.map(row => $(".js-unassign-form", row)).filter(Boolean);
-
-    if (!forms.length) {
-      return notify("error", "Không thể thu hồi", "Không tìm thấy biểu mẫu thu hồi.");
-    }
-
     try {
       if (btn) btn.disabled = true;
 
-      for (const itemForm of forms) {
-        await fetch(itemForm.action, {
+      for (const item of items) {
+        if (!item.unassignUrl) continue;
+
+        await fetch(item.unassignUrl, {
           method: "POST",
-          body: new FormData(itemForm),
           credentials: "same-origin",
           headers: { "X-Requested-With": "fetch" }
         });
       }
 
-      notify("success", "Thu hồi thành công", `Đã thu hồi ${forms.length} tài sản.`);
+      notify("success", "Thu hồi thành công", `Đã thu hồi ${items.length} tài sản.`);
+      selectedAssets.clear();
       loadAssignTable(location.href, false);
     } catch {
       notify("error", "Thu hồi không thành công", "Vui lòng thử lại sau.");
@@ -705,9 +732,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (row && $("#bulkModeToggle")?.checked && !event.target.closest(".action-menu")) {
       event.preventDefault();
 
-      selectedIds.has(row.dataset.id)
-        ? selectedIds.delete(row.dataset.id)
-        : selectedIds.add(row.dataset.id);
+      selectedAssets.has(row.dataset.id)
+        ? selectedAssets.delete(row.dataset.id)
+        : selectedAssets.set(row.dataset.id, readAssetFromRow(row));
 
       closeMenus();
       updateBulk();
