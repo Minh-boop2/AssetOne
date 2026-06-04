@@ -7,13 +7,14 @@
 />
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=22"
+  href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=23"
 />
 
 <section class="manage-detail-page">
   <div class="manage-detail-wrap">
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
     {% set is_active = user.status_code == 'HOAT_DONG' or user.status == 'Hoạt động' or user.status == 'HOAT_DONG' %}
+    {% set current_status_code = 'HOAT_DONG' if is_active else 'NGUNG_HOAT_DONG' %}
 
     <div class="detail-topbar">
       <a href="{{ url_for('manage') }}" class="detail-back-link">
@@ -126,12 +127,20 @@
 
           <button
             type="button"
-            class="detail-btn detail-btn-danger"
-            id="deleteUserBtn"
-            data-delete-url="{{ url_for('user_delete', id=action_id) }}"
+            class="detail-btn {% if is_active %}detail-btn-danger{% else %}detail-btn-restore{% endif %}"
+            id="changeUserStatusBtn"
+            data-action-url="{{ url_for('user_toggle_status', id=action_id) }}"
+            data-user-name="{{ user.name or 'nhân sự này' }}"
+            data-user-code="{{ user.id }}"
+            data-current-status="{{ current_status_code }}"
           >
-            <i class="fas fa-trash"></i>
-            Xóa nhân sự
+            {% if is_active %}
+              <i class="fas fa-ban"></i>
+              Ngưng hoạt động
+            {% else %}
+              <i class="fas fa-redo-alt"></i>
+              Cấp lại
+            {% endif %}
           </button>
         </div>
       </div>
@@ -141,31 +150,60 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const deleteUserBtn = document.getElementById("deleteUserBtn");
+  const changeUserStatusBtn = document.getElementById("changeUserStatusBtn");
 
-  if (!deleteUserBtn) return;
+  if (!changeUserStatusBtn) return;
 
-  deleteUserBtn.addEventListener("click", async function () {
-    const deleteUrl = deleteUserBtn.dataset.deleteUrl;
+  changeUserStatusBtn.addEventListener("click", async function () {
+    const actionUrl = changeUserStatusBtn.dataset.actionUrl;
+    const userName = changeUserStatusBtn.dataset.userName || "nhân sự này";
+    const userCode = changeUserStatusBtn.dataset.userCode || "";
+    const currentStatus = changeUserStatusBtn.dataset.currentStatus || "";
+    const isActive = currentStatus === "HOAT_DONG";
+
+    if (!actionUrl) return;
+
+    const title = isActive
+      ? "Xác nhận ngưng hoạt động"
+      : "Xác nhận cấp lại tài khoản";
+
+    const confirmText = isActive
+      ? "Ngưng hoạt động"
+      : "Cấp lại";
+
+    const message = isActive
+      ? (
+          "Bạn có chắc muốn chuyển " +
+          userName +
+          (userCode ? " (" + userCode + ")" : "") +
+          " sang trạng thái ngưng hoạt động không?"
+        )
+      : (
+          "Bạn có chắc muốn cấp lại tài khoản cho " +
+          userName +
+          (userCode ? " (" + userCode + ")" : "") +
+          " không?"
+        );
+
     let confirmed = false;
 
     if (typeof window.toastConfirm === "function") {
       confirmed = await window.toastConfirm({
-        type: "error",
-        title: "Xác nhận xóa nhân sự",
-        message: "Bạn có chắc muốn xóa nhân sự này không? Hành động này không thể hoàn tác.",
-        confirmText: "Xóa",
+        type: isActive ? "error" : "success",
+        title: title,
+        message: message,
+        confirmText: confirmText,
         cancelText: "Hủy",
-        danger: true,
+        danger: isActive,
         closeOnBackdrop: false,
         closeOnEsc: true
       });
     } else {
-      confirmed = confirm("Bạn có chắc muốn xóa nhân sự này không?");
+      confirmed = confirm(message);
     }
 
     if (confirmed) {
-      window.location.href = deleteUrl;
+      window.location.href = actionUrl;
     }
   });
 });
