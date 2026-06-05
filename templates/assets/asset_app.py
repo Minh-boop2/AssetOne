@@ -5,6 +5,7 @@ from .asset_backend import (
     asset_permission_context,
     create_asset_from_form,
     delete_asset_from_backend,
+    fetch_asset_activity_logs_from_backend,
     fetch_asset_detail_from_backend,
     fetch_asset_types_from_backend,
     fetch_assets_from_backend,
@@ -103,7 +104,6 @@ def register_assets_routes(app):
         pagination = api_result.get("pagination", {}) or {}
 
         # THÊM: chuẩn hóa pagination để asset_table.html luôn nhận đúng page hiện tại
-        # Nếu backend thiếu field nào thì lấy fallback từ URL hiện tại
         pagination = {
             "page": pagination.get("page", page),
             "per_page": pagination.get("per_page", per_page),
@@ -124,11 +124,7 @@ def register_assets_routes(app):
         return render_template(
             "assets/assets.html",
             assets=assets,
-
-            # THÊM: truyền nguyên pagination xuống asset_table.html
-            # Nếu thiếu dòng này thì phân trang trong table sẽ fallback về Trang 1
             pagination=pagination,
-
             current_page=pagination.get("page", 1),
             total_pages=pagination.get("total_pages", 1),
             search_q=search_q,
@@ -266,10 +262,18 @@ def register_assets_routes(app):
             "warranty": info.get("warranty") or "N/A",
         }
 
+        # THÊM: lấy 5 hoạt động mới nhất của đúng tài sản đang xem chi tiết
+        # Dữ liệu lấy từ API /api/activities và render ở phần Lịch sử hoạt động
+        activity_logs = fetch_asset_activity_logs_from_backend(
+            info,
+            max_items=5,
+        )
+
         return render_template(
             "assets/asset_detail.html",
             info=info,
             specs=specs,
+            activity_logs=activity_logs,
             **asset_permission_context(),
         )
 

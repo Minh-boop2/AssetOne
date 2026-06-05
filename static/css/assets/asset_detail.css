@@ -35,7 +35,7 @@ body.asset-detail-lock .app-content {
 }
 
 .asset-detail-container {
-  width: min(100%, 1160px);
+  width: min(100%, 1280px);
   height: 100%;
   margin: 0 auto;
   display: flex;
@@ -268,8 +268,177 @@ body.asset-detail-lock .app-content {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+.history-card-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: clamp(12px, 1.6dvh, 16px);
+  padding-bottom: clamp(10px, 1.4dvh, 14px);
+  border-bottom: 1px solid var(--border, #334155);
+}
+
+.history-card-header h3 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+.history-count {
+  color: var(--text-soft, #94a3b8);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.history-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--border, #334155);
+  border-radius: 14px;
+  background: var(--surface, #1e293b);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #334155) var(--surface, #1e293b);
+}
+
+.history-table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.history-table-wrap::-webkit-scrollbar-track {
+  background: var(--surface, #1e293b);
+}
+
+.history-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border, #334155);
+  border-radius: 999px;
+}
+
+.history-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.history-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 12px 14px;
+  color: var(--text-soft, #94a3b8);
+  background: var(--surface-2, #162033);
+  border-bottom: 1px solid var(--border, #334155);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.history-table tbody td {
+  height: 56px;
+  padding: 12px 14px;
+  color: var(--text, #f8fafc);
+  border-bottom: 1px solid var(--border, #334155);
+  font-size: 13px;
+  font-weight: 700;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table tbody tr:hover td {
+  background: var(--surface-2, #162033);
+}
+
+.history-code,
+.history-time,
+.history-user,
+.history-action,
+.history-detail {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-code {
+  color: var(--text, #f8fafc);
+  font-weight: 800;
+}
+
+.history-time,
+.history-detail {
+  color: var(--text-soft, #94a3b8);
+}
+
+.history-module,
+.history-status {
+  max-width: 100%;
+  min-height: 28px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.history-module {
+  color: var(--hsu-blue, #3b82f6);
+  background: rgba(59, 130, 246, 0.13);
+}
+
+.history-status-success {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.13);
+}
+
+.history-status-danger {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.13);
+}
+
+.history-status-neutral {
+  color: var(--text-soft, #94a3b8);
+  background: rgba(100, 116, 139, 0.16);
+}
+
+.history-empty {
+  flex: 1 1 auto;
+  min-height: 120px;
+  padding: 26px;
+  color: var(--text-soft, #94a3b8);
+  background: var(--surface-2, #162033);
+  border: 1px dashed var(--border, #334155);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Giữ lại class cũ để không làm lỗi nếu nơi khác còn dùng */
 .history-row {
   display: flex;
   justify-content: space-between;
@@ -346,6 +515,10 @@ body.asset-detail-lock .app-content {
   .history-card {
     flex: 0 0 auto;
   }
+
+  .history-table-wrap {
+    max-height: 420px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -374,6 +547,11 @@ body.asset-detail-lock .app-content {
 
   .history-date {
     text-align: left;
+  }
+
+  .history-card-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -427,8 +605,8 @@ body.asset-detail-lock .app-content {
     margin-bottom: 10px;
   }
 
-  .history-row {
-    padding: 10px 0;
+  .history-table tbody td {
+    height: 50px;
   }
 }
 
@@ -465,5 +643,11 @@ body.asset-detail-lock .app-content {
     width: 36px;
     height: 36px;
     flex-basis: 36px;
+  }
+
+  .history-table thead th,
+  .history-table tbody td {
+    padding: 10px 12px;
+    font-size: 12px;
   }
 }

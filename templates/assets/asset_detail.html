@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets/asset_detail.css') }}" />
 
 {% set raw_status = info.status or '' %}
+{% set logs = activity_logs if activity_logs is defined else [] %}
 
 {% if raw_status in ['using', 'Hoàn thành', 'Đang sử dụng'] %}
   {% set status_label = 'Đang sử dụng' %}
@@ -104,25 +105,77 @@
     </div>
 
     <div class="info-card history-card">
-      <h3>Lịch sử hoạt động</h3>
-
-      <div class="history-row">
-        <div class="history-content">
-          <div class="history-title">Cấp phát tài sản</div>
-          <div class="history-sub">Thực hiện bởi Admin</div>
-        </div>
-
-        <div class="history-date">{{ info.date or '—' }}</div>
+      <div class="history-card-header">
+        <h3>Lịch sử hoạt động</h3>
+        <span class="history-count">{{ logs|length }} hoạt động</span>
       </div>
 
-      <div class="history-row">
-        <div class="history-content">
-          <div class="history-title">Kiểm kê định kỳ</div>
-          <div class="history-sub">Tình trạng tốt</div>
-        </div>
+      <!-- THÊM: lấy dữ liệu thật từ trang Hoạt động, bỏ cột Thao tác -->
+      {% if logs and logs|length > 0 %}
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Mã hoạt động</th>
+                <th>Thời gian</th>
+                <th>Người thực hiện</th>
+                <th>Hành động</th>
+                <th>Loại</th>
+                <th>Nội dung</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
 
-        <div class="history-date">01/04/2026</div>
-      </div>
+            <tbody>
+              {% for log in logs %}
+                <tr>
+                  <td>
+                    <span class="history-code">{{ log.activity_code or '—' }}</span>
+                  </td>
+
+                  <td>
+                    <span class="history-time">{{ log.activity_time or '—' }}</span>
+                  </td>
+
+                  <td>
+                    <span class="history-user" title="{{ log.activity_user or '—' }}">
+                      {{ log.activity_user or '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="history-action" title="{{ log.activity_action or '—' }}">
+                      {{ log.activity_action or '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="history-module">
+                      {{ log.activity_module or 'Hệ thống' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="history-detail" title="{{ log.activity_detail or '—' }}">
+                      {{ log.activity_detail or '—' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="history-status {{ log.activity_status_class or 'history-status-neutral' }}">
+                      {{ log.activity_status or '—' }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="history-empty">
+          Chưa có lịch sử hoạt động cho tài sản này.
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>

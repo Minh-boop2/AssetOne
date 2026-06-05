@@ -1,4 +1,6 @@
 import json
+import unicodedata
+from datetime import datetime
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlencode, quote
@@ -8,6 +10,9 @@ from flask import session, flash, redirect, url_for
 
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
 BACKEND_ASSET_TYPES_API = "http://127.0.0.1:5001/api/assets/types"
+
+# THÊM: API hoạt động dùng để lấy lịch sử hoạt động của 1 tài sản ở trang detail
+BACKEND_ACTIVITIES_API = "http://127.0.0.1:5001/api/activities"
 
 
 DEFAULT_FILTER_COUNTS = {
@@ -434,6 +439,347 @@ def fetch_asset_detail_from_backend(asset_id):
 
     except (URLError, TimeoutError, json.JSONDecodeError):
         return None
+
+
+# THÊM: bỏ dấu và viết thường để so khớp hoạt động với tài sản ổn định hơn
+def normalize_match_text(value):
+    if value is None:
+        return ""
+
+    text = str(value).strip().lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
+
+    return text
+
+
+# THÊM: lấy mã hoạt động giống trang Hoạt động
+def build_asset_activity_code(activity, index=0):
+    raw_id = (
+        activity.get("id")
+        or activity.get("_id")
+        or activity.get("activity_id")
+        or activity.get("log_id")
+        or ""
+    )
+
+    raw_id = str(raw_id)
+
+    if raw_id:
+        return "ACT-" + raw_id[-6:].upper()
+
+    return "ACT-" + str(index + 1).zfill(6)
+
+
+# THÊM: format thời gian giống bảng Hoạt động
+def format_asset_activity_time(value):
+    if not value:
+        return "—"
+
+    text = str(value).strip()
+
+    if not text:
+        return "—"
+
+    formats = [
+        "%d/%m/%Y %H:%M",
+        "%H:%M %d/%m/%Y",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+    ]
+
+    clean_text = text.replace("Z", "").replace("+00:00", "")
+
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(clean_text[:26], fmt)
+            return parsed.strftime("%H:%M %d/%m/%Y")
+        except Exception:
+            pass
+
+    return text
+
+
+# THÊM: đổi status_code thành chữ hiển thị
+def get_asset_activity_status_text(activity):
+    status_code = activity.get("status_code")
+
+    if status_code is None or status_code == "":
+        return activity.get("status") or activity.get("display_status") or "Thành công"
+
+    try:
+        code = int(status_code)
+    except Exception:
+        return str(status_code)
+
+    if 200 <= code < 300:
+        return "Thành công"
+
+    if 300 <= code < 400:
+        return "Chuyển hướng"
+
+    if 400 <= code < 500:
+        return "Thất bại"
+
+    if code >= 500:
+        return "Lỗi hệ thống"
+
+    return "Không xác định"
+
+
+# THÊM: class màu cho trạng thái hoạt động
+def get_asset_activity_status_class(activity):
+    status_text = get_asset_activity_status_text(activity)
+
+    if status_text == "Thành công":
+        return "history-status-success"
+
+    if status_text in ["Thất bại", "Lỗi hệ thống"]:
+        return "history-status-danger"
+
+    return "history-status-neutral"
+
+
+# THÊM: xác định loại hoạt động giống trang Hoạt động
+def get_asset_activity_type(activity):
+    module = normalize_match_text(activity.get("module"))
+    action = normalize_match_text(activity.get("action"))
+    path = normalize_match_text(activity.get("path"))
+    target_name = normalize_match_text(activity.get("target_name"))
+
+    text = f"{module} {action} {path} {target_name}"
+
+    if "report" in text or "bao cao" in text:
+        return "Báo cáo"
+
+    if "thu hoi" in text or "recover" in text or "recall" in text or "return" in text:
+        return "Thu hồi"
+
+    if "assign" in text or "cap phat" in text:
+        return "Cấp phát"
+
+    if "asset" in text or "tai san" in text:
+        return "Tài sản"
+
+    if "user" in text or "nguoi dung" in text:
+        return "Người dùng"
+
+    if "permission" in text or "phan quyen" in text:
+        return "Phân quyền"
+
+    if "mail" in text or "email" in text:
+        return "Mail"
+
+    if "activity" in text or "hoat dong" in text:
+        return "Hoạt động"
+
+    return "Hệ thống"
+
+
+# THÊM: nội dung hiển thị của log
+def build_asset_activity_detail(activity):
+    action = activity.get("action") or "Thao tác hệ thống"
+    target_name = activity.get("target_name") or ""
+    path = activity.get("path") or ""
+
+    if target_name:
+        return f"{action} - {target_name}"
+
+    if path:
+        return f"{action} ({path})"
+
+    return action
+
+
+# THÊM: kiểm tra log có thuộc đúng tài sản đang xem hay không
+def activity_matches_asset(activity, asset):
+    asset = normalize_asset_for_template(asset)
+
+    asset_id = normalize_match_text(asset.get("id"))
+    asset_code = normalize_match_text(asset.get("asset_code"))
+    asset_name = normalize_match_text(asset.get("asset") or asset.get("asset_name"))
+
+    target_id = normalize_match_text(activity.get("target_id"))
+
+    metadata = activity.get("metadata") or {}
+
+    metadata_text = ""
+
+    if isinstance(metadata, dict):
+        metadata_text = " ".join([
+            str(value)
+            for value in metadata.values()
+            if value not in [None, ""]
+        ])
+
+    searchable_text = normalize_match_text(" ".join([
+        str(activity.get("action") or ""),
+        str(activity.get("module") or ""),
+        str(activity.get("path") or ""),
+        str(activity.get("target_id") or ""),
+        str(activity.get("target_name") or ""),
+        str(metadata_text or ""),
+    ]))
+
+    exact_tokens = [
+        token
+        for token in [asset_id, asset_code]
+        if token
+    ]
+
+    for token in exact_tokens:
+        if token and (target_id == token or token in searchable_text):
+            return True
+
+    if asset_name and asset_name in searchable_text:
+        return True
+
+    return False
+
+
+# THÊM: chuẩn hóa activity log để asset_detail.html render giống bảng hoạt động
+def normalize_asset_activity_for_template(activity, index=0):
+    if not isinstance(activity, dict):
+        activity = {}
+
+    full_name = (
+        activity.get("full_name")
+        or activity.get("user_name")
+        or activity.get("username")
+        or activity.get("email")
+        or "Chưa xác định"
+    )
+
+    created_at = (
+        activity.get("created_at")
+        or activity.get("updated_at")
+        or activity.get("time")
+        or activity.get("activity_time")
+    )
+
+    action = activity.get("action") or "Thao tác hệ thống"
+    module = get_asset_activity_type(activity)
+    detail = build_asset_activity_detail(activity)
+    status_text = get_asset_activity_status_text(activity)
+
+    return {
+        **activity,
+        "activity_code": build_asset_activity_code(activity, index),
+        "activity_time": format_asset_activity_time(created_at),
+        "activity_user": full_name,
+        "activity_action": action,
+        "activity_module": module,
+        "activity_detail": detail,
+        "activity_status": status_text,
+        "activity_status_class": get_asset_activity_status_class(activity),
+    }
+
+
+# THÊM: gọi API /api/activities theo search term
+def fetch_activity_page_from_backend(search_term="", page=1):
+    params = {
+        "page": page,
+    }
+
+    if search_term:
+        params["search"] = search_term
+
+    api_url = f"{BACKEND_ACTIVITIES_API}?{urlencode(params)}"
+
+    req = Request(
+        api_url,
+        method="GET",
+        headers=build_headers(),
+    )
+
+    try:
+        with urlopen(req, timeout=8) as response:
+            payload = parse_json_response(response)
+
+        return payload
+
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+        return {
+            "success": False,
+            "data": [],
+            "pagination": {
+                "page": page,
+                "total_pages": 1,
+            },
+        }
+
+
+# THÊM: lấy lịch sử hoạt động của đúng tài sản đang xem detail
+# Mặc định chỉ lấy 5 hoạt động mới nhất để trang detail gọn và load nhanh hơn
+def fetch_asset_activity_logs_from_backend(asset, max_pages=5, max_items=5):
+    asset = normalize_asset_for_template(asset)
+
+    search_terms = []
+
+    for value in [
+        asset.get("asset_code"),
+        asset.get("asset"),
+        asset.get("asset_name"),
+        asset.get("id"),
+    ]:
+        value = str(value or "").strip()
+
+        if value and value not in search_terms:
+            search_terms.append(value)
+
+    if not search_terms:
+        return []
+
+    matched_logs = []
+    seen_ids = set()
+
+    for search_term in search_terms:
+        for page in range(1, max_pages + 1):
+            payload = fetch_activity_page_from_backend(
+                search_term=search_term,
+                page=page,
+            )
+
+            raw_items = payload.get("data") or []
+
+            for item in raw_items:
+                activity_id = str(
+                    item.get("id")
+                    or item.get("_id")
+                    or item.get("activity_id")
+                    or item.get("log_id")
+                    or ""
+                )
+
+                if activity_id and activity_id in seen_ids:
+                    continue
+
+                if not activity_matches_asset(item, asset):
+                    continue
+
+                if activity_id:
+                    seen_ids.add(activity_id)
+
+                matched_logs.append(item)
+
+                # THÊM: đủ 5 hoạt động mới nhất thì dừng luôn
+                if len(matched_logs) >= max_items:
+                    return [
+                        normalize_asset_activity_for_template(log, index)
+                        for index, log in enumerate(matched_logs[:max_items])
+                    ]
+
+            pagination = payload.get("pagination") or {}
+            total_pages = int(pagination.get("total_pages") or 1)
+
+            if page >= total_pages:
+                break
+
+    return [
+        normalize_asset_activity_for_template(log, index)
+        for index, log in enumerate(matched_logs[:max_items])
+    ]
 
 
 def fetch_asset_types_from_backend():
