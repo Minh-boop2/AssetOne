@@ -39,6 +39,21 @@ def get_status_action_from_request():
     return (data.get("action") or "").strip()
 
 
+def parse_selected_asset_types(raw_types):
+    # THÊM: tách danh sách loại tài sản khi filter chọn nhiều
+    # URL sẽ có dạng /assets?types=laptop,pc,printer
+    if isinstance(raw_types, list):
+        values = raw_types
+    else:
+        values = str(raw_types or "").split(",")
+
+    return [
+        str(value).strip()
+        for value in values
+        if str(value).strip() and str(value).strip() != "Tất cả"
+    ]
+
+
 def register_assets_routes(app):
     @app.route("/assets")
     def assets_page():
@@ -51,6 +66,14 @@ def register_assets_routes(app):
         sel_type = request.args.get("type", "Tất cả")
         sel_dept = request.args.get("department", "Tất cả")
         sel_status = request.args.get("status", "Tất cả")
+
+        # THÊM: nhận filter nhiều loại tài sản từ URL
+        # ví dụ: /assets?types=laptop,pc,printer
+        selected_types = parse_selected_asset_types(request.args.get("types", ""))
+
+        if selected_types:
+            sel_type = "Tất cả"
+
         page = request.args.get("page", 1, type=int)
         per_page = 10
 
@@ -59,6 +82,7 @@ def register_assets_routes(app):
             per_page=per_page,
             search=search_q,
             asset_type=sel_type,
+            asset_types=selected_types,
             department=sel_dept,
             status=sel_status,
         )
@@ -76,7 +100,17 @@ def register_assets_routes(app):
             for asset in api_result.get("items", [])
         ]
 
-        pagination = api_result.get("pagination", {})
+        pagination = api_result.get("pagination", {}) or {}
+
+        # THÊM: chuẩn hóa pagination để asset_table.html luôn nhận đúng page hiện tại
+        # Nếu backend thiếu field nào thì lấy fallback từ URL hiện tại
+        pagination = {
+            "page": pagination.get("page", page),
+            "per_page": pagination.get("per_page", per_page),
+            "total_items": pagination.get("total_items", len(assets)),
+            "total_pages": pagination.get("total_pages", 1),
+        }
+
         filter_counts = api_result.get("filter_counts", DEFAULT_FILTER_COUNTS)
         scope = api_result.get("scope", {})
 
@@ -90,11 +124,18 @@ def register_assets_routes(app):
         return render_template(
             "assets/assets.html",
             assets=assets,
+
+            # THÊM: truyền nguyên pagination xuống asset_table.html
+            # Nếu thiếu dòng này thì phân trang trong table sẽ fallback về Trang 1
+            pagination=pagination,
+
             current_page=pagination.get("page", 1),
             total_pages=pagination.get("total_pages", 1),
             search_q=search_q,
             total_count=pagination.get("total_items", 0),
             selected_type=sel_type,
+            selected_types=selected_types,
+            selected_types_raw=",".join(selected_types),
             selected_dept=sel_dept,
             selected_status=sel_status,
             filter_counts=filter_counts,

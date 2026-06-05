@@ -1,133 +1,59 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets.css') }}"
-/>
-
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets_create.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets_create.css') }}" />
 
 <div class="assets-create-page">
   <div class="asset-create-card">
     <div class="asset-create-header">
       <div>
         <span class="asset-create-badge">NEW</span>
-
         <h2 class="asset-create-title">Thêm thiết bị mới</h2>
-
-        <p class="asset-create-subtitle">
-          Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.
-        </p>
+        <p class="asset-create-subtitle">Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.</p>
       </div>
     </div>
 
     {% if error_message %}
-      <div class="asset-alert asset-alert--error">
-        {{ error_message }}
-      </div>
+      <div class="asset-alert asset-alert--error">{{ error_message }}</div>
     {% endif %}
 
-    <form
-      id="assetCreateForm"
-      method="POST"
-      class="asset-create-form"
-      novalidate
-    >
+    <form id="assetCreateForm" method="POST" class="asset-create-form" novalidate>
       <div class="asset-create-grid">
         <div class="asset-form-group" data-field-group="asset_code">
-          <label for="asset_code">
-            Mã tài sản <span class="required-star">*</span>
-          </label>
-
-          <input
-            id="asset_code"
-            type="text"
-            name="asset_code"
-            placeholder="VD: LAP-009"
-            value="{{ form_data.get('asset_code', '') if form_data else '' }}"
-            required
-            aria-required="true"
-            aria-describedby="asset_code_error"
-          />
-
-          <div class="asset-field-error" id="asset_code_error">
-            Vui lòng nhập mã tài sản.
-          </div>
+          <label for="asset_code">Mã tài sản <span class="required-star">*</span></label>
+          <input id="asset_code" type="text" name="asset_code" placeholder="VD: LAP-009"
+            value="{{ form_data.get('asset_code', '') if form_data else '' }}" required
+            aria-required="true" aria-describedby="asset_code_error" />
+          <div class="asset-field-error" id="asset_code_error">Vui lòng nhập mã tài sản.</div>
         </div>
 
         <div class="asset-form-group" data-field-group="asset_name">
-          <label for="asset_name">
-            Tên tài sản <span class="required-star">*</span>
-          </label>
-
-          <input
-            id="asset_name"
-            type="text"
-            name="asset_name"
-            placeholder="VD: MacBook Air M2"
-            value="{{ form_data.get('asset_name', '') if form_data else '' }}"
-            required
-            aria-required="true"
-            aria-describedby="asset_name_error"
-          />
-
-          <div class="asset-field-error" id="asset_name_error">
-            Vui lòng nhập tên tài sản.
-          </div>
+          <label for="asset_name">Tên tài sản <span class="required-star">*</span></label>
+          <input id="asset_name" type="text" name="asset_name" placeholder="VD: MacBook Air M2"
+            value="{{ form_data.get('asset_name', '') if form_data else '' }}" required
+            aria-required="true" aria-describedby="asset_name_error" />
+          <div class="asset-field-error" id="asset_name_error">Vui lòng nhập tên tài sản.</div>
         </div>
       </div>
 
       <div class="asset-form-group" data-field-group="type">
-        <label for="type">
-          Loại thiết bị <span class="required-star">*</span>
-        </label>
-
-        <input
-          id="type"
-          type="text"
-          name="type"
-          placeholder="VD: laptop, monitor, camera, router..."
-          value="{{ form_data.get('type', '') if form_data else '' }}"
-          autocomplete="off"
-          required
-          aria-required="true"
-          aria-describedby="type_error"
-        />
-
-        <div class="asset-field-error" id="type_error">
-          Vui lòng nhập loại thiết bị.
-        </div>
-
-        <div class="asset-form-help">
-          Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.
-        </div>
+        <label for="type">Loại thiết bị <span class="required-star">*</span></label>
+        <input id="type" type="text" name="type" placeholder="VD: laptop, monitor, camera, router..."
+          value="{{ form_data.get('type', '') if form_data else '' }}" autocomplete="off" required
+          aria-required="true" aria-describedby="type_error" />
+        <div class="asset-field-error" id="type_error">Vui lòng nhập loại thiết bị.</div>
+        <div class="asset-form-help">Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.</div>
 
         {% if asset_types %}
           <div class="asset-type-suggestions">
-            <div class="asset-type-suggestions__title">
-              Loại thiết bị hiện có
-            </div>
-
-            <div
-              class="asset-type-suggestions__list"
-              id="assetTypeSuggestionsList"
-            >
+            <div class="asset-type-suggestions__title">Loại thiết bị hiện có</div>
+            <div class="asset-type-suggestions__list" id="assetTypeSuggestionsList">
               {% for item in asset_types %}
-                <button
-                  type="button"
-                  class="asset-type-chip"
-                  data-type="{{ item.value }}"
-                  data-search="{{ item.value }}"
-                >
+                <button type="button" class="asset-type-chip" data-type="{{ item.value }}" data-search="{{ item.value }}">
                   <span>{{ item.value }}</span>
                   <small>{{ item.count }}</small>
                 </button>
               {% endfor %}
-
               <div class="asset-type-empty" id="assetTypeEmpty">
                 Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
               </div>
@@ -136,94 +62,51 @@
         {% endif %}
       </div>
 
-      <div class="asset-form-group">
-        <label for="warranty">Bảo hành đến</label>
+      <div class="asset-create-grid asset-create-grid--bottom">
+        <div class="asset-form-group">
+          <label for="warranty">Bảo hành đến</label>
+          <input id="warranty" type="text" name="warranty" placeholder="VD: 12/2026"
+            value="{{ form_data.get('warranty', '') if form_data else '' }}" />
+        </div>
 
-        <input
-          id="warranty"
-          type="text"
-          name="warranty"
-          placeholder="VD: 12/2026"
-          value="{{ form_data.get('warranty', '') if form_data else '' }}"
-        />
-      </div>
-
-      <div class="asset-form-group">
-        <label for="spec">Cấu hình / Ghi chú</label>
-
-        <textarea
-          id="spec"
-          name="spec"
-          rows="4"
-          placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
-        >{{ form_data.get('spec', '') if form_data else '' }}</textarea>
+        <div class="asset-form-group">
+          <label for="spec">Cấu hình / Ghi chú</label>
+          <textarea id="spec" name="spec" rows="3" placeholder="VD: Chip M2, RAM 8GB, SSD 256GB...">{{ form_data.get('spec', '') if form_data else '' }}</textarea>
+        </div>
       </div>
 
       <div class="asset-create-actions">
-        <button type="submit" class="asset-btn-submit">
-          Lưu thiết bị vào hệ thống
-        </button>
-
-        <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel">
-          Hủy và quay lại
-        </a>
+        <button type="submit" class="asset-btn-submit">Lưu thiết bị vào hệ thống</button>
+        <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel">Hủy và quay lại</a>
       </div>
     </form>
   </div>
 </div>
 
 <script>
+  document.documentElement.classList.add("asset-create-lock");
+  document.body.classList.add("asset-create-lock");
+
   const assetCreateForm = document.getElementById("assetCreateForm");
   const typeInput = document.getElementById("type");
   const assetTypeEmpty = document.getElementById("assetTypeEmpty");
-  const assetTypeChips = Array.from(
-    document.querySelectorAll(".asset-type-chip")
-  );
+  const assetTypeChips = Array.from(document.querySelectorAll(".asset-type-chip"));
 
   const requiredFields = [
-    {
-      id: "asset_code",
-      name: "mã tài sản",
-      message: "Vui lòng nhập mã tài sản.",
-    },
-    {
-      id: "asset_name",
-      name: "tên tài sản",
-      message: "Vui lòng nhập tên tài sản.",
-    },
-    {
-      id: "type",
-      name: "loại thiết bị",
-      message: "Vui lòng nhập loại thiết bị.",
-    },
+    { id: "asset_code", message: "Vui lòng nhập mã tài sản." },
+    { id: "asset_name", message: "Vui lòng nhập tên tài sản." },
+    { id: "type", message: "Vui lòng nhập loại thiết bị." },
   ];
 
   let typeFilterTimer = null;
-  const typeFilterDelay = 500;
 
   function normalizeText(value) {
-    return String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   }
 
   function showAssetToast(type, title, description) {
-    if (window.sonner && typeof window.sonner[type] === "function") {
-      window.sonner[type](title, description);
-      return;
-    }
-
-    if (window.sonner) {
-      window.sonner({
-        type: type,
-        title: title,
-        description: description,
-      });
-      return;
-    }
-
+    if (window.sonner && typeof window.sonner[type] === "function") return window.sonner[type](title, description);
+    if (window.sonner) return window.sonner({ type, title, description });
     alert(title + (description ? "\n" + description : ""));
   }
 
@@ -234,34 +117,23 @@
   function setFieldError(input, message) {
     const group = getFieldGroup(input);
     const errorBox = group?.querySelector(".asset-field-error");
-
     group?.classList.add("has-error");
     input.setAttribute("aria-invalid", "true");
-
-    if (errorBox) {
-      errorBox.textContent = message;
-    }
+    if (errorBox) errorBox.textContent = message;
   }
 
   function clearFieldError(input) {
-    const group = getFieldGroup(input);
-
-    group?.classList.remove("has-error");
+    getFieldGroup(input)?.classList.remove("has-error");
     input.removeAttribute("aria-invalid");
   }
 
   function validateRequiredField(field) {
     const input = document.getElementById(field.id);
-
     if (!input) return true;
-
-    const value = input.value.trim();
-
-    if (!value) {
+    if (!input.value.trim()) {
       setFieldError(input, field.message);
       return false;
     }
-
     clearFieldError(input);
     return true;
   }
@@ -273,39 +145,23 @@
     requiredFields.forEach((field) => {
       const input = document.getElementById(field.id);
       const fieldValid = validateRequiredField(field);
-
-      if (!fieldValid && !firstInvalidInput) {
-        firstInvalidInput = input;
-      }
-
-      if (!fieldValid) {
-        isValid = false;
-      }
+      if (!fieldValid && !firstInvalidInput) firstInvalidInput = input;
+      if (!fieldValid) isValid = false;
     });
 
-    if (firstInvalidInput) {
-      firstInvalidInput.focus();
-    }
-
+    if (firstInvalidInput) firstInvalidInput.focus();
     return isValid;
   }
 
   function setActiveChipByValue(value) {
     const normalizedValue = normalizeText(value);
-
     assetTypeChips.forEach((chip) => {
-      const chipValue = normalizeText(chip.dataset.type);
-
-      if (normalizedValue && chipValue === normalizedValue) {
-        chip.classList.add("is-active");
-      } else {
-        chip.classList.remove("is-active");
-      }
+      chip.classList.toggle("is-active", normalizedValue && normalizeText(chip.dataset.type) === normalizedValue);
     });
   }
 
   function filterAssetTypeChips() {
-    if (!typeInput || assetTypeChips.length === 0) return;
+    if (!typeInput || !assetTypeChips.length) return;
 
     const keyword = normalizeText(typeInput.value);
     let visibleCount = 0;
@@ -313,40 +169,25 @@
     assetTypeChips.forEach((chip) => {
       const typeValue = normalizeText(chip.dataset.type);
       const searchValue = normalizeText(chip.dataset.search || chip.textContent);
-
-      const isMatch =
-        !keyword ||
-        typeValue.includes(keyword) ||
-        searchValue.includes(keyword);
+      const isMatch = !keyword || typeValue.includes(keyword) || searchValue.includes(keyword);
 
       chip.style.display = isMatch ? "inline-flex" : "none";
-
-      if (isMatch) {
-        visibleCount += 1;
-      }
+      if (isMatch) visibleCount += 1;
     });
 
-    if (assetTypeEmpty) {
-      assetTypeEmpty.classList.toggle("show", visibleCount === 0);
-    }
-
+    if (assetTypeEmpty) assetTypeEmpty.classList.toggle("show", visibleCount === 0);
     setActiveChipByValue(typeInput.value);
   }
 
   requiredFields.forEach((field) => {
     const input = document.getElementById(field.id);
-
     if (!input) return;
 
     input.addEventListener("input", function () {
-      if (this.value.trim()) {
-        clearFieldError(this);
-      }
+      if (this.value.trim()) clearFieldError(this);
     });
 
-    input.addEventListener("blur", function () {
-      validateRequiredField(field);
-    });
+    input.addEventListener("blur", () => validateRequiredField(field));
   });
 
   if (typeInput) {
@@ -354,10 +195,7 @@
 
     typeInput.addEventListener("input", function () {
       clearTimeout(typeFilterTimer);
-
-      typeFilterTimer = setTimeout(() => {
-        filterAssetTypeChips();
-      }, typeFilterDelay);
+      typeFilterTimer = setTimeout(filterAssetTypeChips, 250);
     });
 
     typeInput.addEventListener("keydown", function (event) {
@@ -373,38 +211,24 @@
   assetTypeChips.forEach((button) => {
     button.addEventListener("click", () => {
       if (!typeInput) return;
-
       typeInput.value = button.dataset.type || "";
       typeInput.focus();
       clearFieldError(typeInput);
-
       clearTimeout(typeFilterTimer);
       filterAssetTypeChips();
-      setActiveChipByValue(typeInput.value);
     });
   });
 
   if (assetCreateForm) {
     assetCreateForm.addEventListener("submit", function (event) {
-      const isValid = validateAssetForm();
-
-      if (!isValid) {
+      if (!validateAssetForm()) {
         event.preventDefault();
-
-        showAssetToast(
-          "error",
-          "Thêm thiết bị không thành công",
-          "Vui lòng nhập đầy đủ các thông tin*."
-        );
-
+        showAssetToast("error", "Thêm thiết bị không thành công", "Vui lòng nhập đầy đủ các thông tin*.");
         return;
       }
 
       if (window.sonner) {
-        window.sonner.loading(
-          "Đang thêm thiết bị",
-          "Hệ thống đang xử lý thông tin..."
-        );
+        window.sonner.loading("Đang thêm thiết bị", "Hệ thống đang xử lý thông tin...");
       }
     });
   }

@@ -190,10 +190,6 @@
   flex-shrink: 0;
 }
 
-/* =========================
-   ASSET TABLE
-========================= */
-
 .asset-table {
   width: 100%;
   min-width: 0;
@@ -223,7 +219,6 @@
   max-width: 100%;
 }
 
-/* Tất cả text trong bảng tài sản bị dài sẽ thành ... */
 .asset-row > div:not(:has(.status-badge)) {
   white-space: nowrap;
   overflow: hidden;
@@ -266,10 +261,6 @@
   background: rgba(239, 59, 45, 0.12);
   color: var(--hsu-red);
 }
-
-/* =========================
-   ACTIVITY LIST
-========================= */
 
 .activity-list {
   display: flex;
@@ -316,40 +307,30 @@
   overflow: hidden;
 }
 
-/* Dòng tiêu đề hoạt động chỉ 1 dòng, dài thì ... */
 .activity-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.5;
   margin-bottom: 4px;
-
   display: block;
   width: 100%;
   max-width: 100%;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Dòng thời gian cũng chỉ 1 dòng */
 .activity-time {
   font-size: 13px;
   color: var(--text-soft);
-
   display: block;
   width: 100%;
   max-width: 100%;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* =========================
-   TASK LIST
-========================= */
 
 .task-list {
   display: flex;
@@ -400,6 +381,12 @@
   color: var(--hsu-red);
 }
 
+/* THÊM: icon xanh khi không có tài sản cần xử lý */
+.task-icon-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
 .task-icon-blue {
   background: rgba(31, 79, 163, 0.12);
   color: var(--hsu-blue);
@@ -410,7 +397,6 @@
   font-weight: 700;
   color: var(--text);
   margin-bottom: 4px;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -419,7 +405,6 @@
 .task-subtitle {
   font-size: 13px;
   color: var(--text-soft);
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -447,10 +432,6 @@
   color: #fff;
 }
 
-/* =========================
-   MINI STATS
-========================= */
-
 .mini-stats {
   display: flex;
   flex-direction: column;
@@ -472,8 +453,31 @@
   overflow: hidden;
 }
 
+.mini-stat-link {
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mini-stat-link:hover {
+  transform: translateY(-1px);
+  border-color: var(--hsu-blue);
+  background: var(--surface);
+  box-shadow: 0 10px 22px rgba(31, 79, 163, 0.14);
+}
+
+.mini-stat-link:focus-visible {
+  outline: 3px solid rgba(31, 79, 163, 0.22);
+  outline-offset: 2px;
+}
+
 .mini-stat span {
   min-width: 0;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -484,10 +488,6 @@
   font-size: 18px;
   flex-shrink: 0;
 }
-
-/* =========================
-   RESPONSIVE
-========================= */
 
 @media (max-width: 1200px) {
   .stats-grid {

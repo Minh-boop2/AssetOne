@@ -1,105 +1,876 @@
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assets/assets.css') }}"
-/>
-
-<section class="assets-page">
+<section class="assets-page" id="assetsPage">
   <div class="assets-page__header">
     <h1 class="assets-page__title">Quản lý tài sản</h1>
-
-    <form
-      action="{{ url_for('assets_page') }}"
-      method="GET"
-      class="assets-search"
-    >
-      <input
-        type="text"
-        name="search"
-        placeholder="Tìm kiếm tài sản..."
-        value="{{ request.args.get('search', '') }}"
-      />
-    </form>
+    {% include 'assets/asset_filter.html' %}
   </div>
 
-  <div class="assets-table-section">
-    <div class="section-heading">
-      <div>
-        <h2>Danh sách tài sản</h2>
-      </div>
-    </div>
-
-    {# --- CÁC MACRO HIỂN THỊ --- #} {% macro render_asset_type(row) %} {% if
-    row.type in ['laptop', 'Laptop'] %}
-    <span class="badge badge-type badge-laptop">Laptop</span>
-    {% elif row.type in ['pc', 'PC', 'Máy tính bàn'] %}
-    <span class="badge badge-type badge-pc">Máy tính bàn</span>
-    {% elif row.type in ['printer', 'Máy in'] %}
-    <span class="badge badge-type badge-printer">Máy in</span>
-    {% elif row.type in ['monitor', 'Màn hình'] %}
-    <span class="badge badge-type">Màn hình</span>
-    {% elif row.type in ['phone', 'Điện thoại'] %}
-    <span class="badge badge-type">Điện thoại</span>
-    {% elif row.type in ['projector', 'Máy chiếu'] %}
-    <span class="badge badge-type">Máy chiếu</span>
-    {% else %}
-    <span class="badge badge-type">Khác</span>
-    {% endif %} {% endmacro %} {% macro render_status(row) %} {% if row.status
-    == 'using' %}
-    <span class="badge badge-using">Đang sử dụng</span>
-    {% elif row.status == 'available' %}
-    <span class="badge badge-available">Chưa sử dụng</span>
-    {% elif row.status == 'maintenance' %}
-    <span class="badge badge-maintenance">Bảo trì</span>
-    {% elif row.status == 'broken' %}
-    <span class="badge badge-broken">Hỏng</span>
-    {% elif row.status == 'pending' %}
-    <span class="badge badge-maintenance">Chờ duyệt</span>
-    {% else %}
-    <span class="badge badge-inactive">{{ row.status }}</span>
-    {% endif %} {% endmacro %} {% macro render_user(row) %} {% if row.user or
-    row.receiver %}
-    <span class="asset-user">{{ row.user or row.receiver }}</span>
-    {% else %}
-    <span class="asset-empty">—</span>
-    {% endif %} {% endmacro %} {% macro render_warranty(row) %} {% if
-    row.warranty %}
-    <span class="asset-date">{{ row.warranty }}</span>
-    {% else %}
-    <span class="asset-empty">—</span>
-    {% endif %} {% endmacro %} {# --- CẬP NHẬT NÚT CHI TIẾT (ĐÃ BỎ NÚT SỬA) ---
-    #} {% macro render_action(row) %}
-    <div class="table-actions">
-      {# Chỉ hiển thị nút Chi tiết #}
-      <a
-        href="{{ url_for('asset_detail_view', asset_id=row.id or row.asset_code) }}"
-        class="action-btn"
-        style="
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        "
-      >
-        Chi tiết
-      </a>
-    </div>
-    {% endmacro %} {# --- CẤU HÌNH CỘT BẢNG --- #} {% set columns = [ {"key":
-    "asset_code", "label": "Mã tài sản"}, {"key": "asset_name", "label": "Tên
-    tài sản"}, {"key": "type", "label": "Loại tài sản", "render":
-    render_asset_type}, {"key": "status", "label": "Trạng thái", "render":
-    render_status}, {"key": "user", "label": "Người sử dụng", "render":
-    render_user}, {"key": "department", "label": "Phòng ban"}, {"key":
-    "location", "label": "Vị trí"}, {"key": "warranty", "label": "Bảo hành đến",
-    "render": render_warranty}, {"key": "action", "label": "Thao tác", "render":
-    render_action} ] %} {# --- DỮ LIỆU HIỂN THỊ (Ưu tiên lấy từ Flask gửi xuống)
-    --- #} {% if assets %} {% set display_data = assets %} {% else %} {% set
-    display_data = [ { "id": "ASG-001", "asset_code": "LAP-001", "asset_name":
-    "Laptop Dell XPS 15", "type": "laptop", "status": "using", "user": "Nguyễn
-    Văn A", "department": "Phòng Kỹ Thuật", "location": "Tầng 3", "warranty":
-    "12/12/2026" }, { "id": "ASG-002", "asset_code": "PC-003", "asset_name": "PC
-    Văn phòng Dell Optiplex", "type": "pc", "status": "available", "user": "",
-    "department": "Kho thiết bị", "location": "Phòng IT", "warranty":
-    "22/06/2027" } ] %} {% endif %} {# Gọi component table chung #} {% set data
-    = display_data %} {% include 'components/table.html' %}
+  <div class="assets-table-card">
+    {% include 'assets/asset_table.html' %}
   </div>
 </section>
+
+<script>
+  document.documentElement.classList.add("assets-lock-scroll");
+  document.body.classList.add("assets-lock-scroll");
+
+  document.addEventListener("DOMContentLoaded", () => {
+    let searchTimer = null;
+    let controller = null;
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) =>
+      Array.from(root.querySelectorAll(selector));
+
+    const getForm = () => $("#filterForm");
+    const getClearButton = () => $("[data-filter-clear]");
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function getSelectedTypeValues(dropdown) {
+      const typesInput = $("[data-filter-types-input]", dropdown);
+
+      return String(typesInput?.value || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter((item) => item && item !== "Tất cả");
+    }
+
+    function setSelectedTypeValues(dropdown, values) {
+      const typesInput = $("[data-filter-types-input]", dropdown);
+      const uniqueValues = [];
+
+      values.forEach((value) => {
+        const cleanValue = String(value || "").trim();
+
+        if (
+          cleanValue &&
+          cleanValue !== "Tất cả" &&
+          !uniqueValues.includes(cleanValue)
+        ) {
+          uniqueValues.push(cleanValue);
+        }
+      });
+
+      if (typesInput) {
+        typesInput.value = uniqueValues.join(",");
+      }
+
+      return uniqueValues;
+    }
+
+    function isTypeMultiMode(dropdown) {
+      return dropdown?.classList.contains("is-multi-mode");
+    }
+
+    function getTypeOptionLabel(dropdown, value) {
+      const option = $(
+        `[data-type-filter-option][data-value="${CSS.escape(value)}"]`,
+        dropdown
+      );
+
+      return option?.dataset.label || value;
+    }
+
+    function syncTypeDropdownSummary(dropdown) {
+      if (!dropdown) {
+        return;
+      }
+
+      const singleInput = $("[data-type-single-input]", dropdown);
+      const label = $("[data-filter-current-label]", dropdown);
+      const count = $("[data-filter-current-count]", dropdown);
+      const selectedValues = getSelectedTypeValues(dropdown);
+
+      let totalCount = 0;
+
+      $$("[data-type-filter-option]", dropdown).forEach((option) => {
+        const value = option.dataset.value || "";
+        const isSelectedMulti =
+          value !== "Tất cả" && selectedValues.includes(value);
+
+        option.classList.toggle("is-selected-multi", isSelectedMulti);
+
+        if (isSelectedMulti) {
+          totalCount += Number(option.dataset.count || 0);
+        }
+      });
+
+      if (isTypeMultiMode(dropdown)) {
+        if (singleInput) {
+          singleInput.value = "Tất cả";
+        }
+
+        const allOption = $(
+          "[data-type-filter-option][data-value='Tất cả']",
+          dropdown
+        );
+        const allCount = allOption?.dataset.count || "0";
+        const isAllSelected = selectedValues.length === 0;
+
+        if (allOption) {
+          allOption.classList.toggle("is-selected-multi", isAllSelected);
+          allOption.classList.toggle("is-active", isAllSelected);
+        }
+
+        if (label) {
+          if (isAllSelected) {
+            label.textContent = "Tất cả loại";
+          } else if (selectedValues.length === 1) {
+            label.textContent = getTypeOptionLabel(dropdown, selectedValues[0]);
+          } else {
+            label.textContent = `${selectedValues.length} loại đã chọn`;
+          }
+        }
+
+        if (count) {
+          count.textContent = isAllSelected ? allCount : String(totalCount);
+        }
+
+        return;
+      }
+
+      const activeOption = $("[data-type-filter-option].is-active", dropdown);
+      const defaultOption = $(
+        "[data-type-filter-option][data-value='Tất cả']",
+        dropdown
+      );
+
+      if (label) {
+        label.textContent =
+          activeOption?.dataset.label ||
+          defaultOption?.dataset.label ||
+          "Tất cả loại";
+      }
+
+      if (count) {
+        count.textContent =
+          activeOption?.dataset.count || defaultOption?.dataset.count || "0";
+      }
+    }
+
+    function hasActiveFilterState() {
+      const form = getForm();
+
+      if (!form) {
+        return false;
+      }
+
+      const searchInput = $("#searchInput", form);
+      const hasSearch = !!String(searchInput?.value || "").trim();
+
+      const hasDropdownFilter = $$("[data-filter-input]", form).some(
+        (input) => {
+          const value = String(input.value || "").trim();
+          return value && value !== "Tất cả";
+        }
+      );
+
+      const hasMultiTypeFilter = $$("[data-filter-types-input]", form).some(
+        (input) => !!String(input.value || "").trim()
+      );
+
+      const hasTypeListSearch = $$("[data-type-filter-search]", form).some(
+        (input) => !!String(input.value || "").trim()
+      );
+
+      return (
+        hasSearch || hasDropdownFilter || hasMultiTypeFilter || hasTypeListSearch
+      );
+    }
+
+    function syncClearButton() {
+      const clearButton = getClearButton();
+
+      if (!clearButton) {
+        return;
+      }
+
+      clearButton.classList.toggle("is-hidden", !hasActiveFilterState());
+    }
+
+    function closeFilterMenus() {
+      $$("[data-filter-select].open").forEach((item) => {
+        item.classList.remove("open");
+      });
+    }
+
+    function closeActionMenus() {
+      $$("[data-menu].open").forEach((menu) => {
+        menu.classList.remove("open");
+
+        const dropdown = $(".action-menu__dropdown", menu);
+
+        if (dropdown) {
+          dropdown.style.left = "";
+          dropdown.style.top = "";
+        }
+      });
+    }
+
+    function closeAllMenus() {
+      closeFilterMenus();
+      closeActionMenus();
+    }
+
+    function buildUrl(page = "") {
+      const form = getForm();
+
+      if (!form) {
+        return location.href;
+      }
+
+      const url = new URL(form.action, location.origin);
+      const params = new URLSearchParams(new FormData(form));
+
+      if (page) {
+        params.set("page", page);
+      } else {
+        params.delete("page");
+      }
+
+      const types = String(params.get("types") || "").trim();
+
+      if (types) {
+        params.set("type", "Tất cả");
+      }
+
+      Array.from(params.entries()).forEach(([key, value]) => {
+        const cleanValue = String(value || "").trim();
+
+        if (!cleanValue || cleanValue === "Tất cả") {
+          params.delete(key);
+        }
+      });
+
+      url.search = params.toString();
+
+      return url.toString();
+    }
+
+    async function loadAssets(url, pushState = true) {
+      if (controller) {
+        controller.abort();
+      }
+
+      controller = new AbortController();
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "X-Requested-With": "fetch",
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+
+        const nextTableCard = $(".assets-table-card", doc);
+        const currentTableCard = $(".assets-table-card");
+
+        if (nextTableCard && currentTableCard) {
+          currentTableCard.innerHTML = nextTableCard.innerHTML;
+        }
+
+        if (pushState) {
+          window.history.replaceState({}, "", url);
+        }
+
+        closeActionMenus();
+        syncClearButton();
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error(error);
+        }
+      }
+    }
+
+    function submitFilterNow() {
+      syncClearButton();
+      loadAssets(buildUrl(), true);
+    }
+
+    function submitFilterDebounced() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(submitFilterNow, 400);
+    }
+
+    function filterTypeOptions(input) {
+      const dropdown = input.closest(".filter-select--type");
+
+      if (!dropdown) {
+        return;
+      }
+
+      const keyword = normalizeText(input.value);
+      const options = $$("[data-type-filter-option]", dropdown);
+      const emptyBox = $("[data-type-filter-empty]", dropdown);
+
+      let visibleCount = 0;
+
+      options.forEach((option) => {
+        const value = option.dataset.value || "";
+        const label = normalizeText(option.dataset.label || "");
+        const normalizedValue = normalizeText(value);
+        const text = normalizeText(option.textContent || "");
+
+        const matched =
+          !keyword ||
+          label.includes(keyword) ||
+          normalizedValue.includes(keyword) ||
+          text.includes(keyword);
+
+        option.style.display = matched ? "flex" : "none";
+
+        if (matched) {
+          visibleCount += 1;
+        }
+      });
+
+      if (emptyBox) {
+        emptyBox.classList.toggle("show", visibleCount === 0);
+      }
+
+      syncClearButton();
+    }
+
+    function resetTypeSearch(dropdown) {
+      const input = $("[data-type-filter-search]", dropdown);
+
+      if (!input) {
+        return;
+      }
+
+      input.value = "";
+      filterTypeOptions(input);
+
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function setTypeMultiMode(dropdown, enabled) {
+      if (!dropdown) {
+        return;
+      }
+
+      const toggle = $("[data-type-multi-toggle]", dropdown);
+      const singleInput = $("[data-type-single-input]", dropdown);
+      const activeSingleOption = $(
+        "[data-type-filter-option].is-active",
+        dropdown
+      );
+      let selectedValues = getSelectedTypeValues(dropdown);
+
+      dropdown.classList.toggle("is-multi-mode", enabled);
+
+      if (toggle) {
+        toggle.classList.toggle("is-active", enabled);
+        toggle.setAttribute("aria-pressed", enabled ? "true" : "false");
+      }
+
+      if (enabled) {
+        const singleValue =
+          activeSingleOption?.dataset.value || singleInput?.value || "";
+
+        if (
+          singleValue &&
+          singleValue !== "Tất cả" &&
+          selectedValues.length === 0
+        ) {
+          selectedValues.push(singleValue);
+        }
+
+        if (singleInput) {
+          singleInput.value = "Tất cả";
+        }
+
+        $$("[data-type-filter-option]", dropdown).forEach((option) => {
+          option.classList.remove("is-active");
+        });
+
+        setSelectedTypeValues(dropdown, selectedValues);
+        syncTypeDropdownSummary(dropdown);
+        return;
+      }
+
+      const firstSelected = selectedValues[0] || "Tất cả";
+
+      if (singleInput) {
+        singleInput.value = firstSelected;
+      }
+
+      setSelectedTypeValues(dropdown, []);
+
+      $$("[data-type-filter-option]", dropdown).forEach((option) => {
+        option.classList.toggle(
+          "is-active",
+          option.dataset.value === firstSelected
+        );
+        option.classList.remove("is-selected-multi");
+      });
+
+      syncTypeDropdownSummary(dropdown);
+    }
+
+    function resetOneDropdown(dropdown) {
+      const input = $("[data-filter-input]", dropdown);
+      const label = $("[data-filter-current-label]", dropdown);
+      const count = $("[data-filter-current-count]", dropdown);
+      const defaultOption = $(
+        "[data-filter-option][data-value='Tất cả']",
+        dropdown
+      );
+      const typeSearchInput = $("[data-type-filter-search]", dropdown);
+      const typesInput = $("[data-filter-types-input]", dropdown);
+      const multiToggle = $("[data-type-multi-toggle]", dropdown);
+
+      if (input) {
+        input.value = "Tất cả";
+      }
+
+      if (typesInput) {
+        typesInput.value = "";
+      }
+
+      dropdown.classList.remove("is-multi-mode");
+
+      if (multiToggle) {
+        multiToggle.classList.remove("is-active");
+        multiToggle.setAttribute("aria-pressed", "false");
+      }
+
+      if (defaultOption) {
+        if (label) {
+          label.textContent = defaultOption.dataset.label || "Tất cả";
+        }
+
+        if (count) {
+          count.textContent = defaultOption.dataset.count || "0";
+        }
+      }
+
+      $$("[data-filter-option]", dropdown).forEach((option) => {
+        option.classList.toggle("is-active", option.dataset.value === "Tất cả");
+        option.classList.remove("is-selected-multi");
+        option.style.display = "";
+      });
+
+      if (typeSearchInput) {
+        typeSearchInput.value = "";
+        filterTypeOptions(typeSearchInput);
+      }
+    }
+
+    function resetFilterUI() {
+      const form = getForm();
+
+      if (!form) {
+        return;
+      }
+
+      const searchInput = $("#searchInput", form);
+
+      if (searchInput) {
+        searchInput.value = "";
+      }
+
+      $$("[data-filter-select]", form).forEach(resetOneDropdown);
+
+      syncClearButton();
+    }
+
+    function positionActionMenu(menu) {
+      const trigger = $("[data-menu-toggle]", menu);
+      const dropdown = $(".action-menu__dropdown", menu);
+
+      if (!trigger || !dropdown) {
+        return;
+      }
+
+      menu.classList.add("open");
+
+      const rect = trigger.getBoundingClientRect();
+      const gap = 8;
+      const padding = 12;
+      const width = dropdown.offsetWidth || 190;
+      const height = dropdown.offsetHeight || 160;
+
+      let left = rect.right - width;
+      let top = rect.bottom + gap;
+
+      if (left < padding) {
+        left = padding;
+      }
+
+      if (left + width > window.innerWidth - padding) {
+        left = window.innerWidth - width - padding;
+      }
+
+      if (top + height > window.innerHeight - padding) {
+        top = rect.top - height - gap;
+      }
+
+      if (top < padding) {
+        top = padding;
+      }
+
+      dropdown.style.left = `${left}px`;
+      dropdown.style.top = `${top}px`;
+    }
+
+    function notify(type, title, description = "") {
+      if (window.sonner && typeof window.sonner[type] === "function") {
+        window.sonner[type](title, description);
+        return;
+      }
+
+      if (typeof window.sonner === "function") {
+        window.sonner({ type, title, description });
+        return;
+      }
+
+      if (window.toast && typeof window.toast[type] === "function") {
+        window.toast[type](title, description);
+        return;
+      }
+
+      alert(description ? `${title}\n${description}` : title);
+    }
+
+    async function confirmDelete() {
+      const message =
+        "Bạn có chắc muốn xóa tài sản này không?\n\nHành động này không thể hoàn tác.";
+
+      if (typeof window.toastConfirm === "function") {
+        try {
+          return await window.toastConfirm(message, {
+            type: "error",
+            title: "Xác nhận xóa tài sản",
+            confirmText: "Xóa",
+            cancelText: "Hủy",
+            danger: true,
+          });
+        } catch (_) {
+          return await window.toastConfirm({
+            type: "error",
+            title: "Xác nhận xóa tài sản",
+            message,
+            confirmText: "Xóa",
+            cancelText: "Hủy",
+            danger: true,
+          });
+        }
+      }
+
+      return window.confirm(message);
+    }
+
+    async function deleteAsset(assetId, button) {
+      const oldHtml = button.innerHTML;
+
+      button.disabled = true;
+      button.innerHTML = "Đang xóa...";
+
+      try {
+        const response = await fetch(
+          `/assets/delete/${encodeURIComponent(assetId)}`,
+          {
+            method: "POST",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          }
+        );
+
+        let result = {};
+
+        try {
+          result = await response.json();
+        } catch (_) {}
+
+        if (!response.ok) {
+          notify(
+            "error",
+            "Xóa tài sản thất bại",
+            result.message || "Không thể xóa tài sản này."
+          );
+          button.disabled = false;
+          button.innerHTML = oldHtml;
+          return;
+        }
+
+        notify(
+          "success",
+          "Xóa tài sản thành công",
+          result.message || "Tài sản đã được xóa khỏi hệ thống."
+        );
+        loadAssets(location.href, false);
+      } catch (_) {
+        notify(
+          "error",
+          "Không thể kết nối server",
+          "Không thể kết nối đến server để xóa tài sản."
+        );
+        button.disabled = false;
+        button.innerHTML = oldHtml;
+      }
+    }
+
+    document.addEventListener("submit", (event) => {
+      if (!event.target.closest("#filterForm")) {
+        return;
+      }
+
+      event.preventDefault();
+      submitFilterNow();
+    });
+
+    document.addEventListener("input", (event) => {
+      const searchInput = event.target.closest("#searchInput");
+      const typeSearchInput = event.target.closest("[data-type-filter-search]");
+
+      if (searchInput) {
+        syncClearButton();
+        submitFilterDebounced();
+        return;
+      }
+
+      if (typeSearchInput) {
+        filterTypeOptions(typeSearchInput);
+      }
+    });
+
+    document.addEventListener("click", async (event) => {
+      const pageBtn = event.target.closest(
+        ".assets-table-card .page-btn:not(.disabled)"
+      );
+      const clearBtn = event.target.closest("[data-filter-clear]");
+      const filterToggle = event.target.closest("[data-filter-toggle]");
+      const filterOption = event.target.closest("[data-filter-option]");
+      const typeSearchBox = event.target.closest(".filter-select__search");
+      const multiToggle = event.target.closest("[data-type-multi-toggle]");
+      const menuToggle = event.target.closest("[data-menu-toggle]");
+      const deleteBtn = event.target.closest("[data-delete-asset-id]");
+
+      if (pageBtn && pageBtn.tagName === "A") {
+        event.preventDefault();
+        loadAssets(pageBtn.href, true);
+        return;
+      }
+
+      if (clearBtn) {
+        event.preventDefault();
+        closeAllMenus();
+        clearTimeout(searchTimer);
+        resetFilterUI();
+        loadAssets(clearBtn.href, true);
+        return;
+      }
+
+      if (multiToggle) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const dropdown = multiToggle.closest(".filter-select--type");
+        const enabled = !isTypeMultiMode(dropdown);
+
+        setTypeMultiMode(dropdown, enabled);
+        syncClearButton();
+        submitFilterNow();
+        return;
+      }
+
+      if (filterToggle) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const dropdown = filterToggle.closest("[data-filter-select]");
+        const willOpen = !dropdown.classList.contains("open");
+
+        closeAllMenus();
+
+        if (willOpen) {
+          dropdown.classList.add("open");
+
+          if (dropdown.classList.contains("filter-select--type")) {
+            resetTypeSearch(dropdown);
+            syncTypeDropdownSummary(dropdown);
+          }
+        }
+
+        syncClearButton();
+        return;
+      }
+
+      if (typeSearchBox) {
+        event.stopPropagation();
+        return;
+      }
+
+      if (filterOption) {
+        event.preventDefault();
+
+        const dropdown = filterOption.closest("[data-filter-select]");
+        const isTypeDropdown = dropdown.classList.contains(
+          "filter-select--type"
+        );
+        const input = $("[data-filter-input]", dropdown);
+        const label = $("[data-filter-current-label]", dropdown);
+        const count = $("[data-filter-current-count]", dropdown);
+
+        if (isTypeDropdown && isTypeMultiMode(dropdown)) {
+          const value = filterOption.dataset.value || "";
+          let selectedValues = getSelectedTypeValues(dropdown);
+
+          if (value === "Tất cả") {
+            selectedValues = [];
+          } else if (selectedValues.includes(value)) {
+            selectedValues = selectedValues.filter((item) => item !== value);
+          } else {
+            selectedValues.push(value);
+          }
+
+          setSelectedTypeValues(dropdown, selectedValues);
+          syncTypeDropdownSummary(dropdown);
+          syncClearButton();
+          submitFilterNow();
+          return;
+        }
+
+        if (isTypeDropdown) {
+          const typesInput = $("[data-filter-types-input]", dropdown);
+
+          if (typesInput) {
+            typesInput.value = "";
+          }
+
+          dropdown.classList.remove("is-multi-mode");
+
+          const toggle = $("[data-type-multi-toggle]", dropdown);
+
+          if (toggle) {
+            toggle.classList.remove("is-active");
+            toggle.setAttribute("aria-pressed", "false");
+          }
+        }
+
+        if (input) {
+          input.value = filterOption.dataset.value || "Tất cả";
+        }
+
+        if (label) {
+          label.textContent = filterOption.dataset.label || input.value;
+        }
+
+        if (count) {
+          count.textContent = filterOption.dataset.count || "0";
+        }
+
+        $$("[data-filter-option]", dropdown).forEach((option) => {
+          option.classList.toggle("is-active", option === filterOption);
+          option.classList.remove("is-selected-multi");
+        });
+
+        closeAllMenus();
+        syncClearButton();
+        submitFilterNow();
+        return;
+      }
+
+      if (menuToggle) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const menu = menuToggle.closest("[data-menu]");
+        const willOpen = !menu.classList.contains("open");
+
+        closeAllMenus();
+
+        if (willOpen) {
+          positionActionMenu(menu);
+        }
+
+        return;
+      }
+
+      if (deleteBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        closeAllMenus();
+
+        const assetId = deleteBtn.dataset.deleteAssetId;
+
+        if (!assetId) {
+          notify("error", "Thiếu mã tài sản", "Không tìm thấy ID tài sản cần xóa.");
+          return;
+        }
+
+        if (await confirmDelete()) {
+          await deleteAsset(assetId, deleteBtn);
+        }
+
+        return;
+      }
+
+      if (!event.target.closest("[data-filter-select], [data-menu]")) {
+        closeAllMenus();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const typeSearchInput = event.target.closest("[data-type-filter-search]");
+
+      if (typeSearchInput && event.key === "Enter") {
+        event.preventDefault();
+
+        const dropdown = typeSearchInput.closest(".filter-select--type");
+        const firstVisibleOption = $$("[data-type-filter-option]", dropdown).find(
+          (option) => {
+            return (
+              option.style.display !== "none" &&
+              option.dataset.value !== "Tất cả"
+            );
+          }
+        );
+
+        if (firstVisibleOption) {
+          firstVisibleOption.click();
+        }
+
+        return;
+      }
+
+      if (typeSearchInput && event.key === "Escape") {
+        event.preventDefault();
+        typeSearchInput.value = "";
+        filterTypeOptions(typeSearchInput);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        closeAllMenus();
+      }
+    });
+
+    window.addEventListener("popstate", () => {
+      loadAssets(location.href, false);
+    });
+
+    window.addEventListener("resize", closeActionMenus);
+    window.addEventListener("scroll", closeActionMenus, true);
+
+    $$(".filter-select--type").forEach(syncTypeDropdownSummary);
+    syncClearButton();
+  });
+</script>

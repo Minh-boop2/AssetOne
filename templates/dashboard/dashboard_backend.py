@@ -19,6 +19,20 @@ DEFAULT_FILTER_COUNTS = {
         "monitor": 0,
         "phone": 0,
         "projector": 0,
+        "scanner": 0,
+        "network": 0,
+        "router": 0,
+        "switch": 0,
+        "ups": 0,
+        "camera": 0,
+        "speaker": 0,
+        "microphone": 0,
+        "keyboard": 0,
+        "mouse": 0,
+        "tablet": 0,
+        "server": 0,
+        "storage": 0,
+        "accessory": 0,
         "other": 0,
     },
     "status": {
@@ -62,6 +76,36 @@ ACTIVITY_DOT_CLASSES = {
     "PATCH": "activity-dot-info",
     "DELETE": "activity-dot-danger",
 }
+
+
+# THÊM: nhóm phân loại nhanh trên dashboard
+# Dữ liệu này chỉ dùng để tạo link nhanh sang trang /assets?types=...
+QUICK_CATEGORY_GROUPS = [
+    {
+        "key": "laptop_pc",
+        "label": "💻 Laptop / PC",
+        "types": ["laptop", "pc"],
+        "count_id": "mini-laptop-pc-count",
+    },
+    {
+        "key": "printer",
+        "label": "🖨️ Máy in",
+        "types": ["printer"],
+        "count_id": "mini-printer-count",
+    },
+    {
+        "key": "network",
+        "label": "🌐 Thiết bị mạng",
+        "types": ["network", "router", "switch"],
+        "count_id": "mini-network-count",
+    },
+    {
+        "key": "monitor_accessory",
+        "label": "🖥️ Màn hình / phụ kiện",
+        "types": ["monitor", "keyboard", "mouse", "accessory"],
+        "count_id": "mini-monitor-accessory-count",
+    },
+]
 
 
 def get_current_user():
@@ -266,6 +310,37 @@ def build_dashboard_stats(filter_counts):
     }
 
 
+# THÊM: build dữ liệu phân loại nhanh cho dashboard
+# Hàm này không sửa dữ liệu tài sản, chỉ đọc filter_counts.type để tính tổng theo nhóm
+def build_quick_categories(filter_counts):
+    filter_counts = filter_counts or DEFAULT_FILTER_COUNTS
+    type_counts = filter_counts.get("type", {}) or {}
+
+    quick_categories = []
+
+    for group in QUICK_CATEGORY_GROUPS:
+        types = group.get("types", [])
+        count = 0
+
+        for type_name in types:
+            count += int(type_counts.get(type_name, 0) or 0)
+
+        query = urlencode({
+            "types": ",".join(types)
+        })
+
+        quick_categories.append({
+            "key": group.get("key"),
+            "label": group.get("label"),
+            "types": types,
+            "count": count,
+            "count_id": group.get("count_id"),
+            "url": f"/assets?{query}",
+        })
+
+    return quick_categories
+
+
 def build_recent_asset_item(asset):
     asset = asset or {}
     status = asset.get("status") or "pending"
@@ -324,7 +399,6 @@ def get_dashboard_overview_data(limit=4, activity_limit=6):
 
     filter_counts = asset_payload.get("filter_counts") or DEFAULT_FILTER_COUNTS
     items = asset_payload.get("items") or []
-
     activity_items = activity_payload.get("data") or []
 
     stats = build_dashboard_stats(filter_counts)
@@ -339,12 +413,19 @@ def get_dashboard_overview_data(limit=4, activity_limit=6):
         for item in activity_items
     ]
 
+    # THÊM: tạo dữ liệu Phân loại nhanh từ filter_counts có sẵn
+    quick_categories = build_quick_categories(filter_counts)
+
     status_code = asset_payload.get("status_code")
 
     return {
         "stats": stats,
         "recent_assets": recent_assets,
         "recent_activities": recent_activities,
+
+        # THÊM: trả thêm dữ liệu để dashboard render Phân loại nhanh
+        "filter_counts": filter_counts,
+        "quick_categories": quick_categories,
 
         "scope": asset_payload.get("scope", {}),
         "activity_viewer": activity_payload.get("viewer", {}),

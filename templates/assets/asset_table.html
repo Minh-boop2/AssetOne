@@ -1,200 +1,224 @@
 {% from 'assets/assets_action.html' import render_action %}
 
-<div class="section-heading">
-  <h2 class="section-heading__title">Danh sách tài sản</h2>
+{% set rows = assets if assets is defined else (items if items is defined else []) %}
+{% set selected_type = selected_type or 'Tất cả' %}
+{% set selected_types_raw = selected_types_raw or '' %}
+{% set selected_dept = selected_dept or 'Tất cả' %}
+{% set selected_status = selected_status or 'Tất cả' %}
+{% set search_q = search_q or '' %}
 
-  <span class="section-heading__meta">
-    Hiển thị <strong>{{ assets|length }}</strong> trên
-    <strong>{{ total_count if total_count else 0 }}</strong> tài sản
-  </span>
+{% set page_data = pagination if pagination is defined and pagination else {} %}
+{% set current_page = page_data.page|default(1)|int %}
+{% set per_page = page_data.per_page|default(10)|int %}
+
+{% set type_labels = {
+  'laptop':'Laptop',
+  'pc':'Máy tính bàn',
+  'printer':'Máy in',
+  'monitor':'Màn hình',
+  'phone':'Điện thoại',
+  'projector':'Máy chiếu',
+  'scanner':'Máy quét',
+  'network':'Thiết bị mạng',
+  'ups':'UPS',
+  'camera':'Camera',
+  'speaker':'Loa',
+  'microphone':'Micro',
+  'keyboard':'Bàn phím',
+  'mouse':'Chuột',
+  'tablet':'Máy tính bảng',
+  'server':'Máy chủ',
+  'router':'Router',
+  'switch':'Switch',
+  'storage':'Lưu trữ',
+  'accessory':'Phụ kiện',
+  'other':'Khác'
+} %}
+
+{% set status_labels = {
+  'using':'Đang sử dụng',
+  'available':'Chưa sử dụng',
+  'maintenance':'Bảo trì',
+  'broken':'Hỏng',
+  'pending':'Chờ duyệt'
+} %}
+
+{% set status_badges = {
+  'using':'badge-using',
+  'available':'badge-available',
+  'maintenance':'badge-maintenance',
+  'broken':'badge-broken',
+  'pending':'badge-pending'
+} %}
+
+{# THÊM: fallback tổng số tài sản từ filter_counts để không bị mất phân trang khi pagination chưa truyền đúng #}
+{% set count_ns = namespace(total_from_counts=0) %}
+
+{% if filter_counts is defined and filter_counts and filter_counts.type is defined and not search_q and selected_dept == 'Tất cả' and selected_status == 'Tất cả' %}
+  {% if selected_types_raw %}
+    {% for type_code in selected_types_raw.split(',') %}
+      {% set clean_type = type_code|trim %}
+      {% if clean_type %}
+        {% set count_ns.total_from_counts = count_ns.total_from_counts + (filter_counts.type.get(clean_type, 0)|int) %}
+      {% endif %}
+    {% endfor %}
+  {% elif selected_type and selected_type != 'Tất cả' %}
+    {% set count_ns.total_from_counts = filter_counts.type.get(selected_type, rows|length)|int %}
+  {% else %}
+    {% set count_ns.total_from_counts = filter_counts.type.get('all', rows|length)|int %}
+  {% endif %}
+{% endif %}
+
+{% set fallback_total = count_ns.total_from_counts if count_ns.total_from_counts > 0 else rows|length %}
+{% set total_items = page_data.total_items|default(fallback_total)|int %}
+{% set total_pages = page_data.total_pages|default(((total_items + per_page - 1) // per_page) if total_items > 0 else 1)|int %}
+
+{# THÊM: chỉ hiển thị tối đa 3 nút số trang để pagination gọn hơn #}
+{% set page_window = namespace(start=1, end=total_pages) %}
+
+{% if total_pages > 3 %}
+  {% if current_page <= 2 %}
+    {% set page_window.start = 1 %}
+    {% set page_window.end = 3 %}
+  {% elif current_page >= total_pages - 1 %}
+    {% set page_window.start = total_pages - 2 %}
+    {% set page_window.end = total_pages %}
+  {% else %}
+    {% set page_window.start = current_page - 1 %}
+    {% set page_window.end = current_page + 1 %}
+  {% endif %}
+{% endif %}
+
+<div class="table-header-wrapper">
+  <h2 class="table-list-title">Danh sách tài sản</h2>
+
+  <div class="table-info-count">
+    Hiển thị <strong>{{ rows|length }}</strong> trên
+    <strong>{{ total_items }}</strong>
+    tài sản
+  </div>
 </div>
 
-{% macro render_asset_type(row) %}
-  {% set type_value = row.type or row.category or '' %}
+<div class="table-scroll">
+  <table class="custom-table assign-table">
+    <thead>
+      <tr>
+        <th>Mã tài sản</th>
+        <th>Tên tài sản</th>
+        <th>Loại tài sản</th>
+        <th>Trạng thái</th>
+        <th>Người sử dụng</th>
+        <th>Phòng ban</th>
+        <th>Vị trí</th>
+        <th>Bảo hành đến</th>
+        <th class="text-center">Thao tác</th>
+      </tr>
+    </thead>
 
-  {% set type_labels = {
-    'laptop': 'Laptop',
-    'pc': 'Máy tính bàn',
-    'printer': 'Máy in',
-    'monitor': 'Màn hình',
-    'phone': 'Điện thoại',
-    'projector': 'Máy chiếu',
+    <tbody>
+      {% if rows and rows|length > 0 %}
+        {% for row in rows %}
+          {% set asset_code = row.asset_code or row.code or row.id or '—' %}
+          {% set asset_name = row.asset_name or row.asset or row.name or '—' %}
+          {% set asset_type = row.type or row.category or row.raw_type or 'other' %}
+          {% set asset_type_label = type_labels.get(asset_type, row.raw_type or asset_type) %}
+          {% set asset_status = row.status or row.raw_status or 'pending' %}
+          {% set asset_status_label = status_labels.get(asset_status, row.raw_status or asset_status) %}
+          {% set asset_status_badge = status_badges.get(asset_status, 'badge-pending') %}
+          {% set receiver = row.user or row.receiver or '—' %}
+          {% set department = row.department or '—' %}
+          {% set location = row.location or '—' %}
+          {% set warranty = row.warranty or '—' %}
 
-    'scanner': 'Máy quét',
-    'network': 'Thiết bị mạng',
-    'ups': 'UPS',
-    'camera': 'Camera',
-    'speaker': 'Loa',
-    'microphone': 'Micro',
-    'keyboard': 'Bàn phím',
-    'mouse': 'Chuột',
-    'tablet': 'Máy tính bảng',
-    'server': 'Server',
-    'router': 'Router',
-    'switch': 'Switch',
-    'webcam': 'Webcam',
-    'storage': 'Lưu trữ',
-    'accessory': 'Phụ kiện',
-    'other': 'Khác'
-  } %}
+          <tr>
+            <td>
+              <span class="asset-code">{{ asset_code }}</span>
+            </td>
 
-  {% set type_label = type_labels.get(type_value, type_value) %}
+            <td>
+              <span class="font-bold" title="{{ asset_name }}">{{ asset_name }}</span>
+            </td>
 
-  {% if type_value %}
-    <span class="badge badge-type badge-{{ type_value|replace(' ', '-')|replace('_', '-')|lower }}">
-      {{ type_label }}
-    </span>
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
+            <td>
+              <span class="badge badge-type" title="{{ asset_type_label }}">
+                {{ asset_type_label }}
+              </span>
+            </td>
 
-{% macro render_status(row) %}
-  {% set status_value = row.status or '' %}
+            <td>
+              <span class="badge {{ asset_status_badge }}">
+                {{ asset_status_label }}
+              </span>
+            </td>
 
-  {% if status_value == 'using' or status_value == 'Hoàn thành' or status_value == 'Đang sử dụng' %}
-    <span class="badge badge-using">Đang sử dụng</span>
+            <td title="{{ receiver }}">
+              {{ receiver }}
+            </td>
 
-  {% elif status_value == 'available' or status_value == 'Chưa sử dụng' or status_value == 'Chưa dùng' %}
-    <span class="badge badge-available">Chưa sử dụng</span>
+            <td title="{{ department }}">
+              {{ department }}
+            </td>
 
-  {% elif status_value == 'maintenance' or status_value == 'Bảo trì' %}
-    <span class="badge badge-maintenance">Bảo trì</span>
+            <td title="{{ location }}">
+              {{ location }}
+            </td>
 
-  {% elif status_value == 'broken' or status_value == 'Hỏng' or status_value == 'Chưa bảo trì' %}
-    <span class="badge badge-broken">Hỏng</span>
+            <td title="{{ warranty }}">
+              {{ warranty }}
+            </td>
 
-  {% elif status_value == 'pending' or status_value == 'Chờ duyệt' %}
-    <span class="badge badge-pending">Chờ duyệt</span>
+            <td class="text-center">
+              {{ render_action(row) }}
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="9" class="empty-table-cell">
+            Không tìm thấy tài sản phù hợp.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
 
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
-
-{% macro render_user(row) %}
-  {% set name = row.receiver or row.user %}
-
-  {% if name %}
-    <span class="asset-user">{{ name }}</span>
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
-
-{% macro render_department(row) %}
-  {% if row.department %}
-    <span>{{ row.department }}</span>
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
-
-{% macro render_location(row) %}
-  {% if row.location %}
-    <span>{{ row.location }}</span>
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
-
-{% macro render_warranty(row) %}
-  {% if row.warranty %}
-    <span class="asset-date">{{ row.warranty }}</span>
-  {% else %}
-    <span class="asset-empty">—</span>
-  {% endif %}
-{% endmacro %}
-
-{% set columns = [
-  {
-    "key": "asset_code",
-    "label": "Mã tài sản"
-  },
-  {
-    "key": "asset",
-    "label": "Tên tài sản"
-  },
-  {
-    "key": "type",
-    "label": "Loại tài sản",
-    "render": render_asset_type
-  },
-  {
-    "key": "status",
-    "label": "Trạng thái",
-    "render": render_status
-  },
-  {
-    "key": "user",
-    "label": "Người sử dụng",
-    "render": render_user
-  },
-  {
-    "key": "department",
-    "label": "Phòng ban",
-    "render": render_department
-  },
-  {
-    "key": "location",
-    "label": "Vị trí",
-    "render": render_location
-  },
-  {
-    "key": "warranty",
-    "label": "Bảo hành đến",
-    "render": render_warranty
-  },
-  {
-    "key": "action",
-    "label": "Thao tác",
-    "render": render_action
-  }
-] %}
-
-{% set data = assets if assets else [] %}
-
-{% include 'components/table.html' %}
-
-{% if total_pages and total_pages > 1 %}
-  <div class="pagination-container">
-    <div class="pagination-info">
-      Trang <strong>{{ current_page }}</strong> / {{ total_pages }}
-    </div>
-
-    <ul class="pagination-list">
-      <li>
-        <a
-          href="{{ url_for('assets_page', page=current_page-1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
-          class="{{ 'disabled' if current_page == 1 }}"
-        >
-          &laquo; Trước
-        </a>
-      </li>
-
-      {% for p in range(1, total_pages + 1) %}
-        {% if p == 1 or p == total_pages or (p >= current_page - 1 and p <= current_page + 1) %}
-          <li>
-            <a
-              href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
-              class="{{ 'active' if p == current_page }}"
-            >
-              {{ p }}
-            </a>
-          </li>
-        {% elif p == current_page - 2 or p == current_page + 2 %}
-          <li class="pagination-dots">...</li>
-        {% endif %}
-      {% endfor %}
-
-      <li>
-        <a
-          href="{{ url_for('assets_page', page=current_page+1, search=search_q, type=selected_type, department=selected_dept, status=selected_status) }}"
-          class="{{ 'disabled' if current_page == total_pages }}"
-        >
-          Sau &raquo;
-        </a>
-      </li>
-    </ul>
+<!-- THÊM: phân trang gọn, chỉ hiện tối đa 3 số trang -->
+<div class="pagination">
+  <div class="pagination-info">
+    Trang {{ current_page }} / {{ total_pages }}
   </div>
-{% endif %}
+
+  <div class="pagination-controls">
+    {% if current_page > 1 %}
+      <a
+        href="{{ url_for('assets_page', page=current_page - 1, search=search_q, type=selected_type, types=selected_types_raw, department=selected_dept, status=selected_status) }}"
+        class="page-btn page-btn--nav"
+      >
+        « Trước
+      </a>
+    {% else %}
+      <span class="page-btn page-btn--nav disabled">« Trước</span>
+    {% endif %}
+
+    {% for p in range(page_window.start, page_window.end + 1) %}
+      <a
+        href="{{ url_for('assets_page', page=p, search=search_q, type=selected_type, types=selected_types_raw, department=selected_dept, status=selected_status) }}"
+        class="page-btn {% if p == current_page %}active{% endif %}"
+      >
+        {{ p }}
+      </a>
+    {% endfor %}
+
+    {% if current_page < total_pages %}
+      <a
+        href="{{ url_for('assets_page', page=current_page + 1, search=search_q, type=selected_type, types=selected_types_raw, department=selected_dept, status=selected_status) }}"
+        class="page-btn page-btn--nav"
+      >
+        Sau »
+      </a>
+    {% else %}
+      <span class="page-btn page-btn--nav disabled">Sau »</span>
+    {% endif %}
+  </div>
+</div>

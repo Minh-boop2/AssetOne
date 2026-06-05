@@ -19,6 +19,20 @@ DEFAULT_FILTER_COUNTS = {
         "monitor": 0,
         "phone": 0,
         "projector": 0,
+        "scanner": 0,
+        "network": 0,
+        "ups": 0,
+        "camera": 0,
+        "speaker": 0,
+        "microphone": 0,
+        "keyboard": 0,
+        "mouse": 0,
+        "tablet": 0,
+        "server": 0,
+        "router": 0,
+        "switch": 0,
+        "storage": 0,
+        "accessory": 0,
         "other": 0,
     },
     "status": {
@@ -324,22 +338,51 @@ def merge_asset_form_data(current_asset, form_data):
     })
 
 
+def normalize_asset_types_filter(asset_types=None):
+    # THÊM: chuẩn hóa danh sách loại tài sản khi filter chọn nhiều
+    # nhận được cả list ["laptop", "pc"] hoặc chuỗi "laptop,pc"
+    if not asset_types:
+        return ""
+
+    if isinstance(asset_types, (list, tuple, set)):
+        values = asset_types
+    else:
+        values = str(asset_types).split(",")
+
+    clean_values = []
+
+    for value in values:
+        value = str(value or "").strip()
+
+        if value and value != "Tất cả" and value not in clean_values:
+            clean_values.append(value)
+
+    return ",".join(clean_values)
+
+
 def fetch_assets_from_backend(
     page=1,
     per_page=10,
     search="",
     asset_type="Tất cả",
+    asset_types=None,
     department="Tất cả",
     status="Tất cả",
 ):
+    selected_types = normalize_asset_types_filter(asset_types)
+
     params = {
         "page": page,
         "per_page": per_page,
         "search": search,
-        "type": asset_type,
+        "type": "Tất cả" if selected_types else asset_type,
         "department": department,
         "status": status,
     }
+
+    # THÊM: gửi thêm types cho backend API để lọc nhiều loại tài sản cùng lúc
+    if selected_types:
+        params["types"] = selected_types
 
     api_url = f"{BACKEND_ASSETS_API}?{urlencode(params)}"
 

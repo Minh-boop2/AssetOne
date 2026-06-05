@@ -82,6 +82,11 @@ def register_dashboard_routes(app):
                 "stats": {},
                 "recent_assets": [],
                 "recent_activities": [],
+
+                # THÊM: giữ key mới để frontend không lỗi khi chưa đăng nhập
+                "filter_counts": {},
+                "quick_categories": [],
+
                 "scope": {},
                 "activity_viewer": {},
             }), 401
@@ -93,6 +98,11 @@ def register_dashboard_routes(app):
                 "stats": {},
                 "recent_assets": [],
                 "recent_activities": [],
+
+                # THÊM: giữ key mới để frontend không lỗi khi thiếu quyền
+                "filter_counts": {},
+                "quick_categories": [],
+
                 "scope": {},
                 "activity_viewer": {},
             }), 403
@@ -116,6 +126,11 @@ def register_dashboard_routes(app):
                 "stats": {},
                 "recent_assets": [],
                 "recent_activities": [],
+
+                # THÊM: giữ key mới để frontend không lỗi khi session hết hạn
+                "filter_counts": {},
+                "quick_categories": [],
+
                 "scope": {},
                 "activity_viewer": {},
             }), 401
@@ -127,6 +142,11 @@ def register_dashboard_routes(app):
                 "stats": data.get("stats", {}),
                 "recent_assets": data.get("recent_assets", []),
                 "recent_activities": data.get("recent_activities", []),
+
+                # THÊM: trả thêm dữ liệu Phân loại nhanh nếu backend có
+                "filter_counts": data.get("filter_counts", {}),
+                "quick_categories": data.get("quick_categories", []),
+
                 "scope": data.get("scope", {}),
                 "activity_viewer": data.get("activity_viewer", {}),
             }), 403
@@ -137,6 +157,11 @@ def register_dashboard_routes(app):
             "stats": data.get("stats", {}),
             "recent_assets": data.get("recent_assets", []),
             "recent_activities": data.get("recent_activities", []),
+
+            # THÊM: dữ liệu dùng cho Phân loại nhanh
+            "filter_counts": data.get("filter_counts", {}),
+            "quick_categories": data.get("quick_categories", []),
+
             "scope": data.get("scope", {}),
             "activity_viewer": data.get("activity_viewer", {}),
             "activity_message": data.get("activity_message"),

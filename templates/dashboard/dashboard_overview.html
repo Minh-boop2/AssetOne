@@ -1,6 +1,6 @@
-{% set current_user = session.get("user") or {} %} {% set current_role =
-current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
-%}
+{% set current_user = session.get("user") or {} %}
+{% set current_role = current_user.get("role") or "" %}
+{% set is_staff = current_role == "NHAN_VIEN" %}
 
 <section class="dashboard-overview">
   <div class="overview-container">
@@ -76,7 +76,7 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
       <div class="stat-card">
         <div class="stat-card-top">
           <span class="stat-icon stat-icon-red">⚠️</span>
-          <span class="stat-label">Đang hỏng / bảo trì</span>
+          <span class="stat-label">Đang bảo trì</span>
         </div>
         <div class="stat-value stat-danger" id="dashboard-problem-assets">
           0
@@ -88,7 +88,7 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
             style="width: 0%"
           ></div>
         </div>
-        <div class="stat-desc">Cần theo dõi và xử lý</div>
+        <div class="stat-desc">Tài sản cần theo dõi và xử lý</div>
       </div>
     </div>
 
@@ -145,23 +145,41 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
         </div>
 
         <div class="task-list">
+          <!-- THÊM: chỉ lấy tài sản Bảo trì làm dữ liệu cần xử lý -->
           <div class="task-item">
             <div class="task-left">
-              <span class="task-icon task-icon-red">!</span>
+              <span
+                class="task-icon task-icon-red"
+                id="dashboard-problem-task-icon"
+              >
+                !
+              </span>
+
               <div>
-                <div class="task-title">
+                <div class="task-title" id="dashboard-problem-task-title">
                   <span id="dashboard-problem-task-count">0</span>
-                  tài sản hỏng / bảo trì cần được xử lý
+                  tài sản bảo trì cần được xử lý
                 </div>
-                <div class="task-subtitle">Ưu tiên xử lý trong hôm nay</div>
+
+                <div class="task-subtitle" id="dashboard-problem-task-subtitle">
+                  Ưu tiên xử lý trong hôm nay
+                </div>
               </div>
             </div>
-            <a href="/assets" class="task-btn">Xem chi tiết</a>
+
+            <a
+              href="/assets?status=maintenance"
+              class="task-btn"
+              id="dashboard-problem-task-link"
+            >
+              Xem chi tiết
+            </a>
           </div>
 
           <div class="task-item">
             <div class="task-left">
               <span class="task-icon task-icon-blue">i</span>
+
               <div>
                 <div class="task-title">Theo dõi hoạt động mới nhất</div>
                 <div class="task-subtitle">
@@ -169,7 +187,10 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
                 </div>
               </div>
             </div>
-            <a href="/assets" class="task-btn task-btn-primary"> Xử lý ngay </a>
+
+            <a href="/activity" class="task-btn task-btn-primary">
+              Xử lý ngay
+            </a>
           </div>
         </div>
       </div>
@@ -180,22 +201,41 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
         </div>
 
         <div class="mini-stats">
-          <div class="mini-stat">
+          <a
+            href="/assets?types=laptop%2Cpc"
+            class="mini-stat mini-stat-link"
+            data-quick-category="laptop_pc"
+          >
             <span>💻 Laptop / PC</span>
             <strong id="mini-laptop-pc-count">0</strong>
-          </div>
-          <div class="mini-stat">
+          </a>
+
+          <a
+            href="/assets?types=printer"
+            class="mini-stat mini-stat-link"
+            data-quick-category="printer"
+          >
             <span>🖨️ Máy in</span>
             <strong id="mini-printer-count">0</strong>
-          </div>
-          <div class="mini-stat">
+          </a>
+
+          <a
+            href="/assets?types=network%2Crouter%2Cswitch"
+            class="mini-stat mini-stat-link"
+            data-quick-category="network"
+          >
             <span>🌐 Thiết bị mạng</span>
             <strong id="mini-network-count">0</strong>
-          </div>
-          <div class="mini-stat">
+          </a>
+
+          <a
+            href="/assets?types=monitor%2Ckeyboard%2Cmouse%2Caccessory"
+            class="mini-stat mini-stat-link"
+            data-quick-category="monitor_accessory"
+          >
             <span>🖥️ Màn hình / phụ kiện</span>
             <strong id="mini-monitor-accessory-count">0</strong>
-          </div>
+          </a>
         </div>
       </div>
     </div>
@@ -256,6 +296,53 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
       setProgress("dashboard-using-progress", stats.using_percent || 0);
       setProgress("dashboard-available-progress", stats.available_percent || 0);
       setProgress("dashboard-problem-progress", stats.problem_percent || 0);
+
+      // THÊM: cập nhật phần Cần xử lý theo số tài sản Bảo trì
+      renderProblemTask(stats);
+    }
+
+    // THÊM: nếu có tài sản Bảo trì thì hiện đỏ, nếu không có thì hiện tích xanh
+    function renderProblemTask(stats) {
+      const maintenanceCount = Number(stats?.problem || 0);
+
+      const icon = document.getElementById("dashboard-problem-task-icon");
+      const title = document.getElementById("dashboard-problem-task-title");
+      const subtitle = document.getElementById("dashboard-problem-task-subtitle");
+      const link = document.getElementById("dashboard-problem-task-link");
+
+      if (!icon || !title || !subtitle || !link) {
+        return;
+      }
+
+      icon.classList.remove("task-icon-red", "task-icon-green");
+
+      if (maintenanceCount > 0) {
+        icon.classList.add("task-icon-red");
+        icon.textContent = "!";
+
+        title.innerHTML = `
+          <span id="dashboard-problem-task-count">${maintenanceCount}</span>
+          tài sản bảo trì cần được xử lý
+        `;
+
+        subtitle.textContent = "Ưu tiên xử lý trong hôm nay";
+        link.href = "/assets?status=maintenance";
+        link.textContent = "Xem chi tiết";
+
+        return;
+      }
+
+      icon.classList.add("task-icon-green");
+      icon.textContent = "✓";
+
+      title.innerHTML = `
+        <span id="dashboard-problem-task-count">0</span>
+        tài sản bảo trì cần được xử lý
+      `;
+
+      subtitle.textContent = "Hiện không có tài sản bảo trì cần xử lý";
+      link.href = "/assets?status=maintenance";
+      link.textContent = "Xem chi tiết";
     }
 
     function renderRecentAssets(items) {
@@ -283,9 +370,7 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
         .map((item) => {
           const assetName = escapeHtml(item.asset_name || "—");
           const assetCode = escapeHtml(item.asset_code || "—");
-          const statusLabel = escapeHtml(
-            item.status_label || item.status || "—",
-          );
+          const statusLabel = escapeHtml(item.status_label || item.status || "—");
           const statusClass = escapeHtml(item.status_class || "status-free");
           const user = escapeHtml(item.user || "—");
 
@@ -381,29 +466,47 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
         .join("");
     }
 
+    function getTypeCount(typeCounts, key) {
+      return Number(typeCounts?.[key] || 0);
+    }
+
     function renderMiniStats(data) {
-      const typeCounts =
-        data.filter_counts?.type ||
-        data.scope?.filter_counts?.type ||
-        data.scope?.type_counts ||
-        data.type_counts ||
-        {};
+      const categories = data.quick_categories || [];
+      const typeCounts = data.filter_counts?.type || {};
+
+      if (categories.length > 0) {
+        categories.forEach((category) => {
+          const link = document.querySelector(
+            `[data-quick-category="${category.key}"]`
+          );
+
+          if (link && category.url) {
+            link.href = category.url;
+          }
+
+          if (category.count_id) {
+            setText(category.count_id, category.count || 0);
+          }
+        });
+
+        return;
+      }
 
       const laptopPc =
-        Number(typeCounts.laptop || 0) + Number(typeCounts.pc || 0);
+        getTypeCount(typeCounts, "laptop") + getTypeCount(typeCounts, "pc");
 
-      const printer = Number(typeCounts.printer || 0);
+      const printer = getTypeCount(typeCounts, "printer");
 
       const network =
-        Number(typeCounts.network || 0) +
-        Number(typeCounts.router || 0) +
-        Number(typeCounts.switch || 0);
+        getTypeCount(typeCounts, "network") +
+        getTypeCount(typeCounts, "router") +
+        getTypeCount(typeCounts, "switch");
 
       const monitorAccessory =
-        Number(typeCounts.monitor || 0) +
-        Number(typeCounts.accessory || 0) +
-        Number(typeCounts.keyboard || 0) +
-        Number(typeCounts.mouse || 0);
+        getTypeCount(typeCounts, "monitor") +
+        getTypeCount(typeCounts, "keyboard") +
+        getTypeCount(typeCounts, "mouse") +
+        getTypeCount(typeCounts, "accessory");
 
       setText("mini-laptop-pc-count", laptopPc);
       setText("mini-printer-count", printer);
@@ -411,7 +514,71 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
       setText("mini-monitor-accessory-count", monitorAccessory);
     }
 
-    async function loadDashboardOverview() {
+    const DASHBOARD_CACHE_KEY = "assetone_dashboard_overview_cache";
+
+    function saveDashboardCache(data) {
+      try {
+        sessionStorage.setItem(
+          DASHBOARD_CACHE_KEY,
+          JSON.stringify({
+            saved_at: Date.now(),
+            data: data || {},
+          })
+        );
+      } catch (_) {}
+    }
+
+    function readDashboardCache() {
+      try {
+        const raw = sessionStorage.getItem(DASHBOARD_CACHE_KEY);
+
+        if (!raw) {
+          return null;
+        }
+
+        const cached = JSON.parse(raw);
+
+        if (!cached || !cached.data) {
+          return null;
+        }
+
+        return cached.data;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function renderDashboardData(data) {
+      data = data || {};
+
+      // THÊM: Cần xử lý chỉ lấy tài sản Bảo trì, không cộng tài sản Hỏng
+      const statusCounts = data.filter_counts?.status || {};
+      const maintenanceCount = Number(statusCounts.maintenance || 0);
+      const totalCount = Number(statusCounts.all || data.stats?.total || 0);
+      const maintenancePercent = totalCount
+        ? Math.min(100, Math.max(0, Math.round((maintenanceCount / totalCount) * 100)))
+        : 0;
+
+      const stats = {
+        ...(data.stats || {}),
+        problem: maintenanceCount,
+        maintenance: maintenanceCount,
+        problem_percent: maintenancePercent,
+      };
+
+      renderStats(stats);
+      renderRecentAssets(data.recent_assets || []);
+      renderRecentActivities(data.recent_activities || []);
+      renderMiniStats(data || {});
+    }
+
+    async function loadDashboardOverview(forceRefresh = false) {
+      const cachedData = readDashboardCache();
+
+      if (cachedData && !forceRefresh) {
+        renderDashboardData(cachedData);
+      }
+
       try {
         const response = await fetch(
           "/api/dashboard/overview?limit=4&activity_limit=6",
@@ -420,6 +587,7 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
             headers: {
               Accept: "application/json",
             },
+            cache: "no-store",
           },
         );
 
@@ -429,12 +597,15 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
           throw new Error(data.message || "Không thể tải dữ liệu dashboard");
         }
 
-        renderStats(data.stats || {});
-        renderRecentAssets(data.recent_assets || []);
-        renderRecentActivities(data.recent_activities || []);
-        renderMiniStats(data || {});
+        renderDashboardData(data || {});
+        saveDashboardCache(data || {});
       } catch (error) {
         console.error(error);
+
+        if (cachedData) {
+          renderDashboardData(cachedData);
+          return;
+        }
 
         const assetBody = document.getElementById("recent-assets-body");
 
@@ -467,6 +638,53 @@ current_user.get("role") or "" %} {% set is_staff = current_role == "NHAN_VIEN"
       }
     }
 
-    document.addEventListener("DOMContentLoaded", loadDashboardOverview);
+    let dashboardOverviewLoaded = false;
+
+    function initDashboardOverview(forceReload = false) {
+      const dashboardRoot = document.querySelector(".dashboard-overview");
+
+      if (!dashboardRoot) {
+        return;
+      }
+
+      if (dashboardOverviewLoaded && !forceReload) {
+        return;
+      }
+
+      dashboardOverviewLoaded = true;
+      loadDashboardOverview(forceReload);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        initDashboardOverview(false);
+      });
+    } else {
+      initDashboardOverview(false);
+    }
+
+    window.addEventListener("pageshow", (event) => {
+      const dashboardRoot = document.querySelector(".dashboard-overview");
+
+      if (!dashboardRoot) {
+        return;
+      }
+
+      const navigationEntry =
+        performance.getEntriesByType &&
+        performance.getEntriesByType("navigation")[0];
+
+      const isBackForward =
+        event.persisted ||
+        (navigationEntry && navigationEntry.type === "back_forward");
+
+      if (isBackForward) {
+        initDashboardOverview(false);
+      }
+    });
+
+    window.addEventListener("pjax:loaded", () => {
+      initDashboardOverview(false);
+    });
   </script>
 </section>
