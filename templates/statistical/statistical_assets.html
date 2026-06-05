@@ -3,6 +3,14 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
 
+{% set total_assets = total_assets|default(0, true) %}
+{% set type_items = type_items|default([], true) %}
+{% set status_segments = status_segments|default([], true) %}
+{% set damaged_assets = damaged_assets|default([], true) %}
+{% set recent_assets = recent_assets|default([], true) %}
+{% set maintenance_total = total_damaged|default(damaged_assets|length, true) %}
+{% set broken_total = total_broken_assets|default(maintenance_total, true) %}
+
 <section class="statistical-page">
   <div class="statistical-container">
 
@@ -10,7 +18,7 @@
       <div>
         <p class="statistical-label">Thống kê tài sản</p>
         <h2>Tổng quan tài sản CNTT</h2>
-        <p>Thống kê tài sản theo loại, trạng thái, thiết bị hư hỏng và các bản ghi gần đây.</p>
+        <p>Thống kê tài sản theo loại, trạng thái, bảo trì tài sản và các bản ghi gần đây.</p>
       </div>
 
       <div class="mini-tabs">
@@ -35,19 +43,19 @@
       <div class="finance-card card-orange">
         <div class="finance-card-top">
           <span>🛠️</span>
-          <p>Thiết bị hư hỏng</p>
+          <p>Bảo trì tài sản</p>
         </div>
-        <h3>{{ total_damaged }}</h3>
-        <small>Cần kiểm tra hoặc sửa chữa</small>
+        <h3>{{ maintenance_total }}</h3>
+        <small>Cần kiểm tra hoặc bảo trì</small>
       </div>
 
       <div class="finance-card card-red">
         <div class="finance-card-top">
-          <span>💸</span>
-          <p>Chi phí sửa chữa</p>
+          <span>⚠️</span>
+          <p>Tài sản hỏng</p>
         </div>
-        <h3>{{ total_repair_cost_text }}</h3>
-        <small>Tổng chi phí sửa chữa dự kiến</small>
+        <h3>{{ broken_total }}</h3>
+        <small>Tài sản hỏng cần xử lý</small>
       </div>
     </div>
 
@@ -62,17 +70,14 @@
           {% for item in type_items %}
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
-
             <div class="horizontal-track">
               <div class="horizontal-fill fill-purple" style="width: {{ item.percent }}%;"></div>
             </div>
-
             <strong>{{ item.value_text }}</strong>
-
-            <span class="chart-tooltip">
-              {{ item.label }}: {{ item.value_text }} tài sản
-            </span>
+            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} tài sản</span>
           </div>
+          {% else %}
+          <div class="stat-empty">Chưa có dữ liệu tài sản theo loại.</div>
           {% endfor %}
         </div>
       </div>
@@ -88,14 +93,17 @@
             class="finance-donut has-tooltip"
             style="
               background: conic-gradient(
-                {% for item in status_segments %}
-                  {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
-                {% endfor %}
+                {% if status_segments %}
+                  {% for item in status_segments %}
+                    {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
+                  {% endfor %}
+                {% else %}
+                  var(--surface-2) 0deg 360deg
+                {% endif %}
               );
             "
           >
             <span class="chart-tooltip">Tổng tài sản: {{ total_assets }}</span>
-
             <div class="donut-center">
               <strong>{{ total_assets }}</strong>
               <span>Tài sản</span>
@@ -110,84 +118,11 @@
               <span class="legend-dot dot-{{ item.class }}"></span>
               {{ item.label }}
             </div>
-
             <strong>{{ item.percent }}%</strong>
-
-            <span class="chart-tooltip">
-              {{ item.label }}: {{ item.value_text }} tài sản
-            </span>
+            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} tài sản</span>
           </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">
-          <h3>Mức độ hư hỏng</h3>
-          <p>Phân loại thiết bị cần sửa theo mức độ lỗi.</p>
-        </div>
-
-        <div class="horizontal-chart">
-          {% for item in repair_level_items %}
-          <div class="horizontal-row has-tooltip">
-            <div class="horizontal-name">{{ item.label }}</div>
-
-            <div class="horizontal-track">
-              <div class="horizontal-fill fill-orange" style="width: {{ item.percent }}%;"></div>
-            </div>
-
-            <strong>{{ item.value_text }}</strong>
-
-            <span class="chart-tooltip">
-              {{ item.label }}: {{ item.value_text }} thiết bị
-            </span>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">
-          <h3>Trạng thái sửa chữa</h3>
-          <p>Biểu đồ tròn theo tiến độ xử lý thiết bị lỗi.</p>
-        </div>
-
-        <div class="donut-wrap">
-          <div
-            class="finance-donut has-tooltip"
-            style="
-              background: conic-gradient(
-                {% for item in repair_status_segments %}
-                  {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
-                {% endfor %}
-              );
-            "
-          >
-            <span class="chart-tooltip">Thiết bị lỗi: {{ total_damaged }}</span>
-
-            <div class="donut-center">
-              <strong>{{ total_damaged }}</strong>
-              <span>Sửa chữa</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="donut-legend">
-          {% for item in repair_status_segments %}
-          <div class="legend-row has-tooltip">
-            <div>
-              <span class="legend-dot dot-{{ item.class }}"></span>
-              {{ item.label }}
-            </div>
-
-            <strong>{{ item.percent }}%</strong>
-
-            <span class="chart-tooltip">
-              {{ item.label }}: {{ item.value_text }} thiết bị
-            </span>
-          </div>
+          {% else %}
+          <div class="stat-empty">Chưa có dữ liệu trạng thái.</div>
           {% endfor %}
         </div>
       </div>
@@ -195,8 +130,8 @@
 
     <div class="finance-table-card repair-table-card">
       <div class="chart-title">
-        <h3>Thiết bị hư hỏng cần sửa chữa</h3>
-        <p>Danh sách thiết bị đang lỗi, nguyên nhân và chi phí sửa chữa dự kiến.</p>
+        <h3>Bảo trì tài sản</h3>
+        <p>Danh sách tài sản đang lỗi và nguyên nhân cần xử lý.</p>
       </div>
 
       <div class="finance-table repair-table">
@@ -204,9 +139,6 @@
           <div>Mã</div>
           <div>Tài sản</div>
           <div>Lỗi</div>
-          <div>Mức độ</div>
-          <div>Trạng thái</div>
-          <div>Chi phí</div>
         </div>
 
         {% for asset in damaged_assets %}
@@ -214,17 +146,12 @@
           <div>{{ asset.asset_code }}</div>
           <div>{{ asset.asset }}</div>
           <div>{{ asset.issue }}</div>
-          <div>
-            <span class="repair-level level-{{ asset.level_class }}">
-              {{ asset.level }}
-            </span>
-          </div>
-          <div>
-            <span class="status-badge badge-{{ asset.repair_status_class }}">
-              {{ asset.repair_status }}
-            </span>
-          </div>
-          <div class="text-loss">{{ asset.repair_cost_text }}</div>
+        </div>
+        {% else %}
+        <div class="finance-row repair-row">
+          <div>---</div>
+          <div>Chưa có dữ liệu</div>
+          <div>---</div>
         </div>
         {% endfor %}
       </div>
@@ -256,6 +183,14 @@
               {{ asset.status }}
             </span>
           </div>
+        </div>
+        {% else %}
+        <div class="finance-row asset-row">
+          <div>---</div>
+          <div>Chưa có dữ liệu</div>
+          <div>---</div>
+          <div>---</div>
+          <div><span class="status-badge badge-info">---</span></div>
         </div>
         {% endfor %}
       </div>
