@@ -7,7 +7,9 @@ from flask import session
 
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:5001")
-REQUEST_TIMEOUT = 5
+
+# SỬA: tăng timeout nhẹ để tránh lỗi read timeout khi backend ghi log / notification chậm
+REQUEST_TIMEOUT = 12
 
 
 DEFAULT_DEPARTMENTS = [
@@ -323,10 +325,15 @@ def assign_many_assets_to_user_api(asset_ids, user_id):
     }
 
 
-def unassign_asset_from_user_api(asset_id):
+def update_assign_status_api(asset_id, status):
+    # THÊM: dùng đúng API NEST của module cấp phát.
+    # Tránh gọi /api/assets/<id>/unassign gây timeout ở màn thu hồi.
     data, error = api_request(
         "PATCH",
-        f"/api/assets/{asset_id}/unassign",
+        f"/api/assign/{asset_id}/status",
+        json={
+            "status": status
+        }
     )
 
     if error:
@@ -335,6 +342,15 @@ def unassign_asset_from_user_api(asset_id):
         }
 
     return True, data or {}
+
+
+def unassign_asset_from_user_api(asset_id):
+    # SỬA: thu hồi tài sản bằng API cấp phát.
+    # Bên NEST sẽ tự đổi status về available và xóa người dùng/phòng ban/vị trí.
+    return update_assign_status_api(
+        asset_id=asset_id,
+        status="Chưa dùng",
+    )
 
 
 def is_assignable_status(assign):

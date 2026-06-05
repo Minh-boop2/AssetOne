@@ -1,7 +1,143 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=20260604_keep_bulk_select">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=assign_bulk_unassign_confirm_01">
+
+<style>
+  .assign-confirm-toast {
+    position: fixed;
+    top: 96px;
+    right: 24px;
+    z-index: 99999;
+    width: min(430px, calc(100vw - 32px));
+    background: var(--surface);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border-left: 5px solid #f59e0b;
+    border-radius: 16px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+    color: var(--text);
+    opacity: 0;
+    transform: translateX(18px);
+    pointer-events: none;
+    transition: 0.22s ease;
+  }
+
+  .assign-confirm-toast.is-show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .assign-confirm-toast__inner {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .assign-confirm-toast__icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.16);
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .assign-confirm-toast__content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .assign-confirm-toast__title {
+    margin: 0 0 6px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  .assign-confirm-toast__message {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .assign-confirm-toast__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .assign-confirm-toast__btn {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.18s ease;
+  }
+
+  .assign-confirm-toast__btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .assign-confirm-toast__btn--cancel {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .assign-confirm-toast__btn--confirm {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #fff;
+  }
+
+  .assign-confirm-toast__close {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .assign-confirm-toast__close:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  @media (max-width: 640px) {
+    .assign-confirm-toast {
+      top: 84px;
+      right: 16px;
+      left: 16px;
+      width: auto;
+    }
+
+    .assign-confirm-toast__actions {
+      flex-direction: column-reverse;
+    }
+
+    .assign-confirm-toast__btn {
+      width: 100%;
+    }
+  }
+</style>
 
 {% set counts = counts or {} %}
 {% set categories = categories or [] %}
@@ -388,22 +524,69 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(text ? `${title}\n${text}` : title);
   };
 
-  const askConfirm = async ({ title, message, confirmText = "Xác nhận", danger = true }) => {
-    if (typeof window.toastConfirm === "function") {
-      return await window.toastConfirm({
-        type: "warning",
-        title,
-        message,
-        confirmText,
-        cancelText: "Hủy",
-        danger,
-        closeOnBackdrop: false,
-        closeOnEsc: true
-      });
-    }
+  function showConfirmToast({ title, message, confirmText = "Xác nhận", cancelText = "Hủy" }) {
+    return new Promise(resolve => {
+      if (typeof window.toastConfirm === "function") {
+        window.toastConfirm({
+          type: "warning",
+          title,
+          message,
+          confirmText,
+          cancelText,
+          danger: true,
+          closeOnBackdrop: false,
+          closeOnEsc: true
+        }).then(resolve);
+        return;
+      }
 
-    return confirm(message);
-  };
+      document.querySelectorAll(".assign-confirm-toast").forEach(item => item.remove());
+
+      const toast = document.createElement("div");
+      toast.className = "assign-confirm-toast";
+      toast.innerHTML = `
+        <div class="assign-confirm-toast__inner">
+          <div class="assign-confirm-toast__icon">!</div>
+
+          <div class="assign-confirm-toast__content">
+            <p class="assign-confirm-toast__title">${title}</p>
+            <p class="assign-confirm-toast__message">${message}</p>
+
+            <div class="assign-confirm-toast__actions">
+              <button type="button" class="assign-confirm-toast__btn assign-confirm-toast__btn--cancel">
+                ${cancelText}
+              </button>
+
+              <button type="button" class="assign-confirm-toast__btn assign-confirm-toast__btn--confirm">
+                ${confirmText}
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="assign-confirm-toast__close" aria-label="Đóng">×</button>
+        </div>
+      `;
+
+      document.body.appendChild(toast);
+
+      const closeToast = value => {
+        toast.classList.remove("is-show");
+
+        setTimeout(() => {
+          toast.remove();
+          resolve(value);
+        }, 180);
+      };
+
+      toast.querySelector(".assign-confirm-toast__btn--cancel").addEventListener("click", () => closeToast(false));
+      toast.querySelector(".assign-confirm-toast__btn--confirm").addEventListener("click", () => closeToast(true));
+      toast.querySelector(".assign-confirm-toast__close").addEventListener("click", () => closeToast(false));
+
+      requestAnimationFrame(() => {
+        toast.classList.add("is-show");
+      });
+    });
+  }
 
   const closeMenus = except => {
     $$(".filter-select__menu, .action-menu__dropdown").forEach(menu => {
@@ -620,10 +803,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return notify("error", "Không thể thu hồi", "Chỉ được chọn các tài sản đang sử dụng.");
     }
 
-    const ok = await askConfirm({
+    const ok = await showConfirmToast({
       title: "Xác nhận thu hồi nhiều",
+      message: `Bạn có chắc muốn thu hồi ${items.length} tài sản đã chọn không?`,
       confirmText: "Thu hồi",
-      message: `Bạn có chắc muốn thu hồi ${items.length} tài sản đã chọn không?`
+      cancelText: "Hủy"
     });
 
     if (!ok) return;
@@ -634,18 +818,32 @@ document.addEventListener("DOMContentLoaded", () => {
       for (const item of items) {
         if (!item.unassignUrl) continue;
 
-        await fetch(item.unassignUrl, {
+        const response = await fetch(item.unassignUrl, {
           method: "POST",
           credentials: "same-origin",
-          headers: { "X-Requested-With": "fetch" }
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "fetch"
+          }
         });
+
+        let data = {};
+
+        try {
+          data = await response.json();
+        } catch (_) {}
+
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || "Thu hồi không thành công.");
+        }
       }
 
-      notify("success", "Thu hồi thành công", `Đã thu hồi ${items.length} tài sản.`);
+      notify("warning", "Thu hồi tài sản thành công.", `Đã thu hồi ${items.length} tài sản.`);
       selectedAssets.clear();
       loadAssignTable(location.href, false);
-    } catch {
-      notify("error", "Thu hồi không thành công", "Vui lòng thử lại sau.");
+    } catch (error) {
+      notify("error", "Thu hồi không thành công", error.message || "Vui lòng thử lại sau.");
+    } finally {
       if (btn) btn.disabled = false;
     }
   }
@@ -785,13 +983,17 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
       closeMenus();
 
-      const ok = await askConfirm({
+      const ok = await showConfirmToast({
         title: "Xác nhận thu hồi",
+        message: "Bạn có chắc muốn thu hồi tài sản này không?",
         confirmText: "Thu hồi",
-        message: "Bạn có chắc muốn thu hồi tài sản này không?"
+        cancelText: "Hủy"
       });
 
-      if (ok) unassignForm.submit();
+      if (ok) {
+        unassignForm.submit();
+      }
+
       return;
     }
 
@@ -801,7 +1003,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keydown", event => {
-    if (event.key === "Escape") closeMenus();
+    if (event.key === "Escape") {
+      document.querySelectorAll(".assign-confirm-toast").forEach(item => item.remove());
+      closeMenus();
+    }
   });
 
   updateClearButton();

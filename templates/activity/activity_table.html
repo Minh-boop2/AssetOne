@@ -4,107 +4,51 @@
 {% set safe_action_value = selected_action_value|default(request.args.get('action', ''), true) %}
 {% set safe_module_value = selected_module_value|default(request.args.get('module', ''), true) %}
 {% set safe_status_value = selected_status_value|default(request.args.get('status', ''), true) %}
-
-{% set safe_start_date_value =
-selected_start_date_value|default(start_date|default(selected_start_date|default(request.args.get('start_date', ''), true), true), true) %}
-
-{% set safe_end_date_value =
-selected_end_date_value|default(end_date|default(selected_end_date|default(request.args.get('end_date', ''), true), true), true) %}
+{% set safe_start_date_value = selected_start_date_value|default(start_date|default(selected_start_date|default(request.args.get('start_date', ''), true), true), true) %}
+{% set safe_end_date_value = selected_end_date_value|default(end_date|default(selected_end_date|default(request.args.get('end_date', ''), true), true), true) %}
 
 {% macro activity_page_url(page_number) %}
-  {{ url_for(
-    'activity_page',
-    page=page_number,
-    search=safe_search_value,
-    action=safe_action_value,
-    module=safe_module_value,
-    status=safe_status_value,
-    start_date=safe_start_date_value,
-    end_date=safe_end_date_value
-  ) }}
+  {{ url_for('activity_page', page=page_number, search=safe_search_value, action=safe_action_value, module=safe_module_value, status=safe_status_value, start_date=safe_start_date_value, end_date=safe_end_date_value) }}
 {% endmacro %}
 
 <div class="activity-overview-card">
   <div class="activity-card-header">
     <h3>Nhật ký hoạt động</h3>
-
     {% if activity_logs %}
-    <div class="activity-card-meta">
-      Hiển thị <b>{{ activity_logs|length }}</b> trên
-      <b>{{ total_activity_count }}</b> kết quả
-    </div>
+      <div class="activity-card-meta">Hiển thị <b>{{ activity_logs|length }}</b> trên <b>{{ total_activity_count }}</b> kết quả</div>
     {% endif %}
   </div>
 
   {% macro render_activity_code(row) %}
-    {% set value =
-      row.display_activity_code
-      |default(row.activity_code
-      |default(row.code
-      |default(row.log_code
-      |default('ACTIVITY', true), true), true), true)
-    %}
-
+    {% set value = row.display_activity_code|default(row.activity_code|default(row.code|default(row.log_code|default('ACTIVITY', true), true), true), true) %}
     <span class="activity-code">{{ value }}</span>
   {% endmacro %}
 
   {% macro render_activity_time(row) %}
-    {% set value =
-      row.display_activity_time
-      |default(row.activity_time
-      |default(row.created_at
-      |default(row.time
-      |default('Chưa có dữ liệu', true), true), true), true)
-    %}
-
+    {% set value = row.display_activity_time|default(row.activity_time|default(row.created_at|default(row.time|default('Chưa có dữ liệu', true), true), true), true) %}
     <span>{{ value }}</span>
   {% endmacro %}
 
   {% macro render_activity_user(row) %}
-    {% set value =
-      row.display_activity_user
-      |default(row.display_user
-      |default(row.actor_name
-      |default(row.user_name
-      |default(row.username
-      |default('Chưa xác định', true), true), true), true), true)
-    %}
-
+    {% set value = row.display_activity_user|default(row.display_user|default(row.actor_name|default(row.user_name|default(row.username|default('Chưa xác định', true), true), true), true), true) %}
     <span class="activity-name">{{ value }}</span>
   {% endmacro %}
 
   {% macro render_activity_action(row) %}
-    {% set action_text =
-      row.display_activity_action
-      |default(row.display_action
-      |default(row.action
-      |default(row.activity_action
-      |default('Khác', true), true), true), true)
-    %}
-
+    {% set action_text = row.display_activity_action|default(row.display_action|default(row.action|default(row.activity_action|default('Khác', true), true), true), true) %}
     {% set value = action_text|lower %}
-
     <span
       class="activity-badge activity-badge--action
-      {% if 'thêm' in value or 'tạo' in value or 'create' in value %}
-        activity-badge--success
-      {% elif 'xóa' in value or 'delete' in value or 'remove' in value %}
-        activity-badge--danger
-      {% elif 'sửa' in value or 'cập nhật' in value or 'update' in value or 'edit' in value %}
-        activity-badge--cyan
-      {% elif 'đăng nhập' in value or 'login' in value %}
-        activity-badge--blue
-      {% elif 'đăng xuất' in value or 'logout' in value %}
-        activity-badge--slate
-      {% elif 'duyệt' in value or 'approve' in value %}
-        activity-badge--success
-      {% elif 'từ chối' in value or 'reject' in value or 'hủy' in value %}
-        activity-badge--danger
-      {% elif 'cấp phát' in value or 'assign' in value %}
-        activity-badge--purple
-      {% else %}
-        activity-badge--default
-      {% endif %}"
+      {% if 'thêm' in value or 'tạo' in value or 'create' in value %}activity-badge--success
+      {% elif 'xóa' in value or 'delete' in value or 'remove' in value %}activity-badge--danger
+      {% elif 'sửa' in value or 'cập nhật' in value or 'update' in value or 'edit' in value %}activity-badge--cyan
+      {% elif 'đăng nhập' in value or 'login' in value %}activity-badge--blue
+      {% elif 'đăng xuất' in value or 'logout' in value %}activity-badge--slate
+      {% elif 'duyệt' in value or 'approve' in value %}activity-badge--success
+      {% elif 'từ chối' in value or 'reject' in value or 'hủy' in value %}activity-badge--danger
+      {% elif 'cấp phát' in value or 'assign' in value %}activity-badge--purple
+      {% elif 'thu hồi' in value or 'return' in value or 'unassign' in value %}activity-badge--slate
+      {% else %}activity-badge--default{% endif %}"
       title="{{ action_text }}"
     >
       <span class="activity-badge__text">{{ action_text }}</span>
@@ -112,183 +56,69 @@ selected_end_date_value|default(end_date|default(selected_end_date|default(reque
   {% endmacro %}
 
   {% macro render_activity_module(row) %}
-    {% set module_text =
-      row.display_activity_module
-      |default(row.display_module
-      |default(row.module
-      |default(row.feature
-      |default('Hệ thống', true), true), true), true)
-    %}
-
+    {% set module_text = row.display_activity_module|default(row.display_module|default(row.module|default(row.feature|default('Hệ thống', true), true), true), true) %}
     {% set value = module_text|lower %}
-
     <span
       class="activity-badge
-      {% if 'tài sản' in value or 'asset' in value %}
-        activity-badge--blue
-      {% elif 'báo cáo' in value or 'report' in value %}
-        activity-badge--orange
-      {% elif 'cấp phát' in value or 'assign' in value %}
-        activity-badge--purple
-      {% elif 'quản lý' in value or 'manage' in value %}
-        activity-badge--cyan
-      {% elif 'đăng nhập' in value or 'login' in value %}
-        activity-badge--success
-      {% else %}
-        activity-badge--default
-      {% endif %}"
+      {% if 'tài sản' in value or 'asset' in value %}activity-badge--blue
+      {% elif 'báo cáo' in value or 'report' in value %}activity-badge--orange
+      {% elif 'cấp phát' in value or 'assign' in value %}activity-badge--purple
+      {% elif 'thu hồi' in value or 'return' in value or 'unassign' in value %}activity-badge--slate
+      {% elif 'quản lý' in value or 'manage' in value %}activity-badge--cyan
+      {% elif 'đăng nhập' in value or 'login' in value %}activity-badge--success
+      {% else %}activity-badge--default{% endif %}"
     >
       {{ module_text }}
     </span>
   {% endmacro %}
 
   {% macro render_activity_detail(row) %}
-    {% set value =
-      row.display_activity_detail
-      |default(row.display_detail
-      |default(row.description
-      |default(row.detail
-      |default(row.note
-      |default('Không có mô tả', true), true), true), true), true)
-    %}
-
+    {% set value = row.display_activity_detail|default(row.display_detail|default(row.description|default(row.detail|default(row.note|default('Không có mô tả', true), true), true), true), true) %}
     <span class="activity-description" title="{{ value }}">{{ value }}</span>
   {% endmacro %}
 
   {% macro render_activity_status(row) %}
-    {% set status_text =
-      row.display_activity_status
-      |default(row.display_status
-      |default(row.status
-      |default('Thành công', true), true), true)
-    %}
-
+    {% set status_text = row.display_activity_status|default(row.display_status|default(row.status|default('Thành công', true), true), true) %}
     {% set value = status_text|lower %}
-
     <span
       class="activity-badge
-      {% if 'thành công' in value or 'success' in value or 'hoàn thành' in value %}
-        activity-badge--success
-      {% elif 'thất bại' in value or 'lỗi' in value or 'fail' in value or 'error' in value %}
-        activity-badge--danger
-      {% elif 'đang xử lý' in value or 'processing' in value %}
-        activity-badge--blue
-      {% elif 'chờ' in value or 'pending' in value %}
-        activity-badge--pending
-      {% else %}
-        activity-badge--default
-      {% endif %}"
+      {% if 'thành công' in value or 'success' in value or 'hoàn thành' in value %}activity-badge--success
+      {% elif 'thất bại' in value or 'lỗi' in value or 'fail' in value or 'error' in value %}activity-badge--danger
+      {% elif 'đang xử lý' in value or 'processing' in value %}activity-badge--blue
+      {% elif 'chờ' in value or 'pending' in value %}activity-badge--pending
+      {% else %}activity-badge--default{% endif %}"
     >
       {{ status_text }}
     </span>
   {% endmacro %}
 
   {% macro render_eye_icon() %}
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      class="action-menu__svg"
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="action-menu__svg">
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
       <circle cx="12" cy="12" r="3"></circle>
     </svg>
   {% endmacro %}
 
   {% macro render_copy_icon() %}
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-      class="action-menu__svg"
-    >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="action-menu__svg">
       <rect x="9" y="9" width="13" height="13" rx="2"></rect>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
     </svg>
   {% endmacro %}
 
   {% macro render_row_action(row) %}
-    {% set code =
-      row.display_activity_code
-      |default(row.activity_code
-      |default(row.code
-      |default(row.log_code
-      |default('ACTIVITY', true), true), true), true)
-    %}
-
-    {% set time =
-      row.display_activity_time
-      |default(row.activity_time
-      |default(row.created_at
-      |default(row.time
-      |default('', true), true), true), true)
-    %}
-
-    {% set user =
-      row.display_activity_user
-      |default(row.display_user
-      |default(row.actor_name
-      |default(row.user_name
-      |default(row.username
-      |default('Chưa xác định', true), true), true), true), true)
-    %}
-
-    {% set action =
-      row.display_activity_action
-      |default(row.display_action
-      |default(row.action
-      |default(row.activity_action
-      |default('Khác', true), true), true), true)
-    %}
-
-    {% set module =
-      row.display_activity_module
-      |default(row.display_module
-      |default(row.module
-      |default(row.feature
-      |default('Hệ thống', true), true), true), true)
-    %}
-
-    {% set detail =
-      row.display_activity_detail
-      |default(row.display_detail
-      |default(row.description
-      |default(row.detail
-      |default(row.note
-      |default('Không có mô tả', true), true), true), true), true)
-    %}
-
-    {% set status =
-      row.display_activity_status
-      |default(row.display_status
-      |default(row.status
-      |default('Thành công', true), true), true)
-    %}
+    {% set code = row.display_activity_code|default(row.activity_code|default(row.code|default(row.log_code|default('ACTIVITY', true), true), true), true) %}
+    {% set time = row.display_activity_time|default(row.activity_time|default(row.created_at|default(row.time|default('', true), true), true), true) %}
+    {% set user = row.display_activity_user|default(row.display_user|default(row.actor_name|default(row.user_name|default(row.username|default('Chưa xác định', true), true), true), true), true) %}
+    {% set action = row.display_activity_action|default(row.display_action|default(row.action|default(row.activity_action|default('Khác', true), true), true), true) %}
+    {% set module = row.display_activity_module|default(row.display_module|default(row.module|default(row.feature|default('Hệ thống', true), true), true), true) %}
+    {% set detail = row.display_activity_detail|default(row.display_detail|default(row.description|default(row.detail|default(row.note|default('Không có mô tả', true), true), true), true), true) %}
+    {% set status = row.display_activity_status|default(row.display_status|default(row.status|default('Thành công', true), true), true) %}
 
     <div class="action-menu-center">
       <div class="action-menu">
-        <button
-          type="button"
-          class="action-menu__trigger"
-          aria-label="Mở menu thao tác"
-        >
-          <div class="action-menu__dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+        <button type="button" class="action-menu__trigger" aria-label="Mở menu thao tác">
+          <div class="action-menu__dots"><span></span><span></span><span></span></div>
         </button>
 
         <div class="action-menu__dropdown">
@@ -321,47 +151,14 @@ selected_end_date_value|default(end_date|default(selected_end_date|default(reque
   {% endmacro %}
 
   {% set columns = [
-    {
-      "key": "activity_code",
-      "label": "MÃ HOẠT ĐỘNG",
-      "render": render_activity_code
-    },
-    {
-      "key": "activity_time",
-      "label": "THỜI GIAN",
-      "render": render_activity_time
-    },
-    {
-      "key": "activity_user",
-      "label": "NGƯỜI THỰC HIỆN",
-      "render": render_activity_user
-    },
-    {
-      "key": "activity_action",
-      "label": "HÀNH ĐỘNG",
-      "render": render_activity_action
-    },
-    {
-      "key": "activity_module",
-      "label": "LOẠI",
-      "render": render_activity_module
-    },
-    {
-      "key": "activity_detail",
-      "label": "NỘI DUNG",
-      "render": render_activity_detail
-    },
-    {
-      "key": "activity_status",
-      "label": "TRẠNG THÁI",
-      "render": render_activity_status
-    },
-    {
-      "key": "action",
-      "label": "THAO TÁC",
-      "render": render_row_action,
-      "align": "center"
-    }
+    {"key": "activity_code", "label": "MÃ HOẠT ĐỘNG", "render": render_activity_code},
+    {"key": "activity_time", "label": "THỜI GIAN", "render": render_activity_time},
+    {"key": "activity_user", "label": "NGƯỜI THỰC HIỆN", "render": render_activity_user},
+    {"key": "activity_action", "label": "HÀNH ĐỘNG", "render": render_activity_action},
+    {"key": "activity_module", "label": "LOẠI", "render": render_activity_module},
+    {"key": "activity_detail", "label": "NỘI DUNG", "render": render_activity_detail},
+    {"key": "activity_status", "label": "TRẠNG THÁI", "render": render_activity_status},
+    {"key": "action", "label": "THAO TÁC", "render": render_row_action, "align": "center"}
   ] %}
 
   {% set safe_current_page = current_page|default(1, true) %}
@@ -376,71 +173,46 @@ selected_end_date_value|default(end_date|default(selected_end_date|default(reque
     </div>
 
     <div class="activity-card-footer">
-      <div class="activity-pagination-info">
-        Trang <b>{{ safe_current_page }}</b> / <b>{{ safe_total_pages }}</b>
-      </div>
+      <div class="activity-pagination-info">Trang <b>{{ safe_current_page }}</b> / <b>{{ safe_total_pages }}</b></div>
 
       <div class="activity-pagination-buttons">
-        <a
-          href="{{ activity_page_url(prev_page) }}"
-          class="activity-page-btn {{ 'disabled' if safe_current_page <= 1 else '' }}"
-          aria-disabled="{{ 'true' if safe_current_page <= 1 else 'false' }}"
-        >
-          « Trước
-        </a>
+        <a href="{{ activity_page_url(prev_page) }}" class="activity-page-btn {{ 'disabled' if safe_current_page <= 1 else '' }}" aria-disabled="{{ 'true' if safe_current_page <= 1 else 'false' }}">« Trước</a>
 
         {% if safe_total_pages <= 3 %}
           {% for p in range(1, safe_total_pages + 1) %}
             {% if p == safe_current_page %}
               <span class="activity-page-btn active">{{ p }}</span>
             {% else %}
-              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">
-                {{ p }}
-              </a>
+              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">{{ p }}</a>
             {% endif %}
           {% endfor %}
-
         {% elif safe_current_page <= 2 %}
           {% for p in range(1, 4) %}
             {% if p == safe_current_page %}
               <span class="activity-page-btn active">{{ p }}</span>
             {% else %}
-              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">
-                {{ p }}
-              </a>
+              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">{{ p }}</a>
             {% endif %}
           {% endfor %}
-
         {% elif safe_current_page >= safe_total_pages - 1 %}
           {% for p in range(safe_total_pages - 2, safe_total_pages + 1) %}
             {% if p == safe_current_page %}
               <span class="activity-page-btn active">{{ p }}</span>
             {% else %}
-              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">
-                {{ p }}
-              </a>
+              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">{{ p }}</a>
             {% endif %}
           {% endfor %}
-
         {% else %}
           {% for p in range(safe_current_page - 1, safe_current_page + 2) %}
             {% if p == safe_current_page %}
               <span class="activity-page-btn active">{{ p }}</span>
             {% else %}
-              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">
-                {{ p }}
-              </a>
+              <a href="{{ activity_page_url(p) }}" class="activity-page-btn">{{ p }}</a>
             {% endif %}
           {% endfor %}
         {% endif %}
 
-        <a
-          href="{{ activity_page_url(next_page) }}"
-          class="activity-page-btn {{ 'disabled' if safe_current_page >= safe_total_pages else '' }}"
-          aria-disabled="{{ 'true' if safe_current_page >= safe_total_pages else 'false' }}"
-        >
-          Sau »
-        </a>
+        <a href="{{ activity_page_url(next_page) }}" class="activity-page-btn {{ 'disabled' if safe_current_page >= safe_total_pages else '' }}" aria-disabled="{{ 'true' if safe_current_page >= safe_total_pages else 'false' }}">Sau »</a>
       </div>
     </div>
   {% else %}
@@ -451,177 +223,226 @@ selected_end_date_value|default(end_date|default(selected_end_date|default(reque
   {% endif %}
 </div>
 
+<div class="activity-modal-backdrop" id="activityQuickModal" aria-hidden="true">
+  <div class="activity-modal" role="dialog" aria-modal="true" aria-labelledby="activityModalTitle">
+    <button type="button" class="activity-modal__close" data-activity-modal-close aria-label="Đóng popup">×</button>
+
+    <div class="activity-modal__head">
+      <div class="activity-modal__icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </div>
+
+      <div class="activity-modal__title-wrap">
+        <h3 id="activityModalTitle">Chi tiết hoạt động</h3>
+        <p id="activityModalCode">ACTIVITY</p>
+      </div>
+    </div>
+
+    <div class="activity-modal__body">
+      <div class="activity-modal__grid">
+        <div class="activity-modal__field"><span>Thời gian</span><strong id="activityModalTime">---</strong></div>
+        <div class="activity-modal__field"><span>Người thực hiện</span><strong id="activityModalUser">---</strong></div>
+        <div class="activity-modal__field"><span>Hành động</span><strong id="activityModalAction">---</strong></div>
+        <div class="activity-modal__field"><span>Loại</span><strong id="activityModalModule">---</strong></div>
+        <div class="activity-modal__field"><span>Trạng thái</span><strong><span class="activity-modal__pill" id="activityModalStatus">---</span></strong></div>
+        <div class="activity-modal__field activity-modal__field--full"><span>Nội dung</span><p id="activityModalDetail">---</p></div>
+      </div>
+    </div>
+
+    <div class="activity-modal__actions">
+      <button type="button" class="activity-modal__btn activity-modal__btn--secondary" data-activity-modal-close>Đóng</button>
+      <button type="button" class="activity-modal__btn activity-modal__btn--primary" id="activityModalCopy">Sao chép</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    function closeAllActionMenus(exceptDropdown = null) {
-      document
-        .querySelectorAll(".activity-overview-card .action-menu__dropdown")
-        .forEach(function (dropdown) {
-          if (dropdown !== exceptDropdown) {
-            dropdown.classList.remove("show");
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("activityQuickModal");
+  let currentCopyText = "";
 
-            const menu = dropdown.closest(".action-menu");
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value || "---";
+  };
 
-            if (menu) {
-              menu.classList.remove("action-menu--drop-up");
-            }
-          }
-        });
+  function statusClass(value) {
+    const text = String(value || "").toLowerCase();
+    if (text.includes("thành công") || text.includes("success") || text.includes("hoàn thành")) return "is-success";
+    if (text.includes("thất bại") || text.includes("lỗi") || text.includes("fail") || text.includes("error")) return "is-danger";
+    if (text.includes("chờ") || text.includes("pending")) return "is-warning";
+    return "is-default";
+  }
+
+  function closeMenus(except = null) {
+    $$(".activity-overview-card .action-menu__dropdown").forEach(dropdown => {
+      if (dropdown === except) return;
+      dropdown.classList.remove("show");
+      dropdown.closest(".action-menu")?.classList.remove("action-menu--drop-up");
+    });
+  }
+
+  function setMenuDirection(menu, dropdown) {
+    const trigger = $(".action-menu__trigger", menu);
+    const box = menu.closest(".activity-table-scroll-container");
+    if (!trigger || !box || !dropdown) return;
+
+    menu.classList.remove("action-menu--drop-up");
+    dropdown.style.visibility = "hidden";
+    dropdown.classList.add("show");
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+    const gap = 8;
+    const below = boxRect.bottom - triggerRect.bottom - gap;
+    const above = triggerRect.top - boxRect.top - gap;
+
+    if (below < dropdown.offsetHeight && above > below) menu.classList.add("action-menu--drop-up");
+    dropdown.style.visibility = "";
+  }
+
+  async function copyText(text) {
+    if (!text) return;
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const input = document.createElement("input");
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
     }
 
-    function updateDropdownDirection(menu, dropdown) {
-      const trigger = menu.querySelector(".action-menu__trigger");
-      const scrollContainer = menu.closest(".activity-table-scroll-container");
+    if (window.sonner?.success) window.sonner.success("Đã sao chép thông tin hoạt động");
+    else if (window.toast?.success) window.toast.success("Đã sao chép thông tin hoạt động");
+    else alert("Đã sao chép thông tin hoạt động");
+  }
 
-      if (!trigger || !scrollContainer || !dropdown) {
-        return;
-      }
+  function openModal(button) {
+    if (!modal || !button) return;
 
-      menu.classList.remove("action-menu--drop-up");
+    const data = {
+      code: button.dataset.activityCode || "---",
+      time: button.dataset.activityTime || "---",
+      user: button.dataset.activityUser || "---",
+      action: button.dataset.activityAction || "---",
+      moduleName: button.dataset.activityModule || "---",
+      status: button.dataset.activityStatus || "---",
+      detail: button.dataset.activityDetail || "---"
+    };
 
-      dropdown.style.visibility = "hidden";
-      dropdown.classList.add("show");
+    currentCopyText = [
+      "Mã hoạt động: " + data.code,
+      "Thời gian: " + data.time,
+      "Người thực hiện: " + data.user,
+      "Hành động: " + data.action,
+      "Loại: " + data.moduleName,
+      "Trạng thái: " + data.status,
+      "Nội dung: " + data.detail
+    ].join(" | ");
 
-      const triggerRect = trigger.getBoundingClientRect();
-      const dropdownHeight = dropdown.offsetHeight;
-      const containerRect = scrollContainer.getBoundingClientRect();
+    setText("activityModalCode", data.code);
+    setText("activityModalTime", data.time);
+    setText("activityModalUser", data.user);
+    setText("activityModalAction", data.action);
+    setText("activityModalModule", data.moduleName);
+    setText("activityModalDetail", data.detail);
 
-      const gap = 8;
-      const spaceBelow = containerRect.bottom - triggerRect.bottom - gap;
-      const spaceAbove = triggerRect.top - containerRect.top - gap;
-
-      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-        menu.classList.add("action-menu--drop-up");
-      }
-
-      dropdown.style.visibility = "";
+    const pill = document.getElementById("activityModalStatus");
+    if (pill) {
+      pill.className = "activity-modal__pill " + statusClass(data.status);
+      pill.textContent = data.status;
     }
 
-    async function copyText(text) {
-      if (!text) {
-        return;
-      }
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("activity-modal-open");
+  }
 
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch (error) {
-        const input = document.createElement("input");
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("activity-modal-open");
+    currentCopyText = "";
+  }
 
-        input.value = text;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        document.body.removeChild(input);
-      }
+  document.addEventListener("click", event => {
+    const closeBtn = event.target.closest("[data-activity-modal-close]");
+    const copyModalBtn = event.target.closest("#activityModalCopy");
+    const copyBtn = event.target.closest(".js-activity-copy");
+    const viewBtn = event.target.closest(".js-activity-view");
+    const trigger = event.target.closest(".activity-overview-card .action-menu__trigger");
+    const insideDropdown = event.target.closest(".activity-overview-card .action-menu__dropdown");
 
-      if (window.sonner && typeof window.sonner.success === "function") {
-        window.sonner.success("Đã sao chép thông tin hoạt động");
+    if (closeBtn || event.target === modal) {
+      event.preventDefault();
+      closeModal();
+      return;
+    }
+
+    if (copyModalBtn) {
+      event.preventDefault();
+      copyText(currentCopyText);
+      return;
+    }
+
+    if (copyBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMenus();
+      copyText(copyBtn.dataset.copyText || "");
+      return;
+    }
+
+    if (viewBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMenus();
+      openModal(viewBtn);
+      return;
+    }
+
+    if (insideDropdown) return;
+
+    if (trigger) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const menu = trigger.closest(".action-menu");
+      const dropdown = menu ? $(".action-menu__dropdown", menu) : null;
+      if (!menu || !dropdown) return;
+
+      const opened = dropdown.classList.contains("show");
+      closeMenus(dropdown);
+
+      if (opened) {
+        dropdown.classList.remove("show");
+        menu.classList.remove("action-menu--drop-up");
       } else {
-        alert("Đã sao chép thông tin hoạt động");
+        setMenuDirection(menu, dropdown);
       }
+
+      return;
     }
 
-    function viewActivity(button) {
-      const code = button.getAttribute("data-activity-code") || "";
-      const time = button.getAttribute("data-activity-time") || "";
-      const user = button.getAttribute("data-activity-user") || "";
-      const action = button.getAttribute("data-activity-action") || "";
-      const moduleName = button.getAttribute("data-activity-module") || "";
-      const status = button.getAttribute("data-activity-status") || "";
-      const detail = button.getAttribute("data-activity-detail") || "";
-
-      const message = [
-        "Mã hoạt động: " + code,
-        "Thời gian: " + time,
-        "Người thực hiện: " + user,
-        "Hành động: " + action,
-        "Loại: " + moduleName,
-        "Trạng thái: " + status,
-        "Nội dung: " + detail,
-      ].join("\n");
-
-      alert(message);
-    }
-
-    document.addEventListener("click", function (event) {
-      const trigger = event.target.closest(
-        ".activity-overview-card .action-menu__trigger"
-      );
-
-      const clickedInsideDropdown = event.target.closest(
-        ".activity-overview-card .action-menu__dropdown"
-      );
-
-      const copyButton = event.target.closest(".js-activity-copy");
-      const viewButton = event.target.closest(".js-activity-view");
-
-      if (copyButton) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        closeAllActionMenus();
-        copyText(copyButton.getAttribute("data-copy-text") || "");
-        return;
-      }
-
-      if (viewButton) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        closeAllActionMenus();
-        viewActivity(viewButton);
-        return;
-      }
-
-      if (clickedInsideDropdown) {
-        return;
-      }
-
-      if (trigger) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const menu = trigger.closest(".action-menu");
-
-        if (!menu) {
-          return;
-        }
-
-        const dropdown = menu.querySelector(".action-menu__dropdown");
-
-        if (!dropdown) {
-          return;
-        }
-
-        const isOpen = dropdown.classList.contains("show");
-
-        closeAllActionMenus(dropdown);
-
-        if (isOpen) {
-          dropdown.classList.remove("show");
-          menu.classList.remove("action-menu--drop-up");
-        } else {
-          updateDropdownDirection(menu, dropdown);
-        }
-
-        return;
-      }
-
-      closeAllActionMenus();
-    });
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        closeAllActionMenus();
-      }
-    });
-
-    document
-      .querySelectorAll(".activity-table-scroll-container")
-      .forEach(function (container) {
-        container.addEventListener("scroll", closeAllActionMenus);
-      });
-
-    window.addEventListener("resize", closeAllActionMenus);
+    closeMenus();
   });
+
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    if (modal?.classList.contains("is-open")) closeModal();
+    else closeMenus();
+  });
+
+  $$(".activity-table-scroll-container").forEach(box => box.addEventListener("scroll", () => closeMenus()));
+  window.addEventListener("resize", () => closeMenus());
+});
 </script>

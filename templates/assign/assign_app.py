@@ -11,7 +11,6 @@ from .assign_backend import (
     build_filter_options,
     get_inventory_from_assets_api,
     get_active_users_from_api,
-    assign_asset_to_user_api,
     assign_many_assets_to_user_api,
     unassign_asset_from_user_api,
 )
@@ -57,6 +56,16 @@ def is_ajax_request():
     return (
         request.args.get("ajax") == "1"
         or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    )
+
+
+def wants_json_response():
+    # THÊM: dùng cho thao tác POST bằng fetch như thu hồi nhiều.
+    # Không dùng hàm này cho GET /assign vì trang đang fetch HTML để thay bảng.
+    return (
+        request.headers.get("X-Requested-With") in ["XMLHttpRequest", "fetch"]
+        or request.is_json
+        or "application/json" in request.headers.get("Accept", "")
     )
 
 
@@ -167,6 +176,7 @@ def split_asset_ids(raw_ids="", fallback_id=""):
 
     for value in str(raw_ids or "").split(","):
         value = value.strip()
+
         if value and value not in asset_ids:
             asset_ids.append(value)
 
@@ -188,6 +198,7 @@ def get_asset_ids_for_give(default_id):
     if request.method == "POST":
         for extra_id in request.form.getlist("asset_id_list"):
             extra_id = str(extra_id or "").strip()
+
             if extra_id and extra_id not in asset_ids:
                 asset_ids.append(extra_id)
 
@@ -546,25 +557,23 @@ def register_assign_routes(app):
             user_id = request.form.get("user_id", "").strip()
 
             if not allow_assign:
-                flash(
-                    "Một hoặc nhiều tài sản không ở trạng thái Chưa dùng nên không thể cấp phát.",
-                    "danger",
-                )
                 return redirect(build_give_redirect_url(id, asset_ids))
 
             if not user_id:
-                flash("Vui lòng chọn người dùng nhận tài sản.", "warning")
                 return redirect(build_give_redirect_url(id, asset_ids))
 
             success, result = assign_many_assets_to_user_api(asset_ids, user_id)
 
             if not success:
                 flash(
-                    f"Đã cấp phát {result.get('success_count', 0)} tài sản, "
-                    f"còn {result.get('failed_count', 0)} tài sản thất bại.",
-                    "warning",
+                    result.get("message")
+                    or (
+                        f"Đã cấp phát {result.get('success_count', 0)} tài sản, "
+                        f"còn {result.get('failed_count', 0)} tài sản thất bại."
+                    ),
+                    "danger",
                 )
-                return redirect(build_give_redirect_url(id, asset_ids))
+                return redirect(url_for("assign_page"))
 
             flash(
                 f"Cấp phát thành công {len(asset_ids)} tài sản."
@@ -616,27 +625,79 @@ def register_assign_routes(app):
     @app.route("/assign/unassign/<string:id>", methods=["POST"])
     def assign_unassign(id):
         permission_redirect = require_assign_permission("update")
+        json_response = wants_json_response()
 
         if permission_redirect:
+            if json_response:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": "Bạn không có quyền thu hồi tài sản.",
+                    }
+                ), 403
+
             return permission_redirect
 
         info, error = api_request("GET", f"/api/assign/{id}")
 
         if error or not info:
-            flash(error or "Không tìm thấy tài sản cần thu hồi.", "danger")
+            message = error or "Không tìm thấy tài sản cần thu hồi."
+
+            if json_response:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": message,
+                    }
+                ), 404
+
+            flash(message, "danger")
             return redirect(url_for("assign_page"))
 
         if not can_unassign_asset(info):
-            flash("Chỉ có tài sản đang sử dụng mới có thể thu hồi.", "warning")
+            message = "Chỉ có tài sản đang sử dụng mới có thể thu hồi."
+
+            if json_response:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": message,
+                    }
+                ), 400
+
+            flash(message, "warning")
             return redirect(url_for("assign_page"))
 
         success, result = unassign_asset_from_user_api(id)
 
         if not success:
-            flash(result.get("message", "Thu hồi tài sản thất bại."), "danger")
+            message = result.get("message", "Thu hồi tài sản thất bại.")
+
+            if json_response:
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": message,
+                    }
+                ), 400
+
+            flash(message, "danger")
             return redirect(url_for("assign_page"))
 
-        flash("Thu hồi tài sản thành công.", "success")
+        message = "Thu hồi tài sản thành công."
+
+        if json_response:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": message,
+                    "toast_type": "warning",
+                    "item": result.get("item") if isinstance(result, dict) else None,
+                }
+            ), 200
+
+        # SỬA: thu hồi thành công dùng warning để toast màu vàng
+        flash(message, "warning")
         return redirect(url_for("assign_page"))
 
     @app.route("/assign/edit/<string:id>", methods=["GET", "POST"])

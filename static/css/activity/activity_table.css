@@ -6,14 +6,11 @@
     min-height: clamp(400px, 45vh, 620px);
     height: clamp(440px, 50vh, 720px);
     max-height: min(720px, 60vh);
-
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
     border-radius: clamp(14px, 1vw, 18px);
     box-shadow: var(--shadow);
-
     overflow: hidden !important;
-
     display: flex;
     flex-direction: column;
 }
@@ -21,10 +18,8 @@
 .activity-card-header,
 .activity-card-footer {
     flex-shrink: 0;
-
     background: var(--surface) !important;
     border-color: var(--border) !important;
-
     display: flex;
     align-items: center;
     gap: 14px;
@@ -38,9 +33,7 @@
 
 .activity-card-header h3 {
     margin: 0;
-
     color: var(--text) !important;
-
     font-size: clamp(15px, 1vw, 17px) !important;
     font-weight: 700;
     line-height: 1.3;
@@ -49,7 +42,6 @@
 .activity-card-meta,
 .activity-pagination-info {
     color: var(--text-soft) !important;
-
     font-size: clamp(12px, 0.85vw, 13px) !important;
     white-space: nowrap;
 }
@@ -64,12 +56,12 @@
 .activity-table-scroll-container {
     flex: 1 1 auto;
     min-height: 0;
-
+    width: 100%;
     background: var(--surface) !important;
-
     overflow: auto !important;
     scrollbar-width: thin;
     scrollbar-color: var(--border) var(--surface);
+    scrollbar-gutter: stable;
 }
 
 .activity-table-scroll-container::-webkit-scrollbar {
@@ -94,11 +86,11 @@
 
 .activity-overview-card .custom-table {
     width: 100% !important;
-    min-width: 980px;
-
+    min-width: 100% !important;
     background: var(--surface) !important;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
+    table-layout: fixed !important;
 }
 
 .activity-overview-card .custom-table thead {
@@ -109,33 +101,70 @@
     position: sticky;
     top: 0;
     z-index: 20;
-
-    padding: clamp(11px, 0.9vw, 14px) clamp(12px, 1vw, 16px) !important;
-
+    padding: clamp(10px, 0.85vw, 13px) clamp(8px, 0.7vw, 12px) !important;
     background: var(--surface-2) !important;
     color: var(--text-soft) !important;
-
     border-bottom: 1px solid var(--border) !important;
-
     text-align: left;
-    font-size: clamp(12px, 0.85vw, 14px) !important;
+    font-size: clamp(11.5px, 0.8vw, 13px) !important;
     font-weight: 700 !important;
     line-height: 1.35;
     white-space: nowrap;
 }
 
 .activity-overview-card .custom-table td {
-    padding: clamp(12px, 1vw, 16px) clamp(12px, 1vw, 16px) !important;
-
+    padding: clamp(11px, 0.9vw, 14px) clamp(8px, 0.7vw, 12px) !important;
     background: var(--surface) !important;
     color: var(--text) !important;
-
     border-bottom: 1px solid var(--border) !important;
-
-    font-size: clamp(12.5px, 0.9vw, 14px) !important;
+    font-size: clamp(12px, 0.82vw, 13.5px) !important;
     line-height: 1.4;
     vertical-align: middle;
     white-space: nowrap;
+}
+
+.activity-overview-card .custom-table th:nth-child(1),
+.activity-overview-card .custom-table td:nth-child(1) {
+    width: 9%;
+}
+
+.activity-overview-card .custom-table th:nth-child(2),
+.activity-overview-card .custom-table td:nth-child(2) {
+    width: 10%;
+}
+
+.activity-overview-card .custom-table th:nth-child(3),
+.activity-overview-card .custom-table td:nth-child(3) {
+    width: 13%;
+}
+
+.activity-overview-card .custom-table th:nth-child(4),
+.activity-overview-card .custom-table td:nth-child(4) {
+    width: 24%;
+}
+
+.activity-overview-card .custom-table th:nth-child(5),
+.activity-overview-card .custom-table td:nth-child(5) {
+    width: 8%;
+}
+
+.activity-overview-card .custom-table th:nth-child(6),
+.activity-overview-card .custom-table td:nth-child(6) {
+    width: 21%;
+}
+
+.activity-overview-card .custom-table th:nth-child(7),
+.activity-overview-card .custom-table td:nth-child(7) {
+    width: 8%;
+}
+
+.activity-overview-card .custom-table th:nth-child(8),
+.activity-overview-card .custom-table td:nth-child(8) {
+    width: 7%;
+    min-width: 76px;
+    padding-left: 6px !important;
+    padding-right: 10px !important;
+    text-align: center !important;
 }
 
 .activity-overview-card .custom-table tbody tr:hover td {
@@ -146,7 +175,6 @@
 
 .activity-code {
     color: var(--text) !important;
-
     font-family: "Cascadia Code", Consolas, monospace;
     font-weight: 700;
     white-space: nowrap;
@@ -154,13 +182,10 @@
 
 .activity-name,
 .activity-description {
-    display: inline-block;
-    max-width: clamp(220px, 20vw, 360px);
-
+    display: block;
+    max-width: 100%;
     color: var(--text) !important;
-
     font-weight: 700;
-
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -178,17 +203,16 @@
 /* ================= BADGES ================= */
 
 .activity-badge {
-    display: inline-flex;
-    align-items: center;
-
+    max-width: 100%;
+    min-width: 0;
     padding: 6px 12px;
-
     border-radius: 999px;
-
     font-size: clamp(11px, 0.78vw, 12px);
     font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
 }
 
 .activity-badge--default,
@@ -228,11 +252,23 @@
     color: var(--hsu-red) !important;
 }
 
+.activity-badge--action {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.activity-badge__text {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* ================= ACTION MENU ================= */
 
 .activity-overview-card .action-menu-center {
     width: 100%;
-
     display: flex;
     justify-content: center;
 }
@@ -246,22 +282,17 @@
     width: 30px;
     height: 30px;
     padding: 0;
-
     background: transparent !important;
     color: var(--text-soft) !important;
-
     border: 0;
     border-radius: 8px;
     outline: none !important;
     box-shadow: none !important;
-
     cursor: pointer;
-
+    transition: 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    transition: 0.2s ease;
 }
 
 .activity-overview-card .action-menu__trigger:hover {
@@ -278,7 +309,6 @@
 .activity-overview-card .action-menu__dots span {
     width: 3px;
     height: 3px;
-
     background: currentColor !important;
     border-radius: 999px;
 }
@@ -288,12 +318,10 @@
     top: calc(100% + 8px);
     right: 0;
     z-index: 1000;
-
     display: none;
     width: 210px;
     min-width: 210px;
     padding: 8px;
-
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
     border-radius: 12px;
@@ -313,27 +341,20 @@
 .activity-overview-card .action-menu__item {
     width: 100%;
     padding: 10px 12px;
-
     background: transparent;
     color: var(--text) !important;
-
     border: 0;
     border-radius: 10px;
-
     text-align: left;
     text-decoration: none;
-
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
-
     cursor: pointer;
-
+    transition: 0.18s ease;
     display: flex;
     align-items: center;
     gap: 10px;
-
-    transition: 0.18s ease;
 }
 
 .activity-overview-card .action-menu__item:hover {
@@ -352,20 +373,250 @@
     flex-shrink: 0;
 }
 
-.activity-overview-card .action-menu__divider {
-    height: 1px;
-    margin: 4px 0;
-    background: var(--border);
+/* ================= QUICK VIEW MODAL ================= */
+
+body.activity-modal-open {
+    overflow: hidden !important;
+}
+
+.activity-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(2, 6, 23, 0.68);
+    backdrop-filter: blur(8px);
+}
+
+.activity-modal-backdrop.is-open {
+    display: flex;
+    animation: activityModalFadeIn 0.16s ease;
+}
+
+.activity-modal {
+    position: relative;
+    width: min(620px, calc(100vw - 32px));
+    max-height: min(720px, calc(100dvh - 48px));
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: activityModalPopIn 0.18s ease;
+}
+
+.activity-modal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    background: transparent;
+    color: var(--text-soft);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    transition: 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-modal__close:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+.activity-modal__head {
+    padding: 24px 56px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.activity-modal__icon {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    background: rgba(31, 94, 255, 0.14);
+    color: var(--hsu-blue);
+    border: 1px solid rgba(31, 94, 255, 0.18);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-modal__title-wrap {
+    min-width: 0;
+}
+
+.activity-modal__title-wrap h3 {
+    margin: 0 0 6px;
+    color: var(--text);
+    font-size: clamp(20px, 1.4vw, 24px);
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.activity-modal__title-wrap p {
+    margin: 0;
+    color: var(--text-soft);
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.activity-modal__body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.activity-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.activity-modal__field {
+    min-width: 0;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.activity-modal__field--full {
+    grid-column: 1 / -1;
+}
+
+.activity-modal__field span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--text-soft);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.activity-modal__field strong,
+.activity-modal__field p {
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.activity-modal__field p {
+    font-weight: 650;
+    white-space: pre-wrap;
+}
+
+.activity-modal__pill {
+    width: fit-content;
+    max-width: 100%;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+}
+
+.activity-modal__pill.is-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--hsu-green);
+}
+
+.activity-modal__pill.is-danger {
+    background: rgba(239, 59, 45, 0.12);
+    color: var(--hsu-red);
+}
+
+.activity-modal__pill.is-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--hsu-warning);
+}
+
+.activity-modal__pill.is-default {
+    background: rgba(100, 116, 139, 0.12);
+    color: var(--text);
+}
+
+.activity-modal__actions {
+    padding: 16px 24px 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.activity-modal__btn {
+    min-width: 112px;
+    height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-modal__btn:hover {
+    transform: translateY(-1px);
+}
+
+.activity-modal__btn--secondary {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.activity-modal__btn--secondary:hover {
+    border-color: var(--hsu-blue);
+    color: var(--hsu-blue);
+}
+
+.activity-modal__btn--primary {
+    background: var(--hsu-blue);
+    border-color: var(--hsu-blue);
+    color: #fff;
+}
+
+.activity-modal__btn--primary:hover {
+    background: var(--hsu-blue-hover);
+    border-color: var(--hsu-blue-hover);
+    box-shadow: 0 10px 22px rgba(31, 94, 255, 0.22);
 }
 
 /* ================= FOOTER / PAGINATION ================= */
 
 .activity-card-footer {
     padding: clamp(10px, 0.9vw, 12px) clamp(14px, 1.2vw, 20px) !important;
-
     border-top: 1px solid var(--border) !important;
     border-radius: 0 0 18px 18px;
-
     justify-content: space-between;
 }
 
@@ -380,23 +631,17 @@
     min-width: clamp(32px, 2.2vw, 36px);
     height: clamp(32px, 2.2vw, 36px);
     padding: 0 11px;
-
     background: var(--surface) !important;
     color: var(--text) !important;
-
     border: 1px solid var(--border) !important;
     border-radius: 10px;
-
     text-decoration: none;
-
     font-size: clamp(12px, 0.85vw, 13px);
     font-weight: 700;
-
+    transition: 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    transition: 0.2s ease;
 }
 
 .activity-page-btn:hover:not(.disabled):not(.active) {
@@ -406,7 +651,7 @@
 
 .activity-page-btn.active {
     background: var(--hsu-blue) !important;
-    color: #ffffff !important;
+    color: #fff !important;
     border-color: var(--hsu-blue) !important;
 }
 
@@ -421,10 +666,8 @@
 .activity-empty-state {
     flex: 1 1 auto;
     padding: clamp(32px, 4vw, 60px);
-
     color: var(--text-soft);
     text-align: center;
-
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -438,7 +681,6 @@
 
 .activity-empty-state a {
     margin-top: 8px;
-
     color: var(--hsu-blue);
     font-size: 14px;
     text-decoration: none;
@@ -458,6 +700,28 @@
     }
 }
 
+@keyframes activityModalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes activityModalPopIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* ================= RESPONSIVE ================= */
 
 @media (min-width: 1600px) {
@@ -465,16 +729,22 @@
         height: clamp(500px, 50vh, 760px);
         max-height: 760px;
     }
-
-    .activity-overview-card .custom-table {
-        min-width: 1100px;
-    }
 }
 
 @media (max-width: 1366px) {
     .activity-overview-card {
         height: clamp(330px, 40vh, 500px);
         max-height: 500px;
+    }
+
+    .activity-overview-card .custom-table th:nth-child(4),
+    .activity-overview-card .custom-table td:nth-child(4) {
+        width: 22%;
+    }
+
+    .activity-overview-card .custom-table th:nth-child(6),
+    .activity-overview-card .custom-table td:nth-child(6) {
+        width: 19%;
     }
 }
 
@@ -485,7 +755,7 @@
     }
 
     .activity-overview-card .custom-table {
-        min-width: 940px;
+        min-width: 1120px !important;
     }
 }
 
@@ -496,7 +766,7 @@
     }
 
     .activity-overview-card .custom-table {
-        min-width: 880px;
+        min-width: 1040px !important;
     }
 }
 
@@ -532,6 +802,25 @@
         padding: 11px 14px !important;
         font-size: 13px !important;
     }
+
+    .activity-overview-card .custom-table th:nth-child(8),
+    .activity-overview-card .custom-table td:nth-child(8) {
+        width: 90px;
+        min-width: 90px;
+        max-width: 90px;
+    }
+
+    .activity-modal__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-modal__actions {
+        flex-direction: column-reverse;
+    }
+
+    .activity-modal__btn {
+        width: 100%;
+    }
 }
 
 @media (max-width: 520px) {
@@ -542,27 +831,22 @@
     }
 
     .activity-overview-card .custom-table {
-        min-width: 820px;
+        min-width: 980px !important;
     }
 
     .activity-card-header,
     .activity-card-footer {
         padding: 12px 14px !important;
     }
-}
-/* Cắt ngắn badge hành động khi nội dung quá dài */
-.activity-badge--action {
-    max-width: clamp(180px, 22vw, 320px);
-    min-width: 0;
-    overflow: hidden;
-}
 
-.activity-badge__text {
-    display: block;
-    min-width: 0;
-    max-width: 100%;
+    .activity-modal-backdrop {
+        padding: 16px;
+    }
 
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    .activity-modal__head,
+    .activity-modal__body,
+    .activity-modal__actions {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
 }

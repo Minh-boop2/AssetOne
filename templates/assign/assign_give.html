@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign_give.css') }}?v=bulk_assign_02" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign_give.css') }}?v=assign_give_remove_after_status_01">
 
 {% set selected_assets = assets if assets is defined and assets else [info] %}
 {% set first_asset = selected_assets[0] %}
@@ -28,37 +28,10 @@
       <h1>{% if is_bulk %}Cấp phát nhiều tài sản{% else %}Cấp phát tài sản{% endif %}</h1>
     </div>
 
-    <a href="{{ url_for('assign_page') }}" class="assign-give-back">
-      <i class="fas fa-arrow-left"></i>
-      Quay lại
-    </a>
+    <!-- SỬA: bỏ nút Quay lại ở góc phải vì nút Hủy bên dưới đã quay lại trang cấp phát -->
   </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="assign-give-flashes">
-        {% for category, message in messages %}
-          <div class="assign-give-alert assign-give-alert--{{ category }}">
-            <i class="fas fa-info-circle"></i>
-            <span>{{ message }}</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  {% if not allow_assign_value %}
-    <div class="assign-give-alert assign-give-alert--warning">
-      <i class="fas fa-triangle-exclamation"></i>
-      <span>
-        {% if is_bulk %}
-          Một hoặc nhiều tài sản không ở trạng thái Chưa dùng nên không thể cấp phát.
-        {% else %}
-          Tài sản này không ở trạng thái Chưa dùng nên không thể cấp phát.
-        {% endif %}
-      </span>
-    </div>
-  {% endif %}
+  <!-- SỬA: không render flash ở trang cấp phát để tránh 2 thanh vàng xuất hiện tại đây -->
 
   <div class="assign-give-grid">
     <div class="assign-give-card">
@@ -84,20 +57,16 @@
               {% for item in selected_assets %}
                 <div class="assign-bulk-preview__item">
                   <strong>#{{ item.asset_code or '---' }} - {{ item.asset or item.asset_name or '---' }}</strong>
-                  <small>{{ item.type or item.category or '---' }} · {{ item.status or '---' }}</small>
+                  <small>{{ item.type or item.category or '---' }} - {{ item.status or '---' }}</small>
                 </div>
               {% endfor %}
             </div>
           </div>
 
-          <div class="asset-summary__item">
-            <span>Trạng thái yêu cầu</span>
+          <!-- SỬA: cho ô trạng thái dài full hàng sau khi bỏ ô "Sau khi cấp phát" -->
+          <div class="asset-summary__item asset-summary__item--full">
+            <span>Trạng thái </span>
             <strong>Chưa dùng</strong>
-          </div>
-
-          <div class="asset-summary__item">
-            <span>Sau khi cấp phát</span>
-            <strong>Chuyển sang Đang sử dụng</strong>
           </div>
 
           <div class="asset-summary__item asset-summary__item--full">
@@ -161,12 +130,12 @@
       </div>
 
       <form method="POST" class="assign-give-form" id="assignGiveForm" data-asset-count="{{ asset_count }}">
-        <input type="hidden" name="user_id" id="selectedUserId" />
-        <input type="hidden" name="asset_ids" id="selectedAssetIds" value="{{ asset_ids_value }}" />
-        <input type="hidden" name="assign_mode" value="{% if is_bulk %}bulk{% else %}single{% endif %}" />
+        <input type="hidden" name="user_id" id="selectedUserId">
+        <input type="hidden" name="asset_ids" id="selectedAssetIds" value="{{ asset_ids_value }}">
+        <input type="hidden" name="assign_mode" value="{% if is_bulk %}bulk{% else %}single{% endif %}">
 
         {% for item_id in ns.ids %}
-          <input type="hidden" name="asset_id_list" value="{{ item_id }}" />
+          <input type="hidden" name="asset_id_list" value="{{ item_id }}">
         {% endfor %}
 
         <label class="assign-give-label" for="userSearchInput">
@@ -183,7 +152,7 @@
               placeholder="Nhập tên, mã nhân viên, email, phòng ban..."
               autocomplete="off"
               {% if not allow_assign_value %}disabled{% endif %}
-            />
+            >
           </div>
 
           <div class="assign-user-search__results" id="userSearchResults">
@@ -254,8 +223,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function notify(type, title, description) {
-    if (window.sonner?.[type]) return window.sonner[type](title, description || "");
-    if (window.toast?.[type]) return window.toast[type](title, description || "");
+    if (window.sonner?.[type]) {
+      return window.sonner[type](title, description || "");
+    }
+
+    if (window.toast?.[type]) {
+      return window.toast[type](title, description || "");
+    }
+
     alert(description ? `${title}\n${description}` : title);
   }
 
@@ -267,7 +242,9 @@ document.addEventListener("DOMContentLoaded", function () {
     selectedUser = null;
     selectedDisplayText = "";
 
-    if (selectedUserId) selectedUserId.value = "";
+    if (selectedUserId) {
+      selectedUserId.value = "";
+    }
 
     if (selectedUserBox) {
       selectedUserBox.innerHTML = `
@@ -300,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="selected-user-avatar">${avatarText}</div>
         <div class="selected-user-info">
           <h3>${name}</h3>
-          <p>${code} · ${email}</p>
+          <p>${code} - ${email}</p>
         </div>
       </div>
 
@@ -367,11 +344,11 @@ document.addEventListener("DOMContentLoaded", function () {
         >
           <span class="assign-user-search__main">
             <strong>${name}</strong>
-            <small>${code} · ${email}</small>
+            <small>${code} - ${email}</small>
           </span>
 
           <span class="assign-user-search__meta">
-            ${department || "---"} · ${floor || "---"}
+            ${department || "---"} - ${floor || "---"}
           </span>
         </button>
       `;
@@ -397,7 +374,9 @@ document.addEventListener("DOMContentLoaded", function () {
   async function searchUsers(keyword) {
     latestKeyword = keyword;
 
-    if (activeRequest) activeRequest.abort();
+    if (activeRequest) {
+      activeRequest.abort();
+    }
 
     if (!keyword) {
       setSearchLoading(false);
@@ -419,11 +398,15 @@ document.addEventListener("DOMContentLoaded", function () {
         signal: activeRequest.signal,
       });
 
-      if (!response.ok) throw new Error("Search user failed");
+      if (!response.ok) {
+        throw new Error("Search user failed");
+      }
 
       const data = await response.json();
 
-      if (latestKeyword !== keyword) return;
+      if (latestKeyword !== keyword) {
+        return;
+      }
 
       renderUserResults(data.items || []);
     } catch (error) {
@@ -467,14 +450,16 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      if (isSubmitting) return;
+      if (isSubmitting) {
+        return;
+      }
 
       isSubmitting = true;
 
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add("is-loading");
-        submitBtn.innerHTML = `<span class="btn-spinner"></span> Đang cấp phát`;
+        submitBtn.innerHTML = '<span class="btn-spinner"></span> Đang cấp phát';
       }
 
       assignForm.submit();
