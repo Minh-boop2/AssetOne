@@ -9,6 +9,7 @@ from .asset_backend import (
     fetch_asset_detail_from_backend,
     fetch_asset_types_from_backend,
     fetch_assets_from_backend,
+    fetch_next_asset_code_preview,
     handle_api_auth_error,
     handle_asset_status_action,
     is_logged_in,
@@ -41,7 +42,7 @@ def get_status_action_from_request():
 
 
 def parse_selected_asset_types(raw_types):
-    # THÊM: tách danh sách loại tài sản khi filter chọn nhiều
+    # Tách danh sách loại tài sản khi filter chọn nhiều
     # URL sẽ có dạng /assets?types=laptop,pc,printer
     if isinstance(raw_types, list):
         values = raw_types
@@ -68,8 +69,6 @@ def register_assets_routes(app):
         sel_dept = request.args.get("department", "Tất cả")
         sel_status = request.args.get("status", "Tất cả")
 
-        # THÊM: nhận filter nhiều loại tài sản từ URL
-        # ví dụ: /assets?types=laptop,pc,printer
         selected_types = parse_selected_asset_types(request.args.get("types", ""))
 
         if selected_types:
@@ -103,7 +102,6 @@ def register_assets_routes(app):
 
         pagination = api_result.get("pagination", {}) or {}
 
-        # THÊM: chuẩn hóa pagination để asset_table.html luôn nhận đúng page hiện tại
         pagination = {
             "page": pagination.get("page", page),
             "per_page": pagination.get("per_page", per_page),
@@ -149,9 +147,15 @@ def register_assets_routes(app):
             return permission_redirect
 
         asset_types = fetch_asset_types_from_backend()
+        next_asset_code = fetch_next_asset_code_preview()
 
         if request.method == "POST":
             form_data = request.form.to_dict()
+
+            # Nếu vì lý do nào đó form không gửi mã, vẫn gắn mã đang preview.
+            if not form_data.get("asset_code"):
+                form_data["asset_code"] = next_asset_code
+
             success, result = create_asset_from_form(form_data)
 
             auth_redirect = handle_api_auth_error(
@@ -163,25 +167,40 @@ def register_assets_routes(app):
                 return auth_redirect
 
             if success:
-                flash("Thêm thiết bị thành công.", "success")
+                item = result.get("item") or {}
+                asset_code = item.get("asset_code") or form_data.get("asset_code") or ""
+
+                if asset_code:
+                    flash(f"Thêm thiết bị thành công. Mã tài sản: {asset_code}", "success")
+                else:
+                    flash("Thêm thiết bị thành công.", "success")
+
                 return redirect(url_for("assets_page"))
 
             error_message = result.get("message", "Tạo tài sản thất bại")
             flash(error_message, "danger")
+
+            # Nếu mã bị trùng do có người vừa tạo trước đó, lấy mã mới để hiển thị lại.
+            next_asset_code = fetch_next_asset_code_preview()
+            form_data["asset_code"] = next_asset_code
 
             return render_template(
                 "assets/asset_create.html",
                 error_message=error_message,
                 form_data=form_data,
                 asset_types=asset_types,
+                next_asset_code=next_asset_code,
                 **asset_permission_context(),
             )
 
         return render_template(
             "assets/asset_create.html",
             error_message=None,
-            form_data={},
+            form_data={
+                "asset_code": next_asset_code,
+            },
             asset_types=asset_types,
+            next_asset_code=next_asset_code,
             **asset_permission_context(),
         )
 
@@ -262,8 +281,6 @@ def register_assets_routes(app):
             "warranty": info.get("warranty") or "N/A",
         }
 
-        # THÊM: lấy 5 hoạt động mới nhất của đúng tài sản đang xem chi tiết
-        # Dữ liệu lấy từ API /api/activities và render ở phần Lịch sử hoạt động
         activity_logs = fetch_asset_activity_logs_from_backend(
             info,
             max_items=5,
@@ -373,3 +390,4 @@ def register_assets_routes(app):
             flash(result.get("message", "Xóa tài sản thất bại."), "danger")
 
         return redirect(url_for("assets_page"))
+    

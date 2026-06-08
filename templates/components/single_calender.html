@@ -1,0 +1,438 @@
+{# templates/components/single-calender.html #}
+
+{% set single_calendar_name = single_calendar_name|default('date', true) %}
+{% set single_calendar_value =
+single_calendar_value|default(selected_date_value|default(selected_date|default(request.args.get(single_calendar_name, ''), true), true), true) %}
+{% set single_calendar_input_class = single_calendar_input_class|default('js-activity-filter', true) %}
+{% set single_calendar_aria_label = single_calendar_aria_label|default('Chọn ngày', true) %}
+{% set single_calendar_align = single_calendar_align|default('right', true) %}
+{% set single_calendar_auto_submit = single_calendar_auto_submit|default(false, true) %}
+
+<div
+  class="single-calendar single-calendar--{{ single_calendar_align }}"
+  data-single-calendar
+  data-single-calendar-auto-submit="{{ 1 if single_calendar_auto_submit else 0 }}"
+>
+  <input
+    type="hidden"
+    class="{{ single_calendar_input_class }}"
+    name="{{ single_calendar_name }}"
+    value="{{ single_calendar_value }}"
+    data-single-calendar-hidden
+  />
+
+  <button
+    type="button"
+    class="single-calendar__button"
+    data-single-calendar-toggle
+    data-single-calendar-default-label="{{ single_calendar_aria_label }}"
+    aria-label="{{ single_calendar_aria_label }}"
+    aria-expanded="false"
+    title="{{ single_calendar_aria_label }}"
+  >
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      <path d="M16 2v4"></path>
+      <path d="M8 2v4"></path>
+      <path d="M3 10h18"></path>
+    </svg>
+  </button>
+
+  <div
+    class="single-calendar__dialog"
+    data-single-calendar-dialog
+    role="dialog"
+    aria-label="Chọn ngày"
+  >
+    <div class="single-calendar__dialog-head">
+      <button type="button" data-single-calendar-prev aria-label="Tháng trước">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <strong data-single-calendar-month-title>Tháng</strong>
+
+      <button type="button" data-single-calendar-next aria-label="Tháng sau">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="single-calendar__weekdays" aria-hidden="true">
+      <span>CN</span>
+      <span>T2</span>
+      <span>T3</span>
+      <span>T4</span>
+      <span>T5</span>
+      <span>T6</span>
+      <span>T7</span>
+    </div>
+
+    <div class="single-calendar__days" data-single-calendar-days></div>
+
+    <div class="single-calendar__dialog-foot">
+      <button type="button" data-single-calendar-clear>Xóa</button>
+      <button type="button" data-single-calendar-today>Hôm nay</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function ready(callback) {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", callback);
+      } else {
+        callback();
+      }
+    }
+
+    ready(function () {
+      function pad(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function formatDate(date) {
+        return (
+          date.getFullYear() +
+          "-" +
+          pad(date.getMonth() + 1) +
+          "-" +
+          pad(date.getDate())
+        );
+      }
+
+      function parseDate(value) {
+        if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return null;
+        }
+
+        const parts = value.split("-").map(Number);
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        if (
+          Number.isNaN(date.getTime()) ||
+          date.getFullYear() !== parts[0] ||
+          date.getMonth() !== parts[1] - 1 ||
+          date.getDate() !== parts[2]
+        ) {
+          return null;
+        }
+
+        return date;
+      }
+
+      function formatDisplay(value) {
+        const date = parseDate(value);
+
+        if (!date) {
+          return "";
+        }
+
+        return (
+          pad(date.getDate()) +
+          "/" +
+          pad(date.getMonth() + 1) +
+          "/" +
+          date.getFullYear()
+        );
+      }
+
+      function closeSingleCalendar(calendarBox) {
+        const toggleButton = calendarBox.querySelector("[data-single-calendar-toggle]");
+
+        calendarBox.classList.remove("open");
+
+        if (toggleButton) {
+          toggleButton.setAttribute("aria-expanded", "false");
+        }
+      }
+
+      function closeAllSingleCalendars(exceptCalendarBox) {
+        document
+          .querySelectorAll("[data-single-calendar]")
+          .forEach(function (calendarBox) {
+            if (calendarBox !== exceptCalendarBox) {
+              closeSingleCalendar(calendarBox);
+            }
+          });
+      }
+
+      function closeOtherPopups(currentCalendarBox) {
+        closeAllSingleCalendars(currentCalendarBox);
+
+        document
+          .querySelectorAll("[data-activity-calendar]")
+          .forEach(function (calendarBox) {
+            calendarBox.classList.remove("open", "dialog-open");
+
+            const toggleButton = calendarBox.querySelector("[data-calendar-toggle]");
+            if (toggleButton) {
+              toggleButton.setAttribute("aria-expanded", "false");
+            }
+          });
+
+        document
+          .querySelectorAll("[data-activity-count-select]")
+          .forEach(function (selectBox) {
+            selectBox.classList.remove("open");
+          });
+
+        const userMenuWrapper = document.getElementById("userMenuWrapper");
+        if (userMenuWrapper) {
+          userMenuWrapper.classList.remove("open");
+        }
+
+        const notificationWrapper = document.getElementById("notificationWrapper");
+        if (notificationWrapper) {
+          notificationWrapper.classList.remove("open");
+        }
+      }
+
+      document
+        .querySelectorAll("[data-single-calendar]")
+        .forEach(function (calendarBox) {
+          if (calendarBox.dataset.initialized === "1") {
+            return;
+          }
+
+          calendarBox.dataset.initialized = "1";
+
+          const hiddenInput = calendarBox.querySelector("[data-single-calendar-hidden]");
+          const toggleButton = calendarBox.querySelector("[data-single-calendar-toggle]");
+          const dialog = calendarBox.querySelector("[data-single-calendar-dialog]");
+          const monthTitle = calendarBox.querySelector("[data-single-calendar-month-title]");
+          const daysBox = calendarBox.querySelector("[data-single-calendar-days]");
+          const prevButton = calendarBox.querySelector("[data-single-calendar-prev]");
+          const nextButton = calendarBox.querySelector("[data-single-calendar-next]");
+          const clearButton = calendarBox.querySelector("[data-single-calendar-clear]");
+          const todayButton = calendarBox.querySelector("[data-single-calendar-today]");
+
+          if (!hiddenInput || !toggleButton || !daysBox) {
+            return;
+          }
+
+          const initialDate = parseDate(hiddenInput.value) || new Date();
+          let viewDate = new Date(initialDate.getFullYear(), initialDate.getMonth(), 1);
+
+          function updateButtonState() {
+            const value = hiddenInput.value || "";
+            const defaultLabel =
+              toggleButton.dataset.singleCalendarDefaultLabel || "Chọn ngày";
+            const displayValue = formatDisplay(value);
+            const buttonLabel = displayValue
+              ? defaultLabel + ": " + displayValue
+              : defaultLabel;
+
+            calendarBox.classList.toggle("has-value", Boolean(value));
+            toggleButton.setAttribute("aria-label", buttonLabel);
+            toggleButton.setAttribute("title", buttonLabel);
+          }
+
+          function notifyChange() {
+            hiddenInput.dispatchEvent(
+              new Event("change", {
+                bubbles: true,
+              })
+            );
+
+            if (calendarBox.dataset.singleCalendarAutoSubmit === "1") {
+              const form = hiddenInput.form;
+
+              if (form) {
+                if (typeof form.requestSubmit === "function") {
+                  form.requestSubmit();
+                } else {
+                  form.submit();
+                }
+              }
+            }
+          }
+
+          function setCalendarOpen(isOpen) {
+            calendarBox.classList.toggle("open", isOpen);
+            toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          }
+
+          function renderCalendar() {
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const todayValue = formatDate(new Date());
+            const selectedValue = hiddenInput.value || "";
+
+            if (monthTitle) {
+              monthTitle.textContent = "Tháng " + (month + 1) + " " + year;
+            }
+
+            daysBox.innerHTML = "";
+
+            const firstDay = new Date(year, month, 1);
+            const startOffset = firstDay.getDay();
+            const gridStart = new Date(year, month, 1 - startOffset);
+
+            for (let i = 0; i < 42; i += 1) {
+              const current = new Date(gridStart);
+              current.setDate(gridStart.getDate() + i);
+
+              const value = formatDate(current);
+              const dayButton = document.createElement("button");
+
+              dayButton.type = "button";
+              dayButton.className = "single-calendar__day";
+              dayButton.textContent = current.getDate();
+              dayButton.dataset.singleCalendarDay = value;
+
+              if (current.getMonth() !== month) {
+                dayButton.classList.add("is-muted");
+              }
+
+              if (value === todayValue) {
+                dayButton.classList.add("is-today");
+              }
+
+              if (value === selectedValue) {
+                dayButton.classList.add("is-selected");
+              }
+
+              daysBox.appendChild(dayButton);
+            }
+          }
+
+          function syncViewDateFromValue() {
+            const date = parseDate(hiddenInput.value) || new Date();
+            viewDate = new Date(date.getFullYear(), date.getMonth(), 1);
+          }
+
+          function chooseDate(value) {
+            hiddenInput.value = value || "";
+
+            if (value) {
+              const pickedDate = parseDate(value);
+              if (pickedDate) {
+                viewDate = new Date(
+                  pickedDate.getFullYear(),
+                  pickedDate.getMonth(),
+                  1
+                );
+              }
+            }
+
+            updateButtonState();
+            renderCalendar();
+            notifyChange();
+          }
+
+          toggleButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const isOpen = calendarBox.classList.contains("open");
+
+            closeOtherPopups(calendarBox);
+
+            if (!isOpen) {
+              syncViewDateFromValue();
+              renderCalendar();
+            }
+
+            setCalendarOpen(!isOpen);
+          });
+
+          if (dialog) {
+            dialog.addEventListener("click", function (event) {
+              event.stopPropagation();
+            });
+          }
+
+          daysBox.addEventListener("click", function (event) {
+            const dayButton = event.target.closest("[data-single-calendar-day]");
+
+            if (!dayButton) {
+              return;
+            }
+
+            chooseDate(dayButton.dataset.singleCalendarDay);
+          });
+
+          if (prevButton) {
+            prevButton.addEventListener("click", function () {
+              viewDate.setMonth(viewDate.getMonth() - 1);
+              renderCalendar();
+            });
+          }
+
+          if (nextButton) {
+            nextButton.addEventListener("click", function () {
+              viewDate.setMonth(viewDate.getMonth() + 1);
+              renderCalendar();
+            });
+          }
+
+          if (clearButton) {
+            clearButton.addEventListener("click", function () {
+              chooseDate("");
+            });
+          }
+
+          if (todayButton) {
+            todayButton.addEventListener("click", function () {
+              chooseDate(formatDate(new Date()));
+            });
+          }
+
+          updateButtonState();
+          renderCalendar();
+        });
+
+      if (!window.__singleCalendarOutsideHandlerReady) {
+        window.__singleCalendarOutsideHandlerReady = true;
+
+        document.addEventListener("click", function (event) {
+          const clickedInsideCalendar = event.target.closest("[data-single-calendar]");
+
+          if (!clickedInsideCalendar) {
+            closeAllSingleCalendars();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeAllSingleCalendars();
+          }
+        });
+      }
+    });
+  })();
+</script>

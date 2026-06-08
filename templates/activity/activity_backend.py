@@ -50,6 +50,22 @@ def safe_int(value, default=1):
     return number
 
 
+# Chuẩn hóa keyword trước khi gửi xuống backend API
+# Nếu người dùng nhập ACT-xxxxxx thì lấy phần xxxxxx để backend dễ tìm theo mã/id
+def normalize_activity_search_value(value):
+    text = str(value or "").strip()
+
+    if not text:
+        return ""
+
+    upper_text = text.upper()
+
+    if upper_text.startswith("ACT-"):
+        return text[4:].strip()
+
+    return text
+
+
 # Format thời gian để hiển thị ở bảng
 def format_datetime(value):
     if not value:
@@ -148,6 +164,22 @@ def get_activity_type(activity):
 
 # Tạo mã hiển thị ACT-xxxxxx cho từng log
 def build_activity_code(activity, index=0):
+    existed_code = (
+        activity.get("display_activity_code")
+        or activity.get("activity_code")
+        or activity.get("code")
+        or activity.get("log_code")
+        or ""
+    )
+
+    existed_code = str(existed_code).strip()
+
+    if existed_code:
+        if existed_code.upper().startswith("ACT-"):
+            return existed_code.upper()
+
+        return existed_code
+
     raw_id = (
         activity.get("id")
         or activity.get("_id")
@@ -196,6 +228,7 @@ def normalize_activity(activity, index=0):
     module = activity.get("module") or "system"
     activity_type = get_activity_type(activity)
     status_text = get_status_text(activity)
+    activity_code = build_activity_code(activity, index)
 
     created_at = (
         activity.get("created_at")
@@ -207,7 +240,7 @@ def normalize_activity(activity, index=0):
     return {
         **activity,
 
-        "display_activity_code": build_activity_code(activity, index),
+        "display_activity_code": activity_code,
         "display_activity_time": format_datetime(created_at),
         "display_activity_user": full_name,
         "display_activity_action": action,
@@ -215,7 +248,7 @@ def normalize_activity(activity, index=0):
         "display_activity_detail": build_activity_detail(activity),
         "display_activity_status": status_text,
 
-        "activity_code": build_activity_code(activity, index),
+        "activity_code": activity_code,
         "activity_time": format_datetime(created_at),
         "activity_user": full_name,
         "activity_action": action,
@@ -372,7 +405,7 @@ def get_activities_from_api(
     }
 
     if search_value:
-        params["search"] = search_value
+        params["search"] = normalize_activity_search_value(search_value)
 
     if selected_type and selected_type != "Tất cả":
         params["type"] = selected_type
@@ -607,7 +640,7 @@ def export_activities_excel(args, current_user):
     ).strip()
 
     if search_value:
-        params["search"] = search_value
+        params["search"] = normalize_activity_search_value(search_value)
 
     if selected_type and selected_type != "Tất cả":
         params["type"] = selected_type

@@ -1,7 +1,12 @@
-{% extends 'main.html' %}
-
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assets/assets_create.css') }}" />
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/assets/assets_create.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/components/single_calender.css') }}"
+/>
 
 <div class="assets-create-page">
   <div class="asset-create-card">
@@ -9,75 +14,177 @@
       <div>
         <span class="asset-create-badge">NEW</span>
         <h2 class="asset-create-title">Thêm thiết bị mới</h2>
-        <p class="asset-create-subtitle">Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.</p>
+        <p class="asset-create-subtitle">
+          Nhập thông tin cơ bản của thiết bị để lưu vào hệ thống.
+        </p>
       </div>
     </div>
 
     {% if error_message %}
-      <div class="asset-alert asset-alert--error">{{ error_message }}</div>
+    <div class="asset-alert asset-alert--error">{{ error_message }}</div>
     {% endif %}
 
-    <form id="assetCreateForm" method="POST" class="asset-create-form" novalidate>
+    {% set preview_code = (
+      form_data.get('asset_code', '') if form_data else ''
+    ) or next_asset_code or 'Assets-00001' %}
+
+    <form
+      id="assetCreateForm"
+      method="POST"
+      class="asset-create-form"
+      novalidate
+    >
       <div class="asset-create-grid">
         <div class="asset-form-group" data-field-group="asset_code">
-          <label for="asset_code">Mã tài sản <span class="required-star">*</span></label>
-          <input id="asset_code" type="text" name="asset_code" placeholder="VD: LAP-009"
-            value="{{ form_data.get('asset_code', '') if form_data else '' }}" required
-            aria-required="true" aria-describedby="asset_code_error" />
-          <div class="asset-field-error" id="asset_code_error">Vui lòng nhập mã tài sản.</div>
+          <label for="asset_code">Mã tài sản</label>
+          <input
+            id="asset_code"
+            type="text"
+            name="asset_code"
+            value="{{ preview_code }}"
+            readonly
+            aria-readonly="true"
+          />
+          <div class="asset-form-help">
+            Mã này được hệ thống dự kiến trước khi tạo và sẽ được gửi lên backend khi lưu.
+          </div>
         </div>
 
         <div class="asset-form-group" data-field-group="asset_name">
-          <label for="asset_name">Tên tài sản <span class="required-star">*</span></label>
-          <input id="asset_name" type="text" name="asset_name" placeholder="VD: MacBook Air M2"
-            value="{{ form_data.get('asset_name', '') if form_data else '' }}" required
-            aria-required="true" aria-describedby="asset_name_error" />
-          <div class="asset-field-error" id="asset_name_error">Vui lòng nhập tên tài sản.</div>
+          <label for="asset_name"
+            >Tên tài sản <span class="required-star">*</span></label
+          >
+          <input
+            id="asset_name"
+            type="text"
+            name="asset_name"
+            placeholder="VD: MacBook Air M2"
+            value="{{ form_data.get('asset_name', '') if form_data else '' }}"
+            required
+            aria-required="true"
+            aria-describedby="asset_name_error"
+          />
+          <div class="asset-field-error" id="asset_name_error">
+            Vui lòng nhập tên tài sản.
+          </div>
         </div>
       </div>
 
       <div class="asset-form-group" data-field-group="type">
-        <label for="type">Loại thiết bị <span class="required-star">*</span></label>
-        <input id="type" type="text" name="type" placeholder="VD: laptop, monitor, camera, router..."
-          value="{{ form_data.get('type', '') if form_data else '' }}" autocomplete="off" required
-          aria-required="true" aria-describedby="type_error" />
-        <div class="asset-field-error" id="type_error">Vui lòng nhập loại thiết bị.</div>
-        <div class="asset-form-help">Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.</div>
+        <label for="type"
+          >Loại thiết bị <span class="required-star">*</span></label
+        >
+        <input
+          id="type"
+          type="text"
+          name="type"
+          placeholder="VD: laptop, monitor, camera, router..."
+          value="{{ form_data.get('type', '') if form_data else '' }}"
+          autocomplete="off"
+          required
+          aria-required="true"
+          aria-describedby="type_error"
+        />
+        <div class="asset-field-error" id="type_error">
+          Vui lòng nhập loại thiết bị.
+        </div>
+        <div class="asset-form-help">
+          Có thể nhập loại mới hoặc chọn nhanh từ loại thiết bị hiện có.
+        </div>
 
         {% if asset_types %}
-          <div class="asset-type-suggestions">
-            <div class="asset-type-suggestions__title">Loại thiết bị hiện có</div>
-            <div class="asset-type-suggestions__list" id="assetTypeSuggestionsList">
-              {% for item in asset_types %}
-                <button type="button" class="asset-type-chip" data-type="{{ item.value }}" data-search="{{ item.value }}">
-                  <span>{{ item.value }}</span>
-                  <small>{{ item.count }}</small>
-                </button>
-              {% endfor %}
-              <div class="asset-type-empty" id="assetTypeEmpty">
-                Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
-              </div>
+        <div class="asset-type-suggestions">
+          <div class="asset-type-suggestions__title">Loại thiết bị hiện có</div>
+          <div
+            class="asset-type-suggestions__list"
+            id="assetTypeSuggestionsList"
+          >
+            {% for item in asset_types %}
+            <button
+              type="button"
+              class="asset-type-chip"
+              data-type="{{ item.value }}"
+              data-search="{{ item.value }}"
+            >
+              <span>{{ item.value }}</span>
+              <small>{{ item.count }}</small>
+            </button>
+            {% endfor %}
+            <div class="asset-type-empty" id="assetTypeEmpty">
+              Không tìm thấy loại thiết bị phù hợp. Bạn có thể nhập loại mới.
             </div>
           </div>
+        </div>
         {% endif %}
       </div>
 
       <div class="asset-create-grid asset-create-grid--bottom">
-        <div class="asset-form-group">
-          <label for="warranty">Bảo hành đến</label>
-          <input id="warranty" type="text" name="warranty" placeholder="VD: 12/2026"
-            value="{{ form_data.get('warranty', '') if form_data else '' }}" />
+        <div class="asset-form-group" data-field-group="warranty">
+          <label for="warrantyText">Bảo hành đến</label>
+
+          {% set warranty_raw = form_data.get('warranty', '') if form_data else
+          '' %} {% set warranty_iso = warranty_raw %} {% set warranty_display =
+          warranty_raw %} {% if warranty_raw and warranty_raw|length == 10 and
+          '-' in warranty_raw %} {% set warranty_parts = warranty_raw.split('-')
+          %} {% if warranty_parts|length == 3 and warranty_parts[0]|length == 4
+          %} {% set warranty_iso = warranty_raw %} {% set warranty_display =
+          warranty_parts[2] ~ '-' ~ warranty_parts[1] ~ '-' ~ warranty_parts[0]
+          %} {% elif warranty_parts|length == 3 and warranty_parts[2]|length ==
+          4 %} {% set warranty_iso = warranty_parts[2] ~ '-' ~ warranty_parts[1]
+          ~ '-' ~ warranty_parts[0] %} {% set warranty_display = warranty_raw %}
+          {% endif %} {% endif %}
+
+          <div class="asset-warranty-input-wrap">
+            <input
+              id="warrantyText"
+              type="text"
+              placeholder="DD-MM-YYYY"
+              value="{{ warranty_display }}"
+              autocomplete="off"
+              inputmode="numeric"
+              data-warranty-text
+              aria-describedby="warranty_error"
+            />
+
+            <div class="asset-warranty-calendar-button">
+              {% set single_calendar_name = 'warranty' %} {% set
+              single_calendar_value = warranty_iso %} {% set
+              single_calendar_input_class = 'asset-warranty-hidden' %} {% set
+              single_calendar_aria_label = 'Chọn ngày bảo hành' %} {% set
+              single_calendar_align = 'right' %} {% set
+              single_calendar_auto_submit = false %} {% include
+              'components/single_calender.html' %}
+            </div>
+          </div>
+
+          <div class="asset-field-error" id="warranty_error">
+            Ngày bảo hành phải đúng định dạng DD-MM-YYYY.
+          </div>
+          <div class="asset-form-help">
+            Có thể nhập tay dạng DD-MM-YYYY hoặc bấm nút lịch để chọn ngày.
+          </div>
         </div>
 
         <div class="asset-form-group">
           <label for="spec">Cấu hình / Ghi chú</label>
-          <textarea id="spec" name="spec" rows="3" placeholder="VD: Chip M2, RAM 8GB, SSD 256GB...">{{ form_data.get('spec', '') if form_data else '' }}</textarea>
+          <textarea
+            id="spec"
+            name="spec"
+            rows="3"
+            placeholder="VD: Chip M2, RAM 8GB, SSD 256GB..."
+          >
+{{ form_data.get('spec', '') if form_data else '' }}</textarea
+          >
         </div>
       </div>
 
       <div class="asset-create-actions">
-        <button type="submit" class="asset-btn-submit">Lưu thiết bị vào hệ thống</button>
-        <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel">Hủy và quay lại</a>
+        <button type="submit" class="asset-btn-submit">
+          Lưu thiết bị vào hệ thống
+        </button>
+        <a href="{{ url_for('assets_page') }}" class="asset-btn-cancel"
+          >Hủy và quay lại</a
+        >
       </div>
     </form>
   </div>
@@ -89,11 +196,14 @@
 
   const assetCreateForm = document.getElementById("assetCreateForm");
   const typeInput = document.getElementById("type");
+  const warrantyTextInput = document.querySelector("[data-warranty-text]");
+  const warrantyHiddenInput = document.querySelector('input[name="warranty"]');
   const assetTypeEmpty = document.getElementById("assetTypeEmpty");
-  const assetTypeChips = Array.from(document.querySelectorAll(".asset-type-chip"));
+  const assetTypeChips = Array.from(
+    document.querySelectorAll(".asset-type-chip"),
+  );
 
   const requiredFields = [
-    { id: "asset_code", message: "Vui lòng nhập mã tài sản." },
     { id: "asset_name", message: "Vui lòng nhập tên tài sản." },
     { id: "type", message: "Vui lòng nhập loại thiết bị." },
   ];
@@ -101,12 +211,22 @@
   let typeFilterTimer = null;
 
   function normalizeText(value) {
-    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
   }
 
   function showAssetToast(type, title, description) {
-    if (window.sonner && typeof window.sonner[type] === "function") return window.sonner[type](title, description);
-    if (window.sonner) return window.sonner({ type, title, description });
+    if (window.sonner && typeof window.sonner[type] === "function") {
+      return window.sonner[type](title, description);
+    }
+
+    if (window.sonner) {
+      return window.sonner({ type, title, description });
+    }
+
     alert(title + (description ? "\n" + description : ""));
   }
 
@@ -117,9 +237,13 @@
   function setFieldError(input, message) {
     const group = getFieldGroup(input);
     const errorBox = group?.querySelector(".asset-field-error");
+
     group?.classList.add("has-error");
     input.setAttribute("aria-invalid", "true");
-    if (errorBox) errorBox.textContent = message;
+
+    if (errorBox) {
+      errorBox.textContent = message;
+    }
   }
 
   function clearFieldError(input) {
@@ -129,12 +253,100 @@
 
   function validateRequiredField(field) {
     const input = document.getElementById(field.id);
-    if (!input) return true;
+
+    if (!input) {
+      return true;
+    }
+
     if (!input.value.trim()) {
       setFieldError(input, field.message);
       return false;
     }
+
     clearFieldError(input);
+    return true;
+  }
+
+  function isoToDisplayDate(value) {
+    const text = String(value || "").trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+      return "";
+    }
+
+    const parts = text.split("-");
+
+    return parts[2] + "-" + parts[1] + "-" + parts[0];
+  }
+
+  function displayToIsoDate(value) {
+    const text = String(value || "").trim();
+
+    if (!text) {
+      return "";
+    }
+
+    if (!/^\d{2}-\d{2}-\d{4}$/.test(text)) {
+      return null;
+    }
+
+    const parts = text.split("-").map(Number);
+    const day = parts[0];
+    const month = parts[1];
+    const year = parts[2];
+
+    const date = new Date(year, month - 1, day);
+
+    if (
+      Number.isNaN(date.getTime()) ||
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return (
+      String(year).padStart(4, "0") +
+      "-" +
+      String(month).padStart(2, "0") +
+      "-" +
+      String(day).padStart(2, "0")
+    );
+  }
+
+  function syncWarrantyTextFromHidden() {
+    if (!warrantyTextInput || !warrantyHiddenInput) {
+      return;
+    }
+
+    const displayValue = isoToDisplayDate(warrantyHiddenInput.value);
+
+    if (displayValue) {
+      warrantyTextInput.value = displayValue;
+    } else if (!warrantyHiddenInput.value) {
+      warrantyTextInput.value = "";
+    }
+  }
+
+  function validateWarrantyField() {
+    if (!warrantyTextInput || !warrantyHiddenInput) {
+      return true;
+    }
+
+    const displayValue = warrantyTextInput.value.trim();
+    const isoValue = displayToIsoDate(displayValue);
+
+    if (isoValue === null) {
+      setFieldError(
+        warrantyTextInput,
+        "Ngày bảo hành phải đúng định dạng DD-MM-YYYY.",
+      );
+      return false;
+    }
+
+    warrantyHiddenInput.value = isoValue;
+    clearFieldError(warrantyTextInput);
     return true;
   }
 
@@ -145,50 +357,112 @@
     requiredFields.forEach((field) => {
       const input = document.getElementById(field.id);
       const fieldValid = validateRequiredField(field);
-      if (!fieldValid && !firstInvalidInput) firstInvalidInput = input;
-      if (!fieldValid) isValid = false;
+
+      if (!fieldValid && !firstInvalidInput) {
+        firstInvalidInput = input;
+      }
+
+      if (!fieldValid) {
+        isValid = false;
+      }
     });
 
-    if (firstInvalidInput) firstInvalidInput.focus();
+    const warrantyValid = validateWarrantyField();
+
+    if (!warrantyValid) {
+      isValid = false;
+
+      if (!firstInvalidInput) {
+        firstInvalidInput = warrantyTextInput;
+      }
+    }
+
+    if (firstInvalidInput) {
+      firstInvalidInput.focus();
+    }
+
     return isValid;
   }
 
   function setActiveChipByValue(value) {
     const normalizedValue = normalizeText(value);
+
     assetTypeChips.forEach((chip) => {
-      chip.classList.toggle("is-active", normalizedValue && normalizeText(chip.dataset.type) === normalizedValue);
+      chip.classList.toggle(
+        "is-active",
+        normalizedValue && normalizeText(chip.dataset.type) === normalizedValue,
+      );
     });
   }
 
   function filterAssetTypeChips() {
-    if (!typeInput || !assetTypeChips.length) return;
+    if (!typeInput || !assetTypeChips.length) {
+      return;
+    }
 
     const keyword = normalizeText(typeInput.value);
     let visibleCount = 0;
 
     assetTypeChips.forEach((chip) => {
       const typeValue = normalizeText(chip.dataset.type);
-      const searchValue = normalizeText(chip.dataset.search || chip.textContent);
-      const isMatch = !keyword || typeValue.includes(keyword) || searchValue.includes(keyword);
+      const searchValue = normalizeText(
+        chip.dataset.search || chip.textContent,
+      );
+      const isMatch =
+        !keyword ||
+        typeValue.includes(keyword) ||
+        searchValue.includes(keyword);
 
       chip.style.display = isMatch ? "inline-flex" : "none";
-      if (isMatch) visibleCount += 1;
+
+      if (isMatch) {
+        visibleCount += 1;
+      }
     });
 
-    if (assetTypeEmpty) assetTypeEmpty.classList.toggle("show", visibleCount === 0);
+    if (assetTypeEmpty) {
+      assetTypeEmpty.classList.toggle("show", visibleCount === 0);
+    }
+
     setActiveChipByValue(typeInput.value);
   }
 
   requiredFields.forEach((field) => {
     const input = document.getElementById(field.id);
-    if (!input) return;
+
+    if (!input) {
+      return;
+    }
 
     input.addEventListener("input", function () {
-      if (this.value.trim()) clearFieldError(this);
+      if (this.value.trim()) {
+        clearFieldError(this);
+      }
     });
 
     input.addEventListener("blur", () => validateRequiredField(field));
   });
+
+  if (warrantyTextInput && warrantyHiddenInput) {
+    syncWarrantyTextFromHidden();
+
+    warrantyTextInput.addEventListener("input", function () {
+      const isoValue = displayToIsoDate(this.value);
+
+      if (isoValue !== null) {
+        warrantyHiddenInput.value = isoValue;
+      }
+
+      clearFieldError(this);
+    });
+
+    warrantyTextInput.addEventListener("blur", validateWarrantyField);
+
+    warrantyHiddenInput.addEventListener("change", function () {
+      syncWarrantyTextFromHidden();
+      validateWarrantyField();
+    });
+  }
 
   if (typeInput) {
     filterAssetTypeChips();
@@ -210,7 +484,10 @@
 
   assetTypeChips.forEach((button) => {
     button.addEventListener("click", () => {
-      if (!typeInput) return;
+      if (!typeInput) {
+        return;
+      }
+
       typeInput.value = button.dataset.type || "";
       typeInput.focus();
       clearFieldError(typeInput);
@@ -223,12 +500,19 @@
     assetCreateForm.addEventListener("submit", function (event) {
       if (!validateAssetForm()) {
         event.preventDefault();
-        showAssetToast("error", "Thêm thiết bị không thành công", "Vui lòng nhập đầy đủ các thông tin*.");
+        showAssetToast(
+          "error",
+          "Thêm thiết bị không thành công",
+          "Vui lòng kiểm tra lại các thông tin chưa hợp lệ.",
+        );
         return;
       }
 
       if (window.sonner) {
-        window.sonner.loading("Đang thêm thiết bị", "Hệ thống đang xử lý thông tin...");
+        window.sonner.loading(
+          "Đang thêm thiết bị",
+          "Hệ thống đang xử lý thông tin...",
+        );
       }
     });
   }

@@ -1,4 +1,6 @@
 import json
+import re
+import socket
 import unicodedata
 from datetime import datetime
 from urllib.request import urlopen, Request
@@ -11,8 +13,17 @@ from flask import session, flash, redirect, url_for
 BACKEND_ASSETS_API = "http://127.0.0.1:5001/api/assets"
 BACKEND_ASSET_TYPES_API = "http://127.0.0.1:5001/api/assets/types"
 
-# THÊM: API hoạt động dùng để lấy lịch sử hoạt động của 1 tài sản ở trang detail
+# API hoạt động dùng để lấy lịch sử hoạt động của 1 tài sản ở trang detail
 BACKEND_ACTIVITIES_API = "http://127.0.0.1:5001/api/activities"
+
+# Tăng timeout để backend có thêm thời gian xử lý notification / socket sau khi tạo hoặc cập nhật tài sản
+BACKEND_READ_TIMEOUT = 8
+BACKEND_WRITE_TIMEOUT = 15
+BACKEND_ACTIVITY_TIMEOUT = 10
+
+# Mã tài sản tự động hiển thị trước khi tạo
+ASSET_CODE_PREFIX = "Assets-"
+ASSET_CODE_DIGITS = 5
 
 
 DEFAULT_FILTER_COUNTS = {
@@ -285,13 +296,87 @@ def asset_has_user(asset):
     )
 
 
+def normalize_asset_code(value):
+    value = str(value or "").strip()
+
+    if not value:
+        return ""
+
+    pattern = rf"^{re.escape(ASSET_CODE_PREFIX)}\d{{{ASSET_CODE_DIGITS}}}$"
+
+    if re.match(pattern, value):
+        return value
+
+    return ""
+
+
+def build_asset_code_from_number(number):
+    try:
+        number = int(number)
+    except (TypeError, ValueError):
+        number = 1
+
+    number = max(1, number)
+    return f"{ASSET_CODE_PREFIX}{number:0{ASSET_CODE_DIGITS}d}"
+
+
+def extract_asset_code_number(asset_code):
+    asset_code = str(asset_code or "").strip()
+    pattern = rf"^{re.escape(ASSET_CODE_PREFIX)}(\d{{{ASSET_CODE_DIGITS}}})$"
+    match = re.match(pattern, asset_code)
+
+    if not match:
+        return 0
+
+    try:
+        return int(match.group(1))
+    except (TypeError, ValueError):
+        return 0
+
+
+def fetch_next_asset_code_preview(max_pages=20, per_page=100):
+    max_number = 0
+
+    for page in range(1, max_pages + 1):
+        payload = fetch_assets_from_backend(
+            page=page,
+            per_page=per_page,
+            search=ASSET_CODE_PREFIX,
+            asset_type="Tất cả",
+            asset_types=None,
+            department="Tất cả",
+            status="Tất cả",
+        )
+
+        items = payload.get("items") or []
+
+        for item in items:
+            number = extract_asset_code_number(item.get("asset_code"))
+
+            if number > max_number:
+                max_number = number
+
+        pagination = payload.get("pagination") or {}
+        total_pages = int(pagination.get("total_pages") or 1)
+
+        if page >= total_pages:
+            break
+
+    return build_asset_code_from_number(max_number + 1)
+
+
 def build_create_asset_payload(form_data):
     asset_type = form_data.get("type", "").strip()
     asset_name = form_data.get("asset_name", "").strip()
     spec = form_data.get("spec", "").strip()
 
+    asset_code = normalize_asset_code(
+        form_data.get("asset_code")
+        or form_data.get("asset_code_preview")
+    )
+
     return {
-        "asset_code": form_data.get("asset_code", "").strip(),
+        "asset_code": asset_code,
         "asset_name": asset_name,
         "asset": asset_name,
         "type": asset_type,
@@ -344,8 +429,6 @@ def merge_asset_form_data(current_asset, form_data):
 
 
 def normalize_asset_types_filter(asset_types=None):
-    # THÊM: chuẩn hóa danh sách loại tài sản khi filter chọn nhiều
-    # nhận được cả list ["laptop", "pc"] hoặc chuỗi "laptop,pc"
     if not asset_types:
         return ""
 
@@ -385,7 +468,6 @@ def fetch_assets_from_backend(
         "status": status,
     }
 
-    # THÊM: gửi thêm types cho backend API để lọc nhiều loại tài sản cùng lúc
     if selected_types:
         params["types"] = selected_types
 
@@ -398,7 +480,7 @@ def fetch_assets_from_backend(
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_READ_TIMEOUT) as response:
             return parse_json_response(response)
 
     except HTTPError as e:
@@ -413,7 +495,7 @@ def fetch_assets_from_backend(
             status_code=e.code,
         )
 
-    except (URLError, TimeoutError, json.JSONDecodeError):
+    except (URLError, TimeoutError, socket.timeout, json.JSONDecodeError):
         return empty_assets_payload(
             per_page=per_page,
             message="Không thể kết nối đến backend để lấy danh sách tài sản.",
@@ -431,17 +513,16 @@ def fetch_asset_detail_from_backend(asset_id):
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_READ_TIMEOUT) as response:
             return parse_json_response(response)
 
     except HTTPError:
         return None
 
-    except (URLError, TimeoutError, json.JSONDecodeError):
+    except (URLError, TimeoutError, socket.timeout, json.JSONDecodeError):
         return None
 
 
-# THÊM: bỏ dấu và viết thường để so khớp hoạt động với tài sản ổn định hơn
 def normalize_match_text(value):
     if value is None:
         return ""
@@ -453,7 +534,6 @@ def normalize_match_text(value):
     return text
 
 
-# THÊM: lấy mã hoạt động giống trang Hoạt động
 def build_asset_activity_code(activity, index=0):
     raw_id = (
         activity.get("id")
@@ -471,7 +551,6 @@ def build_asset_activity_code(activity, index=0):
     return "ACT-" + str(index + 1).zfill(6)
 
 
-# THÊM: format thời gian giống bảng Hoạt động
 def format_asset_activity_time(value):
     if not value:
         return "—"
@@ -501,7 +580,6 @@ def format_asset_activity_time(value):
     return text
 
 
-# THÊM: đổi status_code thành chữ hiển thị
 def get_asset_activity_status_text(activity):
     status_code = activity.get("status_code")
 
@@ -528,7 +606,6 @@ def get_asset_activity_status_text(activity):
     return "Không xác định"
 
 
-# THÊM: class màu cho trạng thái hoạt động
 def get_asset_activity_status_class(activity):
     status_text = get_asset_activity_status_text(activity)
 
@@ -541,7 +618,6 @@ def get_asset_activity_status_class(activity):
     return "history-status-neutral"
 
 
-# THÊM: xác định loại hoạt động giống trang Hoạt động
 def get_asset_activity_type(activity):
     module = normalize_match_text(activity.get("module"))
     action = normalize_match_text(activity.get("action"))
@@ -577,7 +653,6 @@ def get_asset_activity_type(activity):
     return "Hệ thống"
 
 
-# THÊM: nội dung hiển thị của log
 def build_asset_activity_detail(activity):
     action = activity.get("action") or "Thao tác hệ thống"
     target_name = activity.get("target_name") or ""
@@ -592,7 +667,6 @@ def build_asset_activity_detail(activity):
     return action
 
 
-# THÊM: kiểm tra log có thuộc đúng tài sản đang xem hay không
 def activity_matches_asset(activity, asset):
     asset = normalize_asset_for_template(asset)
 
@@ -603,7 +677,6 @@ def activity_matches_asset(activity, asset):
     target_id = normalize_match_text(activity.get("target_id"))
 
     metadata = activity.get("metadata") or {}
-
     metadata_text = ""
 
     if isinstance(metadata, dict):
@@ -638,7 +711,6 @@ def activity_matches_asset(activity, asset):
     return False
 
 
-# THÊM: chuẩn hóa activity log để asset_detail.html render giống bảng hoạt động
 def normalize_asset_activity_for_template(activity, index=0):
     if not isinstance(activity, dict):
         activity = {}
@@ -676,7 +748,6 @@ def normalize_asset_activity_for_template(activity, index=0):
     }
 
 
-# THÊM: gọi API /api/activities theo search term
 def fetch_activity_page_from_backend(search_term="", page=1):
     params = {
         "page": page,
@@ -694,12 +765,12 @@ def fetch_activity_page_from_backend(search_term="", page=1):
     )
 
     try:
-        with urlopen(req, timeout=8) as response:
+        with urlopen(req, timeout=BACKEND_ACTIVITY_TIMEOUT) as response:
             payload = parse_json_response(response)
 
         return payload
 
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError):
+    except (HTTPError, URLError, TimeoutError, socket.timeout, json.JSONDecodeError):
         return {
             "success": False,
             "data": [],
@@ -710,8 +781,6 @@ def fetch_activity_page_from_backend(search_term="", page=1):
         }
 
 
-# THÊM: lấy lịch sử hoạt động của đúng tài sản đang xem detail
-# Mặc định chỉ lấy 5 hoạt động mới nhất để trang detail gọn và load nhanh hơn
 def fetch_asset_activity_logs_from_backend(asset, max_pages=5, max_items=5):
     asset = normalize_asset_for_template(asset)
 
@@ -763,7 +832,6 @@ def fetch_asset_activity_logs_from_backend(asset, max_pages=5, max_items=5):
 
                 matched_logs.append(item)
 
-                # THÊM: đủ 5 hoạt động mới nhất thì dừng luôn
                 if len(matched_logs) >= max_items:
                     return [
                         normalize_asset_activity_for_template(log, index)
@@ -790,12 +858,12 @@ def fetch_asset_types_from_backend():
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_READ_TIMEOUT) as response:
             payload = parse_json_response(response)
 
         return payload.get("items", [])
 
-    except (URLError, HTTPError, TimeoutError, json.JSONDecodeError):
+    except (URLError, HTTPError, TimeoutError, socket.timeout, json.JSONDecodeError):
         return []
 
 
@@ -810,7 +878,7 @@ def create_asset_to_backend(data):
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_WRITE_TIMEOUT) as response:
             result = parse_json_response(response)
 
         return True, result
@@ -824,10 +892,11 @@ def create_asset_to_backend(data):
             payload=payload,
         )
 
-    except (URLError, TimeoutError, json.JSONDecodeError):
+    except (URLError, TimeoutError, socket.timeout, json.JSONDecodeError) as e:
         return False, {
-            "message": "Không thể kết nối đến backend để tạo tài sản.",
+            "message": "Backend xử lý tạo tài sản quá lâu hoặc không phản hồi kịp. Vui lòng tải lại danh sách để kiểm tra tài sản đã được tạo chưa.",
             "status_code": 500,
+            "error": str(e),
         }
 
 
@@ -843,7 +912,7 @@ def update_asset_to_backend(asset_id, data):
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_WRITE_TIMEOUT) as response:
             result = parse_json_response(response)
 
         return True, result
@@ -857,10 +926,11 @@ def update_asset_to_backend(asset_id, data):
             payload=payload,
         )
 
-    except (URLError, TimeoutError, json.JSONDecodeError):
+    except (URLError, TimeoutError, socket.timeout, json.JSONDecodeError) as e:
         return False, {
-            "message": "Không thể kết nối đến backend để cập nhật tài sản.",
+            "message": "Backend xử lý cập nhật tài sản quá lâu hoặc không phản hồi kịp. Vui lòng tải lại trang để kiểm tra dữ liệu mới nhất.",
             "status_code": 500,
+            "error": str(e),
         }
 
 
@@ -981,7 +1051,7 @@ def delete_asset_from_backend(asset_id):
     )
 
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=BACKEND_WRITE_TIMEOUT) as response:
             payload = parse_json_response(response)
 
         return True, payload
@@ -995,8 +1065,9 @@ def delete_asset_from_backend(asset_id):
             payload=payload,
         )
 
-    except (URLError, TimeoutError, json.JSONDecodeError):
+    except (URLError, TimeoutError, socket.timeout, json.JSONDecodeError) as e:
         return False, {
-            "message": "Không thể kết nối đến backend để xóa tài sản.",
+            "message": "Backend xử lý xóa tài sản quá lâu hoặc không phản hồi kịp. Vui lòng tải lại danh sách để kiểm tra trạng thái mới nhất.",
             "status_code": 500,
+            "error": str(e),
         }
