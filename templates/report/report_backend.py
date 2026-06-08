@@ -28,10 +28,6 @@ DEFAULT_ROLE_OPTIONS = [
     "Staff",
 ]
 
-
-# Các field có thể được template/JS dùng để gửi nhiều tài sản.
-# Backend API đã hỗ trợ các tên này, nhưng frontend proxy cần giữ đủ nhiều value
-# thay vì ép MultiDict thành dict thường làm mất lựa chọn.
 ASSET_FORM_FIELDS = [
     "asset_ids",
     "asset_codes",
@@ -66,6 +62,20 @@ def _clean(value):
 
 def _norm(value):
     return _clean(value).lower()
+
+
+def _safe_int(value, default=1, min_value=1, max_value=None):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        value = default
+
+    value = max(min_value, value)
+
+    if max_value is not None:
+        value = min(value, max_value)
+
+    return value
 
 
 def _first(source, *keys, default=""):
@@ -126,8 +136,6 @@ def _flatten_values(value):
     if not text:
         return values
 
-    # Frontend có thể gửi một chuỗi "A1,A2" hoặc "A1;A2".
-    # Tách tại đây để luôn gửi xuống backend dạng chuẩn.
     for part in re.split(r"[,;]", text):
         part = _clean(part)
 
@@ -179,9 +187,6 @@ def _collect_form_values(form_data, fields):
 
 
 def _build_report_form_payload(form_data):
-    # Giữ các field bình thường như report_name/report_type/description...
-    # Với MultiDict, items() chỉ lấy một giá trị đại diện cho mỗi key,
-    # sau đó các field tài sản sẽ được xử lý riêng bằng getlist().
     if hasattr(form_data, "items"):
         data = {
             key: value
@@ -192,15 +197,12 @@ def _build_report_form_payload(form_data):
     else:
         data = {}
 
-    # Giữ đủ nhiều value cho từng field tài sản nếu template gửi dạng multiple.
     for field in ASSET_FORM_FIELDS:
         values = _collect_form_values(form_data, [field])
 
         if values:
             data[field] = ",".join(values)
 
-    # Gửi thêm field chuẩn asset_ids/asset_codes để backend service chắc chắn đọc được,
-    # dù template đang dùng asset_id, selected_asset_ids, assets...
     asset_id_values = _collect_form_values(form_data, ASSET_ID_LIKE_FIELDS)
     asset_code_values = _collect_form_values(form_data, ASSET_CODE_LIKE_FIELDS)
 
@@ -489,6 +491,16 @@ def _extract_items(payload):
         if isinstance(nested_items, list):
             return nested_items
 
+        nested_assets = data.get("assets")
+
+        if isinstance(nested_assets, list):
+            return nested_assets
+
+    assets = payload.get("assets")
+
+    if isinstance(assets, list):
+        return assets
+
     return []
 
 
@@ -557,6 +569,33 @@ def _normalize_asset(item):
     }
 
 
+def _asset_text(asset):
+    return _norm(
+        f"{asset.get('code')} {asset.get('asset_code')} "
+        f"{asset.get('name')} {asset.get('asset_name')}"
+    )
+
+
+def _assets_from_report_assets(assets, *keys):
+    values = []
+
+    if not isinstance(assets, list):
+        return values
+
+    for asset in assets:
+        if not isinstance(asset, dict):
+            continue
+
+        for key in keys:
+            value = asset.get(key)
+
+            if value not in [None, ""]:
+                values.append(value)
+                break
+
+    return values
+
+
 def normalize_report(item, index=0):
     if not isinstance(item, dict):
         item = {}
@@ -597,9 +636,20 @@ def normalize_report(item, index=0):
 
     asset_code = _clean(_first(item, "asset_code", "code"))
 
-    asset_names = _join_values(item.get("asset_names"))
-    asset_codes = _join_values(item.get("asset_codes"))
-    asset_ids = _join_values(item.get("asset_ids"))
+    asset_names = _join_values(
+        item.get("asset_names")
+        or _assets_from_report_assets(item.get("assets"), "asset_name", "asset", "name")
+    )
+
+    asset_codes = _join_values(
+        item.get("asset_codes")
+        or _assets_from_report_assets(item.get("assets"), "asset_code", "code")
+    )
+
+    asset_ids = _join_values(
+        item.get("asset_ids")
+        or _assets_from_report_assets(item.get("assets"), "asset_id", "id", "_id")
+    )
 
     reporter = _clean(
         _first(
@@ -661,8 +711,12 @@ def api_get_report_options():
     return _api_request("GET", "/api/reports/options")
 
 
-def api_get_my_asset_options():
-    return _api_request("GET", "/api/reports/assets/options")
+def api_get_my_asset_options(params=None):
+    return _api_request(
+        "GET",
+        "/api/reports/assets/options",
+        params=params or {},
+    )
 
 
 def api_get_reports(params=None):
@@ -726,7 +780,38 @@ def api_delete_report_file(report_id, file_id):
     )
 
 
-def _get_options():
+def _get_asset_options(report_type=None, search="", page=1, limit=10):
+    params = {
+        "page": _safe_int(page, default=1),
+        "limit": _safe_int(limit, default=10, max_value=100),
+    }
+
+    report_type = _clean(report_type)
+
+    if report_type:
+        params["report_type"] = report_type
+
+    search = _clean(search)
+
+    if search:
+        params["search"] = search
+        params["q"] = search
+
+    success, payload, _ = api_get_my_asset_options(params)
+
+    if not success:
+        return [], {}, payload.get("message", "Không lấy được danh sách tài sản.")
+
+    items = [
+        _normalize_asset(item)
+        for item in _extract_items(payload)
+        if isinstance(item, dict)
+    ]
+
+    return items, _extract_pagination(payload), ""
+
+
+def _get_options(report_type=None):
     success, payload, _ = api_get_report_options()
 
     if not success:
@@ -738,26 +823,12 @@ def _get_options():
     statuses = data.get("statuses") or REPORT_DEFAULT_STATUSES
     reporter_roles = data.get("reporter_roles") or DEFAULT_ROLE_OPTIONS
 
-    # Quan trọng:
-    # Dropdown "Tài sản đang sở hữu" phải lấy từ API riêng này,
-    # không lấy từ /api/reports/options vì options chung có thể chứa toàn bộ tài sản.
-    asset_success, asset_payload, _ = api_get_my_asset_options()
-
-    if asset_success:
-        raw_asset_options = (
-            asset_payload.get("items")
-            or asset_payload.get("assets")
-            or asset_payload.get("data")
-            or []
-        )
-    else:
-        raw_asset_options = []
-
-    asset_options = [
-        _normalize_asset(item)
-        for item in raw_asset_options
-        if isinstance(item, dict)
-    ]
+    default_report_type = report_type or (report_types[0] if report_types else "Báo hỏng")
+    asset_options, asset_pagination, asset_error = _get_asset_options(
+        report_type=default_report_type,
+        page=1,
+        limit=10,
+    )
 
     return {
         "report_type_options": _unique(report_types),
@@ -765,8 +836,12 @@ def _get_options():
         "reporter_role_options": _unique(reporter_roles),
         "role_options": _unique(reporter_roles),
         "asset_options": asset_options,
+        "asset_pagination": asset_pagination,
+        "asset_option_error": asset_error,
+        "asset_option_endpoint": "/report/assets/search",
         "allowed_file_extensions": data.get("allowed_file_extensions", []),
     }
+
 
 def _get_all_reports_for_options():
     success, payload, _ = api_get_reports({
@@ -967,8 +1042,6 @@ def get_report_page_data(args):
 
 
 def get_create_page_data():
-    options = _get_options()
-
     current_user_name = _current_user_name()
     current_user_role = _current_user_role()
     current_user_department = _current_user_department()
@@ -989,7 +1062,7 @@ def get_create_page_data():
         "department_options": [],
         "location_options": [],
 
-        **options,
+        **_get_options("Báo hỏng"),
     }
 
 
@@ -1049,40 +1122,59 @@ def delete_file(report_id, file_id):
     return True, payload.get("message", "Xóa file thành công."), payload, status_code
 
 
-def search_report_assets(keyword):
-    keyword = _norm(keyword)
+def search_report_assets(keyword="", report_type="", page=1, limit=10):
+    keyword = _clean(keyword)
+    report_type = _clean(report_type) or "Báo hỏng"
+    page = _safe_int(page, default=1)
+    limit = _safe_int(limit, default=10, max_value=50)
 
-    if not keyword:
-        return {
-            "items": []
-        }
+    params = {
+        "report_type": report_type,
+        "page": page,
+        "limit": limit,
+    }
 
-    success, payload, _ = api_get_my_asset_options()
+    if keyword:
+        params["search"] = keyword
+        params["q"] = keyword
+
+    success, payload, status_code = api_get_my_asset_options(params)
 
     if not success:
         return {
+            "success": False,
             "items": [],
+            "assets": [],
+            "data": [],
+            "pagination": {},
             "message": payload.get("message", "Không lấy được danh sách tài sản."),
+            "status_code": status_code,
         }
 
-    raw_items = payload.get("data") or payload.get("items") or payload.get("assets") or []
     results = []
     seen = set()
 
-    for item in raw_items:
+    for item in _extract_items(payload):
         asset = _normalize_asset(item)
+        key = _norm(asset.get("value") or asset.get("id") or asset.get("code") or asset.get("name"))
 
-        text = _norm(
-            f"{asset.get('code')} {asset.get('name')} {asset.get('type')} "
-            f"{asset.get('department')} {asset.get('location')} {asset.get('status')}"
-        )
+        if not key or key in seen:
+            continue
 
-        key = _norm(asset.get("code") or asset.get("name"))
+        if keyword and _norm(keyword) not in _asset_text(asset):
+            continue
 
-        if keyword in text and key and key not in seen:
-            seen.add(key)
-            results.append(asset)
+        seen.add(key)
+        results.append(asset)
+
+    pagination = _extract_pagination(payload)
 
     return {
-        "items": results[:10]
+        "success": True,
+        "items": results[:limit],
+        "assets": results[:limit],
+        "data": results[:limit],
+        "pagination": pagination,
+        "report_type": report_type,
+        "message": payload.get("message", "Lấy danh sách tài sản thành công."),
     }

@@ -120,10 +120,12 @@ def _remember_code(real_code, form_data, returned_data=None):
 
     for key in _CODE_KEYS:
         other = _norm_code((returned_data or {}).get(key) if isinstance(returned_data, dict) else "")
+
         if other:
             code_map[other] = real_code
 
     finger = _form_fingerprint(form_data)
+
     if finger:
         finger_map[finger] = real_code
 
@@ -146,6 +148,7 @@ def _fix_row_code(row):
 def _fix_page_codes(page_data):
     for key in ("reports", "all_reports", "filtered_reports", "all_filtered_reports", "report_logs"):
         rows = page_data.get(key)
+
         if isinstance(rows, list):
             for row in rows:
                 _fix_row_code(row)
@@ -176,6 +179,7 @@ def _args_page(args, page):
 def _find_full_rows(page_data):
     for key in ("all_filtered_reports", "filtered_reports", "all_reports", "reports_all", "report_logs", "all_report_logs"):
         rows = page_data.get(key)
+
         if isinstance(rows, list) and rows:
             return rows
 
@@ -184,12 +188,14 @@ def _find_full_rows(page_data):
 
 def _collect_rows(first_data, args):
     full_rows = _find_full_rows(first_data)
+
     if full_rows is not None:
         return full_rows
 
     cur = _safe_int(first_data.get("current_page"), _safe_int(args.get("page"), 1))
     total = _safe_int(first_data.get("total_pages"), 1)
-    rows, seen = [], set()
+    rows = []
+    seen = set()
 
     def add(items):
         for row in items or []:
@@ -236,7 +242,12 @@ def _prepare_create_data():
     data = get_create_page_data() or {}
     existing = _existing_codes()
 
-    code = _norm_code(data.get("auto_report_id") or data.get("report_code") or data.get("display_report_code") or data.get("code"))
+    code = _norm_code(
+        data.get("auto_report_id")
+        or data.get("report_code")
+        or data.get("display_report_code")
+        or data.get("code")
+    )
 
     if not code or code in existing:
         code = _make_code(existing)
@@ -254,11 +265,11 @@ def _prepare_create_data():
 def _prepare_post_form(form):
     data = MultiDict(form)
     existing = _existing_codes()
-
     code = ""
 
     for key in _CODE_KEYS:
         code = _norm_code(data.get(key))
+
         if code:
             break
 
@@ -281,7 +292,10 @@ def _prepare_post_form(form):
 
 
 def _json_or_form_data():
-    return request.get_json(silent=True) or {} if request.is_json else request.form.to_dict(flat=True)
+    if request.is_json:
+        return request.get_json(silent=True) or {}
+
+    return request.form.to_dict(flat=True)
 
 
 def _is_ajax():
@@ -293,13 +307,23 @@ def _is_ajax():
 
 
 def _next_url(default_endpoint="report_page", **kwargs):
-    return request.form.get("next") or request.args.get("next") or request.headers.get("Referer") or url_for(default_endpoint, **kwargs)
+    return (
+        request.form.get("next")
+        or request.args.get("next")
+        or request.headers.get("Referer")
+        or url_for(default_endpoint, **kwargs)
+    )
 
 
 def _count_key(args):
     clean = _copy_args(args)
     clean.pop("page", None)
-    return tuple((k, str(v)) for k in sorted(clean.keys()) for v in clean.getlist(k))
+
+    return tuple(
+        (key, str(value))
+        for key in sorted(clean.keys())
+        for value in clean.getlist(key)
+    )
 
 
 def _cached_counts(args):
@@ -317,10 +341,16 @@ def _cached_counts(args):
 
 
 def _save_counts(args, counts):
-    _REPORT_FILTER_COUNT_CACHE[_count_key(args)] = {"created_at": time(), "counts": counts or {}}
+    _REPORT_FILTER_COUNT_CACHE[_count_key(args)] = {
+        "created_at": time(),
+        "counts": counts or {},
+    }
 
     if len(_REPORT_FILTER_COUNT_CACHE) > 80:
-        oldest = min(_REPORT_FILTER_COUNT_CACHE, key=lambda k: _REPORT_FILTER_COUNT_CACHE[k].get("created_at", 0))
+        oldest = min(
+            _REPORT_FILTER_COUNT_CACHE,
+            key=lambda key: _REPORT_FILTER_COUNT_CACHE[key].get("created_at", 0),
+        )
         _REPORT_FILTER_COUNT_CACHE.pop(oldest, None)
 
 
@@ -364,6 +394,7 @@ def _exact_counts(data, args):
 
     counts = _counts_from_rows(_collect_rows(data, args))
     _save_counts(args, counts)
+
     return counts
 
 
@@ -394,11 +425,22 @@ def register_report_routes(app):
         if _is_ajax() and ajax == "report_counts":
             counts = _exact_counts(data, args)
             counts["total"] = _safe_int(data.get("total_records"), counts.get("total", 0))
-            return jsonify({"success": True, "counts": counts, "counts_ready": True, "total_records": counts["total"]})
+
+            return jsonify({
+                "success": True,
+                "counts": counts,
+                "counts_ready": True,
+                "total_records": counts["total"],
+            })
 
         if _is_ajax() and ajax == "report_list":
             cached = _cached_counts(args)
-            data = _apply_counts(data, cached, True) if cached is not None else _apply_counts(data, _quick_counts(data), False)
+
+            if cached is not None:
+                data = _apply_counts(data, cached, True)
+            else:
+                data = _apply_counts(data, _quick_counts(data), False)
+
             counts = data.get("filter_counts", {})
             counts["total"] = _safe_int(data.get("total_records"), data.get("filter_total_count", 0))
 
@@ -416,7 +458,12 @@ def register_report_routes(app):
 
     @app.route("/report/assets/search")
     def search_report_assets_route():
-        return jsonify(search_report_assets(request.args.get("keyword", "") or request.args.get("q", "") or ""))
+        return jsonify(search_report_assets(
+            keyword=request.args.get("keyword", "") or request.args.get("q", "") or request.args.get("search", ""),
+            report_type=request.args.get("report_type", "") or request.args.get("type", ""),
+            page=request.args.get("page", 1),
+            limit=request.args.get("limit", request.args.get("per_page", 10)),
+        ))
 
     @app.route("/report/files/<path:filename>")
     def report_file_proxy(filename):
@@ -424,6 +471,7 @@ def register_report_routes(app):
             filename=filename,
             download=request.args.get("download") == "1",
         )
+
         return Response(content, status=status_code, headers=headers)
 
     @app.route("/report/create", methods=["GET", "POST"])
@@ -447,7 +495,11 @@ def register_report_routes(app):
                     data[key] = real_code
 
             if _is_ajax():
-                return jsonify({"success": success, "message": message, "data": data}), status_code
+                return jsonify({
+                    "success": success,
+                    "message": message,
+                    "data": data,
+                }), status_code
 
             flash(message, "success" if success else "danger")
             return redirect(url_for("report_page" if success else "new_report_page"))
@@ -460,7 +512,10 @@ def register_report_routes(app):
 
         if error:
             if _is_ajax():
-                return jsonify({"success": False, "message": error}), status_code
+                return jsonify({
+                    "success": False,
+                    "message": error,
+                }), status_code
 
             flash(error, "warning")
             return redirect(url_for("report_page"))
@@ -475,7 +530,11 @@ def register_report_routes(app):
             _clear_report_cache()
 
         if _is_ajax():
-            return jsonify({"success": success, "message": message, "category": category}), status_code
+            return jsonify({
+                "success": success,
+                "message": message,
+                "category": category,
+            }), status_code
 
         flash(message, category or "success")
         return redirect(_next_url())

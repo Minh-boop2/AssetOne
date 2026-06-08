@@ -112,7 +112,7 @@
                     <div class="report-section-heading">THÔNG TIN BÁO CÁO</div>
 
                     <div class="report-form-group report-form-group--asset" id="assetField" data-field>
-                        <label>Tài sản đang sở hữu <span>*</span></label>
+                        <label id="assetLabel">Tài sản đang sở hữu <span>*</span></label>
 
                         <div class="report-pickbox" id="assetBox">
                             <div class="report-pickbox-head">
@@ -124,25 +124,31 @@
                             <div class="report-picked-list is-empty" id="assetPreview"></div>
 
                             <div class="report-pick-menu" id="assetMenu">
-                                {% if asset_list %}
-                                    <button type="button" data-clear="1">-- Bỏ chọn tất cả --</button>
-                                    {% for asset in asset_list %}
-                                        {% set aid = asset.id|default(asset.value|default(asset.asset_id|default(asset._id|default('', true), true), true), true) %}
-                                        {% set acode = asset.code|default(asset.asset_code|default(aid, true), true) %}
-                                        {% set aname = asset.name|default(asset.asset_name|default(asset.asset|default(asset.label|default('Tài sản', true), true), true), true) %}
-                                        {% set akey = aid|default(acode|default(aname, true), true) %}
-                                        <button type="button" data-id="{{ aid }}" data-code="{{ acode }}" data-name="{{ aname }}" data-key="{{ akey }}">
-                                            {{ acode }}{% if acode and aname %} - {% endif %}{{ aname }}
-                                        </button>
-                                    {% endfor %}
-                                {% else %}
-                                    <button type="button" disabled>Không có tài sản đang sở hữu</button>
-                                {% endif %}
+                                <div class="report-asset-search-box" id="assetSearchBox" style="position: sticky; top: 0; z-index: 5; padding: 8px; background: inherit;">
+                                    <input id="assetSearch" type="search" autocomplete="off" placeholder="Tìm theo mã hoặc tên tài sản..." style="width: 100%; height: 38px; border-radius: 10px; border: 1px solid rgba(148,163,184,.35); padding: 0 12px; outline: none; background: rgba(255,255,255,.72);">
+                                </div>
+
+                                <div id="assetMenuItems">
+                                    {% if asset_list %}
+                                        <button type="button" data-clear="1">-- Bỏ chọn tất cả --</button>
+                                        {% for asset in asset_list %}
+                                            {% set aid = asset.id|default(asset.value|default(asset.asset_id|default(asset._id|default('', true), true), true), true) %}
+                                            {% set acode = asset.code|default(asset.asset_code|default(aid, true), true) %}
+                                            {% set aname = asset.name|default(asset.asset_name|default(asset.asset|default(asset.label|default('Tài sản', true), true), true), true) %}
+                                            {% set akey = aid|default(acode|default(aname, true), true) %}
+                                            <button type="button" data-id="{{ aid }}" data-code="{{ acode }}" data-name="{{ aname }}" data-key="{{ akey }}">
+                                                {{ acode }}{% if acode and aname %} - {% endif %}{{ aname }}
+                                            </button>
+                                        {% endfor %}
+                                    {% else %}
+                                        <button type="button" disabled>Không có tài sản đang sở hữu</button>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
 
-                        <em>Với loại “Báo hỏng” hoặc “Cần cấp mới”, bạn phải chọn ít nhất một tài sản đang sở hữu.</em>
-                        <small>Vui lòng chọn tài sản đang sở hữu.</small>
+                        <em id="assetHint">Với loại “Báo hỏng”, bạn phải chọn tài sản nhân viên đang sử dụng.</em>
+                        <small id="assetError">Vui lòng chọn tài sản đang sở hữu.</small>
                     </div>
 
                     <div class="report-form-group report-form-group--file">
@@ -189,14 +195,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
     const esc = v => String(v || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
+
     const f = {
-        form: $("#reportCreateForm"), type: $("#report_type"), name: $("#report_name"), note: $("#description"),
-        time: $("#time"), timeText: $("#timeDisplay"), codeText: $("#reportCodeDisplay"), copy: $("#copyReportCodeBtn"),
-        assetBox: $("#assetBox"), assetBtn: $("#assetBtn"), assetMenu: $("#assetMenu"), assetPreview: $("#assetPreview"), assetSummary: $("#assetSummary"),
-        fileInput: $("#files"), fileBtn: $("#fileBtn"), filePreview: $("#filePreview"), fileSummary: $("#fileSummary")
+        form: $("#reportCreateForm"),
+        type: $("#report_type"),
+        name: $("#report_name"),
+        note: $("#description"),
+        time: $("#time"),
+        timeText: $("#timeDisplay"),
+        codeText: $("#reportCodeDisplay"),
+        copy: $("#copyReportCodeBtn"),
+
+        assetBox: $("#assetBox"),
+        assetBtn: $("#assetBtn"),
+        assetMenu: $("#assetMenu"),
+        assetMenuItems: $("#assetMenuItems"),
+        assetSearch: $("#assetSearch"),
+        assetPreview: $("#assetPreview"),
+        assetSummary: $("#assetSummary"),
+        assetLabel: $("#assetLabel"),
+        assetHint: $("#assetHint"),
+        assetError: $("#assetError"),
+
+        fileInput: $("#files"),
+        fileBtn: $("#fileBtn"),
+        filePreview: $("#filePreview"),
+        fileSummary: $("#fileSummary")
     };
 
-    let assets = [], files = [], nameTouched = false, submitted = false, canSubmit = false;
+    let assets = [];
+    let files = [];
+    let nameTouched = false;
+    let submitted = false;
+    let canSubmit = false;
+    let assetReq = 0;
+    let assetKeyword = "";
+    let assetSearchTimer = null;
+
+    const assetEndpoint = "{{ url_for('search_report_assets_route') }}";
 
     const notifyError = (title, text) => {
         if (window.sonner?.error) return window.sonner.error(title, text);
@@ -206,7 +242,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const mark = (el, ok, force = submitted) => el?.closest("[data-field]")?.classList.toggle("has-error", force && !ok);
     const hasValue = el => !!el.value.trim();
-    const needAsset = () => ["báo hỏng", "cần cấp mới", "cấp phát mới"].includes(f.type.value.trim().toLowerCase());
+    const typeText = () => f.type.value.trim();
+    const typeNorm = () => typeText().toLowerCase();
+    const isBroken = () => typeNorm() === "báo hỏng";
+    const isNeedNew = () => ["cần cấp mới", "cấp phát mới"].includes(typeNorm());
+    const needAsset = () => isBroken() || isNeedNew();
+
+    const assetMode = () => {
+        if (isNeedNew()) {
+            return {
+                label: "Tài sản chưa sử dụng",
+                button: "Chọn tài sản cần cấp mới",
+                hint: "Với loại “Cần cấp mới”, dropdown chỉ hiển thị tài sản hệ thống đang ở trạng thái Chưa sử dụng.",
+                error: "Vui lòng chọn tài sản cần cấp mới.",
+                empty: "Không có tài sản Chưa sử dụng",
+                loading: "Đang tải tài sản Chưa sử dụng...",
+                search: "Tìm theo mã hoặc tên tài sản chưa sử dụng..."
+            };
+        }
+
+        if (isBroken()) {
+            return {
+                label: "Tài sản đang sở hữu",
+                button: "Chọn tài sản",
+                hint: "Với loại “Báo hỏng”, dropdown chỉ hiển thị tài sản nhân viên đang sử dụng.",
+                error: "Vui lòng chọn tài sản đang sở hữu.",
+                empty: "Không có tài sản đang sở hữu",
+                loading: "Đang tải tài sản đang sử dụng...",
+                search: "Tìm theo mã hoặc tên tài sản đang sử dụng..."
+            };
+        }
+
+        return {
+            label: "Tài sản",
+            button: "Chọn tài sản",
+            hint: "Loại báo cáo này không bắt buộc chọn tài sản.",
+            error: "Vui lòng chọn tài sản.",
+            empty: "Không cần chọn tài sản",
+            loading: "Đang tải tài sản...",
+            search: "Chọn loại báo cáo trước"
+        };
+    };
+
+    const setAssetText = () => {
+        const m = assetMode();
+
+        f.assetLabel.innerHTML = `${m.label} <span>*</span>`;
+        f.assetBtn.innerHTML = `${m.button} <b>▾</b>`;
+        f.assetHint.textContent = m.hint;
+        f.assetError.textContent = m.error;
+
+        f.assetSearch.placeholder = m.search;
+        f.assetSearch.disabled = !needAsset();
+
+        if (!needAsset()) {
+            f.assetSearch.value = "";
+            assetKeyword = "";
+        }
+    };
 
     const validateText = (el, force) => {
         const ok = hasValue(el);
@@ -217,7 +310,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const validateAsset = (force, notify = false) => {
         const ok = !needAsset() || assets.length > 0;
         mark($("#assetField"), ok, force);
-        if (!ok && notify) notifyError("Thiếu tài sản", "Vui lòng chọn tài sản đang sở hữu.");
+
+        if (!ok && notify) notifyError("Thiếu tài sản", assetMode().error);
         return ok;
     };
 
@@ -240,6 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
             hour12: false
         }).formatToParts(new Date()).reduce((m, x) => (m[x.type] = x.value, m), {});
         const val = `${p.hour}:${p.minute} ${p.day}/${p.month}/${p.year}`;
+
         f.time.value = val;
         f.timeText.textContent = val;
     };
@@ -247,22 +342,57 @@ document.addEventListener("DOMContentLoaded", () => {
     const resizeNote = () => {
         const max = Number(f.note.dataset.maxWords || 250);
         const words = f.note.value.trim().split(/\s+/).filter(Boolean);
+
         if (words.length > max) {
             f.note.value = words.slice(0, max).join(" ");
             notifyError("Nội dung quá dài", `Nội dung / Ghi chú chỉ được tối đa ${max} từ.`);
         }
+
         f.note.style.height = "auto";
         f.note.style.height = `${Math.max(110, f.note.scrollHeight)}px`;
     };
 
+    const normalizeAsset = item => {
+        item = item || {};
+
+        const id = String(item.id || item.asset_id || item.value || item._id || item.asset_code || item.code || "").trim();
+        const code = String(item.asset_code || item.code || id || "").trim();
+        const name = String(item.asset_name || item.name || item.asset || item.label || "Tài sản").trim();
+        const key = String(item.value || id || code || name).trim();
+
+        return { id, code, name, key };
+    };
+
     const syncAssetInputs = () => {
         const first = assets[0] || {};
+
         $("#asset_id").value = first.id || "";
         $("#asset_code").value = first.code || "";
         $("#asset_name").value = first.name || "";
         $("#asset_ids").value = assets.map(a => a.id).filter(Boolean).join(",");
         $("#asset_codes").value = assets.map(a => a.code).filter(Boolean).join(",");
         $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join(",");
+    };
+
+    const renderAssetMenu = (items, emptyText) => {
+        if (!needAsset()) {
+            f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(assetMode().empty)}</button>`;
+            return;
+        }
+
+        if (!items.length) {
+            f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(emptyText || assetMode().empty)}</button>`;
+            return;
+        }
+
+        f.assetMenuItems.innerHTML = `
+            <button type="button" data-clear="1">-- Bỏ chọn tất cả --</button>
+            ${items.map(a => `
+                <button type="button" data-id="${esc(a.id)}" data-code="${esc(a.code)}" data-name="${esc(a.name)}" data-key="${esc(a.key)}">
+                    ${esc(a.code)}${a.code && a.name ? " - " : ""}${esc(a.name)}
+                </button>
+            `).join("")}
+        `;
     };
 
     const drawAssets = () => {
@@ -278,7 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `).join("");
 
-        $$("#assetMenu button[data-key]").forEach(btn => btn.classList.toggle("is-selected", selected.has(btn.dataset.key)));
+        $$("#assetMenuItems button[data-key]").forEach(btn => btn.classList.toggle("is-selected", selected.has(btn.dataset.key)));
 
         if (!nameTouched && assets.length && needAsset()) {
             f.name.value = assets.length === 1 ? `${f.type.value} - ${assets[0].name}` : `${f.type.value} - ${assets.length} tài sản`;
@@ -288,8 +418,78 @@ document.addEventListener("DOMContentLoaded", () => {
         validateAsset(submitted, false);
     };
 
+    const loadAssetsByType = async ({ clearSelected = false } = {}) => {
+        const currentType = typeText();
+        const reqId = ++assetReq;
+
+        setAssetText();
+
+        if (clearSelected) {
+            assets = [];
+            drawAssets();
+        }
+
+        if (!needAsset()) {
+            renderAssetMenu([], assetMode().empty);
+            return;
+        }
+
+        f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(assetMode().loading)}</button>`;
+
+        try {
+            const params = new URLSearchParams({
+                report_type: currentType,
+                type: currentType,
+                limit: "10"
+            });
+
+            if (assetKeyword) {
+                params.set("keyword", assetKeyword);
+                params.set("q", assetKeyword);
+                params.set("search", assetKeyword);
+            }
+
+            const res = await fetch(`${assetEndpoint}?${params.toString()}`, {
+                headers: { "Accept": "application/json" },
+                credentials: "same-origin"
+            });
+
+            const data = await res.json();
+
+            if (reqId !== assetReq) return;
+
+            const rawItems = Array.isArray(data.items) ? data.items
+                : Array.isArray(data.assets) ? data.assets
+                : Array.isArray(data.data) ? data.data
+                : [];
+
+            const seen = new Set();
+            const items = rawItems.map(normalizeAsset).filter(a => {
+                const key = a.key || a.id || a.code || a.name;
+
+                if (!key || seen.has(key)) return false;
+
+                seen.add(key);
+                return true;
+            });
+
+            const emptyText = assetKeyword
+                ? `Không tìm thấy tài sản theo mã hoặc tên: ${assetKeyword}`
+                : assetMode().empty;
+
+            renderAssetMenu(items, emptyText);
+            drawAssets();
+        } catch (err) {
+            if (reqId !== assetReq) return;
+
+            renderAssetMenu([], "Không tải được danh sách tài sản");
+            notifyError("Không tải được tài sản", "Vui lòng thử lại hoặc kiểm tra backend API.");
+        }
+    };
+
     const syncFiles = () => {
         const dt = new DataTransfer();
+
         files.forEach(x => dt.items.add(x));
         f.fileInput.files = dt.files;
     };
@@ -303,6 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button type="button" data-remove-file="${i}">×</button>
             </div>
         `).join("");
+
         syncFiles();
     };
 
@@ -319,31 +520,85 @@ document.addEventListener("DOMContentLoaded", () => {
         box.querySelectorAll(".report-select-menu button").forEach(btn => {
             btn.onclick = e => {
                 e.stopPropagation();
+
                 select.value = btn.dataset.value;
                 label.textContent = btn.textContent;
                 box.classList.remove("is-open");
+
+                assetKeyword = "";
+                f.assetSearch.value = "";
+
                 validateText(select, submitted);
-                validateAsset(submitted, false);
+                loadAssetsByType({ clearSelected: true });
             };
         });
     });
 
+    f.type.onchange = () => {
+        const label = document.querySelector('.report-select[data-select="report_type"] .report-select-btn span');
+        const selected = [...f.type.options].find(x => x.value === f.type.value);
+
+        if (label && selected) label.textContent = selected.textContent;
+
+        assetKeyword = "";
+        f.assetSearch.value = "";
+
+        validateText(f.type, submitted);
+        loadAssetsByType({ clearSelected: true });
+    };
+
     f.assetBtn.onclick = e => {
         e.stopPropagation();
+
+        if (!typeText()) {
+            notifyError("Chưa chọn loại báo cáo", "Vui lòng chọn loại báo cáo trước khi chọn tài sản.");
+            return;
+        }
+
         f.assetBox.classList.toggle("is-open");
         $$(".report-select").forEach(x => x.classList.remove("is-open"));
     };
 
-    f.assetMenu.onclick = e => {
-        const btn = e.target.closest("button");
-        if (!btn || btn.disabled) return;
+    f.assetSearch.onclick = e => e.stopPropagation();
+    f.assetSearch.onkeydown = e => e.stopPropagation();
+
+    f.assetSearch.oninput = e => {
         e.stopPropagation();
 
-        if (btn.dataset.clear) assets = [];
-        else {
+        assetKeyword = f.assetSearch.value.trim();
+
+        clearTimeout(assetSearchTimer);
+        assetSearchTimer = setTimeout(() => {
+            loadAssetsByType({ clearSelected: false });
+        }, 250);
+    };
+
+    f.assetMenu.onclick = e => {
+        if (e.target.closest("#assetSearchBox")) {
+            e.stopPropagation();
+            return;
+        }
+
+        const btn = e.target.closest("button");
+
+        if (!btn || btn.disabled) return;
+
+        e.stopPropagation();
+
+        if (btn.dataset.clear) {
+            assets = [];
+        } else {
             const key = btn.dataset.key || btn.dataset.id || btn.dataset.code || btn.dataset.name;
-            const item = { id: btn.dataset.id, code: btn.dataset.code, name: btn.dataset.name, key };
-            assets = assets.some(a => a.key === key) ? assets.filter(a => a.key !== key) : [...assets, item];
+            const item = {
+                id: btn.dataset.id || "",
+                code: btn.dataset.code || "",
+                name: btn.dataset.name || "",
+                key
+            };
+
+            assets = assets.some(a => a.key === key)
+                ? assets.filter(a => a.key !== key)
+                : [...assets, item];
         }
 
         drawAssets();
@@ -351,8 +606,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     f.assetPreview.onclick = e => {
         const btn = e.target.closest("[data-remove-asset]");
+
         if (!btn) return;
+
         e.stopPropagation();
+
         assets = assets.filter(a => a.key !== btn.dataset.removeAsset);
         drawAssets();
     };
@@ -365,20 +623,29 @@ document.addEventListener("DOMContentLoaded", () => {
     f.fileInput.onchange = () => {
         [...f.fileInput.files].forEach(x => {
             const key = `${x.name}_${x.size}_${x.lastModified}`;
-            if (!files.some(y => `${y.name}_${y.size}_${y.lastModified}` === key)) files.push(x);
+
+            if (!files.some(y => `${y.name}_${y.size}_${y.lastModified}` === key)) {
+                files.push(x);
+            }
         });
+
         drawFiles();
     };
 
     f.filePreview.onclick = e => {
         const btn = e.target.closest("[data-remove-file]");
+
         if (!btn) return;
+
         files.splice(Number(btn.dataset.removeFile), 1);
         drawFiles();
     };
 
     f.copy.onclick = async () => {
-        try { await navigator.clipboard.writeText(code); } catch {}
+        try {
+            await navigator.clipboard.writeText(code);
+        } catch {}
+
         f.copy.classList.add("copied");
         setTimeout(() => f.copy.classList.remove("copied"), 1000);
     };
@@ -401,11 +668,13 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTime();
     setInterval(updateTime, 30000);
     resizeNote();
+    setAssetText();
     drawAssets();
     drawFiles();
 
     f.form.onsubmit = e => {
         if (canSubmit) return;
+
         e.preventDefault();
 
         submitted = true;
