@@ -80,7 +80,7 @@ body.asset-edit-lock .app-content {
   border: 1px solid var(--edit-border);
   border-radius: clamp(16px, 2vw, 20px);
   box-shadow: var(--edit-shadow);
-  overflow: hidden;
+  overflow: visible !important;
   display: flex;
   flex-direction: column;
 }
@@ -92,6 +92,7 @@ body.asset-edit-lock .app-content {
     radial-gradient(circle at top right, rgba(79, 140, 255, 0.12), transparent 36%),
     linear-gradient(135deg, var(--edit-surface-2), var(--edit-surface));
   border-bottom: 1px solid var(--edit-border);
+  border-radius: clamp(16px, 2vw, 20px) clamp(16px, 2vw, 20px) 0 0;
 }
 
 .asset-edit-badge {
@@ -143,13 +144,14 @@ body.asset-edit-lock .app-content {
   padding: clamp(14px, 1.8dvh, 22px) clamp(18px, 2.2vw, 30px);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible !important;
 }
 
 .asset-edit-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(10px, 1.4vw, 18px);
+  overflow: visible !important;
 }
 
 .asset-edit-grid--bottom {
@@ -162,6 +164,7 @@ body.asset-edit-lock .app-content {
   flex-direction: column;
   gap: clamp(5px, 0.8dvh, 7px);
   margin-bottom: clamp(8px, 1.2dvh, 14px);
+  overflow: visible !important;
 }
 
 .asset-form-group label {
@@ -370,6 +373,121 @@ html[data-theme="dark"] .asset-type-chip small {
   display: block;
 }
 
+/* ================= ASSET WARRANTY SINGLE CALENDAR ================= */
+
+.asset-warranty-input-wrap {
+  position: relative;
+  width: 100%;
+  overflow: visible !important;
+}
+
+.asset-warranty-input-wrap input[data-warranty-text] {
+  width: 100%;
+  padding-right: 58px;
+}
+
+.asset-warranty-calendar-button {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  z-index: 20;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-warranty-calendar-button .single-calendar {
+  position: static;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+}
+
+.asset-warranty-calendar-button .single-calendar__button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid var(--edit-border) !important;
+  border-radius: 10px;
+  background: var(--edit-surface-3) !important;
+  color: var(--edit-text) !important;
+  box-shadow: none !important;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.asset-warranty-calendar-button .single-calendar__button:hover,
+.asset-warranty-calendar-button .single-calendar.open .single-calendar__button {
+  border-color: var(--edit-blue) !important;
+  background: var(--edit-surface) !important;
+  color: var(--edit-blue) !important;
+  box-shadow: 0 0 0 4px var(--edit-blue-soft) !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__button svg,
+.asset-warranty-calendar-button .single-calendar__button i {
+  color: currentColor !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__dialog {
+  position: absolute;
+  top: auto !important;
+  bottom: calc(100% + 8px) !important;
+  right: 0 !important;
+  left: auto !important;
+  width: 272px;
+  z-index: 9999;
+  color: var(--edit-text) !important;
+  background: var(--edit-surface) !important;
+  border: 1px solid var(--edit-border) !important;
+  box-shadow: var(--edit-shadow) !important;
+  transform-origin: bottom right !important;
+}
+
+.asset-warranty-calendar-button .single-calendar.open .single-calendar__dialog {
+  transform: translateY(0) scale(1) !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__dialog *,
+.asset-warranty-calendar-button .single-calendar__dialog button,
+.asset-warranty-calendar-button .single-calendar__dialog input,
+.asset-warranty-calendar-button .single-calendar__dialog select {
+  color: var(--edit-text) !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__dialog button {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__dialog button:hover {
+  background: var(--edit-blue-soft) !important;
+  color: var(--edit-blue) !important;
+}
+
+.asset-warranty-calendar-button .single-calendar__dialog button[aria-selected="true"],
+.asset-warranty-calendar-button .single-calendar__dialog button.is-selected,
+.asset-warranty-calendar-button .single-calendar__dialog .is-selected button {
+  background: var(--edit-blue) !important;
+  color: #fff !important;
+}
+
+.asset-form-group.has-error .asset-warranty-calendar-button .single-calendar__button {
+  border-color: var(--edit-red) !important;
+  background: var(--edit-red-soft) !important;
+  color: var(--edit-red) !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14) !important;
+}
+
 .asset-edit-actions {
   flex: 0 0 auto;
   display: flex;
@@ -456,7 +574,7 @@ html[data-theme="dark"] .asset-type-chip small {
   }
 
   .asset-edit-form {
-    overflow: visible;
+    overflow: visible !important;
   }
 
   .asset-edit-grid {
