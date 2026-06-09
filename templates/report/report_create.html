@@ -16,7 +16,7 @@
         <a href="{{ url_for('report_page') }}" class="report-create-back">« Quay lại</a>
         <h1 class="report-create-title">Thêm báo cáo mới</h1>
 
-        <form id="reportCreateForm" method="POST" action="{{ url_for('new_report_page') }}" enctype="multipart/form-data" class="report-create-card" novalidate>
+        <form id="reportCreateForm" method="POST" action="{{ url_for('report_create_page') }}" enctype="multipart/form-data" class="report-create-card" novalidate>
             <input type="hidden" id="report_code" name="report_code" value="{{ auto_code }}">
             <input type="hidden" id="display_report_code" name="display_report_code" value="{{ auto_code }}">
             <input type="hidden" id="code" name="code" value="{{ auto_code }}">
@@ -228,10 +228,16 @@ document.addEventListener("DOMContentLoaded", () => {
     let nameTouched = false;
     let submitted = false;
     let canSubmit = false;
+
     let assetReq = 0;
     let assetKeyword = "";
     let assetSearchTimer = null;
+    let assetItems = [];
+    let assetPage = 1;
+    let assetHasMore = true;
+    let assetLoading = false;
 
+    const assetLimit = 10;
     const assetEndpoint = "{{ url_for('search_report_assets_route') }}";
 
     const notifyError = (title, text) => {
@@ -282,6 +288,13 @@ document.addEventListener("DOMContentLoaded", () => {
             loading: "Đang tải tài sản...",
             search: "Chọn loại báo cáo trước"
         };
+    };
+
+    const resetAssetPaging = () => {
+        assetItems = [];
+        assetPage = 1;
+        assetHasMore = true;
+        assetLoading = false;
     };
 
     const setAssetText = () => {
@@ -374,25 +387,53 @@ document.addEventListener("DOMContentLoaded", () => {
         $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join(",");
     };
 
-    const renderAssetMenu = (items, emptyText) => {
+    const getHasMore = (pagination, rawCount, newCount, append) => {
+        pagination = pagination || {};
+
+        const currentPage = Number(pagination.page || pagination.current_page || assetPage);
+        const totalPages = Number(pagination.total_pages || pagination.pages || 0);
+        const totalItems = Number(pagination.total_items || pagination.total || 0);
+
+        if (append && rawCount > 0 && newCount === 0) return false;
+        if (totalPages > 0) return currentPage < totalPages;
+        if (totalItems > 0) return assetItems.length < totalItems;
+
+        return rawCount >= assetLimit;
+    };
+
+    const renderAssetMenu = ({ loading = false, done = false, emptyText = "", keepScroll = false } = {}) => {
+        const oldTop = f.assetMenu.scrollTop;
+
         if (!needAsset()) {
             f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(assetMode().empty)}</button>`;
             return;
         }
 
-        if (!items.length) {
+        if (loading && !assetItems.length) {
+            f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(assetMode().loading)}</button>`;
+            return;
+        }
+
+        if (!assetItems.length) {
             f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(emptyText || assetMode().empty)}</button>`;
             return;
         }
 
         f.assetMenuItems.innerHTML = `
             <button type="button" data-clear="1">-- Bỏ chọn tất cả --</button>
-            ${items.map(a => `
+            ${assetItems.map(a => `
                 <button type="button" data-id="${esc(a.id)}" data-code="${esc(a.code)}" data-name="${esc(a.name)}" data-key="${esc(a.key)}">
                     ${esc(a.code)}${a.code && a.name ? " - " : ""}${esc(a.name)}
                 </button>
             `).join("")}
+            ${loading ? `<button type="button" disabled style="opacity:.75;font-weight:700;cursor:default;">Đang tải thêm tài sản...</button>` : ""}
+            ${done ? `<button type="button" disabled style="opacity:.75;font-weight:700;cursor:default;">Đã hết tài sản</button>` : ""}
         `;
+
+        requestAnimationFrame(() => {
+            f.assetMenu.scrollTop = keepScroll ? oldTop : 0;
+            drawAssets();
+        });
     };
 
     const drawAssets = () => {
@@ -418,11 +459,15 @@ document.addEventListener("DOMContentLoaded", () => {
         validateAsset(submitted, false);
     };
 
-    const loadAssetsByType = async ({ clearSelected = false } = {}) => {
+    const loadAssetsByType = async ({ clearSelected = false, reset = true, append = false } = {}) => {
+        if (append && (assetLoading || !assetHasMore)) return;
+
         const currentType = typeText();
         const reqId = ++assetReq;
 
         setAssetText();
+
+        if (reset) resetAssetPaging();
 
         if (clearSelected) {
             assets = [];
@@ -430,17 +475,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!needAsset()) {
-            renderAssetMenu([], assetMode().empty);
+            renderAssetMenu({ emptyText: assetMode().empty });
             return;
         }
 
-        f.assetMenuItems.innerHTML = `<button type="button" disabled>${esc(assetMode().loading)}</button>`;
+        assetLoading = true;
+        renderAssetMenu({ loading: true, keepScroll: append });
 
         try {
             const params = new URLSearchParams({
                 report_type: currentType,
                 type: currentType,
-                limit: "10"
+                page: String(assetPage),
+                limit: String(assetLimit)
             });
 
             if (assetKeyword) {
@@ -463,8 +510,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 : Array.isArray(data.data) ? data.data
                 : [];
 
-            const seen = new Set();
-            const items = rawItems.map(normalizeAsset).filter(a => {
+            const seen = new Set(assetItems.map(a => a.key || a.id || a.code || a.name));
+            const newItems = rawItems.map(normalizeAsset).filter(a => {
                 const key = a.key || a.id || a.code || a.name;
 
                 if (!key || seen.has(key)) return false;
@@ -473,17 +520,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 return true;
             });
 
+            assetItems = append ? [...assetItems, ...newItems] : newItems;
+            assetHasMore = getHasMore(data.pagination, rawItems.length, newItems.length, append);
+            assetPage += 1;
+            assetLoading = false;
+
             const emptyText = assetKeyword
                 ? `Không tìm thấy tài sản theo mã hoặc tên: ${assetKeyword}`
                 : assetMode().empty;
 
-            renderAssetMenu(items, emptyText);
-            drawAssets();
+            renderAssetMenu({
+                done: !assetHasMore,
+                emptyText,
+                keepScroll: append
+            });
         } catch (err) {
             if (reqId !== assetReq) return;
 
-            renderAssetMenu([], "Không tải được danh sách tài sản");
+            assetLoading = false;
+            renderAssetMenu({
+                emptyText: "Không tải được danh sách tài sản",
+                keepScroll: append
+            });
             notifyError("Không tải được tài sản", "Vui lòng thử lại hoặc kiểm tra backend API.");
+        }
+    };
+
+    const checkAssetLoadMore = () => {
+        if (!f.assetBox.classList.contains("is-open") || !needAsset()) return;
+        if (assetLoading || !assetHasMore) return;
+
+        const nearBottom = f.assetMenu.scrollTop + f.assetMenu.clientHeight >= f.assetMenu.scrollHeight - 30;
+
+        if (nearBottom) {
+            loadAssetsByType({ clearSelected: false, reset: false, append: true });
         }
     };
 
@@ -529,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 f.assetSearch.value = "";
 
                 validateText(select, submitted);
-                loadAssetsByType({ clearSelected: true });
+                loadAssetsByType({ clearSelected: true, reset: true });
             };
         });
     });
@@ -544,7 +614,7 @@ document.addEventListener("DOMContentLoaded", () => {
         f.assetSearch.value = "";
 
         validateText(f.type, submitted);
-        loadAssetsByType({ clearSelected: true });
+        loadAssetsByType({ clearSelected: true, reset: true });
     };
 
     f.assetBtn.onclick = e => {
@@ -557,7 +627,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         f.assetBox.classList.toggle("is-open");
         $$(".report-select").forEach(x => x.classList.remove("is-open"));
+
+        if (f.assetBox.classList.contains("is-open") && needAsset() && !assetItems.length && !assetLoading) {
+            loadAssetsByType({ clearSelected: false, reset: true });
+        }
     };
+
+    f.assetMenu.addEventListener("scroll", checkAssetLoadMore);
+    f.assetMenu.addEventListener("wheel", () => setTimeout(checkAssetLoadMore, 0), { passive: true });
 
     f.assetSearch.onclick = e => e.stopPropagation();
     f.assetSearch.onkeydown = e => e.stopPropagation();
@@ -569,7 +646,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clearTimeout(assetSearchTimer);
         assetSearchTimer = setTimeout(() => {
-            loadAssetsByType({ clearSelected: false });
+            loadAssetsByType({ clearSelected: false, reset: true });
         }, 250);
     };
 

@@ -120,7 +120,6 @@ def _remember_code(real_code, form_data, returned_data=None):
 
     for key in _CODE_KEYS:
         other = _norm_code((returned_data or {}).get(key) if isinstance(returned_data, dict) else "")
-
         if other:
             code_map[other] = real_code
 
@@ -269,7 +268,6 @@ def _prepare_post_form(form):
 
     for key in _CODE_KEYS:
         code = _norm_code(data.get(key))
-
         if code:
             break
 
@@ -458,11 +456,25 @@ def register_report_routes(app):
 
     @app.route("/report/assets/search")
     def search_report_assets_route():
+        keyword = (
+            request.args.get("keyword")
+            or request.args.get("search")
+            or request.args.get("q")
+            or ""
+        )
+        report_type = (
+            request.args.get("report_type")
+            or request.args.get("type")
+            or ""
+        )
+        page = max(1, _safe_int(request.args.get("page"), 1))
+        limit = max(1, min(_safe_int(request.args.get("limit") or request.args.get("per_page"), 10), 50))
+
         return jsonify(search_report_assets(
-            keyword=request.args.get("keyword", "") or request.args.get("q", "") or request.args.get("search", ""),
-            report_type=request.args.get("report_type", "") or request.args.get("type", ""),
-            page=request.args.get("page", 1),
-            limit=request.args.get("limit", request.args.get("per_page", 10)),
+            keyword=keyword,
+            report_type=report_type,
+            page=page,
+            limit=limit,
         ))
 
     @app.route("/report/files/<path:filename>")
@@ -474,8 +486,8 @@ def register_report_routes(app):
 
         return Response(content, status=status_code, headers=headers)
 
-    @app.route("/report/create", methods=["GET", "POST"])
-    @app.route("/report/new", methods=["GET", "POST"])
+    @app.route("/report/create", endpoint="report_create_page", methods=["GET", "POST"])
+    @app.route("/report/new", endpoint="new_report_page", methods=["GET", "POST"])
     def new_report_page():
         if request.method == "POST":
             uploaded_files = []
@@ -502,7 +514,7 @@ def register_report_routes(app):
                 }), status_code
 
             flash(message, "success" if success else "danger")
-            return redirect(url_for("report_page" if success else "new_report_page"))
+            return redirect(url_for("report_page" if success else "report_create_page"))
 
         return render_template("report/report_create.html", **_prepare_create_data())
 
