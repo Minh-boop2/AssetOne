@@ -101,9 +101,20 @@
                         <strong>{{ reporter_name }}</strong>
                     </div>
 
-                    <div class="report-form-group report-form-group--description" data-field>
+                    <div class="report-form-group report-form-group--description" id="descriptionField" data-field>
                         <label for="description">Nội dung / Ghi chú <span>*</span></label>
-                        <textarea id="description" name="description" rows="4" data-max-words="250" placeholder="Nhập nội dung hoặc ghi chú cho báo cáo..."></textarea>
+
+                        <textarea id="description" name="description" rows="4" data-max-words="250" spellcheck="false" placeholder="Nhập nội dung hoặc ghi chú cho báo cáo..."></textarea>
+
+                        <div class="report-asset-reason" id="assetReasonBox" hidden>
+                            <div class="report-asset-reason-head">
+                                <strong>Chi tiết tài sản đã chọn</strong>
+                                <span id="assetReasonHint">Chưa chọn tài sản</span>
+                            </div>
+
+                            <div class="report-asset-reason-list" id="assetReasonList"></div>
+                        </div>
+
                         <small>Vui lòng nhập nội dung báo cáo.</small>
                     </div>
                 </div>
@@ -189,14 +200,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const $ = s => document.querySelector(s);
     const $$ = s => [...document.querySelectorAll(s)];
     const esc = v => String(v || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
+
     const f = {
-        form: $("#reportCreateForm"), type: $("#report_type"), name: $("#report_name"), note: $("#description"),
-        time: $("#time"), timeText: $("#timeDisplay"), codeText: $("#reportCodeDisplay"), copy: $("#copyReportCodeBtn"),
-        assetBox: $("#assetBox"), assetBtn: $("#assetBtn"), assetMenu: $("#assetMenu"), assetPreview: $("#assetPreview"), assetSummary: $("#assetSummary"),
-        fileInput: $("#files"), fileBtn: $("#fileBtn"), filePreview: $("#filePreview"), fileSummary: $("#fileSummary")
+        form: $("#reportCreateForm"),
+        type: $("#report_type"),
+        name: $("#report_name"),
+        note: $("#description"),
+        noteField: $("#descriptionField"),
+        reasonBox: $("#assetReasonBox"),
+        reasonList: $("#assetReasonList"),
+        reasonHint: $("#assetReasonHint"),
+        time: $("#time"),
+        timeText: $("#timeDisplay"),
+        codeText: $("#reportCodeDisplay"),
+        copy: $("#copyReportCodeBtn"),
+        assetBox: $("#assetBox"),
+        assetBtn: $("#assetBtn"),
+        assetMenu: $("#assetMenu"),
+        assetPreview: $("#assetPreview"),
+        assetSummary: $("#assetSummary"),
+        fileInput: $("#files"),
+        fileBtn: $("#fileBtn"),
+        filePreview: $("#filePreview"),
+        fileSummary: $("#fileSummary")
     };
 
     let assets = [], files = [], nameTouched = false, submitted = false, canSubmit = false;
+    const reasonMap = new Map();
 
     const notifyError = (title, text) => {
         if (window.sonner?.error) return window.sonner.error(title, text);
@@ -207,19 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mark = (el, ok, force = submitted) => el?.closest("[data-field]")?.classList.toggle("has-error", force && !ok);
     const hasValue = el => !!el.value.trim();
     const needAsset = () => ["báo hỏng", "cần cấp mới", "cấp phát mới"].includes(f.type.value.trim().toLowerCase());
-
-    const validateText = (el, force) => {
-        const ok = hasValue(el);
-        mark(el, ok, force);
-        return ok;
-    };
-
-    const validateAsset = (force, notify = false) => {
-        const ok = !needAsset() || assets.length > 0;
-        mark($("#assetField"), ok, force);
-        if (!ok && notify) notifyError("Thiếu tài sản", "Vui lòng chọn tài sản đang sở hữu.");
-        return ok;
-    };
+    const assetLabel = a => [a.code, a.name].filter(Boolean).join(" - ") || "Tài sản chưa xác định";
 
     const makeCode = () => "REPORT-" + Array.from({ length: 8 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
     const codeInputs = ["#report_code", "#display_report_code", "#code", "#auto_report_id"].map($).filter(Boolean);
@@ -244,15 +262,10 @@ document.addEventListener("DOMContentLoaded", () => {
         f.timeText.textContent = val;
     };
 
-    const resizeNote = () => {
-        const max = Number(f.note.dataset.maxWords || 250);
-        const words = f.note.value.trim().split(/\s+/).filter(Boolean);
-        if (words.length > max) {
-            f.note.value = words.slice(0, max).join(" ");
-            notifyError("Nội dung quá dài", `Nội dung / Ghi chú chỉ được tối đa ${max} từ.`);
-        }
-        f.note.style.height = "auto";
-        f.note.style.height = `${Math.max(110, f.note.scrollHeight)}px`;
+    const autoGrow = el => {
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height = `${Math.min(Math.max(el.scrollHeight, 34), 96)}px`;
     };
 
     const syncAssetInputs = () => {
@@ -265,26 +278,125 @@ document.addEventListener("DOMContentLoaded", () => {
         $("#asset_names").value = assets.map(a => a.name).filter(Boolean).join(",");
     };
 
+    const syncReportContent = () => {
+        if (!needAsset() || !assets.length) return;
+        f.note.value = assets.map(asset => `${assetLabel(asset)}: ${(reasonMap.get(asset.key) || "").trim()}`).join("\n");
+    };
+
+    const resizeNote = () => {
+        if (needAsset() && assets.length) return;
+
+        const max = Number(f.note.dataset.maxWords || 250);
+        const words = f.note.value.trim().split(/\s+/).filter(Boolean);
+
+        if (words.length > max) {
+            f.note.value = words.slice(0, max).join(" ");
+            notifyError("Nội dung quá dài", `Nội dung / Ghi chú chỉ được tối đa ${max} từ.`);
+        }
+
+        f.note.style.height = "auto";
+        f.note.style.height = `${Math.max(110, f.note.scrollHeight)}px`;
+    };
+
+    const missingAssets = () => assets.filter(asset => !(reasonMap.get(asset.key) || "").trim());
+
+    const markReasonRows = (force = submitted) => {
+        const missing = new Set(missingAssets().map(asset => asset.key));
+
+        f.reasonBox?.classList.toggle("has-error", force && missing.size > 0);
+
+        $$(".report-asset-reason-row").forEach(row => {
+            row.classList.toggle("is-missing", force && missing.has(row.dataset.key));
+        });
+    };
+
+    const validateText = (el, force) => {
+        const ok = hasValue(el);
+        mark(el, ok, force);
+        return ok;
+    };
+
+    const validateAsset = (force, notify = false) => {
+        const ok = !needAsset() || assets.length > 0;
+        mark($("#assetField"), ok, force);
+        if (!ok && notify) notifyError("Thiếu tài sản", "Vui lòng chọn ít nhất một tài sản đang sở hữu.");
+        return ok;
+    };
+
+    const validateReasons = (force, notify = false) => {
+        if (!needAsset()) {
+            f.reasonBox?.classList.remove("has-error");
+            return validateText(f.note, force);
+        }
+
+        syncReportContent();
+
+        const okAsset = validateAsset(force, notify);
+        const okReason = assets.length > 0 && missingAssets().length === 0;
+        const ok = okAsset && okReason;
+
+        mark(f.note, ok, force);
+        markReasonRows(force && okAsset);
+
+        if (okAsset && !okReason && notify) {
+            notifyError("Thiếu nội dung tài sản", "Vui lòng nhập nội dung chi tiết cho các tài sản đang được đánh dấu đỏ.");
+            f.reasonList?.querySelector(".report-asset-reason-row.is-missing textarea")?.focus();
+        }
+
+        return ok;
+    };
+
+    const drawReasonBox = () => {
+        const active = needAsset() && assets.length > 0;
+
+        f.noteField.classList.toggle("is-asset-reason-mode", active);
+        f.reasonBox.hidden = !active;
+
+        if (!active) {
+            f.reasonList.innerHTML = "";
+            f.reasonBox.classList.remove("has-error");
+            resizeNote();
+            return;
+        }
+
+        f.reasonHint.textContent = `Đã chọn ${assets.length} tài sản`;
+        f.reasonList.innerHTML = assets.map(asset => `
+            <div class="report-asset-reason-row" data-key="${esc(asset.key)}">
+                <label title="${esc(assetLabel(asset))}">${esc(assetLabel(asset))}:</label>
+                <textarea data-reason-input data-key="${esc(asset.key)}" rows="1" spellcheck="false" placeholder="Nhập nội dung chi tiết...">${esc(reasonMap.get(asset.key) || "")}</textarea>
+            </div>
+        `).join("");
+
+        f.reasonList.querySelectorAll("textarea").forEach(autoGrow);
+        syncReportContent();
+        validateReasons(submitted, false);
+    };
+
     const drawAssets = () => {
         const selected = new Set(assets.map(a => a.key));
+
         syncAssetInputs();
 
         f.assetSummary.textContent = assets.length ? `Đã chọn ${assets.length} tài sản` : "Chưa chọn tài sản nào";
         f.assetPreview.classList.toggle("is-empty", !assets.length);
         f.assetPreview.innerHTML = assets.map(a => `
             <div class="picked-item">
-                <i></i><span title="${esc(a.code + ' - ' + a.name)}">${esc(a.code)} - ${esc(a.name)}</span>
+                <i></i>
+                <span title="${esc(assetLabel(a))}">${esc(assetLabel(a))}</span>
                 <button type="button" data-remove-asset="${esc(a.key)}">×</button>
             </div>
         `).join("");
 
-        $$("#assetMenu button[data-key]").forEach(btn => btn.classList.toggle("is-selected", selected.has(btn.dataset.key)));
+        $$("#assetMenu button[data-key]").forEach(btn => {
+            btn.classList.toggle("is-selected", selected.has(btn.dataset.key));
+        });
 
         if (!nameTouched && assets.length && needAsset()) {
             f.name.value = assets.length === 1 ? `${f.type.value} - ${assets[0].name}` : `${f.type.value} - ${assets.length} tài sản`;
             validateText(f.name, submitted);
         }
 
+        drawReasonBox();
         validateAsset(submitted, false);
     };
 
@@ -299,7 +411,8 @@ document.addEventListener("DOMContentLoaded", () => {
         f.filePreview.classList.toggle("is-empty", !files.length);
         f.filePreview.innerHTML = files.map((x, i) => `
             <div class="picked-item">
-                <i></i><span title="${esc(x.name)}">${esc(x.name)}</span>
+                <i></i>
+                <span title="${esc(x.name)}">${esc(x.name)}</span>
                 <button type="button" data-remove-file="${i}">×</button>
             </div>
         `).join("");
@@ -319,11 +432,13 @@ document.addEventListener("DOMContentLoaded", () => {
         box.querySelectorAll(".report-select-menu button").forEach(btn => {
             btn.onclick = e => {
                 e.stopPropagation();
+
                 select.value = btn.dataset.value;
                 label.textContent = btn.textContent;
                 box.classList.remove("is-open");
+
                 validateText(select, submitted);
-                validateAsset(submitted, false);
+                drawAssets();
             };
         });
     });
@@ -337,13 +452,28 @@ document.addEventListener("DOMContentLoaded", () => {
     f.assetMenu.onclick = e => {
         const btn = e.target.closest("button");
         if (!btn || btn.disabled) return;
+
         e.stopPropagation();
 
-        if (btn.dataset.clear) assets = [];
-        else {
+        if (btn.dataset.clear) {
+            assets = [];
+            reasonMap.clear();
+        } else {
             const key = btn.dataset.key || btn.dataset.id || btn.dataset.code || btn.dataset.name;
-            const item = { id: btn.dataset.id, code: btn.dataset.code, name: btn.dataset.name, key };
-            assets = assets.some(a => a.key === key) ? assets.filter(a => a.key !== key) : [...assets, item];
+            const item = {
+                id: btn.dataset.id,
+                code: btn.dataset.code,
+                name: btn.dataset.name,
+                key
+            };
+
+            if (assets.some(a => a.key === key)) {
+                assets = assets.filter(a => a.key !== key);
+                reasonMap.delete(key);
+            } else {
+                assets = [...assets, item];
+                if (!reasonMap.has(key)) reasonMap.set(key, "");
+            }
         }
 
         drawAssets();
@@ -352,10 +482,24 @@ document.addEventListener("DOMContentLoaded", () => {
     f.assetPreview.onclick = e => {
         const btn = e.target.closest("[data-remove-asset]");
         if (!btn) return;
+
         e.stopPropagation();
+
         assets = assets.filter(a => a.key !== btn.dataset.removeAsset);
+        reasonMap.delete(btn.dataset.removeAsset);
+
         drawAssets();
     };
+
+    f.reasonList.addEventListener("input", e => {
+        const input = e.target.closest("[data-reason-input]");
+        if (!input) return;
+
+        reasonMap.set(input.dataset.key, input.value);
+        autoGrow(input);
+        syncReportContent();
+        validateReasons(submitted, false);
+    });
 
     f.fileBtn.onclick = () => {
         f.fileInput.value = "";
@@ -373,12 +517,16 @@ document.addEventListener("DOMContentLoaded", () => {
     f.filePreview.onclick = e => {
         const btn = e.target.closest("[data-remove-file]");
         if (!btn) return;
+
         files.splice(Number(btn.dataset.removeFile), 1);
         drawFiles();
     };
 
     f.copy.onclick = async () => {
-        try { await navigator.clipboard.writeText(code); } catch {}
+        try {
+            await navigator.clipboard.writeText(code);
+        } catch {}
+
         f.copy.classList.add("copied");
         setTimeout(() => f.copy.classList.remove("copied"), 1000);
     };
@@ -406,6 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     f.form.onsubmit = e => {
         if (canSubmit) return;
+
         e.preventDefault();
 
         submitted = true;
@@ -414,14 +563,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const okName = validateText(f.name, true);
         const okType = validateText(f.type, true);
-        const okNote = validateText(f.note, true);
-        const okAsset = validateAsset(true, false);
+        const okContent = validateReasons(true, true);
 
-        if (!okName || !okType || !okNote || !okAsset) {
+        if (!okName || !okType || !okContent) {
             notifyError("Tạo báo cáo không thành công", "Vui lòng nhập đầy đủ thông tin bắt buộc.");
             return;
         }
 
+        syncReportContent();
         canSubmit = true;
         f.form.submit();
     };

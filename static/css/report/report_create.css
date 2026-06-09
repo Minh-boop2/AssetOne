@@ -207,8 +207,8 @@ body {
     display: none;
 }
 
-.report-form-group.has-error label,
-.report-form-group.has-error label span {
+.report-form-group.has-error > label,
+.report-form-group.has-error > label span {
     display: inline;
     color: var(--danger);
 }
@@ -286,7 +286,7 @@ body {
     min-width: 0;
 }
 
-.report-form-group label {
+.report-form-group > label {
     margin-bottom: 8px;
 }
 
@@ -344,15 +344,15 @@ body {
     font-weight: 850;
 }
 
-.report-form-group.has-error input,
-.report-form-group.has-error textarea,
+.report-form-group.has-error > input,
+.report-form-group.has-error > textarea,
 .report-form-group.has-error .report-select-btn,
 .report-form-group.has-error .report-pickbox {
     border-color: var(--danger);
     box-shadow: 0 0 0 4px rgba(239, 68, 68, .14);
 }
 
-.report-form-group.has-error small {
+.report-form-group.has-error > small {
     display: block;
 }
 
@@ -614,6 +614,139 @@ body {
     line-height: 1.35;
 }
 
+.report-form-group--description.is-asset-reason-mode > #description {
+    display: none;
+}
+
+.report-asset-reason {
+    margin-top: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: none;
+    transition: .18s;
+}
+
+.report-asset-reason[hidden] {
+    display: none;
+}
+
+.report-asset-reason.has-error {
+    border: 0;
+    box-shadow: none;
+}
+
+.report-asset-reason-head {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.report-asset-reason-head strong {
+    min-width: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 950;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.report-asset-reason-head span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.report-asset-reason-list {
+    max-height: 146px;
+    padding: 8px;
+    background: var(--input);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll) transparent;
+}
+
+.report-asset-reason-row {
+    display: grid;
+    grid-template-columns: minmax(150px, .78fr) minmax(180px, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(100, 116, 139, .16);
+}
+
+.report-asset-reason-row:last-child {
+    border-bottom: none;
+}
+
+.report-asset-reason-row label {
+    min-height: 30px;
+    margin: 0;
+    padding: 4px 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 950;
+    line-height: 1.35;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.report-asset-reason-row textarea {
+    width: 100%;
+    min-height: 30px;
+    max-height: none;
+    height: 30px;
+    padding: 4px 0;
+    color: var(--text);
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0;
+    outline: none !important;
+    resize: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.45;
+    overflow: hidden;
+    box-shadow: none !important;
+    box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+.report-asset-reason-row textarea::-webkit-scrollbar {
+    display: none;
+}
+
+.report-asset-reason-row textarea:focus {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.report-asset-reason-row textarea::placeholder {
+    color: var(--muted);
+    opacity: .72;
+}
+
+.report-asset-reason-row.is-missing label,
+.report-asset-reason-row.is-missing textarea {
+    color: var(--danger);
+}
+
+.report-asset-reason-row.is-missing textarea::placeholder {
+    color: var(--danger);
+    opacity: .78;
+}
+
 .report-create-footer {
     min-height: 92px;
     margin-top: 26px;
@@ -656,26 +789,30 @@ body {
 
 .report-select-menu::-webkit-scrollbar,
 .report-pick-menu::-webkit-scrollbar,
-.report-picked-list::-webkit-scrollbar {
+.report-picked-list::-webkit-scrollbar,
+.report-asset-reason-list::-webkit-scrollbar {
     width: 7px;
 }
 
 .report-select-menu::-webkit-scrollbar-track,
 .report-pick-menu::-webkit-scrollbar-track,
-.report-picked-list::-webkit-scrollbar-track {
+.report-picked-list::-webkit-scrollbar-track,
+.report-asset-reason-list::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .report-select-menu::-webkit-scrollbar-thumb,
 .report-pick-menu::-webkit-scrollbar-thumb,
-.report-picked-list::-webkit-scrollbar-thumb {
+.report-picked-list::-webkit-scrollbar-thumb,
+.report-asset-reason-list::-webkit-scrollbar-thumb {
     background: var(--scroll);
     border-radius: 999px;
 }
 
 .report-select-menu::-webkit-scrollbar-thumb:hover,
 .report-pick-menu::-webkit-scrollbar-thumb:hover,
-.report-picked-list::-webkit-scrollbar-thumb:hover {
+.report-picked-list::-webkit-scrollbar-thumb:hover,
+.report-asset-reason-list::-webkit-scrollbar-thumb:hover {
     background: var(--blue2);
 }
 
@@ -722,6 +859,16 @@ body {
     .picked-item {
         width: 100%;
         max-width: 100%;
+    }
+
+    .report-asset-reason-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .report-asset-reason-row label {
+        min-height: auto;
+        padding: 4px 0;
     }
 
     .report-create-footer {
