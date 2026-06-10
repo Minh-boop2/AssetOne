@@ -11,10 +11,35 @@
   <div class="p-container">
     <aside class="p-sidebar">
       <div class="p-user-card">
-        <div class="p-avatar">{{ admin.name[0] }}</div>
-        <p class="p-status">● Trực tuyến</p>
+        <div class="p-avatar-wrap">
+          {% if admin.avatar_url %}
+          <img
+            class="p-avatar-img"
+            src="{{ admin.avatar_url }}"
+            alt="{{ admin.name }}"
+            onerror="
+              this.style.display = 'none';
+              this.nextElementSibling.style.display = 'flex';
+            "
+          />
+          <div class="p-avatar-fallback">
+            {{ admin.name[0]|upper if admin.name else 'U' }}
+          </div>
+          {% else %}
+          <div class="p-avatar-fallback show">
+            {{ admin.name[0]|upper if admin.name else 'U' }}
+          </div>
+          {% endif %}
+          <span class="p-dot"></span>
+        </div>
+
+        <p class="p-status">
+          <span></span>
+          Trực tuyến
+        </p>
+
         <h2 class="p-name">{{ admin.name }}</h2>
-        <span class="p-role-label">QUẢN TRỊ HỆ THỐNG</span>
+        <span class="p-role-label">{{ admin.role_label or 'NGƯỜI DÙNG' }}</span>
       </div>
 
       <div class="p-info-list">
@@ -22,9 +47,10 @@
           <i class="fas fa-id-badge"></i>
           <div>
             <small>Mã nhân viên</small>
-            <p>{{ admin.id }}</p>
+            <p>{{ admin.employee_code or admin.id }}</p>
           </div>
         </div>
+
         <div class="p-info-row">
           <i class="fas fa-envelope"></i>
           <div>
@@ -32,6 +58,7 @@
             <p>{{ admin.email }}</p>
           </div>
         </div>
+
         <div class="p-info-row">
           <i class="fas fa-phone-alt"></i>
           <div>
@@ -39,6 +66,7 @@
             <p>{{ admin.phone }}</p>
           </div>
         </div>
+
         <div class="p-info-row">
           <i class="fas fa-building"></i>
           <div>
@@ -48,24 +76,30 @@
         </div>
       </div>
 
-      <button class="p-btn-edit">
-        <i class="fas fa-user-edit"></i> Chỉnh sửa hồ sơ
+      <button type="button" class="p-btn-edit">
+        <i class="fas fa-user-edit"></i>
+        <span>Chỉnh sửa hồ sơ</span>
       </button>
     </aside>
 
     <main class="p-main">
       <div class="p-stats-grid">
         <div class="p-card-stat">
-          <div class="p-icon blue"><i class="fas fa-layer-group"></i></div>
+          <div class="p-icon blue">
+            <i class="fas fa-layer-group"></i>
+          </div>
           <div class="p-stat-val">
-            <h3>{{ assign_data|length }}</h3>
+            <h3>{{ admin.asset_count or 0 }}</h3>
             <p>Tài sản đang giữ</p>
           </div>
         </div>
-        <div class="p-card-stat">
-          <div class="p-icon green"><i class="fas fa-shield-alt"></i></div>
+
+        <div class="p-card-stat active-card">
+          <div class="p-icon green">
+            <i class="fas fa-shield-alt"></i>
+          </div>
           <div class="p-stat-val">
-            <h3 class="txt-active">Hoạt động</h3>
+            <h3 class="txt-active">{{ admin.status_label or 'Hoạt động' }}</h3>
             <p>Trạng thái tài khoản</p>
           </div>
         </div>
@@ -73,21 +107,32 @@
 
       <section class="p-log-box">
         <div class="p-log-header">
-          <i class="fas fa-history"></i> Nhật ký hoạt động gần đây
+          <i class="fas fa-history"></i>
+          <span>Nhật ký hoạt động gần đây</span>
         </div>
+
         <div class="p-log-content">
-          {% for log in logs %}
-          <div class="p-log-item">
-            <div class="p-log-time">
-              <strong>{{ log.time.split(' ')[1] }}</strong>
-              <span>{{ log.time.split(' ')[0] }}</span>
+          {% if logs %}
+            {% for log in logs %}
+              {% set time_parts = log.time.split(' ') %}
+              <div class="p-log-item">
+                <div class="p-log-time">
+                  <strong>{{ time_parts[1] if time_parts|length > 1 else log.time }}</strong>
+                  <span>{{ time_parts[0] if time_parts|length > 1 else '' }}</span>
+                </div>
+
+                <div class="p-log-desc">
+                  <strong>{{ log.action or 'Hoạt động' }}</strong>
+                  <p>Đối tượng: {{ log.asset or 'Không xác định' }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-empty-log">
+              <i class="fas fa-inbox"></i>
+              <p>Chưa có nhật ký hoạt động</p>
             </div>
-            <div class="p-log-desc">
-              <strong>{{ log.action }}</strong>
-              <p>Đối tượng: {{ log.asset }}</p>
-            </div>
-          </div>
-          {% endfor %}
+          {% endif %}
         </div>
       </section>
     </main>
