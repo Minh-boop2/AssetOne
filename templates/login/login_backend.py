@@ -10,7 +10,31 @@ ROLE_LABELS = {
     "NHAN_VIEN": "Nhân viên",
 }
 
-DEFAULT_AVATAR_URL = "/static/imgages/default-avatar.jpg"
+DEFAULT_AVATAR_URL = "/static/img/default-avatar.jpg"
+
+
+def normalize_avatar_url(avatar_url):
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    avatar_url = str(avatar_url).strip()
+
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == "/static/imgages/default-avatar.jpg":
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == DEFAULT_AVATAR_URL:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://"):
+        return avatar_url
+
+    if avatar_url.startswith("/static/uploads/avatars/"):
+        return f"{API_BASE_URL}{avatar_url}"
+
+    return avatar_url
 
 
 def parse_response(response):
@@ -59,7 +83,7 @@ def build_user_session(user):
         "role": role,
         "role_label": ROLE_LABELS.get(role, role),
         "status": user.get("status"),
-        "avatar_url": user.get("avatar_url") or DEFAULT_AVATAR_URL,
+        "avatar_url": normalize_avatar_url(user.get("avatar_url")),
 
         # Dữ liệu phân quyền cho frontend ẩn/hiện menu, nút, action
         "is_admin": is_admin,

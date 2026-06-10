@@ -238,6 +238,41 @@ document.addEventListener("DOMContentLoaded", function () {
     searchBox?.classList.toggle("is-searching", isLoading);
   }
 
+  function getAvatarText(name) {
+    return name && name !== "---" ? String(name).charAt(0).toUpperCase() : "?";
+  }
+
+  function renderAvatar(avatarUrl, name, className) {
+    const safeAvatarUrl = escapeHtml(avatarUrl || "");
+    const safeName = escapeHtml(name || "Người dùng");
+    const avatarText = escapeHtml(getAvatarText(name));
+
+    if (safeAvatarUrl) {
+      return `
+        <div class="${className}">
+          <img
+            src="${safeAvatarUrl}"
+            alt="${safeName}"
+            style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"
+            onerror="
+              this.style.display='none';
+              this.nextElementSibling.style.display='flex';
+            "
+          >
+          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">
+            ${avatarText}
+          </span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="${className}">
+        ${avatarText}
+      </div>
+    `;
+  }
+
   function resetSelectedUser() {
     selectedUser = null;
     selectedDisplayText = "";
@@ -270,11 +305,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const phone = escapeHtml(user.phone || "---");
     const department = escapeHtml(user.department || "---");
     const floor = escapeHtml(user.floor || "---");
-    const avatarText = name && name !== "---" ? name.charAt(0).toUpperCase() : "?";
+    const avatarHtml = renderAvatar(user.avatar_url, user.full_name || "---", "selected-user-avatar");
 
     selectedUserBox.innerHTML = `
       <div class="selected-user-profile">
-        <div class="selected-user-avatar">${avatarText}</div>
+        ${avatarHtml}
         <div class="selected-user-info">
           <h3>${name}</h3>
           <p>${code} - ${email}</p>
@@ -323,25 +358,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     userSearchResults.innerHTML = users.map(user => {
+      const id = escapeHtml(user.id || "");
       const name = escapeHtml(user.full_name || "---");
       const code = escapeHtml(user.employee_code || "---");
       const email = escapeHtml(user.email || "---");
       const department = escapeHtml(user.department || "---");
       const floor = escapeHtml(user.floor || "---");
       const phone = escapeHtml(user.phone || "---");
+      const avatarUrl = escapeHtml(user.avatar_url || "");
+      const avatarHtml = renderAvatar(user.avatar_url, user.full_name || "---", "assign-user-search__avatar");
 
       return `
         <button
           type="button"
           class="assign-user-search__option"
-          data-id="${escapeHtml(user.id || "")}"
+          data-id="${id}"
           data-name="${name}"
           data-code="${code}"
           data-email="${email}"
           data-phone="${phone}"
           data-department="${department}"
           data-floor="${floor}"
+          data-avatar-url="${avatarUrl}"
         >
+          ${avatarHtml}
+
           <span class="assign-user-search__main">
             <strong>${name}</strong>
             <small>${code} - ${email}</small>
@@ -366,6 +407,7 @@ document.addEventListener("DOMContentLoaded", function () {
             phone: button.dataset.phone,
             department: button.dataset.department,
             floor: button.dataset.floor,
+            avatar_url: button.dataset.avatarUrl,
           });
         });
       });

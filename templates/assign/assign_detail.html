@@ -3,7 +3,7 @@
 {% block content %}
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}"
+  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}?v=assign_detail_user_avatar_compact_03"
 />
 
 {% set assign_id = info.id or info.mongo_id %}
@@ -13,50 +13,75 @@
 {% set is_using = asset_status == 'Đang sử dụng' or asset_status == 'using' %}
 {% set is_free = asset_status == 'Chưa dùng' or asset_status == 'Chưa sử dụng' or asset_status == 'available' %}
 
+{% set receiver_name = info.receiver or info.user %}
+{% set receiver_id = info.employee_code or info.user_employee_code or info.user_id or info.receiver_id %}
+
+{% set receiver_avatar = (
+  info.avatar_url
+  or info.user_avatar_url
+  or info.receiver_avatar_url
+  or info.user_avatar
+  or info.receiver_avatar
+  or info.avatar
+) %}
+
+{% if not receiver_avatar and info.assigned_user %}
+  {% set receiver_avatar = info.assigned_user.avatar_url or info.assigned_user.user_avatar_url or info.assigned_user.avatar %}
+{% endif %}
+
+{% if not receiver_avatar and info.user_info %}
+  {% set receiver_avatar = info.user_info.avatar_url or info.user_info.user_avatar_url or info.user_info.avatar %}
+{% endif %}
+
+{% if receiver_avatar and receiver_avatar.startswith('/static/uploads/avatars/') %}
+  {% set receiver_avatar = 'http://127.0.0.1:5001' ~ receiver_avatar %}
+{% endif %}
+
 <section class="assign-detail-page">
-  <div class="assign-detail-header">
-    <div>
+  <div class="assign-detail-wrap">
+    <div class="assign-detail-header">
       <a href="{{ url_for('assign_page') }}" class="assign-detail-back">
-        <span class="assign-icon-text">←</span>
-        Quay lại danh sách
+        ← Quay lại
       </a>
 
-      <h1>Thông tin chi tiết cấp phát</h1>
-      <p>Thông tin tài sản, trạng thái sử dụng và người đang được bàn giao.</p>
-    </div>
-  </div>
+      <div class="assign-detail-heading">
+        <div class="assign-title-group">
+          <span class="assign-kicker">Chi tiết cấp phát</span>
+          <h1>{{ asset_name }}</h1>
 
-  <div class="assign-detail-card">
-    <div class="assign-detail-hero">
-      <div class="assign-detail-code-box">
-        <span>Mã tài sản</span>
-        <strong>#{{ asset_code }}</strong>
-      </div>
-
-      <div class="assign-detail-title-box">
-        <h2>{{ asset_name }}</h2>
-
-        <div class="assign-detail-meta">
-          <span>
-            <span class="assign-icon-text">#</span>
-            ID: {{ assign_id or 'Chưa có ID' }}
-          </span>
+          <div class="assign-detail-meta">
+            <span>#{{ asset_code }}</span>
+            <span>ID: {{ assign_id or 'Chưa có ID' }}</span>
+          </div>
         </div>
-      </div>
 
-      <div class="assign-detail-qr" title="Mã QR tài sản">
-        <span>▦</span>
+        <span
+          class="assign-detail-status {% if is_using %}assign-detail-status--using{% elif is_free %}assign-detail-status--free{% else %}assign-detail-status--pending{% endif %}"
+        >
+          {% if asset_status == 'using' %}
+            Đang sử dụng
+          {% elif asset_status == 'available' %}
+            Chưa sử dụng
+          {% else %}
+            {{ asset_status }}
+          {% endif %}
+        </span>
       </div>
     </div>
 
-    <div class="assign-detail-content">
-      <div class="assign-detail-section">
-        <div class="assign-detail-section-title">
-          <span class="assign-section-icon">⚙️</span>
-          <h3>Thông số kỹ thuật</h3>
+    <div class="assign-detail-grid">
+      <section class="assign-panel">
+        <div class="assign-panel-head">
+          <h2>Thông tin tài sản</h2>
+          <p>Thông số, phân loại và bảo hành của thiết bị.</p>
         </div>
 
         <div class="assign-info-grid">
+          <div class="assign-info-item">
+            <span>Mã tài sản</span>
+            <strong>#{{ asset_code }}</strong>
+          </div>
+
           <div class="assign-info-item">
             <span>Phân loại</span>
             <strong>{{ info.type or info.category or 'Chưa phân loại' }}</strong>
@@ -64,82 +89,93 @@
 
           <div class="assign-info-item">
             <span>Bảo hành</span>
-            <strong>{{ info.warranty or 'Chưa cập nhật bảo hành' }}</strong>
+            <strong>{{ info.warranty or 'Chưa cập nhật' }}</strong>
+          </div>
+
+          <div class="assign-info-item">
+            <span>Vị trí hiện tại</span>
+            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
           </div>
 
           <div class="assign-info-item assign-info-item--full">
             <span>Cấu hình / ghi chú</span>
-            <strong class="assign-info-code">{{ (specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.')) | trim }}</strong>
+            <strong class="assign-info-code">
+              {{ (specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.')) | trim }}
+            </strong>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="assign-detail-section">
-        <div class="assign-detail-section-title">
-          <span class="assign-section-icon">👤</span>
-          <h3>Bàn giao & sử dụng</h3>
+      <section class="assign-panel">
+        <div class="assign-panel-head">
+          <h2>Bàn giao & sử dụng</h2>
+          <p>Người nhận tài sản và trạng thái sử dụng.</p>
         </div>
+
+        {% if receiver_name %}
+          <div class="assign-user-card">
+            <div class="assign-user-avatar">
+              {% if receiver_avatar %}
+                <img
+                  src="{{ receiver_avatar }}"
+                  alt="{{ receiver_name }}"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                  "
+                />
+                <span>{{ receiver_name[0]|upper }}</span>
+              {% else %}
+                <span class="is-show">{{ receiver_name[0]|upper }}</span>
+              {% endif %}
+            </div>
+
+            <div class="assign-user-info">
+              <span>Người đang sử dụng</span>
+              <h3>{{ receiver_name }}</h3>
+              <p>{{ receiver_id or 'Chưa có ID người dùng' }}</p>
+            </div>
+          </div>
+        {% else %}
+          <div class="assign-user-empty">
+            <strong>Chưa cấp phát</strong>
+            <p>Tài sản này hiện chưa được bàn giao cho người dùng nào.</p>
+          </div>
+        {% endif %}
 
         <div class="assign-info-grid">
-          <div class="assign-info-item">
-            <span>Người sử dụng</span>
-
-            {% set receiver_name = info.receiver or info.user %}
-            {% set receiver_id = info.employee_code or info.user_id or info.receiver_id %}
-
-            {% if receiver_name %}
-              <div class="assign-user-display">
-                <strong class="assign-highlight">
-                  {{ receiver_name }}
-                </strong>
-
-                <small class="assign-user-id">
-                  ID: {{ receiver_id or 'Chưa có ID' }}
-                </small>
-              </div>
-            {% else %}
-              <strong>Chưa cấp phát</strong>
-            {% endif %}
-          </div>
-
           <div class="assign-info-item">
             <span>Phòng ban</span>
             <strong>{{ info.department or 'Chưa có phòng ban' }}</strong>
           </div>
 
           <div class="assign-info-item">
-            <span>Vị trí</span>
+            <span>Vị trí / tầng</span>
             <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
           </div>
 
-          <div class="assign-info-item">
+          <div class="assign-info-item assign-info-item--full">
             <span>Trạng thái tài sản</span>
-
-            <div class="assign-status-wrapper">
-              <span
-                class="assign-detail-status {% if is_using %}assign-detail-status--using{% elif is_free %}assign-detail-status--free{% else %}assign-detail-status--pending{% endif %}"
-              >
-                {% if asset_status == 'using' %}
-                  Đang sử dụng
-                {% elif asset_status == 'available' %}
-                  Chưa sử dụng
-                {% else %}
-                  {{ asset_status }}
-                {% endif %}
-              </span>
-            </div>
+            <strong>
+              {% if asset_status == 'using' %}
+                Đang sử dụng
+              {% elif asset_status == 'available' %}
+                Chưa sử dụng
+              {% else %}
+                {{ asset_status }}
+              {% endif %}
+            </strong>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <div class="assign-detail-footer">
+    <div class="assign-detail-actions">
       <a
         href="{{ url_for('assign_page') }}"
         class="assign-detail-btn assign-detail-btn--secondary"
       >
-        <span class="assign-icon-text">←</span>
-        Quay lại
+        ← Quay lại
       </a>
 
       {% if is_free %}
@@ -147,8 +183,7 @@
           href="{{ url_for('assign_give', id=assign_id) }}"
           class="assign-detail-btn assign-detail-btn--primary"
         >
-          <span class="assign-icon-text">＋</span>
-          Cấp phát
+          ＋ Cấp phát
         </a>
       {% endif %}
 
@@ -165,8 +200,7 @@
             type="submit"
             class="assign-detail-btn assign-detail-btn--warning"
           >
-            <span class="assign-icon-text">↩</span>
-            Thu hồi
+            ↩ Thu hồi
           </button>
         </form>
       {% endif %}
@@ -287,7 +321,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function showProgressToast(form) {
     const assetCode = form?.dataset?.assetCode || "tài sản";
-
     const notify = window.sonner || window.toast;
 
     if (typeof notify === "function") {
@@ -313,7 +346,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!pendingForm || isSubmitting) return;
 
       isSubmitting = true;
-
       submitBtn.disabled = true;
       submitBtn.classList.add("is-loading");
 

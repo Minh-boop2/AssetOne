@@ -1,4 +1,6 @@
 import json
+import mimetypes
+import uuid
 from urllib import request as url_request
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -100,6 +102,78 @@ def call_api_get(path, user_id=None, params=None):
         }
 
 
+def call_api_upload_avatar(path, file, user_id=None):
+    url = f"{API_BASE_URL}{path}"
+
+    if not file or not file.filename:
+        return {
+            "success": False,
+            "message": "Vui lòng chọn ảnh đại diện",
+            "data": None
+        }
+
+    boundary = f"----AssetOneBoundary{uuid.uuid4().hex}"
+    filename = file.filename
+    content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    file_bytes = file.read()
+
+    body = b""
+    body += f"--{boundary}\r\n".encode("utf-8")
+    body += (
+        f'Content-Disposition: form-data; name="avatar"; filename="{filename}"\r\n'
+    ).encode("utf-8")
+    body += f"Content-Type: {content_type}\r\n\r\n".encode("utf-8")
+    body += file_bytes
+    body += f"\r\n--{boundary}--\r\n".encode("utf-8")
+
+    headers = {
+        "Content-Type": f"multipart/form-data; boundary={boundary}",
+        "Content-Length": str(len(body))
+    }
+
+    if user_id:
+        headers["X-User-Id"] = str(user_id)
+
+    req = url_request.Request(
+        url=url,
+        data=body,
+        headers=headers,
+        method="POST"
+    )
+
+    try:
+        with url_request.urlopen(req, timeout=10) as response:
+            response_body = response.read().decode("utf-8")
+            return json.loads(response_body)
+
+    except HTTPError as error:
+        try:
+            response_body = error.read().decode("utf-8")
+            return json.loads(response_body)
+        except Exception:
+            return {
+                "success": False,
+                "message": f"API lỗi HTTP {error.code}",
+                "data": None
+            }
+
+    except URLError as error:
+        return {
+            "success": False,
+            "message": "Không thể kết nối backend API",
+            "error": str(error),
+            "data": None
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": "Có lỗi khi tải avatar lên backend API",
+            "error": str(error),
+            "data": None
+        }
+
+
 def safe_int(value, default=0):
     try:
         return int(value)
@@ -111,8 +185,28 @@ def normalize_avatar_url(avatar_url):
     if not avatar_url:
         return DEFAULT_AVATAR_URL
 
-    if avatar_url == "/static/imgages/default-avatar.jpg":
+    avatar_url = str(avatar_url).strip()
+
+    if not avatar_url:
         return DEFAULT_AVATAR_URL
+
+    default_urls = [
+        "/static/imgages/default-avatar.jpg",
+        "/static/images/default-avatar.jpg",
+        "/static/img/default-avatar.jpg",
+    ]
+
+    if avatar_url in default_urls:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == DEFAULT_AVATAR_URL:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://"):
+        return avatar_url
+
+    if avatar_url.startswith("/static/uploads/avatars/"):
+        return f"{API_BASE_URL.rstrip('/')}{avatar_url}"
 
     return avatar_url
 
@@ -299,12 +393,47 @@ def normalize_assets_from_profile(profile):
     return assets[:5] if isinstance(assets, list) else []
 
 
+def sync_session_user(profile):
+    if not isinstance(profile, dict):
+        return
+
+    session_user = get_session_user()
+
+    if not isinstance(session_user, dict):
+        session_user = {}
+
+    avatar_url = normalize_avatar_url(profile.get("avatar_url"))
+
+    session_user["id"] = (
+        profile.get("id")
+        or profile.get("_id")
+        or profile.get("user_id")
+        or session_user.get("id")
+    )
+    session_user["employee_code"] = profile.get("employee_code") or session_user.get("employee_code")
+    session_user["full_name"] = profile.get("full_name") or profile.get("name") or session_user.get("full_name")
+    session_user["name"] = profile.get("name") or profile.get("full_name") or session_user.get("name")
+    session_user["email"] = profile.get("email") or session_user.get("email")
+    session_user["phone"] = profile.get("phone") or session_user.get("phone")
+    session_user["department"] = profile.get("department") or profile.get("dept") or session_user.get("department")
+    session_user["floor"] = profile.get("floor") or session_user.get("floor")
+    session_user["role"] = profile.get("role") or session_user.get("role")
+    session_user["role_label"] = profile.get("role_label") or session_user.get("role_label")
+    session_user["status"] = profile.get("status") or session_user.get("status")
+    session_user["avatar_url"] = avatar_url
+
+    session["user"] = session_user
+    session["current_user"] = session_user
+    session.modified = True
+
+
 def get_admin_profile_data():
     user_id = get_current_user_id()
     profile_response = call_api_get("/api/profile/me", user_id)
 
     if profile_response.get("success"):
         profile = profile_response.get("data") or {}
+        sync_session_user(profile)
     else:
         profile = get_session_user() or {}
 
@@ -326,3 +455,14 @@ def get_admin_profile_data():
         "logs": logs,
         "assign_data": normalize_assets_from_profile(profile),
     }
+
+
+def upload_admin_avatar(file):
+    user_id = get_current_user_id()
+    response = call_api_upload_avatar("/api/profile/avatar", file, user_id)
+
+    if response.get("success") and isinstance(response.get("data"), dict):
+        data = response.get("data") or {}
+        sync_session_user(data)
+
+    return response

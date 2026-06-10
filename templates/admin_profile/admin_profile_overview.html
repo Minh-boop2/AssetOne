@@ -11,27 +11,54 @@
   <div class="p-container">
     <aside class="p-sidebar">
       <div class="p-user-card">
-        <div class="p-avatar-wrap">
-          {% if admin.avatar_url %}
-          <img
-            class="p-avatar-img"
-            src="{{ admin.avatar_url }}"
-            alt="{{ admin.name }}"
-            onerror="
-              this.style.display = 'none';
-              this.nextElementSibling.style.display = 'flex';
-            "
+        <form
+          id="pAvatarForm"
+          class="p-avatar-form"
+          action="{{ url_for('upload_profile_avatar') }}"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <input
+            id="pAvatarInput"
+            class="p-avatar-input"
+            type="file"
+            name="avatar"
+            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+            hidden
           />
-          <div class="p-avatar-fallback">
-            {{ admin.name[0]|upper if admin.name else 'U' }}
+
+          <div class="p-avatar-wrap">
+            {% if admin.avatar_url %}
+            <img
+              class="p-avatar-img"
+              src="{{ admin.avatar_url }}"
+              alt="{{ admin.name }}"
+              onerror="
+                this.style.display = 'none';
+                this.nextElementSibling.style.display = 'flex';
+              "
+            />
+            <div class="p-avatar-fallback">
+              {{ admin.name[0]|upper if admin.name else 'U' }}
+            </div>
+            {% else %}
+            <div class="p-avatar-fallback show">
+              {{ admin.name[0]|upper if admin.name else 'U' }}
+            </div>
+            {% endif %}
+
+            <span class="p-dot"></span>
+
+            <button
+              type="button"
+              class="p-avatar-edit"
+              title="Đổi ảnh đại diện"
+              onclick="document.getElementById('pAvatarInput').click()"
+            >
+              <i class="fas fa-camera"></i>
+            </button>
           </div>
-          {% else %}
-          <div class="p-avatar-fallback show">
-            {{ admin.name[0]|upper if admin.name else 'U' }}
-          </div>
-          {% endif %}
-          <span class="p-dot"></span>
-        </div>
+        </form>
 
         <p class="p-status">
           <span></span>
@@ -76,7 +103,11 @@
         </div>
       </div>
 
-      <button type="button" class="p-btn-edit">
+      <button
+        type="button"
+        class="p-btn-edit"
+        onclick="document.getElementById('pAvatarInput').click()"
+      >
         <i class="fas fa-user-edit"></i>
         <span>Chỉnh sửa hồ sơ</span>
       </button>
@@ -138,3 +169,16 @@
     </main>
   </div>
 </div>
+
+<script>
+  const pAvatarInput = document.getElementById("pAvatarInput");
+  const pAvatarForm = document.getElementById("pAvatarForm");
+
+  if (pAvatarInput && pAvatarForm) {
+    pAvatarInput.addEventListener("change", function () {
+      if (this.files && this.files[0]) {
+        pAvatarForm.submit();
+      }
+    });
+  }
+</script>

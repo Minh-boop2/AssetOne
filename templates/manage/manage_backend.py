@@ -9,6 +9,7 @@ from flask import session
 API_BASE_URL = "http://127.0.0.1:5001/api"
 PER_PAGE = 10
 DEFAULT_AVATAR_URL = "/static/images/default-avatar.jpg"
+BACKEND_STATIC_BASE_URL = API_BASE_URL.replace("/api", "")
 
 VN_TZ = timezone(timedelta(hours=7))
 
@@ -39,6 +40,30 @@ DEFAULT_FLOORS = [f"Tầng {i}" for i in range(1, 11)]
 
 ROLE_LABELS = {item["value"]: item["label"] for item in ROLE_OPTIONS}
 STATUS_LABELS = {item["value"]: item["label"] for item in STATUS_OPTIONS}
+
+
+def normalize_avatar_url(avatar_url):
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    avatar_url = str(avatar_url).strip()
+
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == "/static/imgages/default-avatar.jpg":
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == DEFAULT_AVATAR_URL:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://"):
+        return avatar_url
+
+    if avatar_url.startswith("/static/uploads/avatars/"):
+        return f"{BACKEND_STATIC_BASE_URL}{avatar_url}"
+
+    return avatar_url
 
 
 def get_current_user():
@@ -216,7 +241,7 @@ def map_user_for_template(user):
         "phone": user.get("phone") or "",
         "dept": user.get("department") or "",
         "position": user.get("floor") or "",
-        "avatar_url": user.get("avatar_url") or DEFAULT_AVATAR_URL,
+        "avatar_url": normalize_avatar_url(user.get("avatar_url")),
 
         "role_code": role_code,
         "role": ROLE_LABELS.get(role_code, role_code),

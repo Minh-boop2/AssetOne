@@ -46,6 +46,38 @@ DEFAULT_STATUS_OPTIONS = [
     "Chưa dùng",
 ]
 
+DEFAULT_AVATAR_URL = "/static/images/default-avatar.jpg"
+
+
+def normalize_avatar_url(avatar_url):
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    avatar_url = str(avatar_url).strip()
+
+    if not avatar_url:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == "/static/imgages/default-avatar.jpg":
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url == DEFAULT_AVATAR_URL:
+        return DEFAULT_AVATAR_URL
+
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://"):
+        return avatar_url
+
+    if avatar_url.startswith("/static/uploads/avatars/"):
+        return f"{API_BASE_URL}{avatar_url}"
+
+    return avatar_url
+
+
+def normalize_user_avatar(user):
+    user = user or {}
+    user["avatar_url"] = normalize_avatar_url(user.get("avatar_url"))
+    return user
+
 
 def get_current_user():
     return session.get("user") or session.get("current_user") or {}
@@ -282,7 +314,12 @@ def get_active_users_from_api(keyword=""):
     if error or not data:
         return []
 
-    return data.get("data", [])
+    users = data.get("data", [])
+
+    if not isinstance(users, list):
+        return []
+
+    return [normalize_user_avatar(user) for user in users]
 
 
 def assign_asset_to_user_api(asset_id, user_id):

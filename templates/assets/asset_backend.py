@@ -25,6 +25,10 @@ BACKEND_ACTIVITY_TIMEOUT = 10
 ASSET_CODE_PREFIX = "Assets-"
 ASSET_CODE_DIGITS = 5
 
+# Avatar mặc định và domain static của backend API
+DEFAULT_AVATAR_URL = "/static/images/default-avatar.jpg"
+BACKEND_STATIC_BASE_URL = BACKEND_ASSETS_API.split("/api/assets")[0]
+
 
 DEFAULT_FILTER_COUNTS = {
     "type": {
@@ -259,6 +263,28 @@ def get_status_label(status):
     return STATUS_LABELS.get(status, status)
 
 
+def normalize_avatar_url(avatar_url):
+    avatar_url = str(avatar_url or "").strip()
+
+    if not avatar_url:
+        return ""
+
+    if avatar_url in [
+        "/static/imgages/default-avatar.jpg",
+        "/static/images/default-avatar.jpg",
+        DEFAULT_AVATAR_URL,
+    ]:
+        return ""
+
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://"):
+        return avatar_url
+
+    if avatar_url.startswith("/static/uploads/avatars/"):
+        return f"{BACKEND_STATIC_BASE_URL}{avatar_url}"
+
+    return avatar_url
+
+
 def normalize_asset_for_template(info):
     info = dict(info or {})
 
@@ -283,6 +309,31 @@ def normalize_asset_for_template(info):
 
     info["user_id"] = info.get("user_id") or ""
     info["employee_code"] = info.get("employee_code") or ""
+
+    assigned_user = info.get("assigned_user") if isinstance(info.get("assigned_user"), dict) else {}
+
+    avatar_url = (
+        info.get("avatar_url")
+        or info.get("user_avatar_url")
+        or info.get("receiver_avatar_url")
+        or info.get("user_avatar")
+        or info.get("receiver_avatar")
+        or assigned_user.get("avatar_url")
+        or assigned_user.get("user_avatar_url")
+        or assigned_user.get("avatar")
+        or ""
+    )
+
+    avatar_url = normalize_avatar_url(avatar_url)
+
+    info["avatar_url"] = avatar_url
+    info["user_avatar_url"] = avatar_url
+    info["receiver_avatar_url"] = avatar_url
+
+    if assigned_user:
+        assigned_user = dict(assigned_user)
+        assigned_user["avatar_url"] = normalize_avatar_url(assigned_user.get("avatar_url"))
+        info["assigned_user"] = assigned_user
 
     return info
 

@@ -468,3 +468,27 @@
         padding-bottom: 8px;
     }
 }
+.p-avatar-form {
+  margin: 0;
+}
+
+.p-avatar-edit {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.p-avatar-edit:hover {
+  filter: brightness(0.95);
+}
