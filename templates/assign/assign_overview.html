@@ -1,143 +1,7 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=assign_bulk_unassign_confirm_01">
-
-<style>
-  .assign-confirm-toast {
-    position: fixed;
-    top: 96px;
-    right: 24px;
-    z-index: 99999;
-    width: min(430px, calc(100vw - 32px));
-    background: var(--surface);
-    border: 1px solid rgba(245, 158, 11, 0.45);
-    border-left: 5px solid #f59e0b;
-    border-radius: 16px;
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
-    color: var(--text);
-    opacity: 0;
-    transform: translateX(18px);
-    pointer-events: none;
-    transition: 0.22s ease;
-  }
-
-  .assign-confirm-toast.is-show {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-  }
-
-  .assign-confirm-toast__inner {
-    padding: 16px;
-    display: flex;
-    gap: 12px;
-  }
-
-  .assign-confirm-toast__icon {
-    flex: 0 0 auto;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(245, 158, 11, 0.16);
-    color: #f59e0b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 900;
-  }
-
-  .assign-confirm-toast__content {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .assign-confirm-toast__title {
-    margin: 0 0 6px;
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 900;
-    line-height: 1.35;
-  }
-
-  .assign-confirm-toast__message {
-    margin: 0;
-    color: var(--text-soft);
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.5;
-  }
-
-  .assign-confirm-toast__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 14px;
-  }
-
-  .assign-confirm-toast__btn {
-    min-height: 36px;
-    padding: 0 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 900;
-    cursor: pointer;
-    transition: 0.18s ease;
-  }
-
-  .assign-confirm-toast__btn:hover {
-    transform: translateY(-1px);
-  }
-
-  .assign-confirm-toast__btn--cancel {
-    background: var(--surface-2);
-    color: var(--text);
-  }
-
-  .assign-confirm-toast__btn--confirm {
-    background: #f59e0b;
-    border-color: #f59e0b;
-    color: #fff;
-  }
-
-  .assign-confirm-toast__close {
-    flex: 0 0 auto;
-    width: 30px;
-    height: 30px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--text-soft);
-    cursor: pointer;
-    font-size: 18px;
-    line-height: 1;
-  }
-
-  .assign-confirm-toast__close:hover {
-    background: var(--surface-2);
-    color: var(--text);
-  }
-
-  @media (max-width: 640px) {
-    .assign-confirm-toast {
-      top: 84px;
-      right: 16px;
-      left: 16px;
-      width: auto;
-    }
-
-    .assign-confirm-toast__actions {
-      flex-direction: column-reverse;
-    }
-
-    .assign-confirm-toast__btn {
-      width: 100%;
-    }
-  }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign.css') }}?v=assign_asset_like_fast_10">
 
 {% set counts = counts or {} %}
 {% set categories = categories or [] %}
@@ -152,50 +16,21 @@
 {% set search_q = search_q or '' %}
 
 {% set type_labels = type_labels or {
-  'laptop': 'Laptop',
-  'pc': 'Máy tính bàn',
-  'desktop': 'Máy tính bàn',
-  'printer': 'Máy in',
-  'monitor': 'Màn hình',
-  'phone': 'Điện thoại',
-  'projector': 'Máy chiếu',
-  'scanner': 'Máy quét',
-  'network': 'Thiết bị mạng',
-  'ups': 'UPS',
-  'camera': 'Camera',
-  'webcam': 'Camera',
-  'speaker': 'Loa',
-  'microphone': 'Micro',
-  'mic': 'Micro',
-  'keyboard': 'Bàn phím',
-  'mouse': 'Chuột',
-  'tablet': 'Máy tính bảng',
-  'server': 'Máy chủ',
-  'router': 'Router',
-  'switch': 'Switch',
-  'storage': 'Lưu trữ',
-  'accessory': 'Phụ kiện',
-  'other': 'Khác'
+  'laptop':'Laptop','pc':'Máy tính bàn','desktop':'Máy tính bàn','printer':'Máy in',
+  'monitor':'Màn hình','phone':'Điện thoại','projector':'Máy chiếu','scanner':'Máy quét',
+  'network':'Thiết bị mạng','ups':'UPS','camera':'Camera','webcam':'Camera',
+  'speaker':'Loa','microphone':'Micro','mic':'Micro','keyboard':'Bàn phím',
+  'mouse':'Chuột','tablet':'Máy tính bảng','server':'Máy chủ','router':'Router',
+  'switch':'Switch','storage':'Lưu trữ','accessory':'Phụ kiện','other':'Khác'
 } %}
 
 {% macro action_icon(type) %}
   {% if type == 'eye' %}
-    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
   {% elif type == 'give' %}
-    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M19 8v6"></path>
-      <path d="M16 11h6"></path>
-    </svg>
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6"></path><path d="M16 11h6"></path></svg>
   {% else %}
-    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true">
-      <path d="M9 14 4 9l5-5"></path>
-      <path d="M4 9h10a6 6 0 0 1 0 12h-3"></path>
-    </svg>
+    <svg viewBox="0 0 24 24" class="action-menu__svg" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 0 12h-3"></path></svg>
   {% endif %}
 {% endmacro %}
 
@@ -236,6 +71,89 @@
   </div>
 {% endmacro %}
 
+{% macro category_multi_filter(id, name, title, selected, all_label, items, count_map, total, label_map=None) %}
+  {% set label_map = label_map or {} %}
+  {% set selected_value = selected or 'Tất cả' %}
+  {% set selected_list = [] if selected_value == 'Tất cả' else selected_value.split(',') %}
+  {% set selected_total = namespace(value=0) %}
+
+  {% for item in selected_list %}
+    {% set selected_total.value = selected_total.value + count_map.get(item, 0) %}
+  {% endfor %}
+
+  {% if selected_value == 'Tất cả' %}
+    {% set selected_label = all_label %}
+    {% set selected_count = total %}
+  {% elif selected_list|length == 1 %}
+    {% set selected_label = label_map.get(selected_list[0]|lower, selected_list[0]) %}
+    {% set selected_count = selected_total.value %}
+  {% else %}
+    {% set selected_label = selected_list|length ~ ' loại đã chọn' %}
+    {% set selected_count = selected_total.value %}
+  {% endif %}
+
+  <div class="filter-item">
+    <label class="filter-label">{{ title }}</label>
+
+    <div class="filter-select filter-select--multi {% if selected_list|length > 1 %}is-multi-mode{% endif %}" id="{{ id }}" data-multi-filter>
+      <input type="hidden" name="{{ name }}" value="{{ selected_value }}" data-multi-value>
+
+      <button type="button" class="filter-select__button" data-multi-toggle>
+        <span class="filter-select__value">
+          <span class="filter-select__label" data-multi-label>{{ selected_label }}</span>
+          <span class="filter-select__count" data-multi-count>{{ selected_count }}</span>
+        </span>
+        <span class="filter-select__arrow">▾</span>
+      </button>
+
+      <div class="filter-select__menu filter-select__menu--multi">
+        <!-- NOTE: Thanh tìm mini cố định trong dropdown loại thiết bị -->
+        <div class="filter-mini-toolbar">
+          <div class="filter-mini-search">
+            <input type="text" placeholder="Tìm loại thiết bị..." autocomplete="off" data-multi-search>
+          </div>
+
+          <label class="filter-multi-check" title="Bật chọn nhiều loại">
+            <input type="checkbox" data-multi-mode {% if selected_list|length > 1 %}checked{% endif %}>
+            <span>✓</span>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          class="filter-choice-option filter-choice-option--all {% if selected_value == 'Tất cả' %}is-selected{% endif %}"
+          data-multi-all
+          data-value="Tất cả"
+          data-label="{{ all_label }}"
+          data-count="{{ total }}"
+        >
+          <span class="filter-choice-label">{{ all_label }}</span>
+          <span class="filter-choice-count">{{ total }}</span>
+        </button>
+
+        {% for item in items %}
+          {% set item_label = label_map.get(item|lower, item) %}
+
+          <button
+            type="button"
+            class="filter-choice-option {% if item in selected_list %}is-selected{% endif %}"
+            data-multi-option
+            data-value="{{ item }}"
+            data-label="{{ item_label }}"
+            data-count="{{ count_map.get(item, 0) }}"
+            data-filter-text="{{ item_label|lower }}"
+          >
+            <span class="filter-choice-label">{{ item_label }}</span>
+            <span class="filter-choice-count">{{ count_map.get(item, 0) }}</span>
+          </button>
+        {% endfor %}
+
+        <div class="filter-choice-empty" data-multi-empty hidden>Không tìm thấy loại thiết bị.</div>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
 <section class="assign-page" id="assignPage">
   <div class="assets-page__header">
     <h1 class="assets-page__title">Quản lý cấp phát</h1>
@@ -259,7 +177,7 @@
       >
     </div>
 
-    {{ filter_select('select-category', 'category', 'Loại thiết bị', selected_cat, 'Tất cả loại', categories, counts.get('categories', {}), counts.get('total', total_items), type_labels) }}
+    {{ category_multi_filter('select-category', 'category', 'Loại thiết bị', selected_cat, 'Tất cả loại', categories, counts.get('categories', {}), counts.get('total', total_items), type_labels) }}
     {{ filter_select('select-department', 'department', 'Phòng ban', selected_dept, 'Tất cả phòng', departments, counts.get('departments', {}), counts.get('total', total_items)) }}
     {{ filter_select('select-status', 'status', 'Trạng thái', selected_status, 'Tất cả trạng thái', status_options, counts.get('status', {}), counts.get('total', total_items)) }}
 
@@ -273,7 +191,8 @@
     </div>
   </form>
 
-  <div class="table-container">
+  <!-- NOTE: Card table riêng để fetch xong thay nguyên khối như trang Asset -->
+  <div class="table-container assign-table-card">
     <div class="table-header-wrapper">
       <div class="table-header-left">
         <div class="table-title-row">
@@ -417,14 +336,7 @@
                       {% endif %}
 
                       {% if can_unassign %}
-                        <form
-                          action="{{ unassign_url }}"
-                          method="POST"
-                          class="action-menu__form js-unassign-form"
-                          data-asset-code="{{ row.asset_code or '---' }}"
-                          data-asset-name="{{ row.asset or row.asset_name or '---' }}"
-                          data-receiver="{{ row.receiver or row.user or '---' }}"
-                        >
+                        <form action="{{ unassign_url }}" method="POST" class="action-menu__form js-unassign-form">
                           <button type="submit" class="action-menu__item action-menu__item--warning" role="menuitem">
                             {{ action_icon('return') }}
                             <span>Thu hồi</span>
@@ -504,9 +416,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-
   const rows = () => $$(".assign-row");
   const selectedRows = () => [...selectedAssets.values()];
+
+  const normalizeText = value => String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+  const notify = (type, title, text) => {
+    if (window.sonner?.[type]) return window.sonner[type](title, text || "");
+    if (window.toast?.[type]) return window.toast[type](title, text || "");
+    alert(text ? `${title}\n${text}` : title);
+  };
+
+  const askConfirm = async ({ title, message, confirmText = "Xác nhận" }) => {
+    if (typeof window.toastConfirm === "function") {
+      return await window.toastConfirm({
+        type: "warning",
+        title,
+        message,
+        confirmText,
+        cancelText: "Hủy",
+        danger: true
+      });
+    }
+
+    return window.confirm(message);
+  };
 
   const readAssetFromRow = row => ({
     id: row.dataset.id,
@@ -518,79 +456,17 @@ document.addEventListener("DOMContentLoaded", () => {
     receiver: row.dataset.receiver || "---"
   });
 
-  const notify = (type, title, text) => {
-    if (window.sonner?.[type]) return window.sonner[type](title, text || "");
-    if (window.toast?.[type]) return window.toast[type](title, text || "");
-    alert(text ? `${title}\n${text}` : title);
+  const closeFilterMenus = except => {
+    $$(".filter-select__menu").forEach(menu => {
+      if (menu !== except) menu.classList.remove(openedClass);
+    });
   };
 
-  function showConfirmToast({ title, message, confirmText = "Xác nhận", cancelText = "Hủy" }) {
-    return new Promise(resolve => {
-      if (typeof window.toastConfirm === "function") {
-        window.toastConfirm({
-          type: "warning",
-          title,
-          message,
-          confirmText,
-          cancelText,
-          danger: true,
-          closeOnBackdrop: false,
-          closeOnEsc: true
-        }).then(resolve);
-        return;
-      }
-
-      document.querySelectorAll(".assign-confirm-toast").forEach(item => item.remove());
-
-      const toast = document.createElement("div");
-      toast.className = "assign-confirm-toast";
-      toast.innerHTML = `
-        <div class="assign-confirm-toast__inner">
-          <div class="assign-confirm-toast__icon">!</div>
-
-          <div class="assign-confirm-toast__content">
-            <p class="assign-confirm-toast__title">${title}</p>
-            <p class="assign-confirm-toast__message">${message}</p>
-
-            <div class="assign-confirm-toast__actions">
-              <button type="button" class="assign-confirm-toast__btn assign-confirm-toast__btn--cancel">
-                ${cancelText}
-              </button>
-
-              <button type="button" class="assign-confirm-toast__btn assign-confirm-toast__btn--confirm">
-                ${confirmText}
-              </button>
-            </div>
-          </div>
-
-          <button type="button" class="assign-confirm-toast__close" aria-label="Đóng">×</button>
-        </div>
-      `;
-
-      document.body.appendChild(toast);
-
-      const closeToast = value => {
-        toast.classList.remove("is-show");
-
-        setTimeout(() => {
-          toast.remove();
-          resolve(value);
-        }, 180);
-      };
-
-      toast.querySelector(".assign-confirm-toast__btn--cancel").addEventListener("click", () => closeToast(false));
-      toast.querySelector(".assign-confirm-toast__btn--confirm").addEventListener("click", () => closeToast(true));
-      toast.querySelector(".assign-confirm-toast__close").addEventListener("click", () => closeToast(false));
-
-      requestAnimationFrame(() => {
-        toast.classList.add("is-show");
-      });
-    });
-  }
-
-  const closeMenus = except => {
-    $$(".filter-select__menu, .action-menu__dropdown").forEach(menu => {
-      if (menu !== except) menu.classList.remove(openedClass);
+  const closeActionMenus = () => {
+    $$(".action-menu__dropdown").forEach(menu => {
+      menu.classList.remove(openedClass);
+      menu.style.left = "";
+      menu.style.top = "";
     });
 
     $$(".action-menu__trigger[aria-expanded='true']").forEach(btn => {
@@ -598,12 +474,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  const closeAllMenus = except => {
+    closeFilterMenus(except);
+    closeActionMenus();
+  };
+
   function hasFilter() {
     if (!form) return false;
 
-    const params = new URLSearchParams(new FormData(form));
-
-    for (const [key, value] of params.entries()) {
+    for (const [key, value] of new URLSearchParams(new FormData(form)).entries()) {
       const v = String(value || "").trim();
 
       if (key === "page" || key === "per_page") continue;
@@ -618,7 +497,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (clearBtn) clearBtn.hidden = !hasFilter();
   }
 
-  function buildUrl(page) {
+  function buildUrl(page = "") {
+    const url = new URL(form.action, location.origin);
     const params = new URLSearchParams(new FormData(form));
 
     if (page) params.set("page", page);
@@ -628,35 +508,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value || value === "Tất cả") params.delete(key);
     });
 
-    const query = params.toString();
-    return form.action + (query ? "?" + query : "");
-  }
-
-  function patchTable(nextTable) {
-    const scroller = $("#assignTableScroll");
-    const top = scroller?.scrollTop || 0;
-    const left = scroller?.scrollLeft || 0;
-
-    const patch = selector => {
-      const current = $(selector);
-      const next = $(selector, nextTable);
-
-      if (current && next && current.innerHTML !== next.innerHTML) {
-        current.innerHTML = next.innerHTML;
-      }
-    };
-
-    patch(".table-info-count");
-    patch(".table-scroll tbody");
-    patch("#assignPickerMenu");
-    patch(".pagination");
-
-    if (scroller) {
-      scroller.scrollTop = top;
-      scroller.scrollLeft = left;
-    }
-
-    updateBulk();
+    url.search = params.toString();
+    return url.toString();
   }
 
   async function loadAssignTable(url, pushState = true) {
@@ -676,10 +529,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const html = await response.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
-      const nextTable = doc.querySelector(".table-container");
+      const nextCard = $(".assign-table-card", doc);
+      const currentCard = $(".assign-table-card");
 
-      if (nextTable) patchTable(nextTable);
-      if (pushState) window.history.replaceState({}, "", url);
+      // NOTE: Thay nguyên table card như Asset để giảm delay render.
+      if (nextCard && currentCard) {
+        currentCard.innerHTML = nextCard.innerHTML;
+      }
+
+      if (pushState) {
+        window.history.replaceState({}, "", url);
+      }
+
+      closeActionMenus();
+      updateClearButton();
+
+      // NOTE: Cho table render trước, sau đó mới quét bulk để cảm giác nhanh hơn.
+      requestAnimationFrame(() => updateBulk(true));
     } catch (error) {
       if (error.name !== "AbortError") console.error(error);
     }
@@ -691,9 +557,53 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function submitFilterDebounced() {
-    updateClearButton();
     clearTimeout(timer);
-    timer = setTimeout(submitFilterNow, 0);
+
+    // NOTE: Tìm kiếm chính phản hồi gần tức thì.
+    timer = setTimeout(submitFilterNow, 20);
+  }
+
+  function syncMultiSummary(select, submit = false) {
+    const input = select.querySelector("[data-multi-value]");
+    const label = select.querySelector("[data-multi-label]");
+    const count = select.querySelector("[data-multi-count]");
+    const allBtn = select.querySelector("[data-multi-all]");
+    const selectedOptions = $$("[data-multi-option].is-selected", select);
+    const values = selectedOptions.map(option => option.dataset.value).filter(Boolean);
+    const total = selectedOptions.reduce((sum, option) => sum + Number(option.dataset.count || 0), 0);
+
+    if (!input || !label) return;
+
+    if (!values.length) {
+      input.value = "Tất cả";
+      label.textContent = "Tất cả loại";
+      if (count) count.textContent = allBtn?.dataset.count || "0";
+      allBtn?.classList.add("is-selected");
+    } else {
+      input.value = values.join(",");
+      label.textContent = values.length === 1 ? (selectedOptions[0].dataset.label || values[0]) : `${values.length} loại đã chọn`;
+      if (count) count.textContent = total;
+      allBtn?.classList.remove("is-selected");
+    }
+
+    updateClearButton();
+    if (submit) submitFilterNow();
+  }
+
+  function resetMultiSearch(select) {
+    const search = select.querySelector("[data-multi-search]");
+    if (!search) return;
+
+    search.value = "";
+
+    $$("[data-multi-option]", select).forEach(option => {
+      option.hidden = false;
+    });
+
+    const empty = select.querySelector("[data-multi-empty]");
+    if (empty) empty.hidden = true;
+
+    setTimeout(() => search.focus(), 0);
   }
 
   function resetFilters() {
@@ -704,41 +614,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     $$(".filter-select").forEach(select => {
-      const hidden = select.querySelector('input[type="hidden"]');
+      if (select.matches("[data-multi-filter]")) {
+        select.classList.remove("is-multi-mode");
+
+        const mode = select.querySelector("[data-multi-mode]");
+        if (mode) mode.checked = false;
+
+        $$("[data-multi-option]", select).forEach(option => {
+          option.classList.remove("is-selected");
+          option.hidden = false;
+        });
+
+        syncMultiSummary(select, false);
+        return;
+      }
+
       const label = select.querySelector(".filter-select__label");
       const count = select.querySelector(".filter-select__count");
       const first = select.querySelector(".filter-select__option");
 
-      if (!hidden || !label || !first) return;
-
-      const firstLabel = first.querySelector(".filter-select__option-label");
-      const firstCount = first.querySelector(".filter-select__option-count");
-
-      hidden.value = "Tất cả";
-      label.textContent = firstLabel ? firstLabel.textContent.trim() : "Tất cả";
-
-      if (count && firstCount) count.textContent = firstCount.textContent.trim();
+      if (label) label.textContent = first?.querySelector(".filter-select__option-label")?.textContent?.trim() || "Tất cả";
+      if (count) count.textContent = first?.querySelector(".filter-select__option-count")?.textContent?.trim() || "";
     });
 
     updateClearButton();
   }
 
   function buildAssignUrl() {
-    const items = selectedRows();
-    const ids = items.map(item => item.id).filter(Boolean).join(",");
-    const first = items[0]?.giveUrl || "#";
+    const ids = selectedRows().map(item => item.id).filter(Boolean).join(",");
+    const first = selectedRows()[0]?.giveUrl || "#";
 
     return `${first}${first.includes("?") ? "&" : "?"}ids=${encodeURIComponent(ids)}`;
   }
 
-  function updateBulk() {
+  function updateBulk(keepMenus = false) {
     const bulkToggle = $("#bulkModeToggle");
     const picker = $("#assignAssetPicker");
     const bulkActions = $("#bulkActions");
     const bulkSummary = $("#bulkSummary");
     const bulkAssignBtn = $("#bulkAssignBtn");
     const bulkUnassignBtn = $("#bulkUnassignBtn");
-    const table = $(".table-container");
+    const table = $(".assign-table-card");
     const isBulk = !!bulkToggle?.checked;
 
     table?.classList.toggle("is-bulk-mode", isBulk);
@@ -759,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bulkUnassignBtn) bulkUnassignBtn.hidden = true;
 
     if (!isBulk) {
-      closeMenus();
+      if (!keepMenus) closeActionMenus();
       return;
     }
 
@@ -803,11 +719,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return notify("error", "Không thể thu hồi", "Chỉ được chọn các tài sản đang sử dụng.");
     }
 
-    const ok = await showConfirmToast({
+    const ok = await askConfirm({
       title: "Xác nhận thu hồi nhiều",
       message: `Bạn có chắc muốn thu hồi ${items.length} tài sản đã chọn không?`,
-      confirmText: "Thu hồi",
-      cancelText: "Hủy"
+      confirmText: "Thu hồi"
     });
 
     if (!ok) return;
@@ -828,10 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         let data = {};
-
-        try {
-          data = await response.json();
-        } catch (_) {}
+        try { data = await response.json(); } catch (_) {}
 
         if (!response.ok || data.success === false) {
           throw new Error(data.message || "Thu hồi không thành công.");
@@ -848,7 +760,100 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  $$("[data-multi-filter]").forEach(select => {
+    const button = select.querySelector("[data-multi-toggle]");
+    const menu = select.querySelector(".filter-select__menu");
+    const search = select.querySelector("[data-multi-search]");
+    const mode = select.querySelector("[data-multi-mode]");
+    const allBtn = select.querySelector("[data-multi-all]");
+
+    if (!button || !menu) return;
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const isOpen = menu.classList.contains(openedClass);
+      closeAllMenus(menu);
+      menu.classList.toggle(openedClass, !isOpen);
+
+      if (!isOpen) resetMultiSearch(select);
+    });
+
+    if (mode) {
+      mode.addEventListener("change", event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // NOTE: Bật hoặc tắt chế độ chọn nhiều loại thiết bị.
+        select.classList.toggle("is-multi-mode", mode.checked);
+
+        if (!mode.checked) {
+          const selected = $$("[data-multi-option].is-selected", select);
+          selected.slice(1).forEach(option => option.classList.remove("is-selected"));
+        }
+
+        syncMultiSummary(select, true);
+      });
+    }
+
+    if (allBtn) {
+      allBtn.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        $$("[data-multi-option]", select).forEach(option => option.classList.remove("is-selected"));
+        syncMultiSummary(select, true);
+
+        if (!mode?.checked) closeFilterMenus();
+      });
+    }
+
+    $$("[data-multi-option]", select).forEach(option => {
+      option.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // NOTE: Chọn nhiều thì giữ dropdown mở và reload table ngầm.
+        if (mode?.checked) {
+          option.classList.toggle("is-selected");
+          syncMultiSummary(select, true);
+          return;
+        }
+
+        $$("[data-multi-option]", select).forEach(item => item.classList.remove("is-selected"));
+        option.classList.add("is-selected");
+        syncMultiSummary(select, true);
+        closeFilterMenus();
+      });
+    });
+
+    if (search) {
+      search.addEventListener("input", () => {
+        const keyword = normalizeText(search.value);
+        let visible = 0;
+
+        $$("[data-multi-option]", select).forEach(option => {
+          const text = normalizeText(`${option.dataset.filterText || ""} ${option.dataset.value || ""} ${option.textContent || ""}`);
+          const show = !keyword || text.includes(keyword);
+
+          option.hidden = !show;
+          if (show) visible += 1;
+        });
+
+        const empty = select.querySelector("[data-multi-empty]");
+        if (empty) empty.hidden = visible !== 0;
+
+        updateClearButton();
+      });
+    }
+
+    syncMultiSummary(select, false);
+  });
+
   $$(".filter-select").forEach(select => {
+    if (select.matches("[data-multi-filter]")) return;
+
     const button = select.querySelector(".filter-select__button");
     const menu = select.querySelector(".filter-select__menu");
     const input = select.querySelector('input[type="hidden"]');
@@ -862,7 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
       event.stopPropagation();
 
       const isOpen = menu.classList.contains(openedClass);
-      closeMenus(menu);
+      closeAllMenus(menu);
       menu.classList.toggle(openedClass, !isOpen);
     });
 
@@ -874,16 +879,21 @@ document.addEventListener("DOMContentLoaded", () => {
         input.value = option.dataset.value || "Tất cả";
         label.textContent = optionLabel ? optionLabel.textContent.trim() : input.value;
 
-        if (count && optionCount) count.textContent = optionCount.textContent.trim();
+        if (count && optionCount) {
+          count.textContent = optionCount.textContent.trim();
+        }
 
-        closeMenus();
+        closeAllMenus();
         submitFilterNow();
       });
     });
   });
 
   if (searchInput) {
-    searchInput.addEventListener("input", submitFilterDebounced);
+    searchInput.addEventListener("input", () => {
+      updateClearButton();
+      submitFilterDebounced();
+    });
   }
 
   if (form) {
@@ -897,17 +907,19 @@ document.addEventListener("DOMContentLoaded", () => {
     clearBtn.addEventListener("click", event => {
       event.preventDefault();
       resetFilters();
-      closeMenus();
+      closeAllMenus();
       loadAssignTable(form.action, true);
     });
   }
 
   document.addEventListener("change", event => {
-    if (event.target.closest("#bulkModeToggle")) updateBulk();
+    if (event.target.closest("#bulkModeToggle")) {
+      updateBulk();
+    }
   });
 
   document.addEventListener("click", async event => {
-    const pageBtn = event.target.closest(".table-container .page-btn:not(.disabled)");
+    const pageBtn = event.target.closest(".assign-table-card .page-btn:not(.disabled)");
     const pickerBtn = event.target.closest("#assignPickerBtn");
     const row = event.target.closest(".assign-row");
     const bulkUnassignBtn = event.target.closest("#bulkUnassignBtn");
@@ -923,7 +935,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pickerBtn) {
       event.preventDefault();
       event.stopPropagation();
-      closeMenus();
+      closeAllMenus();
       return;
     }
 
@@ -934,7 +946,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ? selectedAssets.delete(row.dataset.id)
         : selectedAssets.set(row.dataset.id, readAssetFromRow(row));
 
-      closeMenus();
+      closeAllMenus();
       updateBulk();
       return;
     }
@@ -952,7 +964,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dropdown = $(".action-menu__dropdown", actionBtn.closest(".action-menu"));
       const opened = dropdown?.classList.contains(openedClass);
 
-      closeMenus();
+      closeAllMenus();
 
       if (!opened && dropdown) {
         dropdown.classList.add(openedClass);
@@ -981,13 +993,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (unassignForm) {
       event.preventDefault();
-      closeMenus();
+      closeAllMenus();
 
-      const ok = await showConfirmToast({
+      const ok = await askConfirm({
         title: "Xác nhận thu hồi",
         message: "Bạn có chắc muốn thu hồi tài sản này không?",
-        confirmText: "Thu hồi",
-        cancelText: "Hủy"
+        confirmText: "Thu hồi"
       });
 
       if (ok) {
@@ -998,16 +1009,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!event.target.closest(".filter-select, .assign-asset-picker, .assign-bulk-actions, .action-menu")) {
-      closeMenus();
+      closeAllMenus();
     }
   });
 
   document.addEventListener("keydown", event => {
+    if (event.key === "Enter" && event.target.closest("[data-multi-search]")) {
+      event.preventDefault();
+
+      const select = event.target.closest("[data-multi-filter]");
+      const first = $$("[data-multi-option]", select).find(option => !option.hidden);
+
+      if (first) first.click();
+      return;
+    }
+
     if (event.key === "Escape") {
-      document.querySelectorAll(".assign-confirm-toast").forEach(item => item.remove());
-      closeMenus();
+      closeAllMenus();
     }
   });
+
+  window.addEventListener("popstate", () => {
+    loadAssignTable(location.href, false);
+  });
+
+  window.addEventListener("resize", closeActionMenus);
+  window.addEventListener("scroll", closeActionMenus, true);
 
   updateClearButton();
   updateBulk();

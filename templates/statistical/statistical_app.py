@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+=======
+# File: templates/statistical/statistical_app.py
+# Nhiệm vụ:
+# - Đăng ký route frontend cho module thống kê.
+# - /statistical/assets lấy dữ liệu thật từ trang tài sản.
+# - Bảng bảo trì lấy lỗi từ nội dung / ghi chú báo cáo.
+
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 from flask import render_template, request, session, redirect, url_for
 
 from templates.statistical.statistical_backend import (

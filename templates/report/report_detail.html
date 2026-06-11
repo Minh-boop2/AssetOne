@@ -358,9 +358,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
 
     const relatedBox = $("#reportRelatedAssets");
-    const toast = $("#reportDetailToast");
+    const localToast = $("#reportDetailToast");
     const modal = $("#filePreviewModal");
+<<<<<<< HEAD
     const reportPageUrl = relatedBox?.dataset.overviewUrl || "{{ url_for('report_page') }}";
+=======
+    const reportListUrl = "{{ url_for('report_page') }}";
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
     const esc = value => String(value || "").replace(/[&<>"']/g, c => ({
         "&": "&amp;",
@@ -390,12 +394,15 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/&apos;/g, "'");
 
     const splitData = value => {
+<<<<<<< HEAD
         if (Array.isArray(value)) {
             return value.flatMap(item => splitData(item)).map(cleanAssetToken).filter(Boolean);
         }
+=======
+        if (Array.isArray(value)) return value.flatMap(item => splitData(item)).map(cleanAssetToken).filter(Boolean);
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
         let text = decodeText(value).trim();
-
         if (!text) return [];
 
         if (/^\[.*\]$/.test(text)) {
@@ -419,21 +426,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function assetsFromJson(value) {
         const text = decodeText(value).trim();
-
         if (!text || text === "[]") return [];
 
         try {
             const rawAssets = JSON.parse(text);
-
             if (!Array.isArray(rawAssets)) return [];
 
             return rawAssets.map(asset => {
-                if (typeof asset === "string") {
-                    return {
-                        name: cleanAssetToken(asset),
-                        code: "Không có mã tài sản"
-                    };
-                }
+                if (typeof asset === "string") return { name: cleanAssetToken(asset), code: "Không có mã tài sản" };
 
                 return {
                     name: cleanAssetToken(asset.asset_name || asset.name || asset.asset || asset.label || ""),
@@ -445,21 +445,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+<<<<<<< HEAD
     function showToast(message, type = "success") {
         const text = $("#reportDetailToastText");
+=======
+    function showToast(message) {
+        if (window.toast?.success) {
+            window.toast.success(message || "Thao tác thành công");
+            return;
+        }
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
-        if (!toast || !text) return;
+        const text = $("#reportDetailToastText");
+        if (!localToast || !text) return;
 
         text.textContent = message || "Thao tác thành công";
+<<<<<<< HEAD
         toast.classList.remove("is-show");
         void toast.offsetWidth;
         toast.classList.add("is-show");
+=======
+        localToast.classList.add("is-show");
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
-        clearTimeout(toast.timer);
-        toast.timer = setTimeout(() => toast.classList.remove("is-show"), 3000);
+        clearTimeout(localToast.timer);
+        localToast.timer = setTimeout(() => localToast.classList.remove("is-show"), 2200);
     }
 
-    function post(url, data = {}) {
+    function post(url, data = {}, nextUrl = reportListUrl) {
         if (!url) return;
 
         const form = document.createElement("form");
@@ -467,11 +480,15 @@ document.addEventListener("DOMContentLoaded", () => {
         form.action = url;
         form.style.display = "none";
 
+<<<<<<< HEAD
         Object.entries({
             ...data,
             next: reportPageUrl,
             redirect_to: reportPageUrl
         }).forEach(([name, value]) => {
+=======
+        Object.entries({ next: nextUrl, ...data }).forEach(([name, value]) => {
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = name;
@@ -485,11 +502,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function fileSize(value) {
         const size = Number(value || 0);
-
         if (!size) return "Không rõ dung lượng";
         if (size >= 1048576) return `${(size / 1048576).toFixed(2)} MB`;
         if (size >= 1024) return `${(size / 1024).toFixed(2)} KB`;
-
         return `${size} bytes`;
     }
 
@@ -497,7 +512,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ext) return String(ext).replace(".", "").toLowerCase();
 
         const parts = String(name || "").split(".");
-
         return parts.length > 1 ? parts.pop().toLowerCase() : "";
     }
 
@@ -530,7 +544,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function assetsFrom(namesRaw, codesRaw, assetsRaw = "") {
         const assets = assetsFromJson(assetsRaw);
-
         if (assets.length) return assets;
 
         const names = splitData(namesRaw);
@@ -590,6 +603,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ));
     }
 
+<<<<<<< HEAD
     async function confirmReportAction(btn) {
         const approve = btn.dataset.kind === "approve";
         const name = btn.dataset.name || "báo cáo này";
@@ -613,12 +627,47 @@ document.addEventListener("DOMContentLoaded", () => {
                 cancel_reason: "Từ chối từ trang chi tiết báo cáo",
                 reason: "Từ chối từ trang chi tiết báo cáo"
             }
+=======
+    async function handleReportAction(btn) {
+        const approve = btn.dataset.kind === "approve";
+        const name = btn.dataset.name || "báo cáo này";
+        const message = approve
+            ? `Bạn có chắc muốn duyệt ${name} không?`
+            : `Bạn có chắc muốn từ chối ${name} không? Báo cáo sẽ được chuyển sang trạng thái đã hủy/từ chối.`;
+
+        const ok = typeof window.toastConfirm === "function"
+            ? await window.toastConfirm({
+                type: approve ? "success" : "error",
+                title: approve ? "Xác nhận duyệt" : "Xác nhận từ chối",
+                message,
+                confirmText: approve ? "Duyệt" : "Từ chối",
+                cancelText: "Hủy",
+                danger: !approve,
+                closeOnBackdrop: false,
+                closeOnEsc: true
+            })
+            : confirm(message);
+
+        if (!ok) return;
+
+        btn.disabled = true;
+        btn.classList.add("is-loading");
+
+        post(
+            btn.dataset.url,
+            approve
+                ? { approval_note: "Duyệt từ trang chi tiết báo cáo" }
+                : {
+                    cancel_reason: "Từ chối từ trang chi tiết báo cáo",
+                    reason: "Từ chối từ trang chi tiết báo cáo"
+                },
+            reportListUrl
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
         );
     }
 
     $("#copyReportCodeBtn")?.addEventListener("click", async () => {
         const code = $("#reportCodeText")?.textContent.trim();
-
         if (!code) return;
 
         try {
@@ -664,10 +713,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     $$(".js-report-action").forEach(btn => {
+<<<<<<< HEAD
         btn.addEventListener("click", () => confirmReportAction(btn));
+=======
+        btn.addEventListener("click", () => handleReportAction(btn));
+>>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
     });
 
-    $("#closeReportDetailToast")?.addEventListener("click", () => toast?.classList.remove("is-show"));
+    $("#closeReportDetailToast")?.addEventListener("click", () => localToast?.classList.remove("is-show"));
     $("#closeFilePreviewModal")?.addEventListener("click", () => modal?.classList.remove("is-show"));
 
     modal?.addEventListener("click", event => {
