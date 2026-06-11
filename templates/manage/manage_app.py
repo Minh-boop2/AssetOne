@@ -12,6 +12,9 @@ from .manage_backend import (
 )
 
 
+DENIED_ACTION_MESSAGE = "Bạn không có quyền thực hiện hành động này."
+
+
 def get_current_user():
     return session.get("user") or session.get("current_user") or {}
 
@@ -20,15 +23,113 @@ def is_logged_in():
     return bool(get_current_user())
 
 
+def normalize_role_code(role):
+    role = str(role or "").strip().upper()
+
+    mapping = {
+        "ADMIN": "ADMIN",
+        "QUẢN LÝ": "QUAN_LY",
+        "QUAN_LY": "QUAN_LY",
+        "MANAGER": "QUAN_LY",
+        "NHÂN VIÊN": "NHAN_VIEN",
+        "NHAN_VIEN": "NHAN_VIEN",
+        "USER": "NHAN_VIEN",
+        "STAFF": "NHAN_VIEN",
+    }
+
+    return mapping.get(role, role)
+
+
 def user_can(module_key, action):
     user = get_current_user()
+    role = normalize_role_code(user.get("role"))
 
-    if user.get("is_admin") or user.get("role") == "ADMIN":
+    if user.get("is_admin") or role == "ADMIN":
+        return True
+
+    # NOTE: QUAN_LY được vào trang quản lý user và cập nhật user,
+    # còn được sửa ai thì kiểm tra tiếp bằng can_manage_target_user().
+    if role == "QUAN_LY" and module_key == "users" and action in ["view", "update"]:
         return True
 
     can = user.get("can") or {}
-
     return can.get(module_key, {}).get(action) is True
+
+
+def current_user_identity_values():
+    user = get_current_user()
+
+    values = [
+        session.get("current_user_id"),
+        user.get("_id"),
+        user.get("id"),
+        user.get("user_id"),
+        user.get("employee_code"),
+        user.get("email"),
+    ]
+
+    return {
+        str(value).strip().lower()
+        for value in values
+        if str(value or "").strip()
+    }
+
+
+def target_user_identity_values(user):
+    user = user or {}
+
+    values = [
+        user.get("db_id"),
+        user.get("_id"),
+        user.get("id"),
+        user.get("user_id"),
+        user.get("employee_code"),
+        user.get("email"),
+    ]
+
+    return {
+        str(value).strip().lower()
+        for value in values
+        if str(value or "").strip()
+    }
+
+
+def is_current_user_target(target_user):
+    # NOTE: Cho QUAN_LY thao tác với chính tài khoản quản lý của mình.
+    return bool(current_user_identity_values() & target_user_identity_values(target_user))
+
+
+def can_manage_target_user(target_user):
+    # NOTE: ADMIN thao tác tất cả.
+    # QUAN_LY chỉ thao tác NHAN_VIEN hoặc chính tài khoản QUAN_LY của mình.
+    if not target_user or not user_can("users", "update"):
+        return False
+
+    current_role = normalize_role_code(get_current_user().get("role"))
+    target_role = normalize_role_code(
+        target_user.get("role_code")
+        or target_user.get("role")
+    )
+
+    if current_role == "ADMIN":
+        return True
+
+    if current_role == "QUAN_LY":
+        if target_role == "NHAN_VIEN":
+            return True
+
+        if target_role == "QUAN_LY" and is_current_user_target(target_user):
+            return True
+
+    return False
+
+
+def mark_manage_permissions_for_rows(page_data):
+    # NOTE: Gắn quyền cho từng dòng để template không tự suy luận sai.
+    for row in page_data.get("employees") or []:
+        row["can_manage_action"] = can_manage_target_user(row)
+
+    return page_data
 
 
 def require_login():
@@ -79,13 +180,6 @@ def redirect_back_to_manage():
 
 
 def normalize_toast_type(category, message=""):
-    """
-    Chuẩn hóa màu toast trả về cho frontend.
-
-    warning: màu vàng cho cập nhật nhân sự
-    error: màu đỏ cho ngưng hoạt động / lỗi / xóa
-    success: màu xanh cho thêm mới / cấp lại / mở hoạt động
-    """
     clean_category = str(category or "").lower()
     clean_message = str(message or "").lower()
 
@@ -109,13 +203,6 @@ def normalize_toast_type(category, message=""):
 
 
 def ajax_response(success=True, message="", category="success", **extra):
-    """
-    Trả JSON cho request AJAX.
-
-    Mục đích:
-    - Không dùng flash khi frontend gọi bằng fetch.
-    - Tránh toast cũ từ backend chạy chồng lên toast mới của sessionStorage.
-    """
     payload = {
         "ok": success,
         "success": success,
@@ -125,8 +212,29 @@ def ajax_response(success=True, message="", category="success", **extra):
     }
 
     payload.update(extra)
-
     return jsonify(payload)
+
+
+def denied_manage_action_response():
+    # NOTE: Request AJAX trả JSON 403 để frontend hiện Sonner lỗi.
+    if is_ajax_request():
+        return ajax_response(
+            False,
+            DENIED_ACTION_MESSAGE,
+            "danger",
+            toast_type="error"
+        ), 403
+
+    flash(DENIED_ACTION_MESSAGE, "danger")
+    return redirect_back_to_manage()
+
+
+def not_found_user_response(message="Không tìm thấy nhân sự"):
+    if is_ajax_request():
+        return ajax_response(False, message, "warning"), 404
+
+    flash(message, "warning")
+    return redirect(url_for("manage"))
 
 
 def register_manage_routes(app):
@@ -147,6 +255,8 @@ def register_manage_routes(app):
             flash(page_data["stats_error"], "danger")
 
         page_data = clean_manage_page_data(page_data)
+        page_data = mark_manage_permissions_for_rows(page_data)
+
         context = {
             **page_data,
             **manage_permission_context(),
@@ -217,15 +327,12 @@ def register_manage_routes(app):
         user, error = get_user_detail_page_data(id)
 
         if error:
-            if is_ajax_request():
-                return ajax_response(False, error, "warning"), 404
-
-            flash(error, "warning")
-            return redirect(url_for("manage"))
+            return not_found_user_response(error)
 
         return render_template(
             "manage/manage_detail.html",
             user=user,
+            can_manage_detail_target=can_manage_target_user(user),
             **manage_permission_context(),
         )
 
@@ -235,6 +342,14 @@ def register_manage_routes(app):
 
         if permission_redirect:
             return permission_redirect
+
+        target_user, error = get_user_detail_page_data(id)
+
+        if error:
+            return not_found_user_response(error)
+
+        if not can_manage_target_user(target_user):
+            return denied_manage_action_response()
 
         if request.method == "POST":
             success, message, _ = update_user_from_form(id, request.form)
@@ -260,11 +375,7 @@ def register_manage_routes(app):
         page_data, error = get_edit_page_data(id)
 
         if error:
-            if is_ajax_request():
-                return ajax_response(False, error, "warning"), 404
-
-            flash(error, "warning")
-            return redirect(url_for("manage"))
+            return not_found_user_response(error)
 
         if page_data.get("stats_error"):
             flash(page_data["stats_error"], "danger")
@@ -282,14 +393,27 @@ def register_manage_routes(app):
         permission_redirect = require_user_permission("update")
 
         if permission_redirect:
+            if is_ajax_request():
+                return ajax_response(
+                    False,
+                    DENIED_ACTION_MESSAGE,
+                    "danger",
+                    toast_type="error"
+                ), 403
+
             return permission_redirect
+
+        target_user, error = get_user_detail_page_data(id)
+
+        if error:
+            return not_found_user_response(error)
+
+        if not can_manage_target_user(target_user):
+            return denied_manage_action_response()
 
         success, message, category = toggle_user_status(id)
         toast_type = normalize_toast_type(category, message)
 
-        # Request AJAX/fetch không được flash.
-        # Nếu flash ở đây, frontend sẽ bị hiện 2 toast:
-        # 1 toast cũ từ flash backend + 1 toast mới từ sessionStorage.
         if is_ajax_request():
             status_code = 200 if success else 400
 
@@ -301,7 +425,6 @@ def register_manage_routes(app):
             ), status_code
 
         flash(message, category)
-
         return redirect_back_to_manage()
 
     @app.route("/manage/delete/<string:id>", methods=["GET", "POST"])

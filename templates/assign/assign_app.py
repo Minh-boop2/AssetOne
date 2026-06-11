@@ -59,8 +59,17 @@ def is_ajax_request():
     )
 
 
+def is_fast_table_request():
+    # NOTE: Dùng riêng cho fetch HTML thay .assign-table-card.
+    # Request này không thay filter nên không cần gọi inventory và counts.
+    return (
+        request.args.get("fast_table") == "1"
+        or request.headers.get("X-Requested-With") == "fetch"
+    )
+
+
 def wants_json_response():
-    # THÊM: dùng cho thao tác POST bằng fetch như thu hồi nhiều.
+    # NOTE: Dùng cho thao tác POST bằng fetch như thu hồi nhiều.
     # Không dùng hàm này cho GET /assign vì trang đang fetch HTML để thay bảng.
     return (
         request.headers.get("X-Requested-With") in ["XMLHttpRequest", "fetch"]
@@ -80,7 +89,6 @@ def user_can(module_key, action):
         return action in ["view", "create", "update", "delete", "approve"]
 
     can = user.get("can") or {}
-
     return can.get(module_key, {}).get(action) is True
 
 
@@ -365,6 +373,7 @@ def register_assign_routes(app):
     @app.route("/assign")
     def assign_page():
         ajax = is_ajax_request()
+        fast_table = is_fast_table_request()
         permission_redirect = require_assign_permission("view")
 
         if permission_redirect:
@@ -403,6 +412,8 @@ def register_assign_routes(app):
                 "department": selected_dept,
                 "status": selected_status,
                 "location": selected_loc,
+                # NOTE: fast_table chỉ reload table nên bỏ tính counts để giảm delay.
+                "include_counts": 0 if fast_table else 1,
             },
         )
 
@@ -442,12 +453,19 @@ def register_assign_routes(app):
         counts = convert_counts_for_template(data.get("filter_counts", {}))
         scope = data.get("scope", {})
 
-        categories, departments, locations, status_options = build_filter_options(counts)
+        if fast_table:
+            # NOTE: Frontend chỉ lấy .assign-table-card nên không cần gọi /api/assets lấy inventory.
+            categories = DEFAULT_CATEGORIES
+            departments = DEFAULT_DEPARTMENTS
+            locations = DEFAULT_LOCATIONS
+            status_options = DEFAULT_STATUS_OPTIONS
+        else:
+            categories, departments, locations, status_options = build_filter_options(counts)
 
-        inventory, asset_categories = get_asset_categories_from_inventory()
+            inventory, asset_categories = get_asset_categories_from_inventory()
 
-        if asset_categories:
-            categories = asset_categories
+            if asset_categories:
+                categories = asset_categories
 
         if ajax:
             return jsonify(
@@ -696,7 +714,6 @@ def register_assign_routes(app):
                 }
             ), 200
 
-        # SỬA: thu hồi thành công dùng warning để toast màu vàng
         flash(message, "warning")
         return redirect(url_for("assign_page"))
 

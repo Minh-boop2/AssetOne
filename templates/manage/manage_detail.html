@@ -2,13 +2,14 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=25">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=28">
 
 <section class="manage-detail-page">
   <div class="manage-detail-wrap">
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
     {% set is_active = user.status_code == 'HOAT_DONG' or user.status == 'Hoạt động' or user.status == 'HOAT_DONG' %}
     {% set current_status_code = 'HOAT_DONG' if is_active else 'NGUNG_HOAT_DONG' %}
+    {% set can_manage_detail_target = can_manage_detail_target if can_manage_detail_target is defined else can_update_user %}
 
     <div class="detail-topbar">
       <a href="{{ url_for('manage') }}" class="detail-back-link">
@@ -108,10 +109,22 @@
             Danh sách
           </a>
 
-          <a href="{{ url_for('user_edit', id=action_id) }}" class="detail-btn detail-btn-primary">
-            <i class="fas fa-pen"></i>
-            Chỉnh sửa
-          </a>
+          {% if can_manage_detail_target %}
+            <a href="{{ url_for('user_edit', id=action_id) }}" class="detail-btn detail-btn-primary">
+              <i class="fas fa-pen"></i>
+              Chỉnh sửa
+            </a>
+          {% else %}
+            <button
+              type="button"
+              class="detail-btn detail-btn-primary"
+              id="editDeniedBtn"
+              data-denied-message="Bạn không có quyền thực hiện hành động này."
+            >
+              <i class="fas fa-pen"></i>
+              Chỉnh sửa
+            </button>
+          {% endif %}
 
           <button
             type="button"
@@ -121,6 +134,8 @@
             data-user-name="{{ user.name or 'nhân sự này' }}"
             data-user-code="{{ user.id }}"
             data-current-status="{{ current_status_code }}"
+            data-no-permission="{{ 0 if can_manage_detail_target else 1 }}"
+            data-denied-message="Bạn không có quyền thực hiện hành động này."
           >
             {% if is_active %}
               <i class="fas fa-ban"></i>
@@ -139,8 +154,31 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const changeUserStatusBtn = document.getElementById("changeUserStatusBtn");
+  const editDeniedBtn = document.getElementById("editDeniedBtn");
+  const deniedMessage = "Bạn không có quyền thực hiện hành động này.";
 
-  // Xóa toast cũ trước khi hiện toast mới để tránh bị lặp
+  function showDeniedMessage(message) {
+    // NOTE: Lỗi quyền hiện toast chạy, không mở popup xác nhận.
+    const text = message || deniedMessage;
+
+    if (window.sonner && typeof window.sonner.error === "function") {
+      window.sonner.error(text);
+      return;
+    }
+
+    if (window.toast && typeof window.toast.error === "function") {
+      window.toast.error(text);
+      return;
+    }
+
+    if (typeof window.showToast === "function") {
+      window.showToast(text, "error");
+      return;
+    }
+
+    alert(text);
+  }
+
   function clearOldSonnerToasts() {
     if (window.sonner && typeof window.sonner.dismiss === "function") {
       window.sonner.dismiss();
@@ -153,7 +191,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  // Gọi Sonner chung của hệ thống
   function showSystemSonner(message, type) {
     const text = message || "Thao tác thành công";
     const cleanType = String(type || "success").toLowerCase();
@@ -178,7 +215,6 @@ document.addEventListener("DOMContentLoaded", function () {
     alert(text);
   }
 
-  // Đọc toast lưu tạm sau khi reload trang detail
   function showStoredManageToast() {
     const rawToast = sessionStorage.getItem("manage_toast");
     if (!rawToast) return;
@@ -205,7 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 220);
   }
 
-  // Gọi route đổi trạng thái bằng fetch để tự kiểm soát toast
   async function toggleUserStatus(actionUrl, isActive, userName) {
     try {
       const response = await fetch(actionUrl, {
@@ -213,12 +248,22 @@ document.addEventListener("DOMContentLoaded", function () {
         credentials: "same-origin",
         headers: {
           "X-Requested-With": "XMLHttpRequest",
-          "Accept": "text/html, application/json"
+          "Accept": "application/json"
         }
       });
 
-      if (!response.ok) {
-        throw new Error("Toggle status failed");
+      let result = {};
+
+      try {
+        result = await response.json();
+      } catch (error) {
+        result = {};
+      }
+
+      // NOTE: Nếu backend trả lỗi quyền thì hiện toast lỗi, không reload.
+      if (!response.ok || result.success === false || result.ok === false) {
+        showDeniedMessage(result.message || deniedMessage);
+        return;
       }
 
       sessionStorage.setItem(
@@ -239,6 +284,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   showStoredManageToast();
 
+  if (editDeniedBtn) {
+    editDeniedBtn.addEventListener("click", function () {
+      showDeniedMessage(editDeniedBtn.dataset.deniedMessage || deniedMessage);
+    });
+  }
+
   if (!changeUserStatusBtn) return;
 
   changeUserStatusBtn.addEventListener("click", async function () {
@@ -247,6 +298,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const userCode = changeUserStatusBtn.dataset.userCode || "";
     const currentStatus = changeUserStatusBtn.dataset.currentStatus || "";
     const isActive = currentStatus === "HOAT_DONG";
+
+    if (changeUserStatusBtn.dataset.noPermission === "1") {
+      // NOTE: Chặn trước khi mở confirm, chỉ hiện toast quyền.
+      showDeniedMessage(changeUserStatusBtn.dataset.deniedMessage || deniedMessage);
+      return;
+    }
 
     if (!actionUrl) return;
 

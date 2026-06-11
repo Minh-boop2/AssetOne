@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=48">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_table.css') }}?v=52">
 
 <div class="m-overview-card">
   <div class="m-card-header">
@@ -88,6 +88,7 @@
     {% set row_name = row.name if row.name is defined and row.name else 'nhân sự này' %}
     {% set status_code = row.status_code if row.status_code is defined else '' %}
     {% set is_active = status_code == 'HOAT_DONG' %}
+    {% set can_manage_row = row.can_manage_action if row.can_manage_action is defined else can_update_user %}
 
     <div class="action-menu-center">
       <div class="action-menu">
@@ -105,10 +106,22 @@
             <span>Xem chi tiết</span>
           </a>
 
-          <a href="{{ url_for('user_edit', id=action_id) }}" class="action-menu__item action-menu__item--edit" role="menuitem">
-            {{ svg_icon('pen') }}
-            <span>Chỉnh sửa</span>
-          </a>
+          {% if can_manage_row %}
+            <a href="{{ url_for('user_edit', id=action_id) }}" class="action-menu__item action-menu__item--edit" role="menuitem">
+              {{ svg_icon('pen') }}
+              <span>Chỉnh sửa</span>
+            </a>
+          {% else %}
+            <button
+              type="button"
+              class="action-menu__item action-menu__item--edit js-denied-manage-action"
+              data-denied-message="Bạn không có quyền thực hiện hành động này."
+              role="menuitem"
+            >
+              {{ svg_icon('pen') }}
+              <span>Chỉnh sửa</span>
+            </button>
+          {% endif %}
 
           <div class="action-menu__divider"></div>
 
@@ -119,6 +132,8 @@
             data-user-name="{{ row_name }}"
             data-user-code="{{ row.id }}"
             data-current-status="{{ status_code }}"
+            data-no-permission="{{ 0 if can_manage_row else 1 }}"
+            data-denied-message="Bạn không có quyền thực hiện hành động này."
             role="menuitem"
           >
             {% if is_active %}
@@ -217,6 +232,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const openedClass = "show";
+  const deniedMessage = "Bạn không có quyền thực hiện hành động này.";
 
   function closeActionMenus(exceptDropdown) {
     document.querySelectorAll(".action-menu__dropdown." + openedClass).forEach(function (dropdown) {
@@ -232,6 +248,28 @@ document.addEventListener("DOMContentLoaded", function () {
         button.setAttribute("aria-expanded", "false");
       }
     });
+  }
+
+  function showDeniedMessage(message) {
+    // NOTE: Lỗi quyền hiện Sonner/toast, không mở popup xác nhận.
+    const text = message || deniedMessage;
+
+    if (window.sonner && typeof window.sonner.error === "function") {
+      window.sonner.error(text);
+      return;
+    }
+
+    if (window.toast && typeof window.toast.error === "function") {
+      window.toast.error(text);
+      return;
+    }
+
+    if (typeof window.showToast === "function") {
+      window.showToast(text, "error");
+      return;
+    }
+
+    alert(text);
   }
 
   function positionActionMenu(trigger, dropdown) {
@@ -284,12 +322,22 @@ document.addEventListener("DOMContentLoaded", function () {
         credentials: "same-origin",
         headers: {
           "X-Requested-With": "XMLHttpRequest",
-          "Accept": "text/html, application/json"
+          "Accept": "application/json"
         }
       });
 
-      if (!response.ok) {
-        throw new Error("Toggle status failed");
+      let result = {};
+
+      try {
+        result = await response.json();
+      } catch (error) {
+        result = {};
+      }
+
+      // NOTE: Backend trả lỗi quyền thì chỉ hiện toast lỗi, không reload.
+      if (!response.ok || result.success === false || result.ok === false) {
+        showDeniedMessage(result.message || deniedMessage);
+        return;
       }
 
       sessionStorage.setItem(
@@ -314,9 +362,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const userCode = button.dataset.userCode || "";
     const currentStatus = button.dataset.currentStatus || "";
 
-    if (!actionUrl) return;
-
     closeActionMenus();
+
+    if (button.dataset.noPermission === "1") {
+      // NOTE: Không có quyền thì không mở confirm, chỉ hiện toast lỗi.
+      showDeniedMessage(button.dataset.deniedMessage || deniedMessage);
+      return;
+    }
+
+    if (!actionUrl) return;
 
     const isActive = currentStatus === "HOAT_DONG";
 
@@ -367,6 +421,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.addEventListener("click", function (event) {
     const trigger = event.target.closest(".action-menu__trigger");
+    const deniedButton = event.target.closest(".js-denied-manage-action");
     const statusButton = event.target.closest(".change-user-status-action");
 
     if (trigger) {
@@ -389,6 +444,14 @@ document.addEventListener("DOMContentLoaded", function () {
         positionActionMenu(trigger, dropdown);
       }
 
+      return;
+    }
+
+    if (deniedButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeActionMenus();
+      showDeniedMessage(deniedButton.dataset.deniedMessage || deniedMessage);
       return;
     }
 

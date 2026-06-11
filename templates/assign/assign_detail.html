@@ -3,7 +3,7 @@
 {% block content %}
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}?v=assign_detail_user_avatar_compact_03"
+  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}?v=12"
 />
 
 {% set assign_id = info.id or info.mongo_id %}
@@ -12,66 +12,48 @@
 {% set asset_status = info.status or 'Chưa xác định' %}
 {% set is_using = asset_status == 'Đang sử dụng' or asset_status == 'using' %}
 {% set is_free = asset_status == 'Chưa dùng' or asset_status == 'Chưa sử dụng' or asset_status == 'available' %}
-
 {% set receiver_name = info.receiver or info.user %}
-{% set receiver_id = info.employee_code or info.user_employee_code or info.user_id or info.receiver_id %}
-
-{% set receiver_avatar = (
-  info.avatar_url
-  or info.user_avatar_url
-  or info.receiver_avatar_url
-  or info.user_avatar
-  or info.receiver_avatar
-  or info.avatar
-) %}
-
-{% if not receiver_avatar and info.assigned_user %}
-  {% set receiver_avatar = info.assigned_user.avatar_url or info.assigned_user.user_avatar_url or info.assigned_user.avatar %}
-{% endif %}
-
-{% if not receiver_avatar and info.user_info %}
-  {% set receiver_avatar = info.user_info.avatar_url or info.user_info.user_avatar_url or info.user_info.avatar %}
-{% endif %}
-
-{% if receiver_avatar and receiver_avatar.startswith('/static/uploads/avatars/') %}
-  {% set receiver_avatar = 'http://127.0.0.1:5001' ~ receiver_avatar %}
-{% endif %}
+{% set receiver_id = info.employee_code or info.user_id or info.receiver_id %}
+{% set receiver_avatar = info.avatar_url or info.receiver_avatar or info.user_avatar %}
+{% set asset_note = (specs.spec if specs is defined and specs else (info.spec or info.notes or info.description or 'Chưa có dữ liệu cấu hình.')) | trim %}
 
 <section class="assign-detail-page">
   <div class="assign-detail-wrap">
-    <div class="assign-detail-header">
-      <a href="{{ url_for('assign_page') }}" class="assign-detail-back">
-        ← Quay lại
-      </a>
+    <a href="{{ url_for('assign_page') }}" class="assign-detail-back">
+      <span>←</span>
+      Quay lại
+    </a>
 
-      <div class="assign-detail-heading">
-        <div class="assign-title-group">
-          <span class="assign-kicker">Chi tiết cấp phát</span>
-          <h1>{{ asset_name }}</h1>
+    <!-- HEADER: Hiển thị thông tin chính của tài sản -->
+    <div class="assign-detail-hero">
+      <div class="assign-detail-hero-main">
+        <span class="assign-detail-badge">Chi tiết cấp phát</span>
 
-          <div class="assign-detail-meta">
-            <span>#{{ asset_code }}</span>
-            <span>ID: {{ assign_id or 'Chưa có ID' }}</span>
-          </div>
+        <h1>{{ asset_name }}</h1>
+
+        <div class="assign-detail-meta">
+          <span>#{{ asset_code }}</span>
+          <span>ID: {{ assign_id or 'Chưa có ID' }}</span>
         </div>
-
-        <span
-          class="assign-detail-status {% if is_using %}assign-detail-status--using{% elif is_free %}assign-detail-status--free{% else %}assign-detail-status--pending{% endif %}"
-        >
-          {% if asset_status == 'using' %}
-            Đang sử dụng
-          {% elif asset_status == 'available' %}
-            Chưa sử dụng
-          {% else %}
-            {{ asset_status }}
-          {% endif %}
-        </span>
       </div>
+
+      <span
+        class="assign-status-pill {% if is_using %}assign-status-pill--using{% elif is_free %}assign-status-pill--free{% else %}assign-status-pill--pending{% endif %}"
+      >
+        {% if asset_status == 'using' %}
+          Đang sử dụng
+        {% elif asset_status == 'available' %}
+          Chưa sử dụng
+        {% else %}
+          {{ asset_status }}
+        {% endif %}
+      </span>
     </div>
 
     <div class="assign-detail-grid">
-      <section class="assign-panel">
-        <div class="assign-panel-head">
+      <!-- CARD: Thông tin tài sản -->
+      <section class="assign-detail-card">
+        <div class="assign-detail-card-header">
           <h2>Thông tin tài sản</h2>
           <p>Thông số, phân loại và bảo hành của thiết bị.</p>
         </div>
@@ -89,25 +71,28 @@
 
           <div class="assign-info-item">
             <span>Bảo hành</span>
-            <strong>{{ info.warranty or 'Chưa cập nhật' }}</strong>
+            <strong>{{ info.warranty or 'Chưa cập nhật bảo hành' }}</strong>
           </div>
 
           <div class="assign-info-item">
             <span>Vị trí hiện tại</span>
-            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
+            <strong>{{ info.location or info.floor or 'Chưa có vị trí' }}</strong>
           </div>
 
+          <!-- GHI CHÚ: Không dùng scroll nội bộ, chữ nằm trên cùng và giữ đúng xuống dòng -->
           <div class="assign-info-item assign-info-item--full">
-            <span>Cấu hình / ghi chú</span>
-            <strong class="assign-info-code">
-              {{ (specs.spec if specs else (info.spec or info.notes or 'Chưa có dữ liệu cấu hình.')) | trim }}
-            </strong>
+            <span>Cấu hình / Ghi chú</span>
+
+            <div class="assign-note-box">
+              <p>{{ asset_note }}</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="assign-panel">
-        <div class="assign-panel-head">
+      <!-- CARD: Bàn giao và sử dụng -->
+      <section class="assign-detail-card">
+        <div class="assign-detail-card-header">
           <h2>Bàn giao & sử dụng</h2>
           <p>Người nhận tài sản và trạng thái sử dụng.</p>
         </div>
@@ -116,34 +101,31 @@
           <div class="assign-user-card">
             <div class="assign-user-avatar">
               {% if receiver_avatar %}
-                <img
-                  src="{{ receiver_avatar }}"
-                  alt="{{ receiver_name }}"
-                  onerror="
-                    this.style.display = 'none';
-                    this.nextElementSibling.style.display = 'flex';
-                  "
-                />
-                <span>{{ receiver_name[0]|upper }}</span>
+                <img src="{{ receiver_avatar }}" alt="{{ receiver_name }}" />
               {% else %}
-                <span class="is-show">{{ receiver_name[0]|upper }}</span>
+                <span>{{ receiver_name[:1] | upper }}</span>
               {% endif %}
             </div>
 
-            <div class="assign-user-info">
+            <div class="assign-user-main">
               <span>Người đang sử dụng</span>
-              <h3>{{ receiver_name }}</h3>
-              <p>{{ receiver_id or 'Chưa có ID người dùng' }}</p>
+              <strong>{{ receiver_name }}</strong>
+
+              {% if receiver_id %}
+                <small>{{ receiver_id }}</small>
+              {% else %}
+                <small>Chưa có mã nhân sự</small>
+              {% endif %}
             </div>
           </div>
         {% else %}
-          <div class="assign-user-empty">
-            <strong>Chưa cấp phát</strong>
-            <p>Tài sản này hiện chưa được bàn giao cho người dùng nào.</p>
+          <div class="assign-empty-user">
+            <span>Chưa có người sử dụng</span>
+            <strong>Tài sản hiện chưa được cấp phát</strong>
           </div>
         {% endif %}
 
-        <div class="assign-info-grid">
+        <div class="assign-info-grid assign-info-grid--right">
           <div class="assign-info-item">
             <span>Phòng ban</span>
             <strong>{{ info.department or 'Chưa có phòng ban' }}</strong>
@@ -151,7 +133,7 @@
 
           <div class="assign-info-item">
             <span>Vị trí / tầng</span>
-            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
+            <strong>{{ info.location or info.floor or 'Chưa có vị trí' }}</strong>
           </div>
 
           <div class="assign-info-item assign-info-item--full">
@@ -170,12 +152,13 @@
       </section>
     </div>
 
-    <div class="assign-detail-actions">
+    <div class="assign-detail-footer">
       <a
         href="{{ url_for('assign_page') }}"
         class="assign-detail-btn assign-detail-btn--secondary"
       >
-        ← Quay lại
+        <span>←</span>
+        Quay lại
       </a>
 
       {% if is_free %}
@@ -183,7 +166,8 @@
           href="{{ url_for('assign_give', id=assign_id) }}"
           class="assign-detail-btn assign-detail-btn--primary"
         >
-          ＋ Cấp phát
+          <span>＋</span>
+          Cấp phát
         </a>
       {% endif %}
 
@@ -200,13 +184,15 @@
             type="submit"
             class="assign-detail-btn assign-detail-btn--warning"
           >
-            ↩ Thu hồi
+            <span>↩</span>
+            Thu hồi
           </button>
         </form>
       {% endif %}
     </div>
   </div>
 
+  <!-- MODAL: Xác nhận thu hồi tài sản -->
   <div
     class="assign-confirm-backdrop"
     id="assignUnassignModal"
@@ -287,6 +273,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let pendingForm = null;
   let isSubmitting = false;
 
+  // Mở modal xác nhận thu hồi
   function openModal(form) {
     if (!modal || !form) return;
 
@@ -300,12 +287,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setTimeout(function () {
-      if (submitBtn) {
-        submitBtn.focus();
-      }
+      if (submitBtn) submitBtn.focus();
     }, 80);
   }
 
+  // Đóng modal xác nhận
   function closeModal() {
     if (!modal || isSubmitting) return;
 
@@ -319,6 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 180);
   }
 
+  // Hiện toast đang xử lý thu hồi
   function showProgressToast(form) {
     const assetCode = form?.dataset?.assetCode || "tài sản";
     const notify = window.sonner || window.toast;
@@ -349,13 +336,8 @@ document.addEventListener("DOMContentLoaded", function () {
       submitBtn.disabled = true;
       submitBtn.classList.add("is-loading");
 
-      if (cancelBtn) {
-        cancelBtn.disabled = true;
-      }
-
-      if (closeBtn) {
-        closeBtn.disabled = true;
-      }
+      if (cancelBtn) cancelBtn.disabled = true;
+      if (closeBtn) closeBtn.disabled = true;
 
       showProgressToast(pendingForm);
 
@@ -365,19 +347,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", closeModal);
-  }
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeModal);
-  }
+  if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
 
   if (modal) {
     modal.addEventListener("click", function (event) {
-      if (event.target === modal) {
-        closeModal();
-      }
+      if (event.target === modal) closeModal();
     });
   }
 
