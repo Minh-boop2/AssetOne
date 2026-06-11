@@ -69,7 +69,7 @@
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
             <div class="horizontal-track">
-              <div class="horizontal-fill fill-purple" style="width: {{ item.percent }}%;"></div>
+              <div class="horizontal-fill fill-purple" style="width: 0%;" data-target-width="{{ item.percent }}"></div>
             </div>
             <strong>{{ item.value_text }}</strong>
             <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} tài sản</span>
@@ -88,18 +88,9 @@
 
         <div class="donut-wrap asset-status-donut">
           <div
-            class="finance-donut has-tooltip"
-            style="
-              background: conic-gradient(
-                {% if status_segments %}
-                  {% for item in status_segments %}
-                    {{ item.color }} {{ item.from_deg }}deg {{ item.to_deg }}deg{% if not loop.last %},{% endif %}
-                  {% endfor %}
-                {% else %}
-                  var(--surface-2) 0deg 360deg
-                {% endif %}
-              );
-            "
+            class="finance-donut has-tooltip js-stat-donut"
+            data-segments='{{ status_segments|default([], true)|tojson|e }}'
+            style="background: var(--surface-2);"
           >
             <span class="chart-tooltip">Tổng tài sản: {{ total_assets }}</span>
 
@@ -195,4 +186,67 @@
 
   </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const page = document.querySelector(".statistical-page");
+  if (!page) return;
+
+  const donuts = document.querySelectorAll(".js-stat-donut");
+  const fills = document.querySelectorAll(".horizontal-fill");
+  const duration = 1300; 
+  let startTime = null;
+
+  const drawDonut = (donut, angle) => {
+    let segments = [];
+    try { segments = JSON.parse(donut.dataset.segments || "[]"); } catch { segments = []; }
+    if (!segments.length) { donut.style.background = "var(--surface-2)"; return; }
+
+    const parts = [];
+    segments.forEach((item) => {
+      const from = Number(item.from_deg || 0);
+      const to = Number(item.to_deg || 0);
+      const color = item.color || "#94a3b8";
+      if (angle <= from || to <= from) return;
+      parts.push(`${color} ${from}deg ${Math.min(to, angle)}deg`);
+    });
+
+    if (angle < 360) parts.push(`var(--surface-2) ${angle}deg 360deg`);
+    donut.style.background = `conic-gradient(${parts.join(", ")})`;
+  };
+
+  const drawBars = (eased) => {
+    fills.forEach((fill) => {
+      const targetWidth = Number(fill.dataset.targetWidth || 0);
+      fill.style.width = `${targetWidth * eased}%`;
+    });
+  };
+
+  donuts.forEach(donut => drawDonut(donut, 0));
+  drawBars(0);
+  page.classList.remove("stat-animate-run");
+
+  const animateTimeline = (timestamp) => {
+    if (!startTime) startTime = timestamp;
+    const progress = Math.min((timestamp - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // Cubic Out
+
+    donuts.forEach(donut => drawDonut(donut, eased * 360));
+    drawBars(eased);
+
+    if (progress >= 0.05 && !page.classList.contains("stat-animate-run")) {
+      page.classList.add("stat-animate-run");
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(animateTimeline);
+    } else {
+      donuts.forEach(donut => drawDonut(donut, 360));
+      drawBars(1);
+    }
+  };
+
+  requestAnimationFrame(animateTimeline);
+});
+</script>
 {% endblock %}
