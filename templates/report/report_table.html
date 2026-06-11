@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = btn.dataset.url;
         const name = btn.dataset.name || "báo cáo này";
         const reportType = btn.dataset.type || "";
+
         if (!url || submitting) return;
 
         let message = type === "delete"
@@ -270,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const ok = typeof window.toastConfirm === "function"
             ? await window.toastConfirm({
-                type: type === "approve" ? "warning" : "error",
+                type: type === "approve" ? "success" : "error",
                 title: type === "delete" ? "Xác nhận xóa báo cáo" : type === "approve" ? "Xác nhận duyệt báo cáo" : "Xác nhận từ chối báo cáo",
                 message,
                 confirmText: type === "delete" ? "Xóa" : type === "approve" ? "Duyệt" : "Từ chối",

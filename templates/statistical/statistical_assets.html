@@ -59,14 +59,14 @@
       </div>
     </div>
 
-    <div class="chart-grid">
-      <div class="chart-card">
+    <div class="chart-grid asset-chart-grid">
+      <div class="chart-card asset-type-card">
         <div class="chart-title">
           <h3>Tài sản theo loại</h3>
-          <p>Đưa chuột vào thanh để xem số lượng.</p>
+          <p>Hiển thị tối đa 12 loại, nhiều hơn sẽ cuộn để xem thêm.</p>
         </div>
 
-        <div class="horizontal-chart">
+        <div class="horizontal-chart asset-type-chart">
           {% for item in type_items %}
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
@@ -82,13 +82,13 @@
         </div>
       </div>
 
-      <div class="chart-card">
+      <div class="chart-card asset-status-card">
         <div class="chart-title">
           <h3>Trạng thái tài sản</h3>
           <p>Biểu đồ tròn theo trạng thái xử lý.</p>
         </div>
 
-        <div class="donut-wrap">
+        <div class="donut-wrap asset-status-donut">
           <div
             class="finance-donut has-tooltip"
             style="
@@ -111,7 +111,7 @@
           </div>
         </div>
 
-        <div class="donut-legend">
+        <div class="donut-legend asset-status-legend">
           {% for item in status_segments %}
           <div class="legend-row has-tooltip">
             <div>
