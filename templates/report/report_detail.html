@@ -83,6 +83,8 @@
         {% else %}
             {% set user = session.get('user') or {} %}
             {% set login_role = (user.get('role') or current_user_role|default(current_admin_role|default('', true), true))|lower %}
+            {% set current_name = user.get('full_name') or user.get('name') or user.get('username') or user.get('email') %}
+            {% set current_avatar = user.get('avatar_url') or user.get('avatar') or user.get('photo_url') or user.get('image') %}
             {% set can_review = login_role in ['admin', 'manage', 'manager', 'quan_ly', 'quản lý', 'quan ly'] %}
 
             {% set row_index = report._row_index|default(report.row_index|default(report.id|default(report.report_id|default('', true), true), true), true) %}
@@ -93,6 +95,11 @@
             {% set time = report.display_time|default(report.time|default(report.created_at|default('', true), true), true) %}
             {% set reporter = report.display_reporter|default(report.reporter|default('', true), true) %}
             {% set reporter_role = report.display_reporter_role|default(report.reporter_role|default(report.role|default('', true), true), true) %}
+            {% set reporter_id = report.display_reporter_id|default(report.reporter_employee_code|default(report.employee_code|default(report.user_id|default('', true), true), true), true) %}
+            {% set reporter_avatar = report.display_reporter_avatar|default(report.reporter_avatar|default(report.avatar_url|default(report.avatar|default(report.created_by_avatar|default('', true), true), true), true), true) %}
+            {% if not reporter_avatar and current_avatar and reporter and current_name and reporter == current_name %}
+                {% set reporter_avatar = current_avatar %}
+            {% endif %}
             {% set dept = report.display_department|default(report.department|default('', true), true) %}
             {% set loc = report.display_location|default(report.location|default('', true), true) %}
             {% set detail = report.display_detail|default(report.description|default(report.detail|default(report.content|default('', true), true), true), true) %}
@@ -230,11 +237,27 @@
                             </div>
 
                             <div class="report-detail-person-card">
-                                <div class="report-detail-avatar">{{ (reporter[:1] if reporter else 'A')|upper }}</div>
+                                <div class="report-detail-avatar {% if reporter_avatar %}has-image{% endif %}">
+                                    {% if reporter_avatar %}
+                                        <img
+                                            src="{{ reporter_avatar }}"
+                                            alt="{{ text(reporter, 'Người báo cáo') }}"
+                                            onerror="this.remove(); this.parentElement.classList.remove('has-image'); this.parentElement.textContent='{{ (reporter[:1] if reporter else 'A')|upper }}';"
+                                        >
+                                    {% else %}
+                                        {{ (reporter[:1] if reporter else 'A')|upper }}
+                                    {% endif %}
+                                </div>
 
                                 <div>
                                     <h3>{{ text(reporter, 'Chưa xác định') }}</h3>
-                                    <p>{{ role_label(reporter_role) }}</p>
+                                    <p>
+                                        {% if reporter_id %}
+                                            {{ reporter_id }} - {{ role_label(reporter_role) }}
+                                        {% else %}
+                                            {{ role_label(reporter_role) }}
+                                        {% endif %}
+                                    </p>
                                 </div>
                             </div>
 
@@ -279,8 +302,7 @@
                                 class="report-detail-approve-btn js-report-action"
                                 data-url="{{ url_for('approve_report_log', row_index=row_index) }}"
                                 data-kind="approve"
-                                data-name="{{ name }}"
-                                data-type="{{ type }}">
+                                data-name="{{ name }}">
                                 {{ icon_check() }}
                                 <span>Duyệt</span>
                             </button>
@@ -338,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const relatedBox = $("#reportRelatedAssets");
     const toast = $("#reportDetailToast");
     const modal = $("#filePreviewModal");
+    const reportPageUrl = relatedBox?.dataset.overviewUrl || "{{ url_for('report_page') }}";
 
     const esc = value => String(value || "").replace(/[&<>"']/g, c => ({
         "&": "&amp;",
@@ -368,10 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const splitData = value => {
         if (Array.isArray(value)) {
-            return value
-                .flatMap(item => splitData(item))
-                .map(cleanAssetToken)
-                .filter(Boolean);
+            return value.flatMap(item => splitData(item)).map(cleanAssetToken).filter(Boolean);
         }
 
         let text = decodeText(value).trim();
@@ -425,12 +445,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function showToast(message) {
+    function showToast(message, type = "success") {
         const text = $("#reportDetailToastText");
 
         if (!toast || !text) return;
 
         text.textContent = message || "Thao tác thành công";
+        toast.classList.remove("is-show");
+        void toast.offsetWidth;
         toast.classList.add("is-show");
 
         clearTimeout(toast.timer);
@@ -445,7 +467,11 @@ document.addEventListener("DOMContentLoaded", () => {
         form.action = url;
         form.style.display = "none";
 
-        Object.entries({ next: location.href, ...data }).forEach(([name, value]) => {
+        Object.entries({
+            ...data,
+            next: reportPageUrl,
+            redirect_to: reportPageUrl
+        }).forEach(([name, value]) => {
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = name;
@@ -513,15 +539,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!max) return [];
 
-        return Array.from({ length: max }, (_, index) => {
-            const name = names[index] || codes[index] || "Tài sản chưa có tên";
-            const code = codes[index] || "Không có mã tài sản";
-
-            return {
-                name,
-                code
-            };
-        });
+        return Array.from({ length: max }, (_, index) => ({
+            name: names[index] || codes[index] || "Tài sản chưa có tên",
+            code: codes[index] || "Không có mã tài sản"
+        }));
     }
 
     function renderAssets(items) {
@@ -562,15 +583,37 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadRelatedAssets() {
         if (!relatedBox) return;
 
-        // Chỉ hiển thị tài sản thuộc CHÍNH báo cáo đang xem.
-        // Không quét /report và không cộng thêm tài sản từ các báo cáo khác của cùng người/phòng ban/vị trí.
-        const currentReportAssets = assetsFrom(
+        renderAssets(assetsFrom(
             relatedBox.dataset.assetNames,
             relatedBox.dataset.assetCodes,
             relatedBox.dataset.assets
-        );
+        ));
+    }
 
-        renderAssets(currentReportAssets);
+    async function confirmReportAction(btn) {
+        const approve = btn.dataset.kind === "approve";
+        const name = btn.dataset.name || "báo cáo này";
+
+        const ok = window.toastConfirm
+            ? await window.toastConfirm({
+                type: approve ? "success" : "warning",
+                title: approve ? "Xác nhận duyệt" : "Xác nhận từ chối",
+                message: approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`,
+                confirmText: approve ? "Duyệt" : "Từ chối",
+                cancelText: "Hủy",
+                danger: !approve
+            })
+            : confirm(approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`);
+
+        if (!ok) return;
+
+        post(btn.dataset.url, approve
+            ? { approval_note: "Duyệt từ trang chi tiết báo cáo" }
+            : {
+                cancel_reason: "Từ chối từ trang chi tiết báo cáo",
+                reason: "Từ chối từ trang chi tiết báo cáo"
+            }
+        );
     }
 
     $("#copyReportCodeBtn")?.addEventListener("click", async () => {
@@ -601,7 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const links = $$(".js-file-download-link").map(link => link.href).filter(Boolean);
 
             if (!links.length) {
-                showToast("Không có file để tải");
+                showToast("Không có file để tải", "warning");
                 return;
             }
 
@@ -621,21 +664,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     $$(".js-report-action").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const approve = btn.dataset.kind === "approve";
-            const name = btn.dataset.name || "báo cáo này";
-            const ok = confirm(approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`);
-
-            if (!ok) return;
-
-            post(btn.dataset.url, approve
-                ? { approval_note: "Duyệt từ trang chi tiết báo cáo" }
-                : {
-                    cancel_reason: "Từ chối từ trang chi tiết báo cáo",
-                    reason: "Từ chối từ trang chi tiết báo cáo"
-                }
-            );
-        });
+        btn.addEventListener("click", () => confirmReportAction(btn));
     });
 
     $("#closeReportDetailToast")?.addEventListener("click", () => toast?.classList.remove("is-show"));

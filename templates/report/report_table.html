@@ -250,40 +250,73 @@ document.addEventListener("DOMContentLoaded", () => {
         form.submit();
     };
 
+    const confirmOptions = (type, message) => {
+        if (type === "approve") {
+            return {
+                type: "success",
+                title: "Xác nhận duyệt",
+                message,
+                confirmText: "Duyệt",
+                cancelText: "Hủy",
+                danger: false
+            };
+        }
+
+        if (type === "reject") {
+            return {
+                type: "warning",
+                title: "Xác nhận từ chối",
+                message,
+                confirmText: "Từ chối",
+                cancelText: "Hủy",
+                danger: true
+            };
+        }
+
+        return {
+            type: "error",
+            title: "Xác nhận xóa báo cáo",
+            message,
+            confirmText: "Xóa",
+            cancelText: "Hủy",
+            danger: true
+        };
+    };
+
     const confirmAndPost = async (btn, type) => {
         const url = btn.dataset.url;
         const name = btn.dataset.name || "báo cáo này";
-        const reportType = btn.dataset.type || "";
+
         if (!url || submitting) return;
 
-        let message = type === "delete"
+        const message = type === "delete"
             ? `Bạn có chắc muốn xóa ${name} không? Hành động này không thể hoàn tác.`
             : type === "approve"
                 ? `Bạn có chắc muốn duyệt ${name} không?`
                 : `Bạn có chắc muốn từ chối ${name} không?`;
 
-        if (type === "approve" && reportType === "Báo hỏng") {
-            message += " Sau khi duyệt, tài sản liên quan sẽ chuyển sang trạng thái hỏng.";
-        }
-
         closeMenus();
 
         const ok = typeof window.toastConfirm === "function"
-            ? await window.toastConfirm({
-                type: type === "approve" ? "warning" : "error",
-                title: type === "delete" ? "Xác nhận xóa báo cáo" : type === "approve" ? "Xác nhận duyệt báo cáo" : "Xác nhận từ chối báo cáo",
-                message,
-                confirmText: type === "delete" ? "Xóa" : type === "approve" ? "Duyệt" : "Từ chối",
-                cancelText: "Hủy",
-                danger: type !== "approve"
-            })
+            ? await window.toastConfirm(confirmOptions(type, message))
             : confirm(message);
 
         if (!ok) return;
 
-        if (type === "approve") post(url, { approval_note: "Duyệt từ danh sách báo cáo" });
-        else if (type === "reject") post(url, { cancel_reason: "Từ chối từ danh sách báo cáo", reason: "Từ chối từ danh sách báo cáo" });
-        else post(url);
+        if (type === "approve") {
+            post(url, { approval_note: "Duyệt từ danh sách báo cáo" });
+            return;
+        }
+
+        if (type === "reject") {
+            post(url, {
+                cancel_reason: "Từ chối từ danh sách báo cáo",
+                reason: "Từ chối từ danh sách báo cáo"
+            });
+            return;
+        }
+
+        post(url);
     };
 
     document.addEventListener("click", event => {

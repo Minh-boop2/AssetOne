@@ -427,6 +427,55 @@ body {
     gap: 6px;
 }
 
+.report-asset-search-box {
+    position: sticky;
+    top: -7px;
+    z-index: 8;
+    margin: -7px -7px 4px;
+    padding: 8px;
+    background: var(--input);
+    border-bottom: 1px solid var(--line);
+    border-radius: 14px 14px 0 0;
+}
+
+#assetSearch {
+    width: 100% !important;
+    height: 38px !important;
+    padding: 0 12px !important;
+    color: var(--text) !important;
+    background: var(--input2) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+    outline: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 750 !important;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+}
+
+#assetSearch::placeholder {
+    color: var(--muted) !important;
+    opacity: .78;
+}
+
+#assetSearch:focus {
+    background: var(--input2) !important;
+    border-color: var(--blue2) !important;
+    box-shadow: 0 0 0 4px rgba(47, 107, 255, .16) !important;
+}
+
+#assetSearch:disabled {
+    cursor: not-allowed;
+    opacity: .68;
+}
+
+#assetSearch::-webkit-search-cancel-button {
+    cursor: pointer;
+    filter: opacity(.65);
+}
+
 .report-select.is-open .report-select-menu,
 .report-pickbox.is-open .report-pick-menu {
     opacity: 1;

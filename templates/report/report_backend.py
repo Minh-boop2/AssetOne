@@ -1,14 +1,28 @@
 import os
 import re
+import unicodedata
 from collections import Counter
 from datetime import datetime
+from time import time
 from urllib.parse import urljoin, urlparse
 
 import requests
 from flask import request, session
 
+from templates.manage.manage_backend import (
+    DEFAULT_AVATAR_URL as MANAGE_DEFAULT_AVATAR_URL,
+    fetch_users_from_api as manage_fetch_users_from_api,
+    map_user_for_template as manage_map_user_for_template,
+)
+
 
 BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:5001").rstrip("/")
+
+_REPORT_USER_CACHE = {
+    "created_at": 0,
+    "items": [],
+}
+_REPORT_USER_CACHE_TTL = 60
 
 REPORT_DEFAULT_STATUSES = [
     "Chờ xử lý",
@@ -62,6 +76,12 @@ def _clean(value):
 
 def _norm(value):
     return _clean(value).lower()
+
+
+def _norm_lookup(value):
+    text = unicodedata.normalize("NFD", _norm(value))
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return re.sub(r"\s+", " ", text.replace("đ", "d")).strip()
 
 
 def _safe_int(value, default=1, min_value=1, max_value=None):
@@ -533,6 +553,170 @@ def _extract_pagination(payload):
     return {}
 
 
+def _report_user_cache_valid():
+    return time() - _REPORT_USER_CACHE.get("created_at", 0) <= _REPORT_USER_CACHE_TTL
+
+
+def _get_manage_users(force=False):
+    if not force and _report_user_cache_valid():
+        return _REPORT_USER_CACHE.get("items", [])
+
+    users_raw, _, error = manage_fetch_users_from_api({
+        "page": 1,
+        "limit": 1000,
+    })
+
+    users = [
+        manage_map_user_for_template(user)
+        for user in users_raw
+        if isinstance(user, dict)
+    ] if not error else []
+
+    _REPORT_USER_CACHE.update({
+        "created_at": time(),
+        "items": users,
+    })
+
+    return users
+
+
+def _key(value):
+    return _norm_lookup(value)
+
+
+def _user_keys(user, strong_only=False):
+    if not isinstance(user, dict):
+        return set()
+
+    strong_values = [
+        user.get("db_id"),
+        user.get("id"),
+        user.get("email"),
+    ]
+
+    weak_values = [
+        user.get("name"),
+        user.get("phone"),
+    ]
+
+    values = strong_values if strong_only else strong_values + weak_values
+
+    return {_key(value) for value in values if _key(value)}
+
+
+def _report_user_keys(report):
+    if not isinstance(report, dict):
+        return set(), set()
+
+    strong_fields = [
+        "reporter_id",
+        "user_id",
+        "created_by_id",
+        "reporter_employee_code",
+        "employee_code",
+        "created_by_employee_code",
+        "email",
+        "reporter_email",
+        "created_by_email",
+    ]
+
+    weak_fields = [
+        "display_reporter",
+        "reporter",
+        "user",
+        "created_by",
+    ]
+
+    strong = set()
+    weak = set()
+
+    for field in strong_fields:
+        value = report.get(field)
+
+        if _key(value):
+            strong.add(_key(value))
+
+    for field in weak_fields:
+        value = report.get(field)
+
+        if isinstance(value, dict):
+            for key in ["id", "_id", "user_id", "employee_code", "email"]:
+                if _key(value.get(key)):
+                    strong.add(_key(value.get(key)))
+
+            for key in ["full_name", "name", "username", "display_name"]:
+                if _key(value.get(key)):
+                    weak.add(_key(value.get(key)))
+        elif _key(value):
+            weak.add(_key(value))
+
+    return strong, weak
+
+
+def _find_reporter_from_manage(report):
+    strong_keys, weak_keys = _report_user_keys(report)
+
+    if not strong_keys and not weak_keys:
+        return None
+
+    users = _get_manage_users(force=True)
+
+    for user in users:
+        if strong_keys & _user_keys(user, strong_only=True):
+            return user
+
+    for user in users:
+        if (strong_keys | weak_keys) & _user_keys(user):
+            return user
+
+    return None
+
+
+def _attach_reporter_user(report):
+    if not isinstance(report, dict):
+        return report
+
+    matched_user = _find_reporter_from_manage(report)
+
+    if not matched_user:
+        fallback_avatar = MANAGE_DEFAULT_AVATAR_URL
+
+        report["display_reporter_avatar"] = fallback_avatar
+        report["reporter_avatar"] = fallback_avatar
+        report["avatar_url"] = fallback_avatar
+        report["display_reporter_id"] = (
+            report.get("reporter_employee_code")
+            or report.get("employee_code")
+            or report.get("display_reporter_id")
+            or ""
+        )
+
+        return report
+
+    avatar_url = matched_user.get("avatar_url") or MANAGE_DEFAULT_AVATAR_URL
+
+    report["display_reporter"] = matched_user.get("name") or report.get("display_reporter")
+    report["reporter"] = matched_user.get("name") or report.get("reporter")
+
+    report["display_reporter_id"] = matched_user.get("id") or report.get("display_reporter_id") or ""
+    report["reporter_employee_code"] = matched_user.get("id") or report.get("reporter_employee_code") or ""
+
+    report["display_reporter_avatar"] = avatar_url
+    report["reporter_avatar"] = avatar_url
+    report["avatar_url"] = avatar_url
+
+    if matched_user.get("role"):
+        report["display_reporter_role"] = matched_user.get("role")
+
+    if matched_user.get("dept"):
+        report["display_department"] = matched_user.get("dept")
+
+    if matched_user.get("position"):
+        report["display_location"] = matched_user.get("position")
+
+    return report
+
+
 def _normalize_asset(item):
     if not isinstance(item, dict):
         item = {}
@@ -651,19 +835,51 @@ def normalize_report(item, index=0):
         or _assets_from_report_assets(item.get("assets"), "asset_id", "id", "_id")
     )
 
-    reporter = _clean(
-        _first(
-            item,
-            "reporter",
-            "user",
-            "receiver",
-            "created_by",
-        )
+    reporter_raw = _first(
+        item,
+        "reporter",
+        "user",
+        "receiver",
+        "created_by",
     )
 
-    reporter_role = _clean(_first(item, "reporter_role", "role"))
-    department = _clean(_first(item, "department", "dept"))
-    location = _clean(_first(item, "location", "floor", "place"))
+    reporter_object = reporter_raw if isinstance(reporter_raw, dict) else {}
+
+    reporter = _clean(
+        _first(
+            reporter_object,
+            "full_name",
+            "name",
+            "username",
+            "email",
+        )
+    ) if reporter_object else _clean(reporter_raw)
+
+    reporter_role = _clean(
+        _first(item, "reporter_role", "role")
+        or _first(reporter_object, "role", "position", "title")
+    )
+
+    reporter_id = _clean(
+        _first(item, "reporter_id", "user_id", "created_by_id")
+        or _first(reporter_object, "id", "_id", "user_id")
+    )
+
+    reporter_employee_code = _clean(
+        _first(item, "reporter_employee_code", "employee_code", "created_by_employee_code")
+        or _first(reporter_object, "employee_code")
+    )
+
+    department = _clean(
+        _first(item, "department", "dept")
+        or _first(reporter_object, "department", "dept")
+    )
+
+    location = _clean(
+        _first(item, "location", "floor", "place")
+        or _first(reporter_object, "floor", "location", "place")
+    )
+
     description = _clean(_first(item, "description", "detail", "content"))
     note = _clean(_first(item, "note", "approval_note", "cancel_reason"))
     created_time = _clean(_first(item, "time", "created_at", "date"))
@@ -680,6 +896,9 @@ def normalize_report(item, index=0):
 
     item["display_reporter"] = reporter
     item["display_reporter_role"] = reporter_role
+    item["display_reporter_id"] = reporter_employee_code or reporter_id
+    item["reporter_id"] = reporter_id
+    item["reporter_employee_code"] = reporter_employee_code
 
     item["display_created_by"] = _clean(item.get("approved_by")) or _clean(item.get("created_by")) or reporter
     item["display_created_by_role"] = _clean(item.get("created_by_role")) or reporter_role
@@ -1082,6 +1301,7 @@ def get_report_detail_page_data(report_id):
         return None, payload.get("message", "Không tìm thấy báo cáo."), status_code
 
     report = normalize_report(payload.get("data") or {}, 0)
+    report = _attach_reporter_user(report)
 
     return report, None, status_code
 

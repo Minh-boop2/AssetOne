@@ -59,14 +59,14 @@
       </div>
     </div>
 
-    <div class="chart-grid">
-      <div class="chart-card">
+    <div class="chart-grid asset-chart-grid">
+      <div class="chart-card asset-type-card">
         <div class="chart-title">
           <h3>Tài sản theo loại</h3>
-          <p>Đưa chuột vào thanh để xem số lượng.</p>
+          <p>Hiển thị tối đa 10 loại, nhiều hơn sẽ cuộn để xem thêm.</p>
         </div>
 
-        <div class="horizontal-chart">
+        <div class="horizontal-chart asset-type-chart">
           {% for item in type_items %}
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
@@ -82,13 +82,13 @@
         </div>
       </div>
 
-      <div class="chart-card">
+      <div class="chart-card asset-status-card">
         <div class="chart-title">
           <h3>Trạng thái tài sản</h3>
           <p>Biểu đồ tròn theo trạng thái xử lý.</p>
         </div>
 
-        <div class="donut-wrap">
+        <div class="donut-wrap asset-status-donut">
           <div
             class="finance-donut has-tooltip"
             style="
@@ -111,7 +111,7 @@
           </div>
         </div>
 
-        <div class="donut-legend">
+        <div class="donut-legend asset-status-legend">
           {% for item in status_segments %}
           <div class="legend-row has-tooltip">
             <div>
@@ -131,7 +131,7 @@
     <div class="finance-table-card repair-table-card">
       <div class="chart-title">
         <h3>Bảo trì tài sản</h3>
-        <p>Danh sách tài sản đang lỗi và nguyên nhân cần xử lý.</p>
+        <p>Chỉ hiển thị 5 tài sản bảo trì mới nhất và nguyên nhân cần xử lý.</p>
       </div>
 
       <div class="finance-table repair-table">
@@ -141,7 +141,7 @@
           <div>Lỗi</div>
         </div>
 
-        {% for asset in damaged_assets %}
+        {% for asset in damaged_assets[:5] %}
         <div class="finance-row repair-row">
           <div>{{ asset.asset_code }}</div>
           <div>{{ asset.asset }}</div>
@@ -172,7 +172,7 @@
           <div>Trạng thái</div>
         </div>
 
-        {% for asset in recent_assets %}
+        {% for asset in recent_assets[:5] %}
         <div class="finance-row asset-row">
           <div>{{ asset.asset_code }}</div>
           <div>{{ asset.asset }}</div>

@@ -205,6 +205,7 @@
   grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
   gap: 16px;
   margin-bottom: 16px;
+  align-items: stretch;
 }
 
 .chart-card,
@@ -214,6 +215,22 @@
   border-radius: 16px;
   padding: 18px;
   box-shadow: var(--shadow);
+}
+
+.asset-chart-grid {
+  align-items: stretch;
+}
+
+.asset-type-card,
+.asset-status-card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-status-card {
+  justify-content: flex-start;
 }
 
 .chart-title {
@@ -241,6 +258,23 @@
   gap: 11px;
 }
 
+.asset-type-chart {
+  --type-row-height: 21px;
+  --type-row-gap: 11px;
+  max-height: calc((var(--type-row-height) * 10) + (var(--type-row-gap) * 9));
+  padding-right: 7px;
+  margin-right: -7px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.asset-type-chart .horizontal-row {
+  min-height: var(--type-row-height);
+  flex: 0 0 var(--type-row-height);
+}
+
 .horizontal-row {
   position: relative;
   display: grid;
@@ -250,9 +284,13 @@
 }
 
 .horizontal-name {
+  min-width: 0;
   color: var(--text);
   font-size: 13px;
   font-weight: 650;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .horizontal-track {
@@ -290,6 +328,10 @@
   display: flex;
   justify-content: center;
   padding: 6px 0 14px;
+}
+
+.asset-status-donut {
+  flex: 0 0 auto;
 }
 
 .finance-donut {
@@ -338,6 +380,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.asset-status-legend {
+  margin-top: auto;
 }
 
 .legend-row {
@@ -510,6 +556,7 @@
 
 .repair-table {
   padding-right: 0;
+  max-height: 275px;
 }
 
 .repair-row {
@@ -639,6 +686,10 @@
     grid-template-columns: 1fr;
   }
 
+  .asset-status-legend {
+    margin-top: 0;
+  }
+
   .asset-row {
     min-width: 920px;
   }
@@ -697,12 +748,16 @@
 
   .donut-center {
     width: 112px;
-  height: 112px;
+    height: 112px;
   }
 
   .horizontal-row {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .asset-type-chart {
+    max-height: 360px;
   }
 
   .horizontal-row strong {
