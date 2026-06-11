@@ -1,0 +1,112 @@
+.statistical-assets-page .asset-chart-grid {
+  align-items: stretch;
+}
+
+.statistical-assets-page .asset-type-card,
+.statistical-assets-page .asset-status-card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.statistical-assets-page .asset-status-card {
+  justify-content: flex-start;
+}
+
+.statistical-assets-page .asset-type-chart {
+  --type-row-height: 21px;
+  --type-row-gap: 11px;
+  max-height: calc((var(--type-row-height) * 10) + (var(--type-row-gap) * 9));
+  padding-right: 7px;
+  margin-right: -7px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.statistical-assets-page .asset-type-chart .horizontal-row {
+  min-height: var(--type-row-height);
+  flex: 0 0 var(--type-row-height);
+}
+
+.statistical-assets-page .asset-status-donut {
+  flex: 0 0 auto;
+}
+
+.statistical-assets-page .asset-status-legend {
+  margin-top: auto;
+}
+
+.statistical-assets-page .repair-table-card {
+  margin-bottom: 16px;
+}
+
+.statistical-assets-page .repair-table {
+  max-height: 275px;
+  padding-right: 0;
+}
+
+.statistical-assets-page .repair-row {
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+  padding: 13px 2px;
+}
+
+.statistical-assets-page .repair-row.finance-head {
+  align-items: center;
+}
+
+.statistical-assets-page .asset-row {
+  min-width: 0;
+  grid-template-columns:
+    minmax(130px, 0.8fr)
+    minmax(260px, 1.45fr)
+    minmax(170px, 1fr)
+    minmax(170px, 1fr)
+    minmax(150px, 0.85fr);
+  gap: 22px;
+  align-items: center;
+}
+
+@media (max-width: 1400px) {
+  .statistical-assets-page .asset-row {
+    grid-template-columns:
+      minmax(120px, 0.75fr)
+      minmax(230px, 1.35fr)
+      minmax(150px, 0.95fr)
+      minmax(150px, 0.95fr)
+      minmax(140px, 0.8fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .statistical-assets-page .asset-status-legend {
+    margin-top: 0;
+  }
+
+  .statistical-assets-page .asset-row {
+    min-width: 920px;
+  }
+
+  .statistical-assets-page .repair-row {
+    min-width: 760px;
+  }
+}
+
+@media (max-width: 768px) {
+  .statistical-assets-page .asset-type-chart {
+    max-height: 360px;
+  }
+
+  .statistical-assets-page .repair-row,
+  .statistical-assets-page .asset-row {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

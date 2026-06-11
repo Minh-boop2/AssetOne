@@ -1,0 +1,46 @@
+.statistical-employees-page .employee-chart-grid {
+  align-items: stretch;
+}
+
+.statistical-employees-page .employee-ratio-card,
+.statistical-employees-page .employee-role-card {
+  min-height: 360px;
+}
+
+.statistical-employees-page .employee-ratio-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.statistical-employees-page .employee-ratio-card .donut-wrap {
+  flex: 1;
+  align-items: center;
+}
+
+.statistical-employees-page .employee-dept-card {
+  margin-top: 16px;
+}
+
+.statistical-employees-page .employee-dept-card .horizontal-chart {
+  max-height: 360px;
+  padding-right: 7px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.statistical-employees-page .donut-employee {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .statistical-employees-page .employee-ratio-card,
+  .statistical-employees-page .employee-role-card {
+    min-height: auto;
+  }
+
+  .statistical-employees-page .employee-ratio-card .donut-wrap {
+    flex: 0 0 auto;
+  }
+}

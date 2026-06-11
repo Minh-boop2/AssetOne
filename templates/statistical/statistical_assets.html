@@ -2,6 +2,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical_assets.css') }}">
 
 {% set total_assets = total_assets|default(0, true) %}
 {% set type_items = type_items|default([], true) %}
@@ -9,9 +10,9 @@
 {% set damaged_assets = damaged_assets|default([], true) %}
 {% set recent_assets = recent_assets|default([], true) %}
 {% set maintenance_total = total_damaged|default(damaged_assets|length, true) %}
-{% set broken_total = total_broken_assets|default(maintenance_total, true) %}
+{% set broken_total = total_broken_assets|default(0, true) %}
 
-<section class="statistical-page">
+<section class="statistical-page statistical-assets-page">
   <div class="statistical-container">
 
     <div class="statistical-header">
@@ -22,11 +23,8 @@
       </div>
 
       <div class="mini-tabs">
-        <a href="{{ url_for('statistics_page') }}" class="mini-tab">Doanh thu</a>
         <a href="{{ url_for('statistical_employees') }}" class="mini-tab">Nhân viên</a>
         <a href="{{ url_for('statistical_assets') }}" class="mini-tab active">Tài sản</a>
-        <a href="{{ url_for('statistical_assign') }}" class="mini-tab">Cấp phát</a>
-        <a href="{{ url_for('statistical_report') }}" class="mini-tab">Báo cáo</a>
       </div>
     </div>
 
@@ -104,6 +102,7 @@
             "
           >
             <span class="chart-tooltip">Tổng tài sản: {{ total_assets }}</span>
+
             <div class="donut-center">
               <strong>{{ total_assets }}</strong>
               <span>Tài sản</span>
@@ -179,9 +178,7 @@
           <div>{{ asset.type }}</div>
           <div>{{ asset.receiver }}</div>
           <div>
-            <span class="status-badge badge-{{ asset.status_class }}">
-              {{ asset.status }}
-            </span>
+            <span class="status-badge badge-{{ asset.status_class }}">{{ asset.status }}</span>
           </div>
         </div>
         {% else %}

@@ -1,5 +1,3 @@
-# File: templates/statistical/statistical_app.py
-
 from flask import render_template, request, session, redirect, url_for
 
 from templates.statistical.statistical_backend import (
@@ -18,31 +16,20 @@ def get_current_user():
 
 
 def render_employee_statistics():
-    context = get_statistical_employees_context(
-        args=request.args,
-        current_user=get_current_user(),
-    )
-
     return render_template(
         "statistical/statistical_employees.html",
-        **context
+        **get_statistical_employees_context(request.args, get_current_user())
     )
 
 
 def render_asset_statistics():
-    context = get_statistical_assets_context(
-        args=request.args,
-        current_user=get_current_user(),
-    )
-
     return render_template(
         "statistical/statistical_assets.html",
-        **context
+        **get_statistical_assets_context(request.args, get_current_user())
     )
 
 
 def register_statistical_routes(app):
-
     @app.route("/statistical")
     def statistics_page():
         return redirect(url_for("statistical_employees"))
@@ -58,11 +45,3 @@ def register_statistical_routes(app):
     @app.route("/statistical/assets")
     def statistical_assets():
         return render_asset_statistics()
-
-    @app.route("/statistical/assign")
-    def statistical_assign():
-        return redirect(url_for("statistical_employees"))
-
-    @app.route("/statistical/report")
-    def statistical_report():
-        return redirect(url_for("statistical_employees"))
