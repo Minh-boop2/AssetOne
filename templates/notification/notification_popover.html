@@ -104,6 +104,32 @@ notification_backend_url|default("http://localhost:5001", true) %}
     let hasCache = false;
     let isFetching = false;
 
+    function closeNotificationPopover() {
+      notificationWrapper.classList.remove("open");
+    }
+
+    function showSuccessToast(title, description = "") {
+      closeNotificationPopover();
+
+      const toast = window.sonner || window.toast;
+
+      if (toast && typeof toast.success === "function") {
+        toast.success(title, description, {
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (typeof toast === "function") {
+        toast({
+          type: "success",
+          title,
+          description,
+          duration: 3000,
+        });
+      }
+    }
+
     function escapeHtml(value) {
       return String(value || "")
         .replaceAll("&", "&amp;")
@@ -123,9 +149,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     function formatDateTime(value) {
-      if (!value) {
-        return "";
-      }
+      if (!value) return "";
 
       const date = new Date(value);
 
@@ -194,9 +218,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
         notificationUnreadText.textContent = String(number);
       }
 
-      if (!notificationBadge) {
-        return;
-      }
+      if (!notificationBadge) return;
 
       if (number > 0) {
         notificationBadge.textContent = number > 99 ? "99+" : String(number);
@@ -214,9 +236,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     function saveCache() {
-      if (!userId) {
-        return;
-      }
+      if (!userId) return;
 
       try {
         const payload = {
@@ -232,9 +252,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     function readCache() {
-      if (!userId) {
-        return false;
-      }
+      if (!userId) return false;
 
       try {
         const savedAt = Number(localStorage.getItem(cacheTimeKey) || 0);
@@ -247,9 +265,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
 
         const raw = localStorage.getItem(cacheKey);
 
-        if (!raw) {
-          return false;
-        }
+        if (!raw) return false;
 
         const payload = JSON.parse(raw);
         const items = Array.isArray(payload.notifications)
@@ -257,6 +273,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
           : [];
 
         notifications = items.slice(0, maxCacheItems);
+
         setUnreadCount(
           payload.unread_count ?? countUnreadFromNotifications(notifications),
         );
@@ -310,9 +327,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     function renderNotifications() {
-      if (!notificationList) {
-        return;
-      }
+      if (!notificationList) return;
 
       if (!notifications.length) {
         notificationList.innerHTML = `
@@ -361,18 +376,14 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     async function fetchNotificationsBecauseNewData() {
-      if (isFetching || !userId) {
-        return;
-      }
+      if (isFetching || !userId) return;
 
       isFetching = true;
 
       try {
         const response = await fetchJson(api.data);
 
-        if (!response.success) {
-          return;
-        }
+        if (!response.success) return;
 
         notifications = Array.isArray(response.data)
           ? response.data.slice(0, maxCacheItems)
@@ -401,9 +412,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
           method: "PATCH",
         });
 
-        if (!response.success) {
-          return;
-        }
+        if (!response.success) return;
 
         const updatedNotification = response.data;
 
@@ -434,13 +443,13 @@ notification_backend_url|default("http://localhost:5001", true) %}
 
     async function markAllNotificationsRead() {
       try {
+        notificationReadAllBtn.disabled = true;
+
         const response = await fetchJson(api.readAll, {
           method: "PATCH",
         });
 
-        if (!response.success) {
-          return;
-        }
+        if (!response.success) return;
 
         notifications = notifications.map(function (notification) {
           return {
@@ -452,15 +461,17 @@ notification_backend_url|default("http://localhost:5001", true) %}
         renderNotifications();
         setUnreadCount(0);
         saveCache();
+
+        showSuccessToast("Đã đọc tất cả thành công");
       } catch (error) {
         console.error("Mark all notifications read error:", error);
+      } finally {
+        notificationReadAllBtn.disabled = false;
       }
     }
 
     function addNotificationRealtime(notification, unreadCount) {
-      if (!notification) {
-        return;
-      }
+      if (!notification) return;
 
       const id = getNotificationId(notification);
 
@@ -533,9 +544,7 @@ notification_backend_url|default("http://localhost:5001", true) %}
     }
 
     function connectNotificationSocket() {
-      if (!userId || !window.io) {
-        return;
-      }
+      if (!userId || !window.io) return;
 
       socket = io(socketUrl, {
         transports: ["websocket", "polling"],
@@ -559,30 +568,17 @@ notification_backend_url|default("http://localhost:5001", true) %}
         const oldUnreadCount = currentUnreadCount;
         setUnreadCount(serverUnreadCount);
 
-        /*
-          Không fetch lại khi bấm qua trang khác nếu cache đã có.
-          Chỉ fetch lại khi socket báo unread_count tăng so với cache,
-          tức là có dữ liệu mới bị miss trong lúc chuyển trang / mất kết nối.
-        */
         if (hasCache && serverUnreadCount > oldUnreadCount) {
           fetchNotificationsBecauseNewData();
           return;
         }
 
-        /*
-          Lần đầu sau khi đăng nhập/chưa có cache thì cần fetch 1 lần
-          để có danh sách ban đầu. Các lần chuyển trang sau sẽ đọc cache.
-        */
         if (!hasCache) {
           fetchNotificationsBecauseNewData();
         }
       });
 
       socket.on("notification:new", function (payload) {
-        /*
-          Có dữ liệu mới thật sự thì không cần reload trang.
-          Socket gửi notification mới, frontend tự thêm vào cache + UI.
-        */
         addNotificationRealtime(payload?.notification, payload?.unread_count);
       });
 
@@ -622,28 +618,24 @@ notification_backend_url|default("http://localhost:5001", true) %}
 
     document.addEventListener("click", function (event) {
       if (!notificationWrapper.contains(event.target)) {
-        notificationWrapper.classList.remove("open");
+        closeNotificationPopover();
       }
     });
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
-        notificationWrapper.classList.remove("open");
+        closeNotificationPopover();
       }
     });
 
     notificationList?.addEventListener("click", async function (event) {
       const item = event.target.closest(".notification-item");
 
-      if (!item) {
-        return;
-      }
+      if (!item) return;
 
       const id = item.dataset.id;
 
-      if (!id) {
-        return;
-      }
+      if (!id) return;
 
       await markNotificationRead(id);
     });
