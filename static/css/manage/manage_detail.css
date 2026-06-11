@@ -17,6 +17,15 @@
   --md-success: #10b981;
   --md-danger: #ef4444;
   --md-danger-2: #f87171;
+  --md-warning: #f6c94a;
+  --md-warning-2: #f59e0b;
+
+  --md-role-admin-bg: rgba(239, 68, 68, 0.12);
+  --md-role-admin-text: #ef4444;
+  --md-role-manager-bg: rgba(37, 99, 235, 0.14);
+  --md-role-manager-text: #2563eb;
+  --md-role-staff-bg: var(--md-surface-soft);
+  --md-role-staff-text: var(--md-text-soft);
 
   --md-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
   --md-shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.08);
@@ -66,6 +75,15 @@ body.dark-theme .manage-detail-page,
   --md-success: #34d399;
   --md-danger: #fb7185;
   --md-danger-2: #ef4444;
+  --md-warning: #f6c94a;
+  --md-warning-2: #f59e0b;
+
+  --md-role-admin-bg: rgba(239, 68, 68, 0.14);
+  --md-role-admin-text: #ef4444;
+  --md-role-manager-bg: rgba(37, 99, 235, 0.18);
+  --md-role-manager-text: #3b82f6;
+  --md-role-staff-bg: #111827;
+  --md-role-staff-text: #94a3b8;
 
   --md-shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
   --md-shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.25);
@@ -331,6 +349,18 @@ body.dark-theme .manage-detail-page,
   box-shadow: var(--md-shadow-soft);
 }
 
+.work-card-role.role-admin {
+  border-left-color: var(--md-role-admin-text);
+}
+
+.work-card-role.role-manager {
+  border-left-color: var(--md-role-manager-text);
+}
+
+.work-card-role.role-staff {
+  border-left-color: var(--md-border-strong);
+}
+
 .work-card-value {
   font-size: 16px;
   font-weight: 900;
@@ -339,8 +369,33 @@ body.dark-theme .manage-detail-page,
   word-break: break-word;
 }
 
-.work-card-value.role {
-  color: var(--md-primary);
+.detail-role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.detail-role-badge.role-admin {
+  background: var(--md-role-admin-bg);
+  color: var(--md-role-admin-text);
+}
+
+.detail-role-badge.role-manager {
+  background: var(--md-role-manager-bg);
+  color: var(--md-role-manager-text);
+}
+
+.detail-role-badge.role-staff {
+  background: var(--md-role-staff-bg);
+  color: var(--md-role-staff-text);
+  border: 1px solid var(--md-border);
 }
 
 .mini-grid {
@@ -403,6 +458,21 @@ body.dark-theme .manage-detail-page,
   color: var(--md-text-strong);
   border-color: var(--md-border-strong);
   transform: translateY(-1px);
+}
+
+.detail-btn-edit {
+  background: rgba(246, 201, 74, 0.14);
+  color: var(--md-warning);
+  border-color: rgba(246, 201, 74, 0.26);
+  box-shadow: 0 12px 26px rgba(246, 201, 74, 0.12);
+}
+
+.detail-btn-edit:hover {
+  color: var(--md-warning);
+  background: rgba(246, 201, 74, 0.2);
+  border-color: rgba(246, 201, 74, 0.38);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(246, 201, 74, 0.18);
 }
 
 .detail-btn-primary {

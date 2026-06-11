@@ -1,21 +1,19 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}?v=12"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assgin/assign_detail.css') }}?v=34">
 
 {% set assign_id = info.id or info.mongo_id %}
 {% set asset_name = info.asset or info.asset_name or 'Chưa có tên tài sản' %}
 {% set asset_code = info.asset_code or 'Chưa có mã' %}
-{% set asset_status = info.status or 'Chưa xác định' %}
-{% set is_using = asset_status == 'Đang sử dụng' or asset_status == 'using' %}
-{% set is_free = asset_status == 'Chưa dùng' or asset_status == 'Chưa sử dụng' or asset_status == 'available' %}
+{% set raw_status = info.status or info.asset_status or 'Chưa xác định' %}
+{% set is_using = raw_status in ['Đang sử dụng', 'using', 'Hoàn thành'] %}
+{% set is_free = raw_status in ['Chưa dùng', 'Chưa sử dụng', 'available', 'Chua su dung'] %}
+{% set status_label = 'Đang sử dụng' if is_using else ('Chưa dùng' if is_free else raw_status) %}
+{% set status_class = 'is-using' if is_using else ('is-free' if is_free else 'is-pending') %}
 {% set receiver_name = info.receiver or info.user %}
 {% set receiver_id = info.employee_code or info.user_id or info.receiver_id %}
-{% set receiver_avatar = info.avatar_url or info.receiver_avatar or info.user_avatar %}
-{% set asset_note = (specs.spec if specs is defined and specs else (info.spec or info.notes or info.description or 'Chưa có dữ liệu cấu hình.')) | trim %}
+{% set note_text = (specs.spec if specs else (info.spec or info.notes or 'Không có dữ liệu cấu hình.')) | trim %}
 
 <section class="assign-detail-page">
   <div class="assign-detail-wrap">
@@ -24,167 +22,124 @@
       Quay lại
     </a>
 
-    <!-- HEADER: Hiển thị thông tin chính của tài sản -->
     <div class="assign-detail-hero">
-      <div class="assign-detail-hero-main">
-        <span class="assign-detail-badge">Chi tiết cấp phát</span>
+      <div class="assign-hero-main">
+        <span class="assign-detail-label">Chi tiết cấp phát</span>
 
         <h1>{{ asset_name }}</h1>
 
-        <div class="assign-detail-meta">
+        <div class="assign-hero-meta">
           <span>#{{ asset_code }}</span>
           <span>ID: {{ assign_id or 'Chưa có ID' }}</span>
         </div>
       </div>
 
-      <span
-        class="assign-status-pill {% if is_using %}assign-status-pill--using{% elif is_free %}assign-status-pill--free{% else %}assign-status-pill--pending{% endif %}"
-      >
-        {% if asset_status == 'using' %}
-          Đang sử dụng
-        {% elif asset_status == 'available' %}
-          Chưa sử dụng
-        {% else %}
-          {{ asset_status }}
-        {% endif %}
-      </span>
+      <div class="assign-status-badge {{ status_class }}">
+        {{ status_label }}
+      </div>
     </div>
 
     <div class="assign-detail-grid">
-      <!-- CARD: Thông tin tài sản -->
-      <section class="assign-detail-card">
-        <div class="assign-detail-card-header">
+      <div class="assign-detail-card">
+        <div class="assign-card-head">
           <h2>Thông tin tài sản</h2>
           <p>Thông số, phân loại và bảo hành của thiết bị.</p>
         </div>
 
         <div class="assign-info-grid">
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Mã tài sản</span>
             <strong>#{{ asset_code }}</strong>
           </div>
 
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Phân loại</span>
             <strong>{{ info.type or info.category or 'Chưa phân loại' }}</strong>
           </div>
 
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Bảo hành</span>
             <strong>{{ info.warranty or 'Chưa cập nhật bảo hành' }}</strong>
           </div>
 
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Vị trí hiện tại</span>
-            <strong>{{ info.location or info.floor or 'Chưa có vị trí' }}</strong>
+            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
           </div>
 
-          <!-- GHI CHÚ: Không dùng scroll nội bộ, chữ nằm trên cùng và giữ đúng xuống dòng -->
-          <div class="assign-info-item assign-info-item--full">
-            <span>Cấu hình / Ghi chú</span>
+          <div class="assign-info-box assign-info-box--full assign-note-field">
+            <span>Cấu hình / ghi chú</span>
 
             <div class="assign-note-box">
-              <p>{{ asset_note }}</p>
+              <p class="assign-note-text">{{ note_text }}</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- CARD: Bàn giao và sử dụng -->
-      <section class="assign-detail-card">
-        <div class="assign-detail-card-header">
+      <div class="assign-detail-card">
+        <div class="assign-card-head">
           <h2>Bàn giao & sử dụng</h2>
           <p>Người nhận tài sản và trạng thái sử dụng.</p>
         </div>
 
-        {% if receiver_name %}
-          <div class="assign-user-card">
-            <div class="assign-user-avatar">
-              {% if receiver_avatar %}
-                <img src="{{ receiver_avatar }}" alt="{{ receiver_name }}" />
-              {% else %}
-                <span>{{ receiver_name[:1] | upper }}</span>
-              {% endif %}
-            </div>
-
-            <div class="assign-user-main">
-              <span>Người đang sử dụng</span>
+        <div class="assign-use-grid">
+          <div class="assign-info-box assign-info-box--full">
+            {% if receiver_name %}
+              <span>Người sử dụng</span>
               <strong>{{ receiver_name }}</strong>
 
               {% if receiver_id %}
-                <small>{{ receiver_id }}</small>
-              {% else %}
-                <small>Chưa có mã nhân sự</small>
+                <small>ID: {{ receiver_id }}</small>
               {% endif %}
-            </div>
+            {% else %}
+              <span>Chưa có người sử dụng</span>
+              <strong>Tài sản hiện chưa được cấp phát</strong>
+            {% endif %}
           </div>
-        {% else %}
-          <div class="assign-empty-user">
-            <span>Chưa có người sử dụng</span>
-            <strong>Tài sản hiện chưa được cấp phát</strong>
-          </div>
-        {% endif %}
 
-        <div class="assign-info-grid assign-info-grid--right">
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Phòng ban</span>
             <strong>{{ info.department or 'Chưa có phòng ban' }}</strong>
           </div>
 
-          <div class="assign-info-item">
+          <div class="assign-info-box">
             <span>Vị trí / tầng</span>
-            <strong>{{ info.location or info.floor or 'Chưa có vị trí' }}</strong>
+            <strong>{{ info.location or 'Chưa có vị trí' }}</strong>
           </div>
 
-          <div class="assign-info-item assign-info-item--full">
+          <div class="assign-info-box assign-info-box--full">
             <span>Trạng thái tài sản</span>
-            <strong>
-              {% if asset_status == 'using' %}
-                Đang sử dụng
-              {% elif asset_status == 'available' %}
-                Chưa sử dụng
-              {% else %}
-                {{ asset_status }}
-              {% endif %}
-            </strong>
+
+            <div class="assign-status-inline {{ status_class }}">
+              {{ status_label }}
+            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
 
-    <div class="assign-detail-footer">
-      <a
-        href="{{ url_for('assign_page') }}"
-        class="assign-detail-btn assign-detail-btn--secondary"
-      >
-        <span>←</span>
-        Quay lại
+    <div class="assign-detail-actions">
+      <a href="{{ url_for('assign_page') }}" class="assign-detail-btn assign-detail-btn--secondary">
+        ← Quay lại
       </a>
 
-      {% if is_free %}
-        <a
-          href="{{ url_for('assign_give', id=assign_id) }}"
-          class="assign-detail-btn assign-detail-btn--primary"
-        >
-          <span>＋</span>
-          Cấp phát
+      {% if is_free and assign_id %}
+        <a href="{{ url_for('assign_give', id=assign_id) }}" class="assign-detail-btn assign-detail-btn--primary">
+          + Cấp phát
         </a>
       {% endif %}
 
-      {% if is_using %}
+      {% if is_using and assign_id %}
         <form
           action="{{ url_for('assign_unassign', id=assign_id) }}"
           method="POST"
           class="assign-detail-inline-form js-assign-unassign-form"
           data-asset-code="{{ asset_code }}"
           data-asset-name="{{ asset_name }}"
-          data-receiver="{{ info.receiver or info.user or 'Chưa có người sử dụng' }}"
+          data-receiver="{{ receiver_name or 'Chưa có người sử dụng' }}"
         >
-          <button
-            type="submit"
-            class="assign-detail-btn assign-detail-btn--warning"
-          >
-            <span>↩</span>
+          <button type="submit" class="assign-detail-btn assign-detail-btn--warning">
             Thu hồi
           </button>
         </form>
@@ -192,30 +147,14 @@
     </div>
   </div>
 
-  <!-- MODAL: Xác nhận thu hồi tài sản -->
-  <div
-    class="assign-confirm-backdrop"
-    id="assignUnassignModal"
-    aria-hidden="true"
-    hidden
-  >
-    <div
-      class="assign-confirm-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="assignUnassignTitle"
-    >
-      <button
-        type="button"
-        class="assign-confirm-close"
-        id="assignConfirmClose"
-        aria-label="Đóng"
-      >
+  <div class="assign-confirm-backdrop" id="assignUnassignModal" aria-hidden="true" hidden>
+    <div class="assign-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="assignUnassignTitle">
+      <button type="button" class="assign-confirm-close" id="assignConfirmClose" aria-label="Đóng">
         ×
       </button>
 
       <div class="assign-confirm-icon">
-        <span>↩</span>
+        ↩
       </div>
 
       <h2 id="assignUnassignTitle">Xác nhận thu hồi tài sản</h2>
@@ -237,24 +176,16 @@
 
         <div>
           <span>Người sử dụng</span>
-          <strong>{{ info.receiver or info.user or 'Chưa có người sử dụng' }}</strong>
+          <strong>{{ receiver_name or 'Chưa có người sử dụng' }}</strong>
         </div>
       </div>
 
       <div class="assign-confirm-actions">
-        <button
-          type="button"
-          class="assign-confirm-btn assign-confirm-btn--cancel"
-          id="assignConfirmCancel"
-        >
+        <button type="button" class="assign-confirm-btn assign-confirm-btn--cancel" id="assignConfirmCancel">
           Hủy
         </button>
 
-        <button
-          type="button"
-          class="assign-confirm-btn assign-confirm-btn--danger"
-          id="assignConfirmSubmit"
-        >
+        <button type="button" class="assign-confirm-btn assign-confirm-btn--danger" id="assignConfirmSubmit">
           Thu hồi
         </button>
       </div>
@@ -273,7 +204,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let pendingForm = null;
   let isSubmitting = false;
 
-  // Mở modal xác nhận thu hồi
   function openModal(form) {
     if (!modal || !form) return;
 
@@ -291,7 +221,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 80);
   }
 
-  // Đóng modal xác nhận
   function closeModal() {
     if (!modal || isSubmitting) return;
 
@@ -305,19 +234,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 180);
   }
 
-  // Hiện toast đang xử lý thu hồi
   function showProgressToast(form) {
     const assetCode = form?.dataset?.assetCode || "tài sản";
-    const notify = window.sonner || window.toast;
 
-    if (typeof notify === "function") {
-      notify({
-        id: "assign-unassign-progress",
-        type: "warning",
-        title: "Đang thu hồi tài sản",
-        description: "Đang xử lý thu hồi #" + assetCode + ". Vui lòng chờ...",
-        duration: 2800
-      });
+    if (window.sonner && typeof window.sonner.warning === "function") {
+      window.sonner.warning("Đang thu hồi #" + assetCode);
+      return;
+    }
+
+    if (window.toast && typeof window.toast.warning === "function") {
+      window.toast.warning("Đang thu hồi #" + assetCode);
     }
   }
 

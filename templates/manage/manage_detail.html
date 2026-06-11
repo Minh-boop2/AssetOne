@@ -2,14 +2,19 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=28">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage/manage_detail.css') }}?v=29">
 
 <section class="manage-detail-page">
   <div class="manage-detail-wrap">
     {% set action_id = user.db_id if user.db_id is defined and user.db_id else user.id %}
     {% set is_active = user.status_code == 'HOAT_DONG' or user.status == 'Hoạt động' or user.status == 'HOAT_DONG' %}
     {% set current_status_code = 'HOAT_DONG' if is_active else 'NGUNG_HOAT_DONG' %}
-    {% set can_manage_detail_target = can_manage_detail_target if can_manage_detail_target is defined else can_update_user %}
+    {% set can_manage_detail_target = can_manage_detail_target if can_manage_detail_target is defined else (can_update_user if can_update_user is defined else false) %}
+
+    {% set role_text = user.role if user.role is defined and user.role else 'Nhân viên' %}
+    {% set role_raw = user.role_code if user.role_code is defined and user.role_code else role_text %}
+    {% set role_key = role_raw|string|upper %}
+    {% set role_class = 'role-admin' if role_key == 'ADMIN' else ('role-manager' if role_key in ['QUAN_LY', 'MANAGER', 'QUẢN LÝ'] else 'role-staff') %}
 
     <div class="detail-topbar">
       <a href="{{ url_for('manage') }}" class="detail-back-link">
@@ -78,10 +83,12 @@
               </div>
             </div>
 
-            <div class="work-card">
+            <div class="work-card work-card-role {{ role_class }}">
               <div class="work-card-label">Vai trò hệ thống</div>
-              <div class="work-card-value role">
-                {{ user.role or 'Chưa có dữ liệu' }}
+              <div class="work-card-value">
+                <span class="detail-role-badge {{ role_class }}">
+                  {{ role_text }}
+                </span>
               </div>
             </div>
 
@@ -110,14 +117,14 @@
           </a>
 
           {% if can_manage_detail_target %}
-            <a href="{{ url_for('user_edit', id=action_id) }}" class="detail-btn detail-btn-primary">
+            <a href="{{ url_for('user_edit', id=action_id) }}" class="detail-btn detail-btn-edit">
               <i class="fas fa-pen"></i>
               Chỉnh sửa
             </a>
           {% else %}
             <button
               type="button"
-              class="detail-btn detail-btn-primary"
+              class="detail-btn detail-btn-edit"
               id="editDeniedBtn"
               data-denied-message="Bạn không có quyền thực hiện hành động này."
             >
@@ -157,28 +164,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const editDeniedBtn = document.getElementById("editDeniedBtn");
   const deniedMessage = "Bạn không có quyền thực hiện hành động này.";
 
-  function showDeniedMessage(message) {
-    // NOTE: Lỗi quyền hiện toast chạy, không mở popup xác nhận.
-    const text = message || deniedMessage;
-
-    if (window.sonner && typeof window.sonner.error === "function") {
-      window.sonner.error(text);
-      return;
-    }
-
-    if (window.toast && typeof window.toast.error === "function") {
-      window.toast.error(text);
-      return;
-    }
-
-    if (typeof window.showToast === "function") {
-      window.showToast(text, "error");
-      return;
-    }
-
-    alert(text);
-  }
-
   function clearOldSonnerToasts() {
     if (window.sonner && typeof window.sonner.dismiss === "function") {
       window.sonner.dismiss();
@@ -213,6 +198,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     alert(text);
+  }
+
+  function showDeniedMessage(message) {
+    // NOTE: Không có quyền thì chỉ hiện toast lỗi, không mở confirm.
+    showSystemSonner(message || deniedMessage, "error");
   }
 
   function showStoredManageToast() {
@@ -260,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
         result = {};
       }
 
-      // NOTE: Nếu backend trả lỗi quyền thì hiện toast lỗi, không reload.
+      // NOTE: Backend trả lỗi quyền thì hiện toast lỗi, không reload.
       if (!response.ok || result.success === false || result.ok === false) {
         showDeniedMessage(result.message || deniedMessage);
         return;
@@ -300,7 +290,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const isActive = currentStatus === "HOAT_DONG";
 
     if (changeUserStatusBtn.dataset.noPermission === "1") {
-      // NOTE: Chặn trước khi mở confirm, chỉ hiện toast quyền.
       showDeniedMessage(changeUserStatusBtn.dataset.deniedMessage || deniedMessage);
       return;
     }
