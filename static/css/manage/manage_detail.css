@@ -24,8 +24,8 @@
   --md-role-admin-text: #ef4444;
   --md-role-manager-bg: rgba(37, 99, 235, 0.14);
   --md-role-manager-text: #2563eb;
-  --md-role-staff-bg: var(--md-surface-soft);
-  --md-role-staff-text: var(--md-text-soft);
+  --md-role-staff-bg: rgba(16, 185, 129, 0.14);
+  --md-role-staff-text: #10b981;
 
   --md-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
   --md-shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.08);
@@ -82,8 +82,8 @@ body.dark-theme .manage-detail-page,
   --md-role-admin-text: #ef4444;
   --md-role-manager-bg: rgba(37, 99, 235, 0.18);
   --md-role-manager-text: #3b82f6;
-  --md-role-staff-bg: #111827;
-  --md-role-staff-text: #94a3b8;
+  --md-role-staff-bg: rgba(16, 185, 129, 0.16);
+  --md-role-staff-text: #34d399;
 
   --md-shadow: 0 26px 70px rgba(0, 0, 0, 0.38);
   --md-shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.25);
@@ -357,8 +357,9 @@ body.dark-theme .manage-detail-page,
   border-left-color: var(--md-role-manager-text);
 }
 
+/* NOTE: Detail Nhân viên đổi sang xanh lá giống table */
 .work-card-role.role-staff {
-  border-left-color: var(--md-border-strong);
+  border-left-color: var(--md-role-staff-text);
 }
 
 .work-card-value {
@@ -367,6 +368,10 @@ body.dark-theme .manage-detail-page,
   color: var(--md-text-strong);
   line-height: 1.4;
   word-break: break-word;
+}
+
+.work-card-value.role {
+  color: var(--md-text-strong);
 }
 
 .detail-role-badge {
@@ -392,10 +397,11 @@ body.dark-theme .manage-detail-page,
   color: var(--md-role-manager-text);
 }
 
+/* NOTE: Badge Nhân viên màu xanh lá */
 .detail-role-badge.role-staff {
   background: var(--md-role-staff-bg);
   color: var(--md-role-staff-text);
-  border: 1px solid var(--md-border);
+  border: 1px solid rgba(16, 185, 129, 0.24);
 }
 
 .mini-grid {

@@ -261,10 +261,11 @@
   color: var(--hsu-blue, #2563eb);
 }
 
+/* NOTE: Badge Nhân viên đổi sang xanh lá giống ô thống kê Nhân viên */
 .m-role-staff {
-  background: var(--surface-2);
-  color: var(--text-soft);
-  border: 1px solid var(--border);
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--hsu-green, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.24);
 }
 
 /* =========================================
