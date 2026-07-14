@@ -1,30 +1,40 @@
-{% extends 'main.html' %}
+{% extends 'main.html' %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/statistical/statistical.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/statistical/statistical_assets.css') }}"
+/>
 
-{% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/statistical/statistical_assets.css') }}">
-
-{% set total_assets = total_assets|default(0, true) %}
-{% set type_items = type_items|default([], true) %}
-{% set status_segments = status_segments|default([], true) %}
-{% set damaged_assets = damaged_assets|default([], true) %}
-{% set recent_assets = recent_assets|default([], true) %}
-{% set maintenance_total = total_damaged|default(damaged_assets|length, true) %}
-{% set broken_total = total_broken_assets|default(0, true) %}
+{% set total_assets = total_assets|default(0, true) %} {% set type_items =
+type_items|default([], true) %} {% set status_segments =
+status_segments|default([], true) %} {% set damaged_assets =
+damaged_assets|default([], true) %} {% set recent_assets =
+recent_assets|default([], true) %} {% set maintenance_total =
+total_damaged|default(damaged_assets|length, true) %} {% set broken_total =
+total_broken_assets|default(0, true) %}
 
 <section class="statistical-page statistical-assets-page">
   <div class="statistical-container">
-
     <div class="statistical-header">
       <div>
         <p class="statistical-label">Thống kê tài sản</p>
         <h2>Tổng quan tài sản CNTT</h2>
-        <p>Thống kê tài sản theo loại, trạng thái, bảo trì tài sản và các bản ghi gần đây.</p>
+        <p>
+          Thống kê tài sản theo loại, trạng thái, bảo trì tài sản và các bản ghi
+          gần đây.
+        </p>
       </div>
 
       <div class="mini-tabs">
-        <a href="{{ url_for('statistical_employees') }}" class="mini-tab">Nhân viên</a>
-        <a href="{{ url_for('statistical_assets') }}" class="mini-tab active">Tài sản</a>
+        <a href="{{ url_for('statistical_employees') }}" class="mini-tab"
+          >Nhân viên</a
+        >
+        <a href="{{ url_for('statistical_assets') }}" class="mini-tab active"
+          >Tài sản</a
+        >
       </div>
     </div>
 
@@ -61,11 +71,7 @@
       <div class="chart-card asset-type-card">
         <div class="chart-title">
           <h3>Tài sản theo loại</h3>
-<<<<<<< HEAD
-          <p>Hiển thị tối đa 10 loại, nhiều hơn sẽ cuộn để xem thêm.</p>
-=======
           <p>Hiển thị tối đa 12 loại, nhiều hơn sẽ cuộn để xem thêm.</p>
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
         </div>
 
         <div class="horizontal-chart asset-type-chart">
@@ -73,10 +79,16 @@
           <div class="horizontal-row has-tooltip">
             <div class="horizontal-name">{{ item.label }}</div>
             <div class="horizontal-track">
-              <div class="horizontal-fill fill-purple" style="width: 0%;" data-target-width="{{ item.percent }}"></div>
+              <div
+                class="horizontal-fill fill-purple"
+                style="width: 0%"
+                data-target-width="{{ item.percent }}"
+              ></div>
             </div>
             <strong>{{ item.value_text }}</strong>
-            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} tài sản</span>
+            <span class="chart-tooltip"
+              >{{ item.label }}: {{ item.value_text }} tài sản</span
+            >
           </div>
           {% else %}
           <div class="stat-empty">Chưa có dữ liệu tài sản theo loại.</div>
@@ -93,8 +105,8 @@
         <div class="donut-wrap asset-status-donut">
           <div
             class="finance-donut has-tooltip js-stat-donut"
-            data-segments='{{ status_segments|default([], true)|tojson|e }}'
-            style="background: var(--surface-2);"
+            data-segments="{{ status_segments|default([], true)|tojson|e }}"
+            style="background: var(--surface-2)"
           >
             <span class="chart-tooltip">Tổng tài sản: {{ total_assets }}</span>
 
@@ -113,7 +125,9 @@
               {{ item.label }}
             </div>
             <strong>{{ item.percent }}%</strong>
-            <span class="chart-tooltip">{{ item.label }}: {{ item.value_text }} tài sản</span>
+            <span class="chart-tooltip"
+              >{{ item.label }}: {{ item.value_text }} tài sản</span
+            >
           </div>
           {% else %}
           <div class="stat-empty">Chưa có dữ liệu trạng thái.</div>
@@ -173,7 +187,9 @@
           <div>{{ asset.type }}</div>
           <div>{{ asset.receiver }}</div>
           <div>
-            <span class="status-badge badge-{{ asset.status_class }}">{{ asset.status }}</span>
+            <span class="status-badge badge-{{ asset.status_class }}"
+              >{{ asset.status }}</span
+            >
           </div>
         </div>
         {% else %}
@@ -187,70 +203,76 @@
         {% endfor %}
       </div>
     </div>
-
   </div>
 </section>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const page = document.querySelector(".statistical-page");
-  if (!page) return;
+  document.addEventListener("DOMContentLoaded", () => {
+    const page = document.querySelector(".statistical-page");
+    if (!page) return;
 
-  const donuts = document.querySelectorAll(".js-stat-donut");
-  const fills = document.querySelectorAll(".horizontal-fill");
-  const duration = 1300; 
-  let startTime = null;
+    const donuts = document.querySelectorAll(".js-stat-donut");
+    const fills = document.querySelectorAll(".horizontal-fill");
+    const duration = 1300;
+    let startTime = null;
 
-  const drawDonut = (donut, angle) => {
-    let segments = [];
-    try { segments = JSON.parse(donut.dataset.segments || "[]"); } catch { segments = []; }
-    if (!segments.length) { donut.style.background = "var(--surface-2)"; return; }
+    const drawDonut = (donut, angle) => {
+      let segments = [];
+      try {
+        segments = JSON.parse(donut.dataset.segments || "[]");
+      } catch {
+        segments = [];
+      }
+      if (!segments.length) {
+        donut.style.background = "var(--surface-2)";
+        return;
+      }
 
-    const parts = [];
-    segments.forEach((item) => {
-      const from = Number(item.from_deg || 0);
-      const to = Number(item.to_deg || 0);
-      const color = item.color || "#94a3b8";
-      if (angle <= from || to <= from) return;
-      parts.push(`${color} ${from}deg ${Math.min(to, angle)}deg`);
-    });
+      const parts = [];
+      segments.forEach((item) => {
+        const from = Number(item.from_deg || 0);
+        const to = Number(item.to_deg || 0);
+        const color = item.color || "#94a3b8";
+        if (angle <= from || to <= from) return;
+        parts.push(`${color} ${from}deg ${Math.min(to, angle)}deg`);
+      });
 
-    if (angle < 360) parts.push(`var(--surface-2) ${angle}deg 360deg`);
-    donut.style.background = `conic-gradient(${parts.join(", ")})`;
-  };
+      if (angle < 360) parts.push(`var(--surface-2) ${angle}deg 360deg`);
+      donut.style.background = `conic-gradient(${parts.join(", ")})`;
+    };
 
-  const drawBars = (eased) => {
-    fills.forEach((fill) => {
-      const targetWidth = Number(fill.dataset.targetWidth || 0);
-      fill.style.width = `${targetWidth * eased}%`;
-    });
-  };
+    const drawBars = (eased) => {
+      fills.forEach((fill) => {
+        const targetWidth = Number(fill.dataset.targetWidth || 0);
+        fill.style.width = `${targetWidth * eased}%`;
+      });
+    };
 
-  donuts.forEach(donut => drawDonut(donut, 0));
-  drawBars(0);
-  page.classList.remove("stat-animate-run");
+    donuts.forEach((donut) => drawDonut(donut, 0));
+    drawBars(0);
+    page.classList.remove("stat-animate-run");
 
-  const animateTimeline = (timestamp) => {
-    if (!startTime) startTime = timestamp;
-    const progress = Math.min((timestamp - startTime) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3); // Cubic Out
+    const animateTimeline = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // Cubic Out
 
-    donuts.forEach(donut => drawDonut(donut, eased * 360));
-    drawBars(eased);
+      donuts.forEach((donut) => drawDonut(donut, eased * 360));
+      drawBars(eased);
 
-    if (progress >= 0.05 && !page.classList.contains("stat-animate-run")) {
-      page.classList.add("stat-animate-run");
-    }
+      if (progress >= 0.05 && !page.classList.contains("stat-animate-run")) {
+        page.classList.add("stat-animate-run");
+      }
 
-    if (progress < 1) {
-      requestAnimationFrame(animateTimeline);
-    } else {
-      donuts.forEach(donut => drawDonut(donut, 360));
-      drawBars(1);
-    }
-  };
+      if (progress < 1) {
+        requestAnimationFrame(animateTimeline);
+      } else {
+        donuts.forEach((donut) => drawDonut(donut, 360));
+        drawBars(1);
+      }
+    };
 
-  requestAnimationFrame(animateTimeline);
-});
+    requestAnimationFrame(animateTimeline);
+  });
 </script>
 {% endblock %}

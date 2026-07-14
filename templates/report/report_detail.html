@@ -360,11 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const relatedBox = $("#reportRelatedAssets");
     const localToast = $("#reportDetailToast");
     const modal = $("#filePreviewModal");
-<<<<<<< HEAD
-    const reportPageUrl = relatedBox?.dataset.overviewUrl || "{{ url_for('report_page') }}";
-=======
     const reportListUrl = "{{ url_for('report_page') }}";
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
     const esc = value => String(value || "").replace(/[&<>"']/g, c => ({
         "&": "&amp;",
@@ -394,13 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/&apos;/g, "'");
 
     const splitData = value => {
-<<<<<<< HEAD
-        if (Array.isArray(value)) {
-            return value.flatMap(item => splitData(item)).map(cleanAssetToken).filter(Boolean);
-        }
-=======
         if (Array.isArray(value)) return value.flatMap(item => splitData(item)).map(cleanAssetToken).filter(Boolean);
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
         let text = decodeText(value).trim();
         if (!text) return [];
@@ -445,28 +435,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-<<<<<<< HEAD
-    function showToast(message, type = "success") {
-        const text = $("#reportDetailToastText");
-=======
     function showToast(message) {
         if (window.toast?.success) {
             window.toast.success(message || "Thao tác thành công");
             return;
         }
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
         const text = $("#reportDetailToastText");
         if (!localToast || !text) return;
 
         text.textContent = message || "Thao tác thành công";
-<<<<<<< HEAD
-        toast.classList.remove("is-show");
-        void toast.offsetWidth;
-        toast.classList.add("is-show");
-=======
         localToast.classList.add("is-show");
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
         clearTimeout(localToast.timer);
         localToast.timer = setTimeout(() => localToast.classList.remove("is-show"), 2200);
@@ -480,15 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
         form.action = url;
         form.style.display = "none";
 
-<<<<<<< HEAD
-        Object.entries({
-            ...data,
-            next: reportPageUrl,
-            redirect_to: reportPageUrl
-        }).forEach(([name, value]) => {
-=======
         Object.entries({ next: nextUrl, ...data }).forEach(([name, value]) => {
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = name;
@@ -603,31 +574,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ));
     }
 
-<<<<<<< HEAD
-    async function confirmReportAction(btn) {
-        const approve = btn.dataset.kind === "approve";
-        const name = btn.dataset.name || "báo cáo này";
-
-        const ok = window.toastConfirm
-            ? await window.toastConfirm({
-                type: approve ? "success" : "warning",
-                title: approve ? "Xác nhận duyệt" : "Xác nhận từ chối",
-                message: approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`,
-                confirmText: approve ? "Duyệt" : "Từ chối",
-                cancelText: "Hủy",
-                danger: !approve
-            })
-            : confirm(approve ? `Bạn có chắc muốn duyệt ${name} không?` : `Bạn có chắc muốn từ chối ${name} không?`);
-
-        if (!ok) return;
-
-        post(btn.dataset.url, approve
-            ? { approval_note: "Duyệt từ trang chi tiết báo cáo" }
-            : {
-                cancel_reason: "Từ chối từ trang chi tiết báo cáo",
-                reason: "Từ chối từ trang chi tiết báo cáo"
-            }
-=======
     async function handleReportAction(btn) {
         const approve = btn.dataset.kind === "approve";
         const name = btn.dataset.name || "báo cáo này";
@@ -662,7 +608,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     reason: "Từ chối từ trang chi tiết báo cáo"
                 },
             reportListUrl
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
         );
     }
 
@@ -713,11 +658,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     $$(".js-report-action").forEach(btn => {
-<<<<<<< HEAD
-        btn.addEventListener("click", () => confirmReportAction(btn));
-=======
         btn.addEventListener("click", () => handleReportAction(btn));
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
     });
 
     $("#closeReportDetailToast")?.addEventListener("click", () => localToast?.classList.remove("is-show"));

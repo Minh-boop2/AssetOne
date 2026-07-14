@@ -286,10 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmAndPost = async (btn, type) => {
         const url = btn.dataset.url;
         const name = btn.dataset.name || "báo cáo này";
-<<<<<<< HEAD
-=======
         const reportType = btn.dataset.type || "";
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
 
         if (!url || submitting) return;
 
@@ -302,9 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
         closeMenus();
 
         const ok = typeof window.toastConfirm === "function"
-<<<<<<< HEAD
-            ? await window.toastConfirm(confirmOptions(type, message))
-=======
             ? await window.toastConfirm({
                 type: type === "approve" ? "success" : "error",
                 title: type === "delete" ? "Xác nhận xóa báo cáo" : type === "approve" ? "Xác nhận duyệt báo cáo" : "Xác nhận từ chối báo cáo",
@@ -313,7 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 cancelText: "Hủy",
                 danger: type !== "approve"
             })
->>>>>>> 619993c3769599db132f4ea465a37b35f7832fb3
             : confirm(message);
 
         if (!ok) return;
